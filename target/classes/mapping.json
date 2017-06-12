@@ -1,0 +1,1 @@
+Insert into resources (name, guid, file_type, folder_path, is_active, “isRiws”, alert_for, polygon_type, audio_file, isILS) Values ('RSA BUFFER 10/28', '503165957b159a4a', 'layer', '/home/airboss/AirbossApp-FAAA/public/layers', f, t, 'inside', 'not-enter', '5722d2dca07a1315',f );
