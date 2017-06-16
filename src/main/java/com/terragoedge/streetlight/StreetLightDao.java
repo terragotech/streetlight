@@ -45,6 +45,7 @@ public class StreetLightDao {
 		        		Properties properties = PropertiesReader.getProperties(resPath + "/resources");
 		        		String formtemplateguid = properties.getProperty("streetlight.formtemplateguid.create");
 		        		ResultSet queryResponse = queryStatement.executeQuery( "SELECT edgenoteentity_noteid FROM edgeform WHERE formtemplateguid = '" + formtemplateguid +"'");
+		        		System.out.println(queryResponse);
 		        		ArrayList<String> noteIds = new ArrayList<String>(); 
 		        		while ( queryResponse.next() ) {
 		        			noteIds.add(queryResponse.getString("edgenoteentity_noteid"));
@@ -71,9 +72,11 @@ public class StreetLightDao {
 			        			latitude = coordinates.get(1).getAsString();
 			        			longitude = coordinates.get(0).getAsString();
 			        			forms.add(fv);
+			        			slService.sendFromData(forms, latitude, longitude, createdDate);
 		        			}
-		        			slService.sendFromData(forms, latitude, longitude, createdDate);
 		        		}
+		        		
+		        		
 		        	}catch(Exception e){
 		        		e.printStackTrace();
 		        	}

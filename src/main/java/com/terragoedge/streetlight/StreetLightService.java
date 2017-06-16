@@ -1,6 +1,7 @@
 package com.terragoedge.streetlight;
 
 import java.io.File;
+import java.io.StringReader;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -34,6 +35,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.reflect.TypeToken;
+import com.google.gson.stream.JsonReader;
 import com.terragoedge.edgeserver.EdgeFormData;
 import com.terragoedge.xml.devices.SLVDevice;
 import com.terragoedge.xml.devices.SLVDeviceArray;
@@ -88,7 +90,7 @@ public class StreetLightService {
 							if(key.equalsIgnoreCase("power2")) {
 								watt = Integer.parseInt(value);
 							}
-							if(key.equalsIgnoreCase("userproperty.location.mapnumber"))
+							if(key.equalsIgnoreCase("location.mapnumber"))
 							{
 								block = value;
 							}
@@ -123,9 +125,9 @@ public class StreetLightService {
 			streetLightCreatedTime.setKey("pole.installdate");
 			streetLightCreatedTime.setValue(createdTime);
 			streetLightDatas.add(streetLightCreatedTime);
-			String blockPrefix = properties.getProperty("streetlight.children.geoZone.prefix");
+			//String blockPrefix = properties.getProperty("streetlight.children.geoZone.prefix");
 			String blockSuffix = block;
-		   String blockName = blockPrefix + blockSuffix;
+		   String blockName = "Block " + blockSuffix;
 			if(!devices.containsKey(macAddress)) {
 				String blocNameResponse=getChildrenGeoZone(blockName);
 				createDevice(idonController, blocNameResponse, lat, lng);
@@ -142,17 +144,19 @@ public class StreetLightService {
 		String geoUrl = properties.getProperty("streetlight.url.children.geoZone");
 		String url = mainUrl + geoUrl;
 		String methodName = properties.getProperty("streetlight.children.geoZone.methodName");
-		String geoZoneId = properties.getProperty("streetlight.url.getDevice.zoneid");
-		String json = properties.getProperty("streetlight.url.controller.ser");
+		String geoZoneId = properties.getProperty("streetlight.url.getChildrenDevice.zoneid");
+		//String json = properties.getProperty("streetlight.url.controller.ser");
 		List<Object> paramData = new ArrayList<Object>();
 		paramData.add("methodName=" + methodName);
 		paramData.add("geoZoneId=" + geoZoneId );
-		paramData.add("ser=" + json);
+		paramData.add("ser=json");
 		String params = StringUtils.join(paramData,"&");
 		url = url + "?" + params;
 		String response =  getRequest(url);
+		JsonReader jsonReader = new JsonReader(new StringReader(response));
+		jsonReader.setLenient(true);
 		JsonParser jsonParser = new JsonParser();
-		JsonArray geoZone = (JsonArray) jsonParser.parse(response);
+		JsonArray geoZone = (JsonArray) jsonParser.parse(jsonReader);
 	for(JsonElement slvGeoZoneDevice : geoZone){
 		JsonObject jsonGeoDevice = slvGeoZoneDevice.getAsJsonObject();
 		String geoBlockName = jsonGeoDevice.get("name").getAsString();
@@ -244,11 +248,13 @@ public class StreetLightService {
 		String methodName = properties.getProperty("streetlight.url.getdevice.methodName");
 		String zoneId = properties.getProperty("streetlight.url.getDevice.zoneid");
 		String controllerStrId = properties.getProperty("streetlight.controllerstr.id");
+		String recurse = properties.getProperty("streetlight.url.getDevices.recurse");
 		String url = mainUrl + deviceUrl;
 		Map<String, String> streetLightDataParams = new HashMap<String, String>();
 		streetLightDataParams.put("methodName", methodName);
 		streetLightDataParams.put("geoZoneId", zoneId);
 		streetLightDataParams.put("controllerStrId", controllerStrId);
+		streetLightDataParams.put("recurse", recurse);
 		String response = getRequest(streetLightDataParams, url);
 		XMLMarshaller xmlMarshaller = new XMLMarshaller();
 		SLVDeviceArray slvDeviceArray = (SLVDeviceArray) xmlMarshaller.xmlToObject(response);
