@@ -81,6 +81,13 @@ public class StreetLightService {
 						if (streetLightKey != null && !streetLightKey.isJsonNull()) {
 							String key = streetLightKey.getAsString();
 							String value = edgeFormData.getValue();
+							if(edgeFormData.getLabel().equals("SELC QR Code")){
+								value = value.trim();
+								if(value.isEmpty() || value.equalsIgnoreCase("(null)")){
+									System.out.println("Not Processed because value is empty");
+									return;
+								}
+							}
 							StreetLightData streetLightData = new StreetLightData();
 							streetLightData.setKey(key);
 							streetLightData.setValue(value);
@@ -113,27 +120,30 @@ public class StreetLightService {
 					}
 				}
 			}
-			StreetLightData streetLightPowerData = new StreetLightData();
-			streetLightPowerData.setKey("powerCorrection");
-			streetLightPowerData.setValue(watt+"");
-			streetLightDatas.add(streetLightPowerData);
-			StreetLightData streetLightData = new StreetLightData();
-			streetLightData.setKey("comment");
-			streetLightData.setValue(comment);
-			streetLightDatas.add(streetLightData);
-			StreetLightData streetLightCreatedTime = new StreetLightData();
-			streetLightCreatedTime.setKey("pole.installdate");
-			streetLightCreatedTime.setValue(createdTime);
-			streetLightDatas.add(streetLightCreatedTime);
-			//String blockPrefix = properties.getProperty("streetlight.children.geoZone.prefix");
-			String blockSuffix = block;
-		   String blockName = "Block " + blockSuffix;
-			if(!devices.containsKey(macAddress)) {
-				String blocNameResponse=getChildrenGeoZone(blockName);
-				createDevice(idonController, blocNameResponse, lat, lng);
-				updateDeviceData(streetLightDatas, idonController);
-				SetCommissionController(idonController);
+			if(streetLightDatas.size() > 0){
+				StreetLightData streetLightPowerData = new StreetLightData();
+				streetLightPowerData.setKey("powerCorrection");
+				streetLightPowerData.setValue(watt+"");
+				streetLightDatas.add(streetLightPowerData);
+				StreetLightData streetLightData = new StreetLightData();
+				streetLightData.setKey("comment");
+				streetLightData.setValue(comment);
+				streetLightDatas.add(streetLightData);
+				StreetLightData streetLightCreatedTime = new StreetLightData();
+				streetLightCreatedTime.setKey("pole.installdate");
+				streetLightCreatedTime.setValue(createdTime);
+				streetLightDatas.add(streetLightCreatedTime);
+				//String blockPrefix = properties.getProperty("streetlight.children.geoZone.prefix");
+				String blockSuffix = block;
+			   String blockName = "Block " + blockSuffix;
+				if(!devices.containsKey(macAddress)) {
+					String blocNameResponse=getChildrenGeoZone(blockName);
+					createDevice(idonController, blocNameResponse, lat, lng);
+					updateDeviceData(streetLightDatas, idonController);
+					SetCommissionController(idonController);
+				}
 			}
+			
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -210,6 +220,7 @@ public class StreetLightService {
 	private void SetCommissionController(String idOnController){
 		String controllerStrId = properties.getProperty("streetlight.controllerstr.id");
 		String controllerResponse = afterSetDevices(controllerStrId,idOnController);
+		
 		JsonParser jsonParser = new JsonParser();
 		JsonObject slvBatchDeviceData = (JsonObject) jsonParser.parse(controllerResponse);
 		String batchIdResponse = slvBatchDeviceData.get("batchId").getAsString();
