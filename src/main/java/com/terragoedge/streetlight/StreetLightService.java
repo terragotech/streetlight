@@ -82,6 +82,10 @@ public class StreetLightService {
 							String key = streetLightKey.getAsString();
 							String value = edgeFormData.getValue();
 							if(edgeFormData.getLabel().equals("SELC QR Code")){
+								if(value == null){
+									System.out.println("Not Processed because value is empty");
+									return;
+								}
 								value = value.trim();
 								if(value.isEmpty() || value.equalsIgnoreCase("(null)")){
 									System.out.println("Not Processed because value is empty");
