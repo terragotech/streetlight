@@ -55,14 +55,16 @@ public class StreetLightDao {
 							String latitude = null;
 							String longitude = null;
 							String createdDate = null;
+							String title = null;
 							ResultSet paramData = queryStatement.executeQuery(
-									"SELECT ef.formtemplatedef,ef.formdef, en.geojson, en.createddatetime FROM edgeform ef, edgenote en WHERE ef.edgenoteentity_noteid ="
+									"SELECT ef.formtemplatedef,ef.formdef, en.title, en.geojson, en.createddatetime FROM edgeform ef, edgenote en WHERE ef.edgenoteentity_noteid ="
 											+ noteid + "  and en.noteid = " + noteid + " and en.iscurrent = true and en.isdeleted = false ");
 							
 							while (paramData.next()) {
 								String formTemplateDefData = paramData.getString("formtemplatedef");
 								String formData = paramData.getString("formdef");
 								String geoJson = paramData.getString("geojson");
+							    title = paramData.getString("title");
 								createdDate = paramData.getString("createddatetime");
 								FormValue fv = new FormValue();
 								fv.setFormdata(formData);
@@ -76,7 +78,7 @@ public class StreetLightDao {
 								longitude = coordinates.get(0).getAsString();
 								forms.add(fv);
 							}
-							slService.sendFromData(forms, latitude, longitude, createdDate);
+							slService.sendFromData(forms, latitude, longitude, createdDate,title);
 						}
 
 					} catch (Exception e) {

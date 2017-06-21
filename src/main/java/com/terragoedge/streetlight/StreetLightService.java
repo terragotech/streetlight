@@ -3,7 +3,9 @@ package com.terragoedge.streetlight;
 import java.io.File;
 import java.io.StringReader;
 import java.lang.reflect.Type;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -59,7 +61,7 @@ public class StreetLightService {
 		gson = new Gson();
 		properties = PropertiesReader.getProperties(propertiesPath);
 	}
-	public void sendFromData(ArrayList<FormValue> forms, String latitude, String longitude, String createdTime) throws Exception {	
+	public void sendFromData(ArrayList<FormValue> forms, String latitude, String longitude, String createdTime,String title) throws Exception {	
 		try {
 			String lat = latitude;
 			String lng = longitude;
@@ -129,13 +131,29 @@ public class StreetLightService {
 				streetLightPowerData.setKey("powerCorrection");
 				streetLightPowerData.setValue(watt+"");
 				streetLightDatas.add(streetLightPowerData);
+				
+				
+				StreetLightData streetLightLocData = new StreetLightData();
+				streetLightLocData.setKey("location.utillocationid");
+				streetLightLocData.setValue(title+".Lamp");
+				streetLightDatas.add(streetLightLocData);
+				
+				//nodeTypeStrId
+				StreetLightData streetLightNodeTypeData = new StreetLightData();
+				streetLightNodeTypeData.setKey("modelFunctionId");
+				String nodeTypeStrId = properties.getProperty("streetlight.equipment.type");
+				streetLightNodeTypeData.setValue(nodeTypeStrId);
+				streetLightDatas.add(streetLightNodeTypeData);
+				
+				
 				StreetLightData streetLightData = new StreetLightData();
 				streetLightData.setKey("comment");
 				streetLightData.setValue(comment);
 				streetLightDatas.add(streetLightData);
 				StreetLightData streetLightCreatedTime = new StreetLightData();
-				streetLightCreatedTime.setKey("pole.installdate");
-				streetLightCreatedTime.setValue(createdTime);
+				streetLightCreatedTime.setKey("lamp.installdate");
+				String streetLightDate = dateFormat(createdTime);
+				streetLightCreatedTime.setValue(streetLightDate);
 				streetLightDatas.add(streetLightCreatedTime);
 				//String blockPrefix = properties.getProperty("streetlight.children.geoZone.prefix");
 				String blockSuffix = block;
@@ -190,12 +208,15 @@ public class StreetLightService {
 		String methodName = properties.getProperty("streetlight.url.device.create.methodName");
 		String categoryStrId = properties.getProperty("streetlight.categorystr.id");
 		String controllerStrId = properties.getProperty("streetlight.controllerstr.id");
+		String nodeTypeStrId = properties.getProperty("streetlight.equipment.type");
+		System.out.println("nodeTypeStrId:"+nodeTypeStrId);
 		Map<String, String> streetLightDataParams = new HashMap<>();
 		streetLightDataParams.put("methodName", methodName);
 		streetLightDataParams.put("categoryStrId", categoryStrId);
 		streetLightDataParams.put("controllerStrId", controllerStrId);
 		streetLightDataParams.put("idOnController", idonController);
 		streetLightDataParams.put("geoZoneId", zoneId);
+		streetLightDataParams.put("nodeTypeStrId", nodeTypeStrId);
 		streetLightDataParams.put("lat", lat);
 		streetLightDataParams.put("lng", lng);
 		getRequest(streetLightDataParams, url);
@@ -336,23 +357,45 @@ public class StreetLightService {
 		}
 		String params = StringUtils.join(values, "&");
 		url = url + "?" + params;
+		
 		return getRequest(url);
 	}
 	private String getRequest(String url){
+		System.out.println("------------ Request ------------------");
+		System.out.println(url);
+		System.out.println("------------ Request End ------------------");
 		HttpHeaders headers = getHeaders();
 		RestTemplate restTemplate = new RestTemplate();
 		HttpEntity request = new HttpEntity<>(headers);
 		ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.GET, request, String.class);
+		System.out.println("------------ Response ------------------");
+		System.out.println("Response Code:"+response.getStatusCode().toString());
 		String responseBody = response.getBody();
+		System.out.println(responseBody);
+		System.out.println("------------ Response End ------------------");
 		return responseBody;
 	}
 	private String getPostRequest(String url){
+		System.out.println("------------ Request ------------------");
+		System.out.println(url);
+		System.out.println("------------ Request End ------------------");
 		HttpHeaders headers = getHeaders();
 		RestTemplate restTemplate = new RestTemplate();
 		HttpEntity request = new HttpEntity<>(headers);
 		ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.POST, request, String.class);
+		System.out.println("------------ Response ------------------");
+		System.out.println("Response Code:"+response.getStatusCode().toString());
 		String responseBody = response.getBody();
+		System.out.println(responseBody);
+		System.out.println("------------ Response End ------------------");
 		return responseBody;
+	}
+	
+	private String dateFormat(String dateTime){
+		Date date = new Date(Long.valueOf(dateTime));
+		SimpleDateFormat dateFormat = new SimpleDateFormat("dd MMMM yyyy");
+		String dff = dateFormat.format(date);
+		return dff;
 	}
 	
 	public void sendMail(String body) {
