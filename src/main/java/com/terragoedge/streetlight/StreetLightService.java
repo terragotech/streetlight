@@ -181,8 +181,9 @@ public class StreetLightService {
 					}
 					String setDeviceResponse = SetCommissionController(idonController);
 					if(setDeviceResponse.equalsIgnoreCase("ok")){
-					updateDeviceData(streetLightDatas, idonController);
+						updateParentNoteId(parentNoteId);
 					}
+					updateDeviceData(streetLightDatas, idonController);
 					//SetCommissionController(idonController);
 				}
 			}
@@ -233,6 +234,27 @@ public class StreetLightService {
 		}
 	}
 	}
+	private static void updateParentNoteId(String parentNoteId){
+		PreparedStatement preparedStatement = null;
+		try{
+			connection = DriverManager.getConnection("jdbc:postgresql://localhost:5432/terragoedge", "postgres",
+					"password");
+			connection.setAutoCommit(false);
+		preparedStatement = connection.prepareStatement("UPDATE streetlightsync SET parentnoteid =" + parentNoteId + "WHERE streetlightsyncid = " );
+		preparedStatement.executeQuery();
+	}catch(Exception e){
+		e.printStackTrace();
+	}finally{
+		if(preparedStatement != null){
+			try {
+				preparedStatement.close();
+			} catch (SQLException e) {
+				e.printStackTrace();
+			}
+		}
+	}
+	}
+
 	public String getChildrenGeoZone(String blockName){
 		String mainUrl = properties.getProperty("streetlight.url.main");
 		String geoUrl = properties.getProperty("streetlight.url.children.geoZone");
