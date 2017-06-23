@@ -3,6 +3,12 @@ package com.terragoedge.streetlight;
 import java.io.File;
 import java.io.StringReader;
 import java.lang.reflect.Type;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -28,6 +34,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.RestTemplate;
 
@@ -54,6 +61,8 @@ public class StreetLightService {
 	String propertiesPath;
 	HashMap<String,SLVDevice> devices = new HashMap<String,SLVDevice>();
 	ArrayList<String> batchIdList = new ArrayList<>();
+	static Connection connection = null;
+	static Statement queryStatement = null;
 	public StreetLightService( String mappingPath, String propertiesPath) {
 		this.mappingFilePath = mappingPath;
 		this.propertiesPath = propertiesPath;
@@ -74,8 +83,10 @@ public class StreetLightService {
 			String comment = "";
 			String block = null;
 			int watt = 0;
+			String parentNoteId = null;
 			for(FormValue fv:forms)  {
 				String formData = fv.getFormdata();
+				 parentNoteId = fv.getParentnoteid();
 				List<EdgeFormData> edgeFormDataList = gson.fromJson(formData, listType);
 				if (edgeFormDataList != null) {
 					for (EdgeFormData edgeFormData : edgeFormDataList) {
@@ -155,17 +166,24 @@ public class StreetLightService {
 				String streetLightDate = dateFormat(createdTime);
 				streetLightCreatedTime.setValue(streetLightDate);
 				streetLightDatas.add(streetLightCreatedTime);
-				//String blockPrefix = properties.getProperty("streetlight.children.geoZone.prefix");
 				String blockSuffix = block;
 			   String blockName = "Block " + blockSuffix;
 			   
 			   SLVDevice slvDevice = devices.get(macAddress.trim());
 			   if(slvDevice == null){
-				//if(!devices.containsKey(macAddress.trim())) {
 					String blocNameResponse = getChildrenGeoZone(blockName);
-					createDevice(idonController, blocNameResponse, lat, lng,macAddress.trim());
+					if(!isBaseParentNoteIdPresent(parentNoteId)){
+					ResponseEntity<String> createresponseEntity = createDevice(idonController, blocNameResponse, lat, lng,macAddress.trim());
+					String status = createresponseEntity.getStatusCode().toString();
+					if(status.equalsIgnoreCase("ok")){
+						insertParentNoteId(parentNoteId);	
+					}
+					}
+					String setDeviceResponse = SetCommissionController(idonController);
+					if(setDeviceResponse.equalsIgnoreCase("ok")){
 					updateDeviceData(streetLightDatas, idonController);
-					SetCommissionController(idonController);
+					}
+					//SetCommissionController(idonController);
 				}
 			}
 			
@@ -173,21 +191,62 @@ public class StreetLightService {
 			e.printStackTrace();
 		}
 	}
-	
+	private static boolean isBaseParentNoteIdPresent(String parentNoteId){
+		PreparedStatement preparedStatement = null;
+		try{
+			connection = DriverManager.getConnection("jdbc:postgresql://localhost:5432/terragoedge", "postgres",
+					"password");
+			connection.setAutoCommit(false);
+		preparedStatement = connection.prepareStatement("SELECT * from streetlightsync WHERE parentnoteid =" + parentNoteId);
+		ResultSet noteIdResponse = preparedStatement.executeQuery();
+		return noteIdResponse.next();
+	}catch(Exception e){
+		e.printStackTrace();
+	}finally{
+		if(preparedStatement != null){
+			try {
+				preparedStatement.close();
+			} catch (SQLException e) {
+				e.printStackTrace();
+			}
+		}
+	}
+		return false;
+	}
+	private static void insertParentNoteId(String parentNoteId){
+		PreparedStatement preparedStatement = null;
+		try{
+			connection = DriverManager.getConnection("jdbc:postgresql://localhost:5432/terragoedge", "postgres",
+					"password");
+			connection.setAutoCommit(false);
+		preparedStatement = connection.prepareStatement("INSERT INTO streetlightsync (parentnoteid) VALUES (" + parentNoteId + ")");
+		preparedStatement.executeQuery();
+	}catch(Exception e){
+		e.printStackTrace();
+	}finally{
+		if(preparedStatement != null){
+			try {
+				preparedStatement.close();
+			} catch (SQLException e) {
+				e.printStackTrace();
+			}
+		}
+	}
+	}
 	public String getChildrenGeoZone(String blockName){
 		String mainUrl = properties.getProperty("streetlight.url.main");
 		String geoUrl = properties.getProperty("streetlight.url.children.geoZone");
 		String url = mainUrl + geoUrl;
 		String methodName = properties.getProperty("streetlight.children.geoZone.methodName");
 		String geoZoneId = properties.getProperty("streetlight.url.getChildrenDevice.zoneid");
-		//String json = properties.getProperty("streetlight.url.controller.ser");
 		List<Object> paramData = new ArrayList<Object>();
 		paramData.add("methodName=" + methodName);
 		paramData.add("geoZoneId=" + geoZoneId );
 		paramData.add("ser=json");
 		String params = StringUtils.join(paramData,"&");
 		url = url + "?" + params;
-		String response =  getRequest(url);
+		ResponseEntity<String> responseEntity =  getRequest(url);
+		String response = responseEntity.getBody();
 		JsonReader jsonReader = new JsonReader(new StringReader(response));
 		jsonReader.setLenient(true);
 		JsonParser jsonParser = new JsonParser();
@@ -204,7 +263,7 @@ public class StreetLightService {
 		}
 	return null;
 	}
-	public void createDevice(String idonController, String zoneId, String lat, String lng,String macAddress) {
+	public ResponseEntity<String> createDevice(String idonController, String zoneId, String lat, String lng,String macAddress) {
 		System.out.println("createDevice_idonController:"+idonController);
 		System.out.println("Current MacAddress:"+macAddress);
 		String mainUrl = properties.getProperty("streetlight.url.main");
@@ -224,7 +283,8 @@ public class StreetLightService {
 		streetLightDataParams.put("nodeTypeStrId", nodeTypeStrId);
 		streetLightDataParams.put("lat", lat);
 		streetLightDataParams.put("lng", lng);
-		getRequest(streetLightDataParams, url);
+	    return getRequest(streetLightDataParams, url);
+	    
 	}
 	public String updateDeviceData(List<StreetLightData> streetLightDatas,String idOnController) throws Exception {
 		if (streetLightDatas != null && streetLightDatas.size() > 0) {
@@ -247,31 +307,30 @@ public class StreetLightService {
 		}
 		return null;
 	}
-	private void SetCommissionController(String idOnController){
+	private String SetCommissionController(String idOnController){
 		String controllerStrId = properties.getProperty("streetlight.controllerstr.id");
-		String controllerResponse = afterSetDevices(controllerStrId,idOnController);
-		
+		ResponseEntity<String> controllerResponse = afterSetDevices(controllerStrId,idOnController);
+		String response = controllerResponse.getBody();
+		String statusResponse = controllerResponse.getStatusCode().toString();
 		JsonParser jsonParser = new JsonParser();
-		JsonObject slvBatchDeviceData = (JsonObject) jsonParser.parse(controllerResponse);
+		JsonObject slvBatchDeviceData = (JsonObject) jsonParser.parse(response);
 		String batchIdResponse = slvBatchDeviceData.get("batchId").getAsString();
 		batchIdList.add(batchIdResponse);
+		return statusResponse;
 	}
-		public void callBatchStatus(){
-			  Iterator<String> iter = batchIdList.iterator();
-			  while (iter.hasNext()) {
-			   String batchId = iter.next();
-			   String batchResponse = getBatchResult(batchId);
-			   JsonObject slvBatchRespone = (JsonObject) jsonParser.parse(batchResponse);
-			   String batchRunning = slvBatchRespone.get("batchRunning").getAsString();
-			   String status = slvBatchRespone.get("status").getAsString();
-			   if(batchRunning.equalsIgnoreCase("false")){
-			    if(status.equalsIgnoreCase("ERROR")){
-			     sendMail(batchResponse);
-			    }
-			    iter.remove();
-			   }
-			  }
-		}
+	public ResponseEntity<String> afterSetDevices(String controllerStrId, String idOnController){
+		String mainUrl = properties.getProperty("streetlight.url.main");
+		String controllerUrl = properties.getProperty("streetlight.url.setDevice.controller.api");
+		String json = properties.getProperty("streetlight.url.controller.ser");
+		String url = mainUrl + controllerUrl;
+		List<Object> paramData = new ArrayList<Object>();
+		paramData.add("controllerStrId=" + controllerStrId);
+		paramData.add("idOnController=" + idOnController);
+		paramData.add("ser=" + json);
+		String params = StringUtils.join(paramData,"&");
+		url = url + "?" + params;
+		return getPostRequest(url);
+	}
 		private String getStreetLightMappingData() throws Exception {
 			String mappingPath = properties.getProperty("streetlight.mapping.json.path");
 			File file = new File(mappingFilePath + "/"+mappingPath);
@@ -296,7 +355,8 @@ public class StreetLightService {
 		streetLightDataParams.put("geoZoneId", zoneId);
 		streetLightDataParams.put("controllerStrId", controllerStrId);
 		streetLightDataParams.put("recurse", recurse);
-		String response = getRequest(streetLightDataParams, url);
+		ResponseEntity<String> responseEntity = getRequest(streetLightDataParams, url);
+		String response = responseEntity.getBody();
 		XMLMarshaller xmlMarshaller = new XMLMarshaller();
 		SLVDeviceArray slvDeviceArray = (SLVDeviceArray) xmlMarshaller.xmlToObject(response);
 		List<SLVDevice> slvDevices = slvDeviceArray.getSLVDevice();
@@ -315,20 +375,25 @@ public class StreetLightService {
 		
 		return -1;
 	}
-	public String afterSetDevices(String controllerStrId, String idOnController){
-		String mainUrl = properties.getProperty("streetlight.url.main");
-		String controllerUrl = properties.getProperty("streetlight.url.setDevice.controller.api");
-		String json = properties.getProperty("streetlight.url.controller.ser");
-		String url = mainUrl + controllerUrl;
-		List<Object> paramData = new ArrayList<Object>();
-		paramData.add("controllerStrId=" + controllerStrId);
-		paramData.add("idOnController=" + idOnController);
-		paramData.add("ser=" + json);
-		String params = StringUtils.join(paramData,"&");
-		url = url + "?" + params;
-		return getPostRequest(url);
+	
+	public void callBatchStatus(){
+		  Iterator<String> iter = batchIdList.iterator();
+		  while (iter.hasNext()) {
+		   String batchId = iter.next();
+		   ResponseEntity<String> batchResponseEntity = getBatchResult(batchId);
+		   String batchResponse = batchResponseEntity.getBody();
+		   JsonObject slvBatchRespone = (JsonObject) jsonParser.parse(batchResponse);
+		   String batchRunning = slvBatchRespone.get("batchRunning").getAsString();
+		   String status = slvBatchRespone.get("status").getAsString();
+		   if(batchRunning.equalsIgnoreCase("false")){
+		    if(status.equalsIgnoreCase("ERROR")){
+		     sendMail(batchResponse);
+		    }
+		    iter.remove();
+		   }
+		  }
 	}
-	public String getBatchResult(String batchId){
+	public ResponseEntity<String> getBatchResult(String batchId){
 		String mainUrl = properties.getProperty("streetlight.url.main");
 		String batchUrl = properties.getProperty("streelight.url.getDevice.batch");
 		String json = properties.getProperty("streetlight.url.controller.ser");
@@ -351,7 +416,7 @@ public class StreetLightService {
 		headers.add("Authorization", "Basic " + base64Creds);
 		return headers;
 	}
-	private <T> String getRequest(Map<String, String> streetLightDataParams, String url) {
+	private <T> ResponseEntity<String> getRequest(Map<String, String> streetLightDataParams, String url) {
 		Set<String> keys = streetLightDataParams.keySet();
 		List<String> values = new ArrayList<>();
 		for (String key : keys) {
@@ -364,7 +429,7 @@ public class StreetLightService {
 		
 		return getRequest(url);
 	}
-	private String getRequest(String url){
+	private ResponseEntity<String> getRequest(String url){
 		System.out.println("------------ Request ------------------");
 		System.out.println(url);
 		System.out.println("------------ Request End ------------------");
@@ -377,9 +442,10 @@ public class StreetLightService {
 		String responseBody = response.getBody();
 		System.out.println(responseBody);
 		System.out.println("------------ Response End ------------------");
-		return responseBody;
+		//return responseBody;
+		return response;
 	}
-	private String getPostRequest(String url){
+	private ResponseEntity<String> getPostRequest(String url){
 		System.out.println("------------ Request ------------------");
 		System.out.println(url);
 		System.out.println("------------ Request End ------------------");
@@ -392,7 +458,7 @@ public class StreetLightService {
 		String responseBody = response.getBody();
 		System.out.println(responseBody);
 		System.out.println("------------ Response End ------------------");
-		return responseBody;
+		return response;
 	}
 	
 	private String dateFormat(String dateTime){

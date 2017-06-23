@@ -37,6 +37,7 @@ public class StreetLightDao {
 			connection = DriverManager.getConnection("jdbc:postgresql://localhost:5432/terragoedge", "postgres",
 					"password");
 			connection.setAutoCommit(false);
+			createStreetLightSyncTable();
 			queryStatement = connection.createStatement();
 			Timer timer = new Timer();
 			timer.scheduleAtFixedRate(new TimerTask() {
@@ -47,6 +48,7 @@ public class StreetLightDao {
 						slService.getDevices();
 						Properties properties = PropertiesReader.getProperties(resPath + "/resources");
 						String formtemplateguid = properties.getProperty("streetlight.formtemplateguid.create");
+						
 						queryResponse = queryStatement
 								.executeQuery("SELECT edgenoteentity_noteid FROM edgeform WHERE formtemplateguid = '"
 										+ formtemplateguid + "'");
@@ -57,19 +59,21 @@ public class StreetLightDao {
 							noteIds.add(queryResponse.getString("edgenoteentity_noteid"));
 						}
 						for (String noteid : noteIds) {
-							List<FormValue> forms = new ArrayList<FormValue>();
-							NoteValue noteValue = new NoteValue();
-							
-							paramData = queryStatement.executeQuery(
-									"SELECT ef.formtemplatedef,ef.formdef,ef.formtemplateguid, en.title, en.noteid, en.parentnoteid, en.geojson, en.createddatetime FROM edgeform ef, edgenote en WHERE ef.edgenoteentity_noteid ="
-											+ noteid + "  and en.noteid = " + noteid + " and en.iscurrent = true and en.isdeleted = false ");
-							
-							getFormData(paramData, noteValue, forms);
-							paramData.close();
-							if(forms.size() == 1){
-								loadBlockForm(forms, formtemplateguid,  noteValue);
+							if(!isNotePresent(noteid)){
+								List<FormValue> forms = new ArrayList<FormValue>();
+								NoteValue noteValue = new NoteValue();
+								
+								paramData = queryStatement.executeQuery(
+										"SELECT ef.formtemplatedef,ef.formdef,ef.formtemplateguid, en.title, en.noteid, en.parentnoteid, en.geojson, en.createddatetime FROM edgeform ef, edgenote en WHERE ef.edgenoteentity_noteid ="
+												+ noteid + "  and en.noteid = " + noteid + " and en.iscurrent = true and en.isdeleted = false ");
+								
+								getFormData(paramData, noteValue, forms);
+								paramData.close();
+								if(forms.size() == 1){
+									loadBlockForm(forms, formtemplateguid,  noteValue);
+								}
+								slService.sendFromData(forms, noteValue.getLatitude(), noteValue.getLongitude(), noteValue.getCreatedDate(),noteValue.getTitle());
 							}
-							slService.sendFromData(forms, noteValue.getLatitude(), noteValue.getLongitude(), noteValue.getCreatedDate(),noteValue.getTitle());
 						}
 
 					} catch (Exception e) {
@@ -94,16 +98,13 @@ public class StreetLightDao {
 			// connection.close();
 		}
 	}
-	
-	
 	private static void createStreetLightSyncTable(){
 		PreparedStatement preparedStatement = null;
 		try{
-			String sql = "CREATE TABLE IF NOT EXISTS streetlightsync (streetlightsyncid integer NOT NULL,"
-					+ " parentnoteid text, processednoteid integer CONSTRAINT streetlightsync_pkey PRIMARY KEY (streetlightsyncid);";
+		String sql = "CREATE TABLE IF NOT EXISTS streetlightsync (streetlightsyncid integer NOT NULL,"
+					+ " parentnoteid text, processednoteid integer, CONSTRAINT streetlightsync_pkey PRIMARY KEY (streetlightsyncid));";
 			preparedStatement = connection.prepareStatement(sql);
-			preparedStatement.executeQuery();
-			
+			preparedStatement.execute();
 		}catch(Exception e){
 			e.printStackTrace();
 		}finally{
@@ -115,11 +116,7 @@ public class StreetLightDao {
 				}
 			}
 		}
-		
-		
 	}
-	
-	
 	private static void closeResultSet(ResultSet resultSet){
 		if(resultSet != null){
 			try {
@@ -129,12 +126,30 @@ public class StreetLightDao {
 			}
 		}
 	}
+	private static boolean isNotePresent(String noteId){
+		PreparedStatement preparedStatement = null;
+		try{
+		preparedStatement = connection.prepareStatement("SELECT * from streetlightsync WHERE streetlightsyncid =" + noteId);
+		ResultSet noteIdResponse = preparedStatement.executeQuery();
+		return noteIdResponse.next();
+	}catch(Exception e){
+		e.printStackTrace();
+	}finally{
+		if(preparedStatement != null){
+			try {
+				preparedStatement.close();
+			} catch (SQLException e) {
+				e.printStackTrace();
+			}
+		}
+	}
+		return false;
+	}
 	
 	private static void getFormData(ResultSet paramData,NoteValue noteValue,List<FormValue> forms) throws Exception, SQLException{
 		while (paramData.next()) {
 			String noteid = null;
 			try{
-				//noteid
 			    noteid = paramData.getString("noteid");
 				String formTemplateDefData = paramData.getString("formtemplatedef");
 				String formData = paramData.getString("formdef");
@@ -147,7 +162,9 @@ public class StreetLightDao {
 				fv.setFormdata(formData);
 				fv.setFormdef(formTemplateDefData);
 				fv.setFormTemplateGuid(dbFormtemplateguid);
-				fv.setParentnoteid(parentnoteid);
+				if(parentnoteid != null  && !parentnoteid.trim().isEmpty()){
+					fv.setParentnoteid(parentnoteid);
+				}
 				JsonParser jsonParser = new JsonParser();
 				if(geoJson != null){
 					JsonObject geoJsonData = (JsonObject) jsonParser.parse(geoJson);
@@ -167,10 +184,8 @@ public class StreetLightDao {
 				System.out.println("Error in getFormData, noteId:"+noteid);
 				throw new Exception(e);
 			}
-			
 		}
 	}
-	
 	private static void loadBlockForm(List<FormValue> forms,String formtemplateguid,NoteValue noteValue) throws Exception{
 		ResultSet paramData = null;
 		try{
@@ -188,11 +203,8 @@ public class StreetLightDao {
 		}finally{
 			closeResultSet(paramData);
 		}
-		
 	}
-
 	public String fetchData(ResultSet queryResponseData) {
 		return null;
 	}
-
 }
