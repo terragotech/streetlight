@@ -4,6 +4,10 @@ public class FormValue {
 
 	private String formdata;
 	private String formdef;
+	private String formTemplateGuid;
+	private String parentnoteid;
+	
+	
 	/**
 	 * @return the formdata
 	 */
@@ -27,6 +31,18 @@ public class FormValue {
 	 */
 	public void setFormdef(String formdef) {
 		this.formdef = formdef;
+	}
+	public String getFormTemplateGuid() {
+		return formTemplateGuid;
+	}
+	public void setFormTemplateGuid(String formTemplateGuid) {
+		this.formTemplateGuid = formTemplateGuid;
+	}
+	public String getParentnoteid() {
+		return parentnoteid;
+	}
+	public void setParentnoteid(String parentnoteid) {
+		this.parentnoteid = parentnoteid;
 	}
 	
 	

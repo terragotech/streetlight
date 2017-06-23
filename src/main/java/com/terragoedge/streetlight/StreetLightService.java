@@ -61,7 +61,7 @@ public class StreetLightService {
 		gson = new Gson();
 		properties = PropertiesReader.getProperties(propertiesPath);
 	}
-	public void sendFromData(ArrayList<FormValue> forms, String latitude, String longitude, String createdTime,String title) throws Exception {	
+	public void sendFromData(List<FormValue> forms, String latitude, String longitude, String createdTime,String title) throws Exception {	
 		try {
 			String lat = latitude;
 			String lng = longitude;
@@ -158,9 +158,12 @@ public class StreetLightService {
 				//String blockPrefix = properties.getProperty("streetlight.children.geoZone.prefix");
 				String blockSuffix = block;
 			   String blockName = "Block " + blockSuffix;
-				if(!devices.containsKey(macAddress)) {
-					String blocNameResponse=getChildrenGeoZone(blockName);
-					createDevice(idonController, blocNameResponse, lat, lng);
+			   
+			   SLVDevice slvDevice = devices.get(macAddress.trim());
+			   if(slvDevice == null){
+				//if(!devices.containsKey(macAddress.trim())) {
+					String blocNameResponse = getChildrenGeoZone(blockName);
+					createDevice(idonController, blocNameResponse, lat, lng,macAddress.trim());
 					updateDeviceData(streetLightDatas, idonController);
 					SetCommissionController(idonController);
 				}
@@ -201,7 +204,9 @@ public class StreetLightService {
 		}
 	return null;
 	}
-	public void createDevice(String idonController, String zoneId, String lat, String lng) {
+	public void createDevice(String idonController, String zoneId, String lat, String lng,String macAddress) {
+		System.out.println("createDevice_idonController:"+idonController);
+		System.out.println("Current MacAddress:"+macAddress);
 		String mainUrl = properties.getProperty("streetlight.url.main");
 		String serveletApiUrl = properties.getProperty("streetlight.url.device.create");
 		String url = mainUrl + serveletApiUrl;
@@ -295,20 +300,19 @@ public class StreetLightService {
 		XMLMarshaller xmlMarshaller = new XMLMarshaller();
 		SLVDeviceArray slvDeviceArray = (SLVDeviceArray) xmlMarshaller.xmlToObject(response);
 		List<SLVDevice> slvDevices = slvDeviceArray.getSLVDevice();
-		for(SLVDevice slvDev : slvDevices)
-		{
-			com.terragoedge.xml.devices.Properties property =   slvDev.getProperties(); 
-			List<SLVKeyValuePair> slvKeyValueList  = property.getSLVKeyValuePair(); 
-			for(SLVKeyValuePair slvKey : slvKeyValueList)
-			{
-				String key = slvKey.getKey();
-				Value value = slvKey.getValue(); 
-				if(key.equalsIgnoreCase("userproperty.MacAddress"))
-				{
-					devices.put(value.getContent(), slvDev);
+		for (SLVDevice slvDev : slvDevices) {
+			com.terragoedge.xml.devices.Properties property = slvDev.getProperties();
+			List<SLVKeyValuePair> slvKeyValueList = property.getSLVKeyValuePair();
+			for (SLVKeyValuePair slvKey : slvKeyValueList) {
+				String key = slvKey.getKey().trim().toLowerCase();
+				Value value = slvKey.getValue(); // userproperty.MacAddress
+				if (key.equalsIgnoreCase("userproperty.macaddress")) {
+					System.out.println("Mac Address:"+value.getContent().trim());
+					devices.put(value.getContent().trim(), slvDev);
 				}
 			}
 		}
+		
 		return -1;
 	}
 	public String afterSetDevices(String controllerStrId, String idOnController){
@@ -351,7 +355,7 @@ public class StreetLightService {
 		Set<String> keys = streetLightDataParams.keySet();
 		List<String> values = new ArrayList<>();
 		for (String key : keys) {
-			String val = streetLightDataParams.get(key).toString();
+			String val = streetLightDataParams.get(key) != null ? streetLightDataParams.get(key).toString() : "";
 			String tem = key + "=" + val;
 			values.add(tem);
 		}
