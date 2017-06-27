@@ -168,7 +168,6 @@ public class StreetLightService {
 				streetLightDatas.add(streetLightCreatedTime);
 				String blockSuffix = block;
 			   String blockName = "Block " + blockSuffix;
-			   
 			   SLVDevice slvDevice = devices.get(macAddress.trim());
 			   if(slvDevice == null){
 					String blocNameResponse = getChildrenGeoZone(blockName);
@@ -179,11 +178,11 @@ public class StreetLightService {
 						insertParentNoteId(parentNoteId);	
 					}
 					}
+					updateDeviceData(streetLightDatas, idonController);
 					String setDeviceResponse = SetCommissionController(idonController);
 					if(setDeviceResponse.equalsIgnoreCase("ok")){
 						updateParentNoteId(parentNoteId);
 					}
-					updateDeviceData(streetLightDatas, idonController);
 					//SetCommissionController(idonController);
 				}
 			}
@@ -240,7 +239,7 @@ public class StreetLightService {
 			connection = DriverManager.getConnection("jdbc:postgresql://localhost:5432/terragoedge", "postgres",
 					"password");
 			connection.setAutoCommit(false);
-		preparedStatement = connection.prepareStatement("UPDATE streetlightsync SET parentnoteid =" + parentNoteId + "WHERE streetlightsyncid = " );
+		preparedStatement = connection.prepareStatement("UPDATE streetlightsync SET processednoteid =" + parentNoteId + "WHERE parentnoteid = " + parentNoteId);
 		preparedStatement.executeQuery();
 	}catch(Exception e){
 		e.printStackTrace();
