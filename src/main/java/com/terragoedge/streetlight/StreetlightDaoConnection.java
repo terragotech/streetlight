@@ -3,38 +3,39 @@ package com.terragoedge.streetlight;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
+import java.sql.Statement;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class StreetlightDaoConnection {
-	static Connection connection = null;
-	  static Connection getConnection() throws Exception {
+	  private static StreetlightDaoConnection dbInstance;
+	    private static Connection connection ;
 
-	        String url = "jdbc:postgresql://localhost:5432";
-	        String dbName = "/terragoedge";
-	        String driver = "org.postgresql.Driver";
-	        String userName = "postgres";
-	        String password = "password";
-	        Class.forName(driver).newInstance();
-	        Connection connection = DriverManager.getConnection(url + dbName, userName,password);
-//		  try {
-//				Class.forName("org.postgresql.Driver");
-//			} catch (ClassNotFoundException e) {
-//				e.printStackTrace();
-//				return;
-//			}
-//	        connection = DriverManager.getConnection("jdbc:postgresql://localhost:5432/terragoedge", "postgres",
-//	    			"password");
-//	    	connection.setAutoCommit(false);
-	        return connection;
+	    private StreetlightDaoConnection() {
+	      // private constructor //
 	    }
-	  public static void closeConnection(Connection connection) {
 
-	        try {
-	        	connection.close();
-	        } catch (SQLException e) {
+	    public static StreetlightDaoConnection getInstance(){
+	    if(dbInstance==null){
+	    	dbInstance= new StreetlightDaoConnection();
+	    }
+	    return dbInstance;
+	    }
 
+	    public  Connection getConnection(){
+
+	        if(connection==null){
+	            try {
+	                String host = "dbc:postgresql://localhost:5432/terragoedge";
+	                String username = "postgres";
+	                String password = "password";
+	                connection = DriverManager.getConnection( host, username, password );
+	            } catch (SQLException ex) {
+	                Logger.getLogger(StreetlightDaoConnection.class.getName()).log(Level.SEVERE, null, ex);
+	            }
 	        }
 
-	    }
-//	  
+	        return connection;
 	
+}
 }

@@ -192,7 +192,7 @@ public class StreetLightService {
 	private static boolean isBaseParentNoteIdPresent(String parentNoteId){
 		PreparedStatement preparedStatement = null;
 		try{
-			connection = StreetlightDaoConnection.getConnection();
+			connection = StreetlightDaoConnection.getInstance().getConnection();
 //			connection = DriverManager.getConnection("jdbc:postgresql://localhost:5432/terragoedge", "postgres",
 //					"password");
 //			connection.setAutoCommit(false);
@@ -215,7 +215,7 @@ public class StreetLightService {
 	private static void insertParentNoteId(String parentNoteId){
 		PreparedStatement preparedStatement = null;
 		try{
-			connection = StreetlightDaoConnection.getConnection();
+			connection = StreetlightDaoConnection.getInstance().getConnection();
 //			connection = DriverManager.getConnection("jdbc:postgresql://localhost:5432/terragoedge", "postgres",
 //					"password");
 //			connection.setAutoCommit(false);
@@ -236,7 +236,7 @@ public class StreetLightService {
 	private static void updateParentNoteId(String parentNoteId){
 		PreparedStatement preparedStatement = null;
 		try{
-			connection = StreetlightDaoConnection.getConnection();
+			connection = StreetlightDaoConnection.getInstance().getConnection();
 //			connection = DriverManager.getConnection("jdbc:postgresql://localhost:5432/terragoedge", "postgres",
 //					"password");
 //			connection.setAutoCommit(false);

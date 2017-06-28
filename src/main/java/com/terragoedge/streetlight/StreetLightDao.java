@@ -31,7 +31,7 @@ public class StreetLightDao {
 //			return;
 //		}
 		try {
-			connection = StreetlightDaoConnection.getConnection();
+			connection = StreetlightDaoConnection.getInstance().getConnection();
 			slService = new StreetLightService(resPath + "/resources", resPath + "/resources");
 //			connection = DriverManager.getConnection("jdbc:postgresql://localhost:5432/terragoedge", "postgres",
 //					"password");
