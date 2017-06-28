@@ -4,7 +4,6 @@ import java.io.File;
 import java.io.StringReader;
 import java.lang.reflect.Type;
 import java.sql.Connection;
-import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -34,7 +33,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.RestTemplate;
 
@@ -194,9 +192,10 @@ public class StreetLightService {
 	private static boolean isBaseParentNoteIdPresent(String parentNoteId){
 		PreparedStatement preparedStatement = null;
 		try{
-			connection = DriverManager.getConnection("jdbc:postgresql://localhost:5432/terragoedge", "postgres",
-					"password");
-			connection.setAutoCommit(false);
+			connection = StreetlightDaoConnection.getConnection();
+//			connection = DriverManager.getConnection("jdbc:postgresql://localhost:5432/terragoedge", "postgres",
+//					"password");
+//			connection.setAutoCommit(false);
 		preparedStatement = connection.prepareStatement("SELECT * from streetlightsync WHERE parentnoteid =" + parentNoteId);
 		ResultSet noteIdResponse = preparedStatement.executeQuery();
 		return noteIdResponse.next();
@@ -216,9 +215,10 @@ public class StreetLightService {
 	private static void insertParentNoteId(String parentNoteId){
 		PreparedStatement preparedStatement = null;
 		try{
-			connection = DriverManager.getConnection("jdbc:postgresql://localhost:5432/terragoedge", "postgres",
-					"password");
-			connection.setAutoCommit(false);
+			connection = StreetlightDaoConnection.getConnection();
+//			connection = DriverManager.getConnection("jdbc:postgresql://localhost:5432/terragoedge", "postgres",
+//					"password");
+//			connection.setAutoCommit(false);
 		preparedStatement = connection.prepareStatement("INSERT INTO streetlightsync (parentnoteid) VALUES (" + parentNoteId + ")");
 		preparedStatement.executeQuery();
 	}catch(Exception e){
@@ -236,10 +236,11 @@ public class StreetLightService {
 	private static void updateParentNoteId(String parentNoteId){
 		PreparedStatement preparedStatement = null;
 		try{
-			connection = DriverManager.getConnection("jdbc:postgresql://localhost:5432/terragoedge", "postgres",
-					"password");
-			connection.setAutoCommit(false);
-		preparedStatement = connection.prepareStatement("UPDATE streetlightsync SET processednoteid =" + parentNoteId + "WHERE parentnoteid = " + parentNoteId);
+			connection = StreetlightDaoConnection.getConnection();
+//			connection = DriverManager.getConnection("jdbc:postgresql://localhost:5432/terragoedge", "postgres",
+//					"password");
+//			connection.setAutoCommit(false);
+		preparedStatement = connection.prepareStatement("UPDATE streetlightsync SET streetlightsyncid =" + parentNoteId + "WHERE parentnoteid = " + parentNoteId);
 		preparedStatement.executeQuery();
 	}catch(Exception e){
 		e.printStackTrace();

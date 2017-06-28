@@ -2,7 +2,6 @@ package com.terragoedge.streetlight;
 
 import java.io.File;
 import java.sql.Connection;
-import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -16,7 +15,6 @@ import java.util.TimerTask;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import com.google.gson.JsonSyntaxException;
 
 public class StreetLightDao {
 	static Connection connection = null;
@@ -26,17 +24,18 @@ public class StreetLightDao {
 
 	public static void main(String[] args) throws SQLException, ClassNotFoundException {
 		resPath = new File("").getAbsolutePath();
+//		try {
+//			Class.forName("org.postgresql.Driver");
+//		} catch (ClassNotFoundException e) {
+//			e.printStackTrace();
+//			return;
+//		}
 		try {
-			Class.forName("org.postgresql.Driver");
-		} catch (ClassNotFoundException e) {
-			e.printStackTrace();
-			return;
-		}
-		try {
+			connection = StreetlightDaoConnection.getConnection();
 			slService = new StreetLightService(resPath + "/resources", resPath + "/resources");
-			connection = DriverManager.getConnection("jdbc:postgresql://localhost:5432/terragoedge", "postgres",
-					"password");
-			connection.setAutoCommit(false);
+//			connection = DriverManager.getConnection("jdbc:postgresql://localhost:5432/terragoedge", "postgres",
+//					"password");
+//			connection.setAutoCommit(false);
 			createStreetLightSyncTable();
 			queryStatement = connection.createStatement();
 			Timer timer = new Timer();
@@ -90,10 +89,12 @@ public class StreetLightDao {
 					slService.callBatchStatus();
 				}
 			}, 0, 10000);
-		} catch (SQLException e) {
+		} catch (Exception e) {
+			//catch (SQLException e) {
 			e.printStackTrace();
 			return;
 		} finally {
+			//StreetlightDaoConnection.closeConnection(connection);
 			// queryStatement.close();
 			// connection.close();
 		}
