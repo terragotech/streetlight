@@ -12,6 +12,8 @@ import java.util.Properties;
 import java.util.Timer;
 import java.util.TimerTask;
 
+import org.apache.log4j.Logger;
+
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
@@ -21,21 +23,15 @@ public class StreetLightDao {
 	static Statement queryStatement = null;
 	static StreetLightService slService = null;
 	static String resPath = null;
+	
+	static Logger logger = Logger.getLogger(StreetLightDao.class);
 
 	public static void main(String[] args) throws SQLException, ClassNotFoundException {
 		resPath = new File("").getAbsolutePath();
-//		try {
-//			Class.forName("org.postgresql.Driver");
-//		} catch (ClassNotFoundException e) {
-//			e.printStackTrace();
-//			return;
-//		}
 		try {
 			connection = StreetlightDaoConnection.getInstance().getConnection();
 			slService = new StreetLightService(resPath + "/resources", resPath + "/resources");
-//			connection = DriverManager.getConnection("jdbc:postgresql://localhost:5432/terragoedge", "postgres",
-//					"password");
-//			connection.setAutoCommit(false);
+
 			createStreetLightSyncTable();
 			queryStatement = connection.createStatement();
 			Timer timer = new Timer();
@@ -44,6 +40,7 @@ public class StreetLightDao {
 					ResultSet queryResponse = null;
 					ResultSet paramData = null;
 					try {
+						
 						slService.getDevices();
 						Properties properties = PropertiesReader.getProperties(resPath + "/resources");
 						String formtemplateguid = properties.getProperty("streetlight.formtemplateguid.create");
@@ -52,13 +49,13 @@ public class StreetLightDao {
 								.executeQuery("SELECT edgenoteentity_noteid FROM edgeform WHERE formtemplateguid = '"
 										+ formtemplateguid + "'");
 						
-						System.out.println(queryResponse);
 						ArrayList<String> noteIds = new ArrayList<String>();
 						while (queryResponse.next()) {
 							noteIds.add(queryResponse.getString("edgenoteentity_noteid"));
 						}
 						for (String noteid : noteIds) {
 							if(!isNotePresent(noteid)){
+								logger.info("Note id ["+noteid+" ] not yet processed." );
 								List<FormValue> forms = new ArrayList<FormValue>();
 								NoteValue noteValue = new NoteValue();
 								
@@ -68,10 +65,14 @@ public class StreetLightDao {
 								
 								getFormData(paramData, noteValue, forms);
 								paramData.close();
+								logger.info("Total No of forms present:"+forms.size());
 								if(forms.size() == 1){
 									loadBlockForm(forms, formtemplateguid,  noteValue);
+									logger.info("Total No of forms present (including base note):"+forms.size());
 								}
-								slService.sendFromData(forms, noteValue.getLatitude(), noteValue.getLongitude(), noteValue.getCreatedDate(),noteValue.getTitle());
+								slService.sendFromData(forms, noteValue.getLatitude(), noteValue.getLongitude(), noteValue.getCreatedDate(),noteValue.getTitle(),noteid);
+							}else{
+								logger.info("Note id is ["+noteid+" ] already processed." );
 							}
 						}
 
@@ -90,7 +91,6 @@ public class StreetLightDao {
 				}
 			}, 0, 10000);
 		} catch (Exception e) {
-			//catch (SQLException e) {
 			e.printStackTrace();
 			return;
 		} finally {
