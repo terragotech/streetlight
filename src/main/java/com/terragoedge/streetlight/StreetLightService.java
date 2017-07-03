@@ -157,34 +157,34 @@ public class StreetLightService {
 				if (slvDevice == null) {
 					String blocNameResponse = getChildrenGeoZone(blockName);
 					if (!isBaseParentNoteIdPresent(parentNoteId)) {
-						logger.info("Given NoteGuid "+parentNoteId+" is not present in db.");
+						logger.info("Given NoteGuid "+parentNoteId+"-"+title+" is not present in db.");
 						logger.info("Create Device Called.");
 						ResponseEntity<String> createresponseEntity = createDevice(idonController, blocNameResponse,
 								lat, lng, macAddress.trim());
 						
 						String status = createresponseEntity.getStatusCode().toString();
 						if (status.equalsIgnoreCase("ok")) {
-							logger.info("Device Created Successfully, NoteId:"+noteid);
+							logger.info("Device Created Successfully, NoteId:"+noteid+"-"+title);
 							insertParentNoteId(parentNoteId);
 						}else{
-							logger.info("Device  Not Created Successfully, NoteId:"+noteid);
+							logger.info("Device  Not Created Successfully, NoteId:"+noteid+"-"+title);
 						}
 					}else{
-						logger.info("Given NoteGuid "+parentNoteId+" is already present in db.");
+						logger.info("Given NoteGuid "+parentNoteId+"-"+title+" is already present in db.");
 					}
 					ResponseEntity<String> responseEntity = updateDeviceData(streetLightDatas, idonController);
 					if (responseEntity != null) {
 						String setDeviceResponse = setCommissionController(idonController);
 						if (responseEntity.getStatusCode().value() == 200) {
-							logger.info("Note Synced with StreetLight Server. NoteId:"+noteid);
+							logger.info("Note Synced with StreetLight Server. NoteId:"+noteid+"-"+title);
 							updateParentNoteId(parentNoteId, noteid);
 						}else{
-							logger.info("Note Not Synced with StreetLight Server. NoteId:"+noteid);
+							logger.info("Note Not Synced with StreetLight Server. NoteId:"+noteid+"-"+title);
 							logger.info("Response Code:"+responseEntity.getStatusCode().value());
 							logger.info("Response Body:"+responseEntity.getBody());
 						}
 					}else{
-						logger.info("Note Not Synced with StreetLight Server. NoteId:"+noteid);
+						logger.info("Note Not Synced with StreetLight Server. NoteId:"+noteid+"-"+title);
 					}
 
 				} else {
@@ -240,7 +240,7 @@ public class StreetLightService {
 			}
 			connection = StreetlightDaoConnection.getInstance().getConnection();
 			preparedStatement = connection.prepareStatement("INSERT INTO streetlightsync (streetlightsyncid , parentnoteid) VALUES ("+maxStreetLight+"," + parentNoteId + ")");
-			preparedStatement.executeQuery();
+			preparedStatement.execute();
 		} catch (Exception e) {
 			logger.error("Error in insertParentNoteId",e);
 		} finally {
@@ -287,8 +287,8 @@ public class StreetLightService {
 		try {
 			connection = StreetlightDaoConnection.getInstance().getConnection();
 			preparedStatement = connection.prepareStatement(
-					"UPDATE streetlightsync SET processednoteid =" + noteid + "WHERE parentnoteid = " + parentNoteId);
-			preparedStatement.executeQuery();
+					"UPDATE streetlightsync SET processednoteid = '" + noteid + "' WHERE parentnoteid = '" + parentNoteId+"' ;");
+			preparedStatement.execute();
 		} catch (Exception e) {
 			logger.error("Error in updateParentNoteId",e);
 		} finally {
