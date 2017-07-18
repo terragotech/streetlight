@@ -53,6 +53,7 @@ public class StreetLightDao {
 						while (queryResponse.next()) {
 							noteIds.add(queryResponse.getString("edgenoteentity_noteid"));
 						}
+						
 						for (String noteid : noteIds) {
 							if(!isNotePresent(noteid)){
 								logger.info("Note id ["+noteid+" ] not yet processed." );
@@ -128,6 +129,7 @@ public class StreetLightDao {
 		}
 	}
 	private static boolean isNotePresent(String noteId){
+		//return false;
 		PreparedStatement preparedStatement = null;
 		try{
 		preparedStatement = connection.prepareStatement("SELECT * from streetlightsync WHERE streetlightsyncid =" + noteId);

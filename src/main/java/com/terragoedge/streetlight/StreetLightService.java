@@ -60,6 +60,25 @@ public class StreetLightService {
 	String propertiesPath;
 	HashMap<String, SLVDevice> devices = new HashMap<String, SLVDevice>();
 	ArrayList<String> batchIdList = new ArrayList<>();
+	
+	static Map<String,Integer> luminareCore  =new HashMap<>();
+	
+	static{
+		luminareCore.put("L1",39);
+		luminareCore.put("L2",58);
+		luminareCore.put("L3",27);
+		luminareCore.put("L4",80);
+		luminareCore.put("L5",108);
+		luminareCore.put("L6",108);
+		luminareCore.put("L7",133);
+		luminareCore.put("L8",158);
+		luminareCore.put("L9",80);
+		luminareCore.put("L10",133);
+		luminareCore.put("L11",108);
+		luminareCore.put("L12",158);
+		luminareCore.put("L13",80);
+		
+	}
 
 	private static Logger logger = Logger.getLogger(StreetLightService.class);
 
@@ -84,7 +103,9 @@ public class StreetLightService {
 			String macAddress = null;
 			String comment = "";
 			String block = null;
-			int watt = 0;
+			int power2Watt  = 0;
+			String luminareCoreValueLog = null;
+			int lWatt = 0;
 			String parentNoteId = null;
 			for (FormValue fv : forms) {
 				String formData = fv.getFormdata();
@@ -107,6 +128,18 @@ public class StreetLightService {
 									return;
 								}
 							}
+							if(edgeFormData.getLabel().equals("New Luminare Code")){
+								luminareCoreValueLog = value;
+								if (value != null && !(value.trim().isEmpty()) && !(value.trim().equalsIgnoreCase("(null)"))){
+									String[] luminareCoreValues = value.split("-");
+									if(luminareCoreValues.length > 0){
+										String luminareCoreValue = luminareCoreValues[0].trim();
+										if(luminareCore.containsKey(luminareCoreValue)){
+											lWatt = luminareCore.get(luminareCoreValue);
+										}
+									}
+								}
+							}
 							StreetLightData streetLightData = new StreetLightData();
 							streetLightData.setKey(key);
 							streetLightData.setValue(value);
@@ -114,7 +147,12 @@ public class StreetLightService {
 								idonController = value;
 							}
 							if (key.equalsIgnoreCase("power2")) {
-								watt = Integer.parseInt(value);
+								if (value != null && !(value.trim().isEmpty()) && !(value.trim().equalsIgnoreCase("(null)"))) {
+									String temp = value.replaceAll("[^\\d.]", "");
+									temp = temp.trim();
+									power2Watt = Integer.parseInt(temp);
+								}
+								
 							}
 							if (key.equalsIgnoreCase("location.mapnumber")) {
 								block = value;
@@ -126,10 +164,12 @@ public class StreetLightService {
 								comment = comment + " " + edgeFormData.getLabel() + ":" + value;
 							} else {
 								if (key.equalsIgnoreCase("power")) {
-									if (!(value.trim().isEmpty()) && !(value.trim().equalsIgnoreCase("(null)"))) {
-										streetLightDatas.add(streetLightData);
-										watt = watt - Integer.parseInt(value.replaceAll("[^\\d.]", ""));
+									if (value != null && !(value.trim().isEmpty()) && !(value.trim().equalsIgnoreCase("(null)"))) {
+										String temp = value.replaceAll("[^\\d.]", "");
+										temp = temp.trim();
+										lWatt = Integer.parseInt(temp);
 									}
+									
 								} else {
 									streetLightDatas.add(streetLightData);
 								}
@@ -139,6 +179,13 @@ public class StreetLightService {
 				}
 			}
 			if (streetLightDatas.size() > 0) {
+				if(lWatt == 0){
+					addStreetLightData("power", "39 W", streetLightDatas);
+					lWatt = 39;
+				}else{
+					addStreetLightData("power", lWatt+" W", streetLightDatas);
+				}
+				int watt = power2Watt - lWatt;
 				addStreetLightData("powerCorrection", watt + "", streetLightDatas);
 				addStreetLightData("location.utillocationid", title + ".Lamp", streetLightDatas);
 				String nodeTypeStrId = properties.getProperty("streetlight.equipment.type");
@@ -189,11 +236,30 @@ public class StreetLightService {
 
 				} else {
 					logger.info("Mac Address is already present " + macAddress.trim());
+					/*logger.info("Mac Address is already present . Device Update Called" + macAddress.trim());
+					updateDeviceData(streetLightDatas, idonController, title, parentNoteId);*/
 				}
 			}
 
 		} catch (Exception e) {
 			logger.error("Error in sendFromData",e);
+		}
+	}
+	
+	private void updateDeviceData(List<StreetLightData> streetLightDatas,String idonController,String title,String noteid) throws Exception{
+		ResponseEntity<String> responseEntity = updateDeviceData(streetLightDatas, idonController);
+		if (responseEntity != null) {
+			String setDeviceResponse = setCommissionController(idonController);
+			if (responseEntity.getStatusCode().value() == 200) {
+				logger.info("Note Synced with StreetLight Server. NoteId:"+noteid+"-"+title);
+				//updateParentNoteId(parentNoteId, noteid);
+			}else{
+				logger.info("Note Not Synced with StreetLight Server. NoteId:"+noteid+"-"+title);
+				logger.info("Response Code:"+responseEntity.getStatusCode().value());
+				logger.info("Response Body:"+responseEntity.getBody());
+			}
+		}else{
+			logger.info("Note Not Synced with StreetLight Server. NoteId:"+noteid+"-"+title);
 		}
 	}
 
@@ -210,7 +276,7 @@ public class StreetLightService {
 		try {
 			connection = StreetlightDaoConnection.getInstance().getConnection();
 			preparedStatement = connection
-					.prepareStatement("SELECT * from streetlightsync WHERE parentnoteid =" + parentNoteId);
+					.prepareStatement("SELECT * from streetlightsync WHERE parentnoteid ='" + parentNoteId+"'");
 			ResultSet noteIdResponse = preparedStatement.executeQuery();
 			return noteIdResponse.next();
 		} catch (Exception e) {
@@ -314,7 +380,7 @@ public class StreetLightService {
 		paramData.add("ser=json");
 		String params = StringUtils.join(paramData, "&");
 		url = url + "?" + params;
-		ResponseEntity<String> responseEntity = getRequest(url);
+		ResponseEntity<String> responseEntity = getRequest(url,true);
 		String response = responseEntity.getBody();
 		JsonReader jsonReader = new JsonReader(new StringReader(response));
 		jsonReader.setLenient(true);
@@ -351,7 +417,7 @@ public class StreetLightService {
 		streetLightDataParams.put("nodeTypeStrId", nodeTypeStrId);
 		streetLightDataParams.put("lat", lat);
 		streetLightDataParams.put("lng", lng);
-		return getRequest(streetLightDataParams, url);
+		return getRequest(streetLightDataParams, url,true);
 
 	}
 
@@ -373,7 +439,7 @@ public class StreetLightService {
 			}
 			String params = StringUtils.join(paramsList, "&");
 			url = url + "?" + params;
-			ResponseEntity<String> response = getRequest(url);
+			ResponseEntity<String> response = getRequest(url,true);
 			return response;
 		}
 		return null;
@@ -436,9 +502,8 @@ public class StreetLightService {
 		streetLightDataParams.put("geoZoneId", zoneId);
 		streetLightDataParams.put("controllerStrId", controllerStrId);
 		streetLightDataParams.put("recurse", recurse);
-		ResponseEntity<String> responseEntity = getRequest(streetLightDataParams, url);
+		ResponseEntity<String> responseEntity = getRequest(streetLightDataParams, url,false);
 		String response = responseEntity.getBody();
-		logger.info("Response:"+response);
 		XMLMarshaller xmlMarshaller = new XMLMarshaller();
 		SLVDeviceArray slvDeviceArray = (SLVDeviceArray) xmlMarshaller.xmlToObject(response);
 		List<SLVDevice> slvDevices = slvDeviceArray.getSLVDevice();
@@ -485,7 +550,7 @@ public class StreetLightService {
 		ParamData.add("ser=" + json);
 		String params = StringUtils.join(ParamData, "&");
 		url = url + "?" + params;
-		return getRequest(url);
+		return getRequest(url,true);
 	}
 
 	private HttpHeaders getHeaders() {
@@ -500,7 +565,7 @@ public class StreetLightService {
 		return headers;
 	}
 
-	private <T> ResponseEntity<String> getRequest(Map<String, String> streetLightDataParams, String url) {
+	private <T> ResponseEntity<String> getRequest(Map<String, String> streetLightDataParams, String url,boolean isLog) {
 		Set<String> keys = streetLightDataParams.keySet();
 		List<String> values = new ArrayList<>();
 		for (String key : keys) {
@@ -511,10 +576,10 @@ public class StreetLightService {
 		String params = StringUtils.join(values, "&");
 		url = url + "?" + params;
 
-		return getRequest(url);
+		return getRequest(url,isLog);
 	}
 
-	private ResponseEntity<String> getRequest(String url) {
+	private ResponseEntity<String> getRequest(String url,boolean isLog) {
 		logger.info("------------ Request ------------------");
 		logger.info(url);
 		logger.info("------------ Request End ------------------");
@@ -525,7 +590,10 @@ public class StreetLightService {
 		logger.info("------------ Response ------------------");
 		logger.info("Response Code:" + response.getStatusCode().toString());
 		String responseBody = response.getBody();
-		logger.info(responseBody);
+		if(isLog){
+			logger.info(responseBody);
+		}
+		
 		logger.info("------------ Response End ------------------");
 		// return responseBody;
 		return response;
