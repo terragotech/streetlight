@@ -149,6 +149,29 @@ public class StreetLightDao {
 		return false;
 	}
 	
+	
+	private static boolean isFormTemplateAssigned(String formTemplateGuid,String parentNoteId){
+		//return false;
+		PreparedStatement preparedStatement = null;
+		try{
+		preparedStatement = connection.prepareStatement(
+				"SELECT ef.formtemplatedef,ef.formdef,ef.formtemplateguid, en.title, en.parentnoteid, en.noteid, en.geojson, en.createddatetime FROM edgeform ef, edgenote en WHERE ef.formtemplateguid = '" + formTemplateGuid +  "' and ef.edgenoteentity_noteid =  en.noteid and en.noteguid = '" + parentNoteId + "'");
+		ResultSet noteIdResponse = preparedStatement.executeQuery();
+		return noteIdResponse.next();
+	}catch(Exception e){
+		e.printStackTrace();
+	}finally{
+		if(preparedStatement != null){
+			try {
+				preparedStatement.close();
+			} catch (SQLException e) {
+				e.printStackTrace();
+			}
+		}
+	}
+		return false;
+	}
+	
 	private static void getFormData(ResultSet paramData,NoteValue noteValue,List<FormValue> forms) throws Exception, SQLException{
 		while (paramData.next()) {
 			String noteid = null;
@@ -195,7 +218,18 @@ public class StreetLightDao {
 			FormValue fv = forms.get(0);
 			if(fv.getFormTemplateGuid().equals(formtemplateguid)){
 				Properties properties = PropertiesReader.getProperties(resPath + "/resources");
-				String richFormTemplateGuid = properties.getProperty("streetlight.ef.formtemplateguid.update");
+				String blockFormTemplates = properties.getProperty("streetlight.ef.formtemplateguid.update");
+				String[] blockFormTemplatesList =  blockFormTemplates.split(",");
+				String richFormTemplateGuid = null;
+				for(String blockFormTemplate : blockFormTemplatesList){
+					boolean res = isFormTemplateAssigned(blockFormTemplate,fv.getParentnoteid());
+					if(res){
+						richFormTemplateGuid = blockFormTemplate;
+						logger.info("FormTemplate "+richFormTemplateGuid + " is Exists.");
+						break;
+					}
+				}
+				
 			    paramData = queryStatement.executeQuery(
 						"SELECT ef.formtemplatedef,ef.formdef,ef.formtemplateguid, en.title, en.parentnoteid, en.noteid, en.geojson, en.createddatetime FROM edgeform ef, edgenote en WHERE ef.formtemplateguid = '" + richFormTemplateGuid +  "' and ef.edgenoteentity_noteid =  en.noteid and en.noteguid = '" + fv.getParentnoteid() + "'");
 				
