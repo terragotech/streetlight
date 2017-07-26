@@ -109,7 +109,10 @@ public class StreetLightService {
 			String parentNoteId = null;
 			for (FormValue fv : forms) {
 				String formData = fv.getFormdata();
-				parentNoteId = fv.getParentnoteid();
+				if(parentNoteId == null){
+					parentNoteId = fv.getParentnoteid();
+				}
+				
 				List<EdgeFormData> edgeFormDataList = gson.fromJson(formData, listType);
 				if (edgeFormDataList != null) {
 					for (EdgeFormData edgeFormData : edgeFormDataList) {
@@ -145,6 +148,10 @@ public class StreetLightService {
 							streetLightData.setValue(value);
 							if (key.equalsIgnoreCase("idOnController")) {
 								idonController = value;
+								if (value.isEmpty() || value.equalsIgnoreCase("(null)")) {
+									logger.warn("Not Processed because idonController value is empty. NoteId:"+noteid+"-"+title);
+									return;
+								}
 							}
 							if (key.equalsIgnoreCase("power2")) {
 								if (value != null && !(value.trim().isEmpty()) && !(value.trim().equalsIgnoreCase("(null)"))) {
@@ -178,6 +185,7 @@ public class StreetLightService {
 					}
 				}
 			}
+			
 			if (streetLightDatas.size() > 0) {
 				if(lWatt == 0){
 					addStreetLightData("power", "39 W", streetLightDatas);
@@ -210,11 +218,14 @@ public class StreetLightService {
 								lat, lng, macAddress.trim());
 						
 						String status = createresponseEntity.getStatusCode().toString();
-						if (status.equalsIgnoreCase("ok")) {
+						String responseBody = createresponseEntity.getBody();
+						if ((status.equalsIgnoreCase("200") || status.equalsIgnoreCase("ok")) && !responseBody.contains("<status>ERROR</status>")) {
 							logger.info("Device Created Successfully, NoteId:"+noteid+"-"+title);
 							insertParentNoteId(parentNoteId);
 						}else{
 							logger.info("Device  Not Created Successfully, NoteId:"+noteid+"-"+title);
+							logger.info("Note Not Synced with StreetLight Server. NoteId:"+noteid+"-"+title);
+							return;
 						}
 					}else{
 						logger.info("Given NoteGuid "+parentNoteId+"-"+title+" is already present in db.");
@@ -236,8 +247,8 @@ public class StreetLightService {
 
 				} else {
 					logger.info("Mac Address is already present " + macAddress.trim());
-					/*logger.info("Mac Address is already present . Device Update Called" + macAddress.trim());
-					updateDeviceData(streetLightDatas, idonController, title, parentNoteId);*/
+					//logger.info("Mac Address is already present . Device Update Called" + macAddress.trim());
+					//updateDeviceData(streetLightDatas, idonController, title, parentNoteId);
 				}
 			}
 
@@ -305,7 +316,7 @@ public class StreetLightService {
 				maxStreetLight += 1;
 			}
 			connection = StreetlightDaoConnection.getInstance().getConnection();
-			preparedStatement = connection.prepareStatement("INSERT INTO streetlightsync (streetlightsyncid , parentnoteid) VALUES ("+maxStreetLight+"," + parentNoteId + ")");
+			preparedStatement = connection.prepareStatement("INSERT INTO streetlightsync (streetlightsyncid , parentnoteid) VALUES ("+maxStreetLight+",'" + parentNoteId + "')");
 			preparedStatement.execute();
 		} catch (Exception e) {
 			logger.error("Error in insertParentNoteId",e);

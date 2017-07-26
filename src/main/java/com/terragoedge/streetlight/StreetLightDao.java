@@ -48,11 +48,13 @@ public class StreetLightDao {
 						queryResponse = queryStatement
 								.executeQuery("SELECT edgenoteentity_noteid FROM edgeform WHERE formtemplateguid = '"
 										+ formtemplateguid + "'");
-						
-						ArrayList<String> noteIds = new ArrayList<String>();
+						List<String> noteIds = new ArrayList<>();
 						while (queryResponse.next()) {
 							noteIds.add(queryResponse.getString("edgenoteentity_noteid"));
 						}
+						
+						//String[] noteIdTemp = {"55773","56558","56563","55772"};
+						
 						
 						for (String noteid : noteIds) {
 							if(!isNotePresent(noteid)){
@@ -76,7 +78,7 @@ public class StreetLightDao {
 								logger.info("Note id is ["+noteid+" ] already processed." );
 							}
 						}
-
+						logger.info("----------Completed---------------");
 					} catch (Exception e) {
 						e.printStackTrace();
 					} finally {
