@@ -206,54 +206,59 @@ public class StreetLightService {
 
 				String blockSuffix = block;
 				String blockName = "Block " + blockSuffix;
-
-				SLVDevice slvDevice = devices.get(macAddress.trim().toLowerCase());
-
-				if (slvDevice == null) {
-					String blocNameResponse = getChildrenGeoZone(blockName);
-					if (!isBaseParentNoteIdPresent(parentNoteId)) {
-						logger.info("Given NoteGuid "+parentNoteId+"-"+title+" is not present in db.");
-						logger.info("Create Device Called.");
-						ResponseEntity<String> createresponseEntity = createDevice(idonController, blocNameResponse,
-								lat, lng, macAddress.trim());
-						
-						String status = createresponseEntity.getStatusCode().toString();
-						String responseBody = createresponseEntity.getBody();
-						if ((status.equalsIgnoreCase("200") || status.equalsIgnoreCase("ok")) && !responseBody.contains("<status>ERROR</status>")) {
-							logger.info("Device Created Successfully, NoteId:"+noteid+"-"+title);
-							insertParentNoteId(parentNoteId);
-						}else{
-							logger.info("Device  Not Created Successfully, NoteId:"+noteid+"-"+title);
-							logger.info("Note Not Synced with StreetLight Server. NoteId:"+noteid+"-"+title);
-							return;
-						}
-					}else{
-						logger.info("Given NoteGuid "+parentNoteId+"-"+title+" is already present in db.");
-					}
-					ResponseEntity<String> responseEntity = updateDeviceData(streetLightDatas, idonController);
-					if (responseEntity != null) {
-						String setDeviceResponse = setCommissionController(idonController);
-						if (responseEntity.getStatusCode().value() == 200) {
-							logger.info("Note Synced with StreetLight Server. NoteId:"+noteid+"-"+title);
-							updateParentNoteId(parentNoteId, noteid);
-						}else{
-							logger.info("Note Not Synced with StreetLight Server. NoteId:"+noteid+"-"+title);
-							logger.info("Response Code:"+responseEntity.getStatusCode().value());
-							logger.info("Response Body:"+responseEntity.getBody());
-						}
-					}else{
-						logger.info("Note Not Synced with StreetLight Server. NoteId:"+noteid+"-"+title);
-					}
-
-				} else {
-					logger.info("Mac Address is already present " + macAddress.trim());
-					//logger.info("Mac Address is already present . Device Update Called" + macAddress.trim());
-					//updateDeviceData(streetLightDatas, idonController, title, parentNoteId);
-				}
+				sendData(streetLightDatas, blockName, macAddress, title, idonController, parentNoteId, parentNoteId, lat, lng);
+				
 			}
 
 		} catch (Exception e) {
 			logger.error("Error in sendFromData",e);
+		}
+	}
+	
+	// edge revision note slv -> 
+	private void sendData(List<StreetLightData> streetLightDatas,String blockName,String macAddress,String title,String idonController,String parentNoteId,String noteid,String lat, String lng) throws Exception{
+		SLVDevice slvDevice = devices.get(macAddress.trim().toLowerCase());
+
+		if (slvDevice == null) {
+			String blocNameResponse = getChildrenGeoZone(blockName);
+			if (!isBaseParentNoteIdPresent(parentNoteId)) {
+				logger.info("Given NoteGuid "+parentNoteId+"-"+title+" is not present in db.");
+				logger.info("Create Device Called.");
+				ResponseEntity<String> createresponseEntity = createDevice(idonController, blocNameResponse,
+						lat, lng, macAddress.trim());
+				
+				String status = createresponseEntity.getStatusCode().toString();
+				String responseBody = createresponseEntity.getBody();
+				if ((status.equalsIgnoreCase("200") || status.equalsIgnoreCase("ok")) && !responseBody.contains("<status>ERROR</status>")) {
+					logger.info("Device Created Successfully, NoteId:"+noteid+"-"+title);
+					insertParentNoteId(parentNoteId);
+				}else{
+					logger.info("Device  Not Created Successfully, NoteId:"+noteid+"-"+title);
+					logger.info("Note Not Synced with StreetLight Server. NoteId:"+noteid+"-"+title);
+					return;
+				}
+			}else{
+				logger.info("Given NoteGuid "+parentNoteId+"-"+title+" is already present in db.");
+			}
+			ResponseEntity<String> responseEntity = updateDeviceData(streetLightDatas, idonController);
+			if (responseEntity != null) {
+				String setDeviceResponse = setCommissionController(idonController);
+				if (responseEntity.getStatusCode().value() == 200) {
+					logger.info("Note Synced with StreetLight Server. NoteId:"+noteid+"-"+title);
+					updateParentNoteId(parentNoteId, noteid);
+				}else{
+					logger.info("Note Not Synced with StreetLight Server. NoteId:"+noteid+"-"+title);
+					logger.info("Response Code:"+responseEntity.getStatusCode().value());
+					logger.info("Response Body:"+responseEntity.getBody());
+				}
+			}else{
+				logger.info("Note Not Synced with StreetLight Server. NoteId:"+noteid+"-"+title);
+			}
+
+		} else {
+			logger.info("Mac Address is already present " + macAddress.trim());
+			//logger.info("Mac Address is already present . Device Update Called" + macAddress.trim());
+			//updateDeviceData(streetLightDatas, idonController, title, parentNoteId);
 		}
 	}
 	

@@ -34,9 +34,8 @@ public class StreetLightDao {
 
 			createStreetLightSyncTable();
 			queryStatement = connection.createStatement();
-			Timer timer = new Timer();
-			timer.scheduleAtFixedRate(new TimerTask() {
-				public void run() {
+			while(true){
+				try{
 					ResultSet queryResponse = null;
 					ResultSet paramData = null;
 					try {
@@ -85,14 +84,14 @@ public class StreetLightDao {
 						closeResultSet(paramData);
 						closeResultSet(queryResponse);
 					}
+				
+				}catch(Exception e){
+					e.printStackTrace();
+				}finally{
+					Thread.sleep(3000);
 				}
-			}, 0, 30000);
-			Timer timer2 = new Timer();
-			timer2.scheduleAtFixedRate(new TimerTask() {
-				public void run() {
-					slService.callBatchStatus();
-				}
-			}, 0, 10000);
+			}
+			
 		} catch (Exception e) {
 			e.printStackTrace();
 			return;
