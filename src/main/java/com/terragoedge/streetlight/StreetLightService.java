@@ -120,7 +120,7 @@ public class StreetLightService {
 						if (streetLightKey != null && !streetLightKey.isJsonNull()) {
 							String key = streetLightKey.getAsString();
 							String value = edgeFormData.getValue();
-							if (edgeFormData.getLabel().equals("SELC QR Code") || edgeFormData.getLabel().equals("SL_Num") || edgeFormData.getLabel().equals("SL")) {
+							if (edgeFormData.getLabel().equals("SELC QR Code")) {
 								if (value == null) {
 									logger.warn("Not Processed because value is empty");
 									return;
@@ -206,7 +206,7 @@ public class StreetLightService {
 
 				String blockSuffix = block;
 				String blockName = "Block " + blockSuffix;
-				sendData(streetLightDatas, blockName, macAddress, title, idonController, parentNoteId, parentNoteId, lat, lng);
+				sendData(streetLightDatas, blockName, macAddress, title, idonController, parentNoteId, noteid, lat, lng);
 				
 			}
 
@@ -259,9 +259,9 @@ public class StreetLightService {
 			}*/
 
 		} else {
-			//logger.info("Mac Address is already present " + macAddress.trim());
-			logger.info("Mac Address is already present . Device Update Called" + macAddress.trim());
-			updateDeviceData(streetLightDatas, idonController, title, parentNoteId, noteid);
+			logger.info("Mac Address is already present " + macAddress.trim());
+			//logger.info("Mac Address is already present . Device Update Called" + macAddress.trim());
+			//updateDeviceData(streetLightDatas, idonController, title, parentNoteId, noteid);
 		}
 	}
 	
