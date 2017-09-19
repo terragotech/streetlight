@@ -267,7 +267,10 @@ public class StreetLightDao {
 				}
 				noteValue.setCreatedDate(createdDate);
 				noteValue.setTitle(title);
-				forms.add(fv);
+				if(!dbFormtemplateguid.equals("d93a1607-d227-459f-900f-7b508b619f10")){
+					forms.add(fv);
+				}
+				
 			}catch(Exception e){
 				System.out.println("Error in getFormData, noteId:"+noteid);
 				throw new Exception(e);
