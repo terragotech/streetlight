@@ -1,6 +1,7 @@
 package com.terragoedge.streetlight;
 
 import java.io.File;
+import java.lang.reflect.Type;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -14,9 +15,12 @@ import java.util.TimerTask;
 
 import org.apache.log4j.Logger;
 
+import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import com.google.gson.reflect.TypeToken;
+import com.terragoedge.edgeserver.EdgeFormData;
 
 public class StreetLightDao {
 	static Connection connection = null;
@@ -72,7 +76,14 @@ public class StreetLightDao {
 									loadBlockForm(forms, formtemplateguid,  noteValue);
 									logger.info("Total No of forms present (including base note):"+forms.size());
 								}
-								slService.sendFromData(forms, noteValue.getLatitude(), noteValue.getLongitude(), noteValue.getCreatedDate(),noteValue.getTitle(),noteid);
+								validateFormData(forms);
+								if(forms.size() > 1){
+									slService.sendFromData(forms, noteValue.getLatitude(), noteValue.getLongitude(), noteValue.getCreatedDate(),noteValue.getTitle(),noteid);
+								}else{
+									logger.info("Total No of forms present :"+forms.size());
+									logger.info("Note id is ["+noteid+" ] not processed." );
+								}
+								
 							}else{
 								logger.info("Note id is ["+noteid+" ] already processed." );
 							}
@@ -101,6 +112,58 @@ public class StreetLightDao {
 			// connection.close();
 		}
 	}
+	
+	
+	private static void validateFormData(List<FormValue> forms){
+		if (forms.size() > 2) {
+			Gson gson = new Gson();
+			List<Integer> position = new ArrayList<>();
+			int i = -1;
+			for (FormValue fv : forms) {
+				String formData = fv.getFormdata();
+				i += 1;
+				Type listType = new TypeToken<ArrayList<EdgeFormData>>() {
+				}.getType();
+
+				List<EdgeFormData> edgeFormDataList = gson.fromJson(formData, listType);
+				if (edgeFormDataList != null) {
+					for (EdgeFormData edgeFormData : edgeFormDataList) {
+						String value = edgeFormData.getValue();
+						if (edgeFormData.getLabel().equals("SELC QR Code")) {
+							logger.info("SELC QR Code val."+value);
+							if (value == null) {
+								logger.info("val is null.");
+								position.add(i);
+							} else {
+								value = value.trim();
+								if (value.isEmpty() || value.equalsIgnoreCase("(null)")) {
+									logger.info("val is empty.");
+									position.add(i);
+								}
+							}
+
+						}
+					}
+				}
+			}
+			
+			if(position.size() > 0){
+				for(int pos : position){
+					forms.remove(pos);
+					logger.info("Position "+pos);
+					try {
+						Thread.sleep(1000);
+					} catch (InterruptedException e) {
+						e.printStackTrace();
+					}
+					
+				}
+			}
+
+		}
+		
+	}
+	
 	private static void createStreetLightSyncTable(){
 		PreparedStatement preparedStatement = null;
 		try{

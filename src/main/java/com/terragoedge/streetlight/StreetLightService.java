@@ -235,7 +235,7 @@ public class StreetLightService {
 				}else{
 					logger.info("Device  Not Created Successfully, NoteId:"+noteid+"-"+title);
 					logger.info("Note Not Synced with StreetLight Server. NoteId:"+noteid+"-"+title);
-					return;
+					//return;
 				}
 			}else{
 				logger.info("Given NoteGuid "+parentNoteId+"-"+title+" is already present in db.");
@@ -260,8 +260,14 @@ public class StreetLightService {
 
 		} else {
 			logger.info("Mac Address is already present " + macAddress.trim());
-			//logger.info("Mac Address is already present . Device Update Called" + macAddress.trim());
-			//updateDeviceData(streetLightDatas, idonController, title, parentNoteId, noteid);
+			/*logger.info("Mac Address is already present . Device Update Called" + macAddress.trim());
+			StringBuffer sb = new StringBuffer();
+			sb.append("idonController:"+idonController);
+			sb.append("title:"+idonController);
+			sb.append("parentNoteId:"+idonController);
+			sb.append("noteid:"+noteid);
+			logger.info("Data :"+sb.toString());
+			updateDeviceData(streetLightDatas, idonController, title, parentNoteId, noteid);*/
 		}
 	}
 	
