@@ -1,6 +1,9 @@
 package com.terragoedge.streetlight;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
 import java.io.StringReader;
 import java.lang.reflect.Type;
 import java.sql.Connection;
@@ -62,6 +65,7 @@ public class StreetLightService {
 	ArrayList<String> batchIdList = new ArrayList<>();
 	
 	static Map<String,Integer> luminareCore  =new HashMap<>();
+	Map<String,String> dimmingValue  =new HashMap<>();
 	
 	static{
 		luminareCore.put("L1",39);
@@ -88,6 +92,7 @@ public class StreetLightService {
 		jsonParser = new JsonParser();
 		gson = new Gson();
 		properties = PropertiesReader.getProperties(propertiesPath);
+		loadDimmingValue();
 	}
 
 	public void sendFromData(List<FormValue> forms, String latitude, String longitude, String createdTime, String title,
@@ -200,6 +205,8 @@ public class StreetLightService {
 				addStreetLightData("modelFunctionId", nodeTypeStrId, streetLightDatas);
 
 				addStreetLightData("comment", comment, streetLightDatas);
+				
+			
 
 				String streetLightDate = dateFormat(createdTime);
 				addStreetLightData("lamp.installdate", streetLightDate, streetLightDatas);
@@ -237,6 +244,10 @@ public class StreetLightService {
 					logger.info("Note Not Synced with StreetLight Server. NoteId:"+noteid+"-"+title);
 					//return;
 				}
+				
+				String dimmingGroupName = dimmingValue.get(idonController);
+				addStreetLightData("DimmingGroupName", dimmingGroupName, streetLightDatas);
+				
 			}else{
 				logger.info("Given NoteGuid "+parentNoteId+"-"+title+" is already present in db.");
 			}
@@ -688,5 +699,28 @@ public class StreetLightService {
 		} catch (MessagingException me) {
 			me.printStackTrace();
 		}
+	}
+	
+	private void loadDimmingValue() {
+		BufferedReader csvFile = null;
+		try {
+			csvFile = new BufferedReader(new FileReader("./Dimming Schedules.csv"));
+			String currentLine;
+			while ((currentLine = csvFile.readLine()) != null) {
+				String[] stringArray = currentLine.split(",");
+				dimmingValue.put(stringArray[0], stringArray[1]);
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		} finally {
+			if (csvFile != null) {
+				try {
+					csvFile.close();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			}
+		}
+
 	}
 }
