@@ -704,7 +704,7 @@ public class StreetLightService {
 	private void loadDimmingValue() {
 		BufferedReader csvFile = null;
 		try {
-			csvFile = new BufferedReader(new FileReader("./Dimming Schedules.csv"));
+			csvFile = new BufferedReader(new FileReader(properties.getProperty("dimming.group.csv")));
 			String currentLine;
 			while ((currentLine = csvFile.readLine()) != null) {
 				String[] stringArray = currentLine.split(",");
