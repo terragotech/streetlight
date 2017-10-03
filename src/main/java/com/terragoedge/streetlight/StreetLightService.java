@@ -183,7 +183,10 @@ public class StreetLightService {
 									}
 									
 								} else {
-									streetLightDatas.add(streetLightData);
+									if(!key.equalsIgnoreCase("MacAddress")){
+										streetLightDatas.add(streetLightData);
+									}
+									
 								}
 							}
 						}
@@ -232,7 +235,7 @@ public class StreetLightService {
 				logger.info("Given NoteGuid "+parentNoteId+"-"+title+" is not present in db.");
 				logger.info("Create Device Called.");
 				ResponseEntity<String> createresponseEntity = createDevice(idonController, blocNameResponse,
-						lat, lng, macAddress.trim());
+						lat, lng);
 				
 				String status = createresponseEntity.getStatusCode().toString();
 				String responseBody = createresponseEntity.getBody();
@@ -435,8 +438,7 @@ public class StreetLightService {
 		return null;
 	}
 
-	public ResponseEntity<String> createDevice(String idonController, String zoneId, String lat, String lng,
-			String macAddress) {
+	public ResponseEntity<String> createDevice(String idonController, String zoneId, String lat, String lng) {
 		String mainUrl = properties.getProperty("streetlight.url.main");
 		String serveletApiUrl = properties.getProperty("streetlight.url.device.create");
 		String url = mainUrl + serveletApiUrl;
@@ -449,7 +451,7 @@ public class StreetLightService {
 		streetLightDataParams.put("categoryStrId", categoryStrId);
 		streetLightDataParams.put("controllerStrId", controllerStrId);
 		streetLightDataParams.put("idOnController", idonController);
-		streetLightDataParams.put("geoZoneId", zoneId);
+		streetLightDataParams.put("geoZoneId", "738");
 		streetLightDataParams.put("nodeTypeStrId", nodeTypeStrId);
 		streetLightDataParams.put("lat", lat);
 		streetLightDataParams.put("lng", lng);
@@ -477,6 +479,34 @@ public class StreetLightService {
 			url = url + "?" + params;
 			ResponseEntity<String> response = getRequest(url,true);
 			return response;
+		}
+		return null;
+	}
+	
+	// Ameresco 
+	
+	private String replaceOLCs(String controllerStrId,String idOnController,String macAddress){
+		try{
+			String mainUrl = properties.getProperty("streetlight.url.main");
+			String replaceOLCs = properties.getProperty("streetlight.url.replaceOLCs");
+			String json = properties.getProperty("streetlight.url.controller.ser");
+			String url = mainUrl + replaceOLCs;
+			List<Object> paramData = new ArrayList<Object>();
+			paramData.add("controllerStrId=" + controllerStrId);
+			paramData.add("idOnController=" + idOnController);
+			paramData.add("&newNetworkId=" + macAddress);
+			paramData.add("ser=" + json);
+			String params = StringUtils.join(paramData, "&");
+			url = url + "?" + params;
+			ResponseEntity<String> replaceOLCResponse = getPostRequest(url);
+			String response = replaceOLCResponse.getBody();
+			JsonObject responseJson = (JsonObject) jsonParser.parse(response);
+			int errorCode = responseJson.get("errorCode").getAsInt();
+			if(errorCode != 0){
+				
+			}
+		}catch(Exception e){
+			logger.error("Error in replaceOLCs",e);
 		}
 		return null;
 	}
