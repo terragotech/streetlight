@@ -5,10 +5,9 @@ import java.util.Properties;
 
 public class PropertiesReader {
 	static Properties mainProperties = null;
-	String path = null;
 
-	private PropertiesReader(String path) {
-		this.path = path;
+	private PropertiesReader() {
+		
 	}
 
 	private void init() {
@@ -17,8 +16,12 @@ public class PropertiesReader {
 			mainProperties = new Properties();
 			FileInputStream file;
 			
+			
+			 // String path = "./src/main/resource/main.properties";
+		    String path = "./resources/main.properties";
+		    
 			// load the file handle for main.properties
-			file = new FileInputStream(path+"/main.properties");
+			file = new FileInputStream(path);
 
 			// load all the properties from this file
 			mainProperties.load(file);
@@ -32,9 +35,9 @@ public class PropertiesReader {
 
 	}
 
-	public static Properties getProperties(String path) {
+	public static Properties getProperties() {
 		if (mainProperties == null) {
-			PropertiesReader propertiesReader = new PropertiesReader(path);
+			PropertiesReader propertiesReader = new PropertiesReader();
 			propertiesReader.init();
 		}
 		return mainProperties;
