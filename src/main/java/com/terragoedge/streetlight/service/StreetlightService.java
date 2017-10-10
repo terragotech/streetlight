@@ -133,7 +133,7 @@ public class StreetlightService {
 								if (isQRCodePresent) {
 									List<EdgeNoteDetails> edgeNoteDetailsList = new ArrayList<>(formDetailsHolder.values());
 									// Sync data with slv
-									sendFromData(edgeNoteDetailsList, edgeNoteDetails);
+									sendFromData(edgeNoteDetailsList, edgeNoteDetails,replaceNoteValue);
 									
 								} else {
 									logger.warn("Richmond QR Code is empty.Note Id:"+edgeNoteDetails.getNoteId()+" , Note Title:"+edgeNoteDetails.getTitle());
@@ -296,7 +296,8 @@ public class StreetlightService {
 		SLVDeviceArray slvDeviceArray = (SLVDeviceArray) xmlMarshaller.xmlToObject(response);
 		List<SLVDevice> slvDevices = slvDeviceArray.getSLVDevice();
 		for (SLVDevice slvDev : slvDevices) {
-			com.terragoedge.xml.devices.Properties property = slvDev.getProperties();
+			devices.put(slvDev.getIdOnController().trim(), slvDev);
+			/*com.terragoedge.xml.devices.Properties property = slvDev.getProperties();
 			List<SLVKeyValuePair> slvKeyValueList = property.getSLVKeyValuePair();
 			for (SLVKeyValuePair slvKey : slvKeyValueList) {
 				String key = slvKey.getKey().trim().toLowerCase();
@@ -304,7 +305,7 @@ public class StreetlightService {
 				if (key.equalsIgnoreCase("userproperty.macaddress")) {
 					devices.put(value.getContent().trim().toLowerCase(), slvDev);
 				}
-			}
+			}*/
 		}
 
 		return -1;
@@ -421,7 +422,7 @@ public class StreetlightService {
 	 * @param edgeNoteDetail
 	 * @throws Exception
 	 */
-	public void sendFromData(List<EdgeNoteDetails> edgeNoteDetailsList,EdgeNoteDetails edgeNoteDetail) throws Exception {
+	public void sendFromData(List<EdgeNoteDetails> edgeNoteDetailsList,EdgeNoteDetails edgeNoteDetail,String replaceNoteValue) throws Exception {
 		try {
 
 			Type listType = new TypeToken<ArrayList<EdgeFormData>>() {
@@ -529,7 +530,7 @@ public class StreetlightService {
 
 				String streetLightDate = dateFormat(edgeNoteDetail.getCreatedDateTime());
 				addStreetLightData("lamp.installdate", streetLightDate, slvSyncDataEntity.getStreetLightDatas());
-
+				slvSyncDataEntity.setReplaceNodeQRVal(replaceNoteValue);
 				sync2SLV(slvSyncDataEntity,edgeNoteDetail);
 			}
 
@@ -545,10 +546,12 @@ public class StreetlightService {
 			// call Update Device
 			updateSLVData(slvSyncDataEntity,edgeNoteDetail);
 			// ReplaceOLC
-			replaceOLC(slvSyncDataEntity);
+			replaceOLC(slvSyncDataEntity,edgeNoteDetail);
 		} catch (DeviceCreationFailedException dec) {
+			logger.info("Error in DeviceCreationFailedException",dec);
 			// Need to send mail
 		} catch (DeviceUpdationFailedException e) {
+			logger.info("Error in DeviceCreationFailedException",e);
 			// Need to send mail
 		} catch (ReplaceOLCFailedException e) {
 			edgeMailService.sendMailReplaceOLCsErrorCode(slvSyncDataEntity.getIdOnController(), e.getMessage());
@@ -559,9 +562,10 @@ public class StreetlightService {
 
 	public void createDeviceInSlv(SlvSyncDataEntity slvSyncDataEntity,EdgeNoteDetails edgeNoteDetails)
 			throws DeviceCreationFailedException, DeviceNotFoundException {
-		SLVDevice slvDevice = devices.get(slvSyncDataEntity.getMacAddress().trim().toLowerCase());
+		SLVDevice slvDevice = devices.get(slvSyncDataEntity.getIdOnController().trim());
 		// Need to create device in SLV
 		if (slvDevice == null) {
+			logger.info("ControllerId Present is not present in SLV.Device creation called.");
 			// Check if replace node val is present and QR Code val is present.
 			// Then throws devicenotfoundexception
 			if (slvSyncDataEntity.getReplaceNodeQRVal() != null && !slvSyncDataEntity.getReplaceNodeQRVal().trim()
@@ -585,7 +589,7 @@ public class StreetlightService {
 						streetlightDao.insertParentNoteId(slvSyncDataEntity.getParentNoteId());
 
 						SLVDevice slvDeviceTemp = new SLVDevice();
-						devices.put(slvSyncDataEntity.getMacAddress().trim().toLowerCase(), slvDeviceTemp);
+						devices.put(slvSyncDataEntity.getIdOnController().trim(), slvDeviceTemp);
 					} else {
 						throw new DeviceCreationFailedException(edgeNoteDetails.getNoteId() + "-" + slvSyncDataEntity.getIdOnController());
 					}
@@ -635,7 +639,7 @@ public class StreetlightService {
 			if (errorCode != 0) {
 				throw new DeviceUpdationFailedException(errorCode + "");
 			}
-			streetlightDao.updateParentNoteId(slvSyncDataEntity.getParentNoteId(), edgeNoteDetails.getNoteId());
+			
 		}
 
 	}
@@ -646,7 +650,7 @@ public class StreetlightService {
 	 * @param slvSyncDataEntity
 	 * @throws ReplaceOLCFailedException
 	 */
-	public void replaceOLC(SlvSyncDataEntity slvSyncDataEntity) throws ReplaceOLCFailedException {
+	public void replaceOLC(SlvSyncDataEntity slvSyncDataEntity,EdgeNoteDetails edgeNoteDetails) throws ReplaceOLCFailedException {
 		try{
 			String newNetworkId = slvSyncDataEntity.getMacAddress();
 			// Get Mac address from replacenode form
@@ -655,8 +659,8 @@ public class StreetlightService {
 			}
 			// Get Url detail from properties
 			String mainUrl = properties.getProperty("streetlight.url.main");
-			String dataUrl = properties.getProperty("streetlight.data.url");
-			String replaceOlc = properties.getProperty("streetlight.url.replaceolc");
+			String dataUrl = properties.getProperty("streetlight.url.replaceolc");
+			String replaceOlc = properties.getProperty("streetlight.url.replaceolc.method");
 			String url = mainUrl + dataUrl;
 			String controllerStrId = properties.getProperty("streetlight.controllerstr.id");
 			List<Object> paramsList = new ArrayList<Object>();
@@ -670,11 +674,14 @@ public class StreetlightService {
 			ResponseEntity<String> response = restService.getPostRequest(url);
 			String responseString = response.getBody();
 			JsonObject replaceOlcResponse = (JsonObject) jsonParser.parse(responseString);
-			int errorCode = replaceOlcResponse.get("errorCode").getAsInt();
+			String errorStatus = replaceOlcResponse.get("status").getAsString();
 			// As per doc, errorcode is 0 for success. Otherwise, its not success.
-			if (errorCode != 0) {
-				throw new ReplaceOLCFailedException(errorCode + "");
+			if (errorStatus.equals("ERROR")) {
+				String value = replaceOlcResponse.get("value").getAsString();
+				throw new ReplaceOLCFailedException(value);
 			}
+			
+			streetlightDao.updateParentNoteId(slvSyncDataEntity.getParentNoteId(), edgeNoteDetails.getNoteId());
 		}catch(Exception e){
 			logger.error("Error in replaceOLC", e);
 			throw new ReplaceOLCFailedException(e.getMessage());

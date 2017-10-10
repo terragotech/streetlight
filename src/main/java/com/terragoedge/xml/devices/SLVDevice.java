@@ -89,7 +89,7 @@ public class SLVDevice {
     @XmlElement(required = true)
     protected String controllerStrId;
     @XmlElement(required = true)
-    protected BigInteger idOnController;
+    protected String idOnController;
     @XmlElement(required = true)
     @XmlJavaTypeAdapter(CollapsedStringAdapter.class)
     @XmlSchemaType(name = "NCName")
@@ -220,7 +220,7 @@ public class SLVDevice {
      *     {@link BigInteger }
      *     
      */
-    public BigInteger getIdOnController() {
+    public String getIdOnController() {
         return idOnController;
     }
 
@@ -232,7 +232,7 @@ public class SLVDevice {
      *     {@link BigInteger }
      *     
      */
-    public void setIdOnController(BigInteger value) {
+    public void setIdOnController(String value) {
         this.idOnController = value;
     }
 
