@@ -88,6 +88,12 @@ public class EdgeMailService {
 				"The service call to replaceOLCs rest service failed. This is the corresponding error code ("
 						+ errorCode + ") and pole number (" + slNumber + ")");
 	}
+	
+	
+	public void sendMailMacAddressAlreadyUsed(final String macAddress, final String slNumbers) {
+		startMailThread("MacAddress - Already in use",
+				"The MacAddress ("+macAddress+") is already used by following SLNumbers \n "+slNumbers);
+	}
 
 	public void sendMailDeviceNotFound(final String slNumber, final String replaceNodeQrCode,final String richmondQrCode) {
 		startMailThread("Device Not Found",
