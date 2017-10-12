@@ -39,6 +39,7 @@ import com.terragoedge.streetlight.exception.DeviceCreationFailedException;
 import com.terragoedge.streetlight.exception.DeviceNotFoundException;
 import com.terragoedge.streetlight.exception.DeviceUpdationFailedException;
 import com.terragoedge.streetlight.exception.InValidSLNumberException;
+import com.terragoedge.streetlight.exception.QRCodeAlreadyUsedException;
 import com.terragoedge.streetlight.exception.ReplaceOLCFailedException;
 import com.terragoedge.xml.devices.SLVDevice;
 import com.terragoedge.xml.devices.SLVDeviceArray;
@@ -50,6 +51,8 @@ public class StreetlightService {
 
 	StreetlightDao streetlightDao = null;
 	HashMap<String, SLVDevice> devices = new HashMap<String, SLVDevice>();
+	
+	HashMap<String, List<String>> macAddress = new HashMap<String, List<String>>();
 	Properties properties = null;
 	RestService restService = null;
 	Gson gson = null;
@@ -154,7 +157,7 @@ public class StreetlightService {
 				} catch (InValidSLNumberException e) {
 					logger.warn("InValid SL Number.Note is not processed. SLNumber:"+e.getMessage());
 					edgeMailService.sendMailInValidSLNumber(e.getMessage());
-					//streetlightDao.insertProcessedNoteId(Integer.valueOf(noteId));
+					streetlightDao.insertProcessedNoteId(Integer.valueOf(noteId));
 				} catch (Exception e) {
 					logger.error("Error processing NoteId:"+noteId, e);
 				}
@@ -276,6 +279,7 @@ public class StreetlightService {
 	public int getDevices() {
 		// Clear Previous device
 		devices.clear();
+		macAddress.clear();
 		// Get Url details from Properties
 		String mainUrl = properties.getProperty("streetlight.url.main");
 		String deviceUrl = properties.getProperty("streetlight.url.getdevice");
@@ -297,15 +301,16 @@ public class StreetlightService {
 		List<SLVDevice> slvDevices = slvDeviceArray.getSLVDevice();
 		for (SLVDevice slvDev : slvDevices) {
 			devices.put(slvDev.getIdOnController().trim(), slvDev);
-			/*com.terragoedge.xml.devices.Properties property = slvDev.getProperties();
+			com.terragoedge.xml.devices.Properties property = slvDev.getProperties();
 			List<SLVKeyValuePair> slvKeyValueList = property.getSLVKeyValuePair();
 			for (SLVKeyValuePair slvKey : slvKeyValueList) {
 				String key = slvKey.getKey().trim().toLowerCase();
-				Value value = slvKey.getValue(); // userproperty.MacAddress
 				if (key.equalsIgnoreCase("userproperty.macaddress")) {
-					devices.put(value.getContent().trim().toLowerCase(), slvDev);
+					Value value = slvKey.getValue(); // userproperty.MacAddress
+					addMacAddress(value.getContent().trim(), slvDev.getIdOnController().trim());
+					break;
 				}
-			}*/
+			}
 		}
 
 		return -1;
@@ -472,6 +477,7 @@ public class StreetlightService {
 									 logger.warn("Not Processed because idonController value is empty. NoteId:"+edgeNoteDetails.getNoteId()+"-"+edgeNoteDetails.getTitle());
 									return;
 								}
+								
 								slvSyncDataEntity.setIdOnController(value);
 							}
 							if (key.equalsIgnoreCase("power2")) {
@@ -538,14 +544,36 @@ public class StreetlightService {
 			 logger.error("Error in sendFromData",e);
 		}
 	}
+	
+	private void validateMacAddress(String qrCode,String idOnControllers) throws QRCodeAlreadyUsedException{
+		List<String> idOnControllersList =	macAddress.get(qrCode.trim());
+		if(idOnControllersList != null && !idOnControllersList.contains(idOnControllers.trim())){
+			// Need to throw
+			String slNums = StringUtils.join(idOnControllersList, "\n");
+			throw new QRCodeAlreadyUsedException(slNums);
+		}
+	}
 
 	private void sync2SLV(SlvSyncDataEntity slvSyncDataEntity,EdgeNoteDetails edgeNoteDetail) {
+		String newNetworkId =  null;
 		try {
+			
 			// Call Create Device
 			createDeviceInSlv(slvSyncDataEntity,edgeNoteDetail);
 			// call Update Device
 			updateSLVData(slvSyncDataEntity,edgeNoteDetail);
 			// ReplaceOLC
+			
+			 newNetworkId = slvSyncDataEntity.getMacAddress();
+			// Get Mac address from replacenode form
+			if (slvSyncDataEntity.getReplaceNodeQRVal() != null) {
+				newNetworkId = slvSyncDataEntity.getReplaceNodeQRVal();
+			}
+			//Validate Mac address is already used any pole or not
+			validateMacAddress(newNetworkId.trim(), slvSyncDataEntity.getIdOnController());
+			System.out.println(macAddress.keySet());
+			System.out.println(macAddress.values());
+			System.out.println(newNetworkId.trim()+":"+slvSyncDataEntity.getIdOnController());
 			replaceOLC(slvSyncDataEntity,edgeNoteDetail);
 		} catch (DeviceCreationFailedException dec) {
 			logger.info("Error in DeviceCreationFailedException",dec);
@@ -555,8 +583,12 @@ public class StreetlightService {
 			// Need to send mail
 		} catch (ReplaceOLCFailedException e) {
 			edgeMailService.sendMailReplaceOLCsErrorCode(slvSyncDataEntity.getIdOnController(), e.getMessage());
+			streetlightDao.updateParentNoteId(slvSyncDataEntity.getParentNoteId(), edgeNoteDetail.getNoteId());
 		} catch (DeviceNotFoundException e) {
 			edgeMailService.sendMailDeviceNotFound(slvSyncDataEntity.getIdOnController(), slvSyncDataEntity.getReplaceNodeQRVal(), slvSyncDataEntity.getMacAddress());
+		} catch (QRCodeAlreadyUsedException e) {
+			edgeMailService.sendMailMacAddressAlreadyUsed(newNetworkId, e.getMessage());
+			streetlightDao.updateParentNoteId(slvSyncDataEntity.getParentNoteId(), edgeNoteDetail.getNoteId());
 		}
 	}
 
@@ -657,6 +689,7 @@ public class StreetlightService {
 			if (slvSyncDataEntity.getReplaceNodeQRVal() != null) {
 				newNetworkId = slvSyncDataEntity.getReplaceNodeQRVal();
 			}
+			
 			// Get Url detail from properties
 			String mainUrl = properties.getProperty("streetlight.url.main");
 			String dataUrl = properties.getProperty("streetlight.url.replaceolc");
@@ -682,10 +715,23 @@ public class StreetlightService {
 			}
 			
 			streetlightDao.updateParentNoteId(slvSyncDataEntity.getParentNoteId(), edgeNoteDetails.getNoteId());
+			addMacAddress(newNetworkId, slvSyncDataEntity.getIdOnController());
 		}catch(Exception e){
 			logger.error("Error in replaceOLC", e);
 			throw new ReplaceOLCFailedException(e.getMessage());
 		}
+		
+	}
+	
+	
+	private void addMacAddress(String qrCode,String slNumber){
+		logger.info("QRCode Added: "+macAddress.size());
+		List<String> idOnControllers = macAddress.get(qrCode.trim().toLowerCase());
+		if(idOnControllers == null){
+			idOnControllers = new ArrayList<>();
+			macAddress.put(qrCode.trim().toLowerCase(), idOnControllers);
+		}
+		idOnControllers.add(slNumber);
 		
 	}
 
