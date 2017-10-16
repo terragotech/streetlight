@@ -64,8 +64,8 @@ public class StreetlightDao extends UtilDao {
 		try {
 			queryStatement = connection.createStatement();
 			queryResponse = queryStatement.executeQuery(
-					"SELECT edgenoteentity_noteid FROM edgeform WHERE formtemplateguid = '" + formTemplateGuid + "'");
-
+					"SELECT ef.edgenoteentity_noteid FROM edgeform ef, edgenote en  WHERE en.iscurrent = true and en.isdeleted = false and  en.noteid =  ef.edgenoteentity_noteid and ef.formtemplateguid = '" + formTemplateGuid + "'");
+			
 			while (queryResponse.next()) {
 				noteIds.add(queryResponse.getString("edgenoteentity_noteid"));
 			}
@@ -128,7 +128,7 @@ public class StreetlightDao extends UtilDao {
 		try {
 			queryStatement = connection.createStatement();
 			queryResponse = queryStatement.executeQuery(
-					"SELECT ef.formtemplatedef,ef.formdef,ef.formtemplateguid, en.title, en.noteid, en.parentnoteid, en.geojson, en.createddatetime FROM edgeform ef, edgenote en WHERE ef.edgenoteentity_noteid ="
+					"SELECT ef.formtemplatedef,ef.formdef,ef.formtemplateguid, en.title, en.noteid, en.parentnoteid, en.geojson, en.createddatetime,en.revisionfromnoteid FROM edgeform ef, edgenote en WHERE ef.edgenoteentity_noteid ="
 							+ noteId + "  and en.noteid = " + noteId
 							+ " and en.iscurrent = true and en.isdeleted = false ");
 
@@ -152,6 +152,36 @@ public class StreetlightDao extends UtilDao {
 
 	}
 	
+	/**
+	 * Get Formdef for given templateGuid and noteguid
+	 * @param richFormTemplateGuid - String
+	 * @param noteGuid - String
+	 * @return fromDefs - List<String>
+	 */
+	public List<String> getFormDef(String richFormTemplateGuid,String noteGuid){
+		Statement queryStatement = null;
+		ResultSet queryResponse = null;
+		List<String> fromDefs = new ArrayList<>();
+		try{
+			queryStatement = connection.createStatement();
+			queryResponse = queryStatement.executeQuery(
+					"SELECT ef.formdef FROM edgeform ef, edgenote en WHERE ef.formtemplateguid = '"
+							+ richFormTemplateGuid + "' and ef.edgenoteentity_noteid =  en.noteid and en.noteguid = '"
+							+ noteGuid + "'");
+			
+			while (queryResponse.next()) {
+				fromDefs.add(queryResponse.getString("formdef"));
+			}
+			
+		}catch(Exception e){
+			logger.error("Error in getFormDefs", e);
+		}finally{
+			closeResultSet(queryResponse);
+			closeStatement(queryStatement);
+		}
+		return fromDefs;
+	}
+	
 	
 	public void getFormData(String richFormTemplateGuid,String parentNoteId,Map<String, EdgeNoteDetails> formDetailsHolder) {
 		Statement queryStatement = null;
@@ -159,7 +189,7 @@ public class StreetlightDao extends UtilDao {
 		try {
 			queryStatement = connection.createStatement();
 			queryResponse = queryStatement.executeQuery(
-					"SELECT ef.formtemplatedef,ef.formdef,ef.formtemplateguid, en.title, en.parentnoteid, en.noteid, en.geojson, en.createddatetime FROM edgeform ef, edgenote en WHERE ef.formtemplateguid = '" + richFormTemplateGuid +  "' and ef.edgenoteentity_noteid =  en.noteid and en.noteguid = '" + parentNoteId + "'");
+					"SELECT ef.formtemplatedef,ef.formdef,ef.formtemplateguid, en.title, en.parentnoteid,en.revisionfromnoteid, en.noteid, en.geojson, en.createddatetime FROM edgeform ef, edgenote en WHERE ef.formtemplateguid = '" + richFormTemplateGuid +  "' and ef.edgenoteentity_noteid =  en.noteid and en.noteguid = '" + parentNoteId + "'");
 
 			while (queryResponse.next()) {
 				EdgeNoteDetails edgeNoteDetails = new EdgeNoteDetails();
@@ -218,6 +248,7 @@ public class StreetlightDao extends UtilDao {
 		edgeNoteDetails.setParentNoteId(queryResponse.getString("parentnoteid"));
 		edgeNoteDetails.setGeoJson(queryResponse.getString("geojson"));
 		edgeNoteDetails.setCreatedDateTime(queryResponse.getString("createddatetime"));
+		edgeNoteDetails.setRevisionFromNoteId(queryResponse.getString("revisionfromnoteid"));
 		if(edgeNoteDetails.getGeoJson() != null){
 			JsonObject geoJsonData = (JsonObject) jsonParser.parse(edgeNoteDetails.getGeoJson());
 			JsonObject geometryData = geoJsonData.getAsJsonObject();
@@ -232,20 +263,12 @@ public class StreetlightDao extends UtilDao {
 		
 	}
 	
-	
 	public  void insertParentNoteId(String parentNoteId) {
 		PreparedStatement preparedStatement = null;
 		Connection connection = null;
 		try {
-			String sql = "SELECT max(streetlightsyncid) from streetlightsync";
-			long maxStreetLight = exceuteSql(sql);
-			if (maxStreetLight == -1) {
-				maxStreetLight = 1;
-			} else {
-				maxStreetLight += 1;
-			}
 			connection = StreetlightDaoConnection.getInstance().getConnection();
-			preparedStatement = connection.prepareStatement("INSERT INTO streetlightsync (streetlightsyncid , parentnoteid) VALUES ("+maxStreetLight+",'" + parentNoteId + "')");
+			preparedStatement = connection.prepareStatement("INSERT INTO streetlightsync (streetlightsyncid , parentnoteid) SELECT max(streetlightsyncid) + 1, '"+ parentNoteId +"' from streetlightsync ;");
 			preparedStatement.execute();
 		} catch (Exception e) {
 			logger.error("Error in insertParentNoteId",e);
@@ -273,7 +296,7 @@ public class StreetlightDao extends UtilDao {
 				maxStreetLight += 1;
 			}
 			connection = StreetlightDaoConnection.getInstance().getConnection();
-			preparedStatement = connection.prepareStatement("INSERT INTO streetlightsync (streetlightsyncid , processednoteid) VALUES ("+maxStreetLight+"," + noteId + ")");
+			preparedStatement = connection.prepareStatement("INSERT INTO streetlightsync (streetlightsyncid , processednoteid) SELECT max(streetlightsyncid) + 1, "+ noteId +" from streetlightsync;");
 			preparedStatement.execute();
 		} catch (Exception e) {
 			logger.error("Error in insertParentNoteId",e);

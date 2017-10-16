@@ -11,6 +11,7 @@ public class EdgeNoteDetails {
 	private String lat;
 	private String lng;
 	private String createdDateTime;
+	private String revisionFromNoteId;
 	
 
 	
@@ -70,11 +71,7 @@ public class EdgeNoteDetails {
 		this.edgeFormValues = edgeFormValues;
 	}
 
-	@Override
-	public String toString() {
-		return "EdgeNoteDetails [noteId=" + noteId + ", noteGuid=" + noteGuid + ", parentNoteId=" + parentNoteId
-				+ ", title=" + title + ", edgeFormValues=" + edgeFormValues + "]";
-	}
+
 
 	public String getGeoJson() {
 		return geoJson;
@@ -91,5 +88,23 @@ public class EdgeNoteDetails {
 	public void setCreatedDateTime(String createdDateTime) {
 		this.createdDateTime = createdDateTime;
 	}
+
+	public String getRevisionFromNoteId() {
+		return revisionFromNoteId;
+	}
+
+	public void setRevisionFromNoteId(String revisionFromNoteId) {
+		this.revisionFromNoteId = revisionFromNoteId;
+	}
+
+	@Override
+	public String toString() {
+		return "EdgeNoteDetails [noteId=" + noteId + ", noteGuid=" + noteGuid + ", parentNoteId=" + parentNoteId
+				+ ", title=" + title + ", edgeFormValues=" + edgeFormValues + ", geoJson=" + geoJson + ", lat=" + lat
+				+ ", lng=" + lng + ", createdDateTime=" + createdDateTime + ", revisionFromNoteId=" + revisionFromNoteId
+				+ "]";
+	}
+	
+	
 
 }

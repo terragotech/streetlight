@@ -34,6 +34,7 @@ import com.terragoedge.streetlight.StreetLightData;
 import com.terragoedge.streetlight.dao.StreetlightDao;
 import com.terragoedge.streetlight.entity.EdgeFormValues;
 import com.terragoedge.streetlight.entity.EdgeNoteDetails;
+import com.terragoedge.streetlight.entity.EdgeSLNumber;
 import com.terragoedge.streetlight.entity.SlvSyncDataEntity;
 import com.terragoedge.streetlight.exception.DeviceCreationFailedException;
 import com.terragoedge.streetlight.exception.DeviceNotFoundException;
@@ -118,8 +119,12 @@ public class StreetlightService {
 						if(formDetailsHolder.size() == 0){
 							continue;
 						}
+						
+						//Holds SLNumber
+						EdgeSLNumber edgeSLNumber = new EdgeSLNumber();
+						
 						// Check current note have block form or not. If not, try to get Base Parent note and also validate SL Number format
-						boolean isBlockFormPresent = validateBlockFormPresent(formDetailsHolder,blockFormTemplatesList);
+						boolean isBlockFormPresent = validateBlockFormPresent(formDetailsHolder,blockFormTemplatesList,edgeSLNumber);
 						
 						if (isBlockFormPresent) {
 							if (richFormtemplateGuid != null) {
@@ -139,14 +144,28 @@ public class StreetlightService {
 									sendFromData(edgeNoteDetailsList, edgeNoteDetails,replaceNoteValue);
 									
 								} else {
-									logger.warn("Richmond QR Code is empty.Note Id:"+edgeNoteDetails.getNoteId()+" , Note Title:"+edgeNoteDetails.getTitle());
-									if (replaceNoteValue != null) {
-										logger.warn("Richmond QR Code is empty but Replace Node QR Code is Not Empty"
-												+ ". Note is not processed. Note Id:"+edgeNoteDetails.getNoteId()+" , Note Title:"+edgeNoteDetails.getTitle() +",Replace Node QR Code:"+replaceNoteValue);
-										// Send mail - Richmond QR code not present and Replace Node QR Code Present
-										edgeMailService.sendMailQRCodeMissing(edgeNoteDetails.getTitle(), replaceNoteValue);
-										streetlightDao.insertProcessedNoteId(Integer.valueOf(noteId));
+									logger.warn("QR Code Not Present."+edgeNoteDetails.getTitle());
+									logger.warn("SL Number is "+edgeSLNumber.getSlNumber());
+									if(edgeSLNumber.getSlNumber() != null){
+										SLVDevice slvDevice = devices.get(edgeSLNumber.getSlNumber().trim());
+										if(slvDevice != null){
+											reSetQrCodeInSLV(richFormtemplateGuid, edgeNoteDetails, formDetailsHolder);
+										}else{
+											logger.warn("Richmond QR Code is empty.Note Id:"+edgeNoteDetails.getNoteId()+" , Note Title:"+edgeNoteDetails.getTitle());
+										}
+									}else{
+
+										logger.warn("Richmond QR Code is empty.Note Id:"+edgeNoteDetails.getNoteId()+" , Note Title:"+edgeNoteDetails.getTitle());
+										if (replaceNoteValue != null) {
+											logger.warn("Richmond QR Code is empty but Replace Node QR Code is Not Empty"
+													+ ". Note is not processed. Note Id:"+edgeNoteDetails.getNoteId()+" , Note Title:"+edgeNoteDetails.getTitle() +",Replace Node QR Code:"+replaceNoteValue);
+											// Send mail - Richmond QR code not present and Replace Node QR Code Present
+											edgeMailService.sendMailQRCodeMissing(edgeNoteDetails.getTitle(), replaceNoteValue);
+											streetlightDao.insertProcessedNoteId(Integer.valueOf(noteId));
+										}
 									}
+									
+									
 																	}
 							}
 
@@ -167,6 +186,25 @@ public class StreetlightService {
 			logger.error("Error in run", e);
 		}
 	}
+	
+	
+	
+	private void reSetQrCodeInSLV(String richFormTemplateGuid,EdgeNoteDetails edgeNoteDetails,Map<String, EdgeNoteDetails> formDetailsHolder) throws Exception{
+		List<String> formDefList = streetlightDao.getFormDef(richFormTemplateGuid, edgeNoteDetails.getRevisionFromNoteId());
+		if(formDefList.size() > 0){
+			for(String formDef : formDefList){
+				String qrCode = getQRCode(formDef);
+				if(qrCode != null){
+					List<EdgeNoteDetails> edgeNoteDetailsList = new ArrayList<>(formDetailsHolder.values());
+					// Sync data with slv
+					sendFromData(edgeNoteDetailsList, edgeNoteDetails,null);
+					return;
+				}
+			}
+		}
+		
+		logger.warn("Richmond QR Code is empty.Note Id:"+edgeNoteDetails.getNoteId()+" , Note Title:"+edgeNoteDetails.getTitle());
+	}
 
 	/**
 	 * Check QR Code is present or not
@@ -180,28 +218,38 @@ public class StreetlightService {
 		EdgeFormValues edgeFormValues = edgeNoteDetails.getEdgeFormValues();
 		if (edgeFormValues != null) {
 			String formDef = edgeFormValues.getFormDef();
-			Type listType = new TypeToken<ArrayList<EdgeFormData>>() {
-			}.getType();
-
-			List<EdgeFormData> edgeFormDataList = gson.fromJson(formDef, listType);
-			if (edgeFormDataList != null) {
-				for (EdgeFormData edgeFormData : edgeFormDataList) {
-					if (edgeFormData.getLabel().equals("SELC QR Code")) {
-						String value = edgeFormData.getValue();
-						if (value == null) {
-							return false;
-						}
-						value = value.trim();
-						if (value.isEmpty() || value.equalsIgnoreCase("(null)")) {
-							return false;
-						}
-						return true;
-					}
-				}
-			}
-
+			String qrCode = getQRCode(formDef);
+			return qrCode == null ? false : true;
 		}
 		return false;
+	}
+	
+	/**
+	 * Get QR Code from formDef.
+	 * @param formDef
+	 * @return
+	 */
+	private String getQRCode(String formDef){
+		Type listType = new TypeToken<ArrayList<EdgeFormData>>() {
+		}.getType();
+
+		List<EdgeFormData> edgeFormDataList = gson.fromJson(formDef, listType);
+		if (edgeFormDataList != null) {
+			for (EdgeFormData edgeFormData : edgeFormDataList) {
+				if (edgeFormData.getLabel().equals("SELC QR Code")) {
+					String value = edgeFormData.getValue();
+					if (value == null) {
+						return null;
+					}
+					value = value.trim();
+					if (value.isEmpty() || value.equalsIgnoreCase("(null)")) {
+						return null;
+					}
+					return value;
+				}
+			}
+		}
+		return null;
 	}
 
 	/**
@@ -215,15 +263,19 @@ public class StreetlightService {
 	 * @throws InValidSLNumberException
 	 */
 	private boolean validateBlockFormPresent(Map<String, EdgeNoteDetails> formDetailsHolder,
-			String[] blockFormTemplatesList) throws InValidSLNumberException {
+			String[] blockFormTemplatesList,EdgeSLNumber edgeSLNumber) throws InValidSLNumberException {
 
 		// Check Block form is present or not and also SL_Number format
-		boolean res = validateBlockFormPresent(blockFormTemplatesList, formDetailsHolder);
+		boolean res = validateBlockFormPresent(blockFormTemplatesList, formDetailsHolder,edgeSLNumber);
 		// If not present, then load block form from Base Parent Note
+		logger.info("Block form is not present.");
 		if (!res) {
 			List<EdgeNoteDetails> edgeNoteDetails = new ArrayList<>(formDetailsHolder.values());
 			// Check if parent note is present or not. If not present, then we didn't get Parent NoteId
 			String parentNoteId = edgeNoteDetails.get(0).getParentNoteId();
+			
+			logger.info("Block form is not present.parentNoteId"+parentNoteId);
+			
 			if (parentNoteId == null) {
 				return false;
 			}
@@ -237,12 +289,12 @@ public class StreetlightService {
 					break;
 				}
 			}
-
+			logger.info("Block form is not present.blockFormTemplateGuid"+blockFormTemplateGuid);
 			if (blockFormTemplateGuid != null) {
 				// Load Block form from database
 				streetlightDao.getFormData(blockFormTemplateGuid, parentNoteId, formDetailsHolder);
 				// Again check Block form is present or not and also SL_Number format.
-				return validateBlockFormPresent(blockFormTemplatesList, formDetailsHolder);
+				return validateBlockFormPresent(blockFormTemplatesList, formDetailsHolder, edgeSLNumber);
 			} else {
 				return false;
 			}
@@ -261,11 +313,11 @@ public class StreetlightService {
 	 * @throws InValidSLNumberException
 	 */
 	private boolean validateBlockFormPresent(String[] blockFormTemplatesList,
-			Map<String, EdgeNoteDetails> formDetailsHolder) throws InValidSLNumberException {
+			Map<String, EdgeNoteDetails> formDetailsHolder,EdgeSLNumber edgeSLNumber) throws InValidSLNumberException {
 		for (String blockFormTemplateGuid : blockFormTemplatesList) {
 			EdgeNoteDetails edgeNoteDetails = formDetailsHolder.get(blockFormTemplateGuid);
 			if (edgeNoteDetails != null) {
-				validateSLNumber(edgeNoteDetails);
+				validateSLNumber(edgeNoteDetails,edgeSLNumber);
 				return true;
 			}
 		}
@@ -344,7 +396,7 @@ public class StreetlightService {
 	 * @param edgeNoteDetails
 	 * @throws InValidSLNumberException
 	 */
-	private void validateSLNumber(EdgeNoteDetails edgeNoteDetails) throws InValidSLNumberException {
+	private void validateSLNumber(EdgeNoteDetails edgeNoteDetails,EdgeSLNumber edgeSLNumber) throws InValidSLNumberException {
 		if (edgeNoteDetails != null) {
 			EdgeFormValues edgeFormValues = edgeNoteDetails.getEdgeFormValues();
 			if (edgeFormValues != null) {
@@ -366,9 +418,12 @@ public class StreetlightService {
 				if (pos != -1) {
 					EdgeFormData edgeFormData = edgeFormDataList.get(pos);
 					String value = edgeFormData.getValue();
+					logger.warn("SL Number is"+value);
 					if (value == null || value.trim().isEmpty()) {
 						throw new InValidSLNumberException(value);// Need to tthrow
 					} else {
+						
+						edgeSLNumber.setSlNumber(value);
 						value = value.replaceAll("-", "");
 						Pattern p = Pattern.compile("^\\d+$");
 						Matcher m = p.matcher(value);
@@ -377,6 +432,7 @@ public class StreetlightService {
 																	// throw
 						}
 					}
+					
 				} else {
 					throw new InValidSLNumberException(null);// Need to throw
 				}
@@ -536,6 +592,11 @@ public class StreetlightService {
 
 				String streetLightDate = dateFormat(edgeNoteDetail.getCreatedDateTime());
 				addStreetLightData("lamp.installdate", streetLightDate, slvSyncDataEntity.getStreetLightDatas());
+				
+				String dimmingGroupName = dimmingValue.get(slvSyncDataEntity.getIdOnController());
+				addStreetLightData("DimmingGroupName", dimmingGroupName, slvSyncDataEntity.getStreetLightDatas());
+				
+				
 				slvSyncDataEntity.setReplaceNodeQRVal(replaceNoteValue);
 				sync2SLV(slvSyncDataEntity,edgeNoteDetail);
 			}
@@ -564,19 +625,23 @@ public class StreetlightService {
 			updateSLVData(slvSyncDataEntity,edgeNoteDetail);
 			// ReplaceOLC
 			
+			
 			 newNetworkId = slvSyncDataEntity.getMacAddress();
-			// Get Mac address from replacenode form
-			if (slvSyncDataEntity.getReplaceNodeQRVal() != null) {
-				newNetworkId = slvSyncDataEntity.getReplaceNodeQRVal();
-			}
-			//Validate Mac address is already used any pole or not
-			validateMacAddress(newNetworkId.trim(), slvSyncDataEntity.getIdOnController());
-			System.out.println(macAddress.keySet());
-			System.out.println(macAddress.values());
-			System.out.println(newNetworkId.trim()+":"+slvSyncDataEntity.getIdOnController());
+			 
+			 if(newNetworkId != null && !newNetworkId.trim().isEmpty()){
+				// Get Mac address from replacenode form
+					if (slvSyncDataEntity.getReplaceNodeQRVal() != null) {
+						newNetworkId = slvSyncDataEntity.getReplaceNodeQRVal();
+					}
+					//Validate Mac address is already used any pole or not
+					validateMacAddress(newNetworkId.trim(), slvSyncDataEntity.getIdOnController());
+			 }
+			
+			
 			replaceOLC(slvSyncDataEntity,edgeNoteDetail);
 		} catch (DeviceCreationFailedException dec) {
 			logger.info("Error in DeviceCreationFailedException",dec);
+			streetlightDao.insertProcessedNoteId(Integer.valueOf(edgeNoteDetail.getNoteId()));
 			// Need to send mail
 		} catch (DeviceUpdationFailedException e) {
 			logger.info("Error in DeviceCreationFailedException",e);
@@ -586,6 +651,7 @@ public class StreetlightService {
 			streetlightDao.updateParentNoteId(slvSyncDataEntity.getParentNoteId(), edgeNoteDetail.getNoteId());
 		} catch (DeviceNotFoundException e) {
 			edgeMailService.sendMailDeviceNotFound(slvSyncDataEntity.getIdOnController(), slvSyncDataEntity.getReplaceNodeQRVal(), slvSyncDataEntity.getMacAddress());
+			streetlightDao.insertProcessedNoteId(Integer.valueOf(edgeNoteDetail.getNoteId()));
 		} catch (QRCodeAlreadyUsedException e) {
 			edgeMailService.sendMailMacAddressAlreadyUsed(newNetworkId, e.getMessage());
 			streetlightDao.updateParentNoteId(slvSyncDataEntity.getParentNoteId(), edgeNoteDetail.getNoteId());
@@ -633,6 +699,8 @@ public class StreetlightService {
 			} else {
 				throw new DeviceCreationFailedException(edgeNoteDetails.getNoteId() + "-" + slvSyncDataEntity.getIdOnController() + ". GeoZone value is null;");
 			}
+		}else{
+			streetlightDao.insertParentNoteId(slvSyncDataEntity.getParentNoteId());
 		}
 	}
 
