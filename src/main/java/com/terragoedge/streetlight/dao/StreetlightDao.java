@@ -10,6 +10,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 
 import com.google.gson.JsonArray;
@@ -158,15 +159,27 @@ public class StreetlightDao extends UtilDao {
 	 * @param noteGuid - String
 	 * @return fromDefs - List<String>
 	 */
-	public List<String> getFormDef(String richFormTemplateGuid,String noteGuid){
+	public List<String> getFormDef(String[] richFormTemplateGuids,String noteGuid){
 		Statement queryStatement = null;
 		ResultSet queryResponse = null;
 		List<String> fromDefs = new ArrayList<>();
 		try{
+			String[] richFormTemplateGuidsTemp = new String[richFormTemplateGuids.length];
+			int i = 0;
+			for(String richFormTemplateGuid : richFormTemplateGuids){
+				richFormTemplateGuidsTemp[i] = "'"+richFormTemplateGuid+"'";
+				i++;
+				
+			}
+			String richFormTemplateGuidsList = StringUtils.join(richFormTemplateGuidsTemp, ",");
 			queryStatement = connection.createStatement();
+			String query = "SELECT ef.formdef FROM edgeform ef, edgenote en WHERE ef.formtemplateguid in [ "
+					+ richFormTemplateGuidsList + " ] and ef.edgenoteentity_noteid =  en.noteid and en.noteguid = '"
+					+ noteGuid + "'";
+			logger.info("Query :"+query);
 			queryResponse = queryStatement.executeQuery(
-					"SELECT ef.formdef FROM edgeform ef, edgenote en WHERE ef.formtemplateguid = '"
-							+ richFormTemplateGuid + "' and ef.edgenoteentity_noteid =  en.noteid and en.noteguid = '"
+					"SELECT ef.formdef FROM edgeform ef, edgenote en WHERE ef.formtemplateguid in [ "
+							+ richFormTemplateGuidsList + " ] and ef.edgenoteentity_noteid =  en.noteid and en.noteguid = '"
 							+ noteGuid + "'");
 			
 			while (queryResponse.next()) {

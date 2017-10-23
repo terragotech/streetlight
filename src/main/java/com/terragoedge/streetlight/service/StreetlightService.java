@@ -103,10 +103,17 @@ public class StreetlightService {
 			String[] blockFormTemplatesList = blockFormTemplatesGuids.split(",");
 			
 			//Read Richmond formtemplate Guid from Properties
-			String richFormtemplateGuid = properties.getProperty("streetlight.ef.formtemplateguid.richmond");
+			String richFormtemplateGuids = properties.getProperty("streetlight.ef.formtemplateguid.richmond");
+			String[] richFormtemplatesList = richFormtemplateGuids.split(",");
 			
-			//Get Richmond form notes
-			List<String> noteIds = streetlightDao.getNoteIds(richFormtemplateGuid); // -- TODO Need to get is current notes
+			List<String> noteIds = new ArrayList<>();
+			
+			for(String richFormtemplateGuid : richFormtemplatesList){
+				//Get Richmond form notes
+				List<String> noteIdsTemp = streetlightDao.getNoteIds(richFormtemplateGuid); // -- TODO Need to get is current notes
+				noteIds.addAll(noteIdsTemp);
+			}
+			
 			for (String noteId : noteIds) {
 				try {
 					// Check this note is already synced with SLV or not
@@ -127,10 +134,17 @@ public class StreetlightService {
 						boolean isBlockFormPresent = validateBlockFormPresent(formDetailsHolder,blockFormTemplatesList,edgeSLNumber);
 						
 						if (isBlockFormPresent) {
-							if (richFormtemplateGuid != null) {
+							if (richFormtemplatesList != null && richFormtemplatesList.length > 0)  {
 								
 								// Get Richmond form deails
-								EdgeNoteDetails edgeNoteDetails = formDetailsHolder.get(richFormtemplateGuid);
+								EdgeNoteDetails edgeNoteDetails =  null;
+								for(String richFormtemplateGuid : richFormtemplatesList){
+									 edgeNoteDetails = formDetailsHolder.get(richFormtemplateGuid);
+									 if(edgeNoteDetails != null){
+										 break;
+									 }
+								}
+								
 								
 								// Check QR code is present or not in Richmond Hill streets.
 								boolean isQRCodePresent = validateQRCodePresent(edgeNoteDetails);
@@ -149,7 +163,7 @@ public class StreetlightService {
 									if(edgeSLNumber.getSlNumber() != null){
 										SLVDevice slvDevice = devices.get(edgeSLNumber.getSlNumber().trim());
 										if(slvDevice != null){
-											reSetQrCodeInSLV(richFormtemplateGuid, edgeNoteDetails, formDetailsHolder);
+											reSetQrCodeInSLV(richFormtemplatesList, edgeNoteDetails, formDetailsHolder);
 										}else{
 											logger.warn("Richmond QR Code is empty.Note Id:"+edgeNoteDetails.getNoteId()+" , Note Title:"+edgeNoteDetails.getTitle());
 										}
@@ -189,8 +203,8 @@ public class StreetlightService {
 	
 	
 	
-	private void reSetQrCodeInSLV(String richFormTemplateGuid,EdgeNoteDetails edgeNoteDetails,Map<String, EdgeNoteDetails> formDetailsHolder) throws Exception{
-		List<String> formDefList = streetlightDao.getFormDef(richFormTemplateGuid, edgeNoteDetails.getRevisionFromNoteId());
+	private void reSetQrCodeInSLV(String[] richFormTemplateGuids,EdgeNoteDetails edgeNoteDetails,Map<String, EdgeNoteDetails> formDetailsHolder) throws Exception{
+		List<String> formDefList = streetlightDao.getFormDef(richFormTemplateGuids, edgeNoteDetails.getRevisionFromNoteId());
 		if(formDefList.size() > 0){
 			for(String formDef : formDefList){
 				String qrCode = getQRCode(formDef);
