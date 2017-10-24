@@ -173,13 +173,13 @@ public class StreetlightDao extends UtilDao {
 			}
 			String richFormTemplateGuidsList = StringUtils.join(richFormTemplateGuidsTemp, ",");
 			queryStatement = connection.createStatement();
-			String query = "SELECT ef.formdef FROM edgeform ef, edgenote en WHERE ef.formtemplateguid in [ "
-					+ richFormTemplateGuidsList + " ] and ef.edgenoteentity_noteid =  en.noteid and en.noteguid = '"
+			String query = "SELECT ef.formdef FROM edgeform ef, edgenote en WHERE ef.formtemplateguid in ( "
+					+ richFormTemplateGuidsList + " ) and ef.edgenoteentity_noteid =  en.noteid and en.noteguid = '"
 					+ noteGuid + "'";
 			logger.info("Query :"+query);
 			queryResponse = queryStatement.executeQuery(
-					"SELECT ef.formdef FROM edgeform ef, edgenote en WHERE ef.formtemplateguid in [ "
-							+ richFormTemplateGuidsList + " ] and ef.edgenoteentity_noteid =  en.noteid and en.noteguid = '"
+					"SELECT ef.formdef FROM edgeform ef, edgenote en WHERE ef.formtemplateguid in ( "
+							+ richFormTemplateGuidsList + " ) and ef.edgenoteentity_noteid =  en.noteid and en.noteguid = '"
 							+ noteGuid + "'");
 			
 			while (queryResponse.next()) {
