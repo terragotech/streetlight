@@ -1,7 +1,9 @@
 package com.terragoedge.streetlight.service;
 
 import java.lang.reflect.Type;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -120,7 +122,7 @@ public class StreetlightChicagoService {
 					logger.info("Fixture MAC address is empty. So note is not processed. Note Title :"+edgeNote.getTitle());
 					return;
 				}
-				buildFixtureStreetLightData(edgeFormData.getValue(), paramsList);
+				buildFixtureStreetLightData(edgeFormData.getValue(), paramsList,edgeNote);
 			}else if(edgeFormData.getLabel().equals(properties.getProperty("edge.fortemplate.chicago.label.node.macaddress"))){
 				if(edgeFormData.getValue() == null ||  edgeFormData.getValue().trim().isEmpty()){
 					logger.info("Node MAC address is empty. So note is not processed. Note Title :"+edgeNote.getTitle());
@@ -220,31 +222,47 @@ public class StreetlightChicagoService {
 		throw new InValidBarCodeException("Node MAC address is not valid. Value is:"+data);
 	}
 	
-	public void buildFixtureStreetLightData(String data,List<Object> paramsList ) throws InValidBarCodeException{
+	//Philips RoadFocus, RFS-54W16LED3K-T-R2M-UNIV-DMG-PH9-RCD-SP2-GY3,
+	//RFM0455, 07/24/17, 54W, 120/277V, 4000K, 8140 Lm, R2M, Gray, Advance, 442100083510, DMG
+	
+	public void buildFixtureStreetLightData(String data,List<Object> paramsList,EdgeNote edgeNote ) throws InValidBarCodeException{
 		String[] fixtureInfo = data.split(",");
 		if(fixtureInfo.length == 13){
+			addStreetLightData("userproperty.luminaire.brand", fixtureInfo[0], paramsList);
+			addStreetLightData("userproperty.device.luminaire.partnumber", fixtureInfo[1], paramsList);
 			addStreetLightData("userproperty.luminaire.model", fixtureInfo[2], paramsList);
 			addStreetLightData("userproperty.device.luminaire.manufacturedate", fixtureInfo[3], paramsList);
-			addStreetLightData("power", fixtureInfo[2], paramsList);
-			addStreetLightData("userproperty.ballast.dimmingtype", fixtureInfo[2], paramsList);
-			addStreetLightData("userproperty.device.luminaire.colortemp", fixtureInfo[2], paramsList);
-			addStreetLightData("userproperty.device.luminaire.lumenoutput", fixtureInfo[2], paramsList);
-			addStreetLightData("userproperty.luminaire.DistributionType", fixtureInfo[2], paramsList);
-			addStreetLightData("userproperty.luminaire.colorcode", fixtureInfo[2], paramsList);
-			addStreetLightData("userproperty.device.luminaire.drivermanufacturer", fixtureInfo[2], paramsList);
-			addStreetLightData("userproperty.device.luminaire.driverpartnumber", fixtureInfo[2], paramsList);
-			addStreetLightData("userproperty.ballast.dimmingtype", fixtureInfo[2], paramsList);
+			addStreetLightData("power", fixtureInfo[4], paramsList);
+			addStreetLightData("userproperty.ballast.dimmingtype", fixtureInfo[5], paramsList);
+			addStreetLightData("userproperty.device.luminaire.colortemp", fixtureInfo[6], paramsList);
+			addStreetLightData("userproperty.device.luminaire.lumenoutput", fixtureInfo[7], paramsList);
+			addStreetLightData("userproperty.luminaire.DistributionType", fixtureInfo[8], paramsList);
+			addStreetLightData("userproperty.luminaire.colorcode", fixtureInfo[9], paramsList);
+			addStreetLightData("userproperty.device.luminaire.drivermanufacturer", fixtureInfo[10], paramsList);
+			addStreetLightData("userproperty.device.luminaire.driverpartnumber", fixtureInfo[11], paramsList);
+			addStreetLightData("userproperty.ballast.dimmingtype", fixtureInfo[12], paramsList);
 			
 			
-			addStreetLightData("userproperty.luminaire.installdate", fixtureInfo[2], paramsList); // -- TODO
+			addStreetLightData("userproperty.luminaire.installdate", dateFormat(edgeNote.getCreatedDateTime()), paramsList); // -- TODO
 			//userproperty.luminaire.installdate - 2017-09-07 09:47:35
 			
-			//Controller Install Date  -- TODO
-			addStreetLightData("userproperty.MacAddress", fixtureInfo[2], paramsList);
+			addStreetLightData("userproperty.controller.installdate", dateFormat(edgeNote.getCreatedDateTime()) , paramsList);
+			//userproperty.controller.installdate  - 2017/10/10
+			
 			
 		}else{
 			throw new InValidBarCodeException("Fixture MAC address is not valid. Value is:"+data);
 		}
 	}
-
+	
+	
+	private String dateFormat(Long dateTime) {
+		Date date = new Date(Long.valueOf(dateTime));
+		SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+		String dff = dateFormat.format(date);
+		return dff;
+	}
+	
+	
+	
 }
