@@ -1,15 +1,19 @@
 package com.terragoedge.edgeserver;
 
+import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
+
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 
 public class FormData {
 
 	private String formTemplateGuid = null;
-	private List<EdgeFormData> formDef = new ArrayList<>();
+	private String formDef = null;
 	private String category = null;
 	private String formGuid = null;
-	private String formTemplateDef = null;
+	//private String formTemplateDef = null;
 	private String name = null;
 
 	public String getFormTemplateGuid() {
@@ -21,12 +25,14 @@ public class FormData {
 	}
 
 	public List<EdgeFormData> getFormDef() {
-		return formDef;
+		Type listType = new TypeToken<ArrayList<EdgeFormData>>() {
+		}.getType();
+		Gson gson = new Gson();
+		List<EdgeFormData> edgeFormDatas = gson.fromJson(formDef, listType);
+		return edgeFormDatas;
 	}
 
-	public void setFormDef(List<EdgeFormData> formDef) {
-		this.formDef = formDef;
-	}
+	
 
 	public String getCategory() {
 		return category;
@@ -44,13 +50,13 @@ public class FormData {
 		this.formGuid = formGuid;
 	}
 
-	public String getFormTemplateDef() {
+	/*public String getFormTemplateDef() {
 		return formTemplateDef;
 	}
 
 	public void setFormTemplateDef(String formTemplateDef) {
 		this.formTemplateDef = formTemplateDef;
-	}
+	}*/
 
 	public String getName() {
 		return name;
@@ -60,10 +66,6 @@ public class FormData {
 		this.name = name;
 	}
 
-	@Override
-	public String toString() {
-		return "FormData [formTemplateGuid=" + formTemplateGuid + ", formDef=" + formDef + ", category=" + category
-				+ ", formGuid=" + formGuid + ", formTemplateDef=" + formTemplateDef + ", name=" + name + "]";
-	}
+	
 
 }
