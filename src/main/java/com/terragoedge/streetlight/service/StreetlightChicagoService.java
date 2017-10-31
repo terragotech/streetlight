@@ -47,19 +47,27 @@ public class StreetlightChicagoService {
 		
 		// Get Already synced noteguids from Database
 		List<String> noteGuids = streetlightDao.getNoteIds();
-		
+		String accessToken = getEdgeToken();
+		if(accessToken == null){
+			logger.error("Edge Invalid UserName and Password.");
+			return;
+		}
 		// Get Edge Server Url from properties
 		String url = PropertiesReader.getProperties().getProperty("streetlight.edge.url.main");
-		url = url + "/"+PropertiesReader.getProperties().getProperty("streetlight.edge.url.notes.get");
+		
+		
+		url = url +PropertiesReader.getProperties().getProperty("streetlight.edge.url.notes.get");
+		
 		
 		// Get NoteList from edgeserver
-		ResponseEntity<String> responseEntity = restService.getRequest(url, false, true);
+		ResponseEntity<String> responseEntity = restService.getRequest(url, false, accessToken);
 		
 		// Process only response code as success
 		if(responseEntity.getStatusCode().is2xxSuccessful()){
 			
 			// Get Response String
 			String notesData = responseEntity.getBody();
+			System.out.println(notesData);
 			
 			//Convert notes Json to List of notes object
 			Type listType = new TypeToken<ArrayList<EdgeNote>>() {
@@ -168,8 +176,8 @@ public class StreetlightChicagoService {
 		
 		paramsList.add("ser=json");
 		String params = StringUtils.join(paramsList, "&");
-		url = url + "?" + params;
-		ResponseEntity<String> response = restService.getRequest(url, true,false);
+		url = url + "&" + params;
+		ResponseEntity<String> response = restService.getRequest(url, true,null);
 		String responseString = response.getBody();
 		JsonObject replaceOlcResponse = (JsonObject) jsonParser.parse(responseString);
 		int errorCode = replaceOlcResponse.get("errorCode").getAsInt();
@@ -214,7 +222,7 @@ public class StreetlightChicagoService {
 			for(String nodeData : nodeInfo){
 				if(nodeData.startsWith("MACid")){
 					String macAddress = nodeData.substring(6);
-					addStreetLightData("userproperty.MacAddress", macAddress, paramsList);
+					addStreetLightData("MacAddress", macAddress, paramsList);
 					return;
 				}
 			}
@@ -228,26 +236,26 @@ public class StreetlightChicagoService {
 	public void buildFixtureStreetLightData(String data,List<Object> paramsList,EdgeNote edgeNote ) throws InValidBarCodeException{
 		String[] fixtureInfo = data.split(",");
 		if(fixtureInfo.length == 13){
-			addStreetLightData("userproperty.luminaire.brand", fixtureInfo[0], paramsList);
-			addStreetLightData("userproperty.device.luminaire.partnumber", fixtureInfo[1], paramsList);
-			addStreetLightData("userproperty.luminaire.model", fixtureInfo[2], paramsList);
-			addStreetLightData("userproperty.device.luminaire.manufacturedate", fixtureInfo[3], paramsList);
+			addStreetLightData("luminaire.brand", fixtureInfo[0], paramsList);
+			addStreetLightData("device.luminaire.partnumber", fixtureInfo[1], paramsList);
+			addStreetLightData("luminaire.model", fixtureInfo[2], paramsList);
+			addStreetLightData("device.luminaire.manufacturedate", fixtureInfo[3], paramsList);
 			addStreetLightData("power", fixtureInfo[4], paramsList);
-			addStreetLightData("userproperty.ballast.dimmingtype", fixtureInfo[5], paramsList);
-			addStreetLightData("userproperty.device.luminaire.colortemp", fixtureInfo[6], paramsList);
-			addStreetLightData("userproperty.device.luminaire.lumenoutput", fixtureInfo[7], paramsList);
-			addStreetLightData("userproperty.luminaire.DistributionType", fixtureInfo[8], paramsList);
-			addStreetLightData("userproperty.luminaire.colorcode", fixtureInfo[9], paramsList);
-			addStreetLightData("userproperty.device.luminaire.drivermanufacturer", fixtureInfo[10], paramsList);
-			addStreetLightData("userproperty.device.luminaire.driverpartnumber", fixtureInfo[11], paramsList);
-			addStreetLightData("userproperty.ballast.dimmingtype", fixtureInfo[12], paramsList);
+			addStreetLightData("ballast.dimmingtype", fixtureInfo[5], paramsList);
+			addStreetLightData("device.luminaire.colortemp", fixtureInfo[6], paramsList);
+			addStreetLightData("device.luminaire.lumenoutput", fixtureInfo[7], paramsList);
+			addStreetLightData("luminaire.DistributionType", fixtureInfo[8], paramsList);
+			addStreetLightData("luminaire.colorcode", fixtureInfo[9], paramsList);
+			addStreetLightData("device.luminaire.drivermanufacturer", fixtureInfo[10], paramsList);
+			addStreetLightData("device.luminaire.driverpartnumber", fixtureInfo[11], paramsList);
+			addStreetLightData("ballast.dimmingtype", fixtureInfo[12], paramsList);
 			
 			
-			addStreetLightData("userproperty.luminaire.installdate", dateFormat(edgeNote.getCreatedDateTime()), paramsList); // -- TODO
-			//userproperty.luminaire.installdate - 2017-09-07 09:47:35
+			addStreetLightData("luminaire.installdate", dateFormat(edgeNote.getCreatedDateTime()), paramsList); // -- TODO
+			//luminaire.installdate - 2017-09-07 09:47:35
 			
-			addStreetLightData("userproperty.controller.installdate", dateFormat(edgeNote.getCreatedDateTime()) , paramsList);
-			//userproperty.controller.installdate  - 2017/10/10
+			addStreetLightData("controller.installdate", dateFormat_1(edgeNote.getCreatedDateTime()) , paramsList);
+			//controller.installdate  - 2017/10/10
 			
 			
 		}else{
@@ -264,5 +272,30 @@ public class StreetlightChicagoService {
 	}
 	
 	
+	private String dateFormat_1(Long dateTime) {
+		Date date = new Date(Long.valueOf(dateTime));
+		SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd");
+		String dff = dateFormat.format(date);
+		return dff;
+	}
+	
+	
+	
+	//http://192.168.1.9:8080/edgeServer/oauth/token?grant_type=password&username=admin&password=admin&client_id=edgerestapp
+	
+	private String getEdgeToken(){
+		String url = PropertiesReader.getProperties().getProperty("streetlight.edge.url.main");
+		String userName = properties.getProperty("streetlight.edge.username");
+		String  password = properties.getProperty("streetlight.edge.password");
+		url = url + "/oauth/token?grant_type=password&username=" +userName+"&password="+password+"&client_id=edgerestapp";
+		ResponseEntity<String> responseEntity 
+		 = restService.getRequest(url);
+		if(responseEntity.getStatusCode().is2xxSuccessful()){
+			JsonObject jsonObject = (JsonObject) jsonParser.parse(responseEntity.getBody());
+			return jsonObject.get("access_token").getAsString();
+		}
+		return null;
+	
+	}
 	
 }

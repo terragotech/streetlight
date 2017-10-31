@@ -90,8 +90,15 @@ public class StreetlightDao extends UtilDao {
 		PreparedStatement preparedStatement = null;
 		Connection connection = null;
 		try {
+			String sql = "SELECT max(streetlightsyncid) + 1 from  notesyncdetails";
+			long id = exceuteSql(sql);
+			if(id == -1 || id == 0){
+				id = 1; 
+			}
 			connection = StreetlightDaoConnection.getInstance().getConnection();
-			preparedStatement = connection.prepareStatement("INSERT INTO notesyncdetails (streetlightsyncid , processednoteid) SELECT max(streetlightsyncid) + 1, '"+ noteGuid +"' from notesyncdetails ;");
+			preparedStatement = connection.prepareStatement("INSERT INTO notesyncdetails (streetlightsyncid , processednoteid) values (?,?) ;");
+			preparedStatement.setLong(1, id);
+			preparedStatement.setString(2, noteGuid);
 			preparedStatement.execute();
 		} catch (Exception e) {
 			logger.error("Error in insertParentNoteId",e);

@@ -37,11 +37,11 @@ public class RestService {
 		return getRequest(url,isLog);
 	}*/
 
-	public ResponseEntity<String> getRequest(String url,boolean isLog,boolean isEdgeRequest) {
+	public ResponseEntity<String> getRequest(String url,boolean isLog,String accessToken) {
 		logger.info("------------ Request ------------------");
 		logger.info(url);
 		logger.info("------------ Request End ------------------");
-		HttpHeaders headers = getHeaders(isEdgeRequest);
+		HttpHeaders headers = getHeaders(accessToken);
 		RestTemplate restTemplate = new RestTemplate();
 		HttpEntity request = new HttpEntity<>(headers);
 		ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.GET, request, String.class);
@@ -57,11 +57,11 @@ public class RestService {
 		return response;
 	}
 
-	public ResponseEntity<String> getPostRequest(String url,boolean isEdgeRequest) {
+	public ResponseEntity<String> getPostRequest(String url,String accessToken) {
 		logger.info("------------ Request ------------------");
 		logger.info(url);
 		logger.info("------------ Request End ------------------");
-		HttpHeaders headers = getHeaders(isEdgeRequest);
+		HttpHeaders headers = getHeaders(accessToken);
 		RestTemplate restTemplate = new RestTemplate();
 		HttpEntity request = new HttpEntity<>(headers);
 		ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.POST, request, String.class);
@@ -74,24 +74,42 @@ public class RestService {
 	}
 	
 	
-	private HttpHeaders getHeaders(boolean isEdge) {
+	private HttpHeaders getHeaders(String accessToken) {
 		String userName = null;
 		String password = null;
-		if(isEdge){
-			userName = properties.getProperty("streetlight.edge.rest.username");
-		    password = properties.getProperty("streetlight.edge.rest.password");
+		HttpHeaders headers = new HttpHeaders();
+		if(accessToken != null){
+			headers.add("Authorization",  "Bearer "+accessToken);
+			return headers;
 		}else{
-			 userName = properties.getProperty("streetlight.username");
-			 password = properties.getProperty("streetlight.password");
+			 userName = properties.getProperty("streetlight.slv.username");
+			 password = properties.getProperty("streetlight.slv.password");
 		}
+		  String plainCreds = userName + ":" + password;
 		
-		String plainCreds = userName + ":" + password;
 		byte[] plainCredsBytes = plainCreds.getBytes();
 		byte[] base64CredsBytes = Base64.encodeBase64(plainCredsBytes);
 		String base64Creds = new String(base64CredsBytes);
-		HttpHeaders headers = new HttpHeaders();
+		
 		headers.add("Authorization", "Basic " + base64Creds);
 		return headers;
+	}
+	
+	
+	public ResponseEntity<String> getRequest(String url){
+		logger.info("------------ Request ------------------");
+		logger.info(url);
+		logger.info("------------ Request End ------------------");
+		RestTemplate restTemplate = new RestTemplate();
+		ResponseEntity<String> response = restTemplate.postForEntity(url,null,   String.class);
+		logger.info("------------ Response ------------------");
+		logger.info("Response Code:" + response.getStatusCode().toString());
+		String responseBody = response.getBody();
+		
+		
+		logger.info("------------ Response End ------------------");
+		// return responseBody;
+		return response;
 	}
 
 }
