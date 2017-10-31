@@ -2,17 +2,17 @@ package com.terragoedge.streetlight;
 
 import org.apache.log4j.Logger;
 
-import com.terragoedge.streetlight.service.StreetlightService;
+import com.terragoedge.streetlight.service.StreetlightChicagoService;
 
 public class StreetlightApp {
 	
 	final static Logger logger = Logger.getLogger(StreetlightApp.class);
 	
 	public static void main(String[] args) {
-		StreetlightService streetlightService = new StreetlightService();
+		StreetlightChicagoService streetlightChicagoService = new StreetlightChicagoService();
 		while(true){
 			try{
-				streetlightService.run();
+				streetlightChicagoService.run();
 				Thread.sleep(60000);
 				
 			}catch(Exception e){
