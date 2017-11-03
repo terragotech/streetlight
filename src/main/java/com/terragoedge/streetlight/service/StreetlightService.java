@@ -515,7 +515,7 @@ public class StreetlightService {
 			int lWatt = 0;
 			for (EdgeNoteDetails edgeNoteDetails : edgeNoteDetailsList) {
 				String formData = edgeNoteDetails.getEdgeFormValues().getFormDef();
-				if (slvSyncDataEntity.getParentNoteId() == null) {
+				if (slvSyncDataEntity.getParentNoteId() == null || slvSyncDataEntity.getParentNoteId().isEmpty()) {
 					slvSyncDataEntity.setParentNoteId(edgeNoteDetails.getParentNoteId());
 				}
 
