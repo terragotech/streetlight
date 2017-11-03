@@ -128,9 +128,11 @@ public class StreetlightChicagoService {
 			if(edgeFormData.getLabel().equals(properties.getProperty("edge.fortemplate.chicago.label.fixture.macaddress"))){
 				if(edgeFormData.getValue() == null ||  edgeFormData.getValue().trim().isEmpty()){
 					logger.info("Fixture MAC address is empty. So note is not processed. Note Title :"+edgeNote.getTitle());
-					return;
+					// return; -- TODO Need to skip or not later decide
+				}else{
+					buildFixtureStreetLightData(edgeFormData.getValue(), paramsList,edgeNote);
 				}
-				buildFixtureStreetLightData(edgeFormData.getValue(), paramsList,edgeNote);
+				
 			}else if(edgeFormData.getLabel().equals(properties.getProperty("edge.fortemplate.chicago.label.node.macaddress"))){
 				if(edgeFormData.getValue() == null ||  edgeFormData.getValue().trim().isEmpty()){
 					logger.info("Node MAC address is empty. So note is not processed. Note Title :"+edgeNote.getTitle());
@@ -217,16 +219,22 @@ public class StreetlightChicagoService {
 	
 	
 	private void loadMACAddress(String data,List<Object> paramsList ) throws InValidBarCodeException{
-		String[] nodeInfo = data.split(",");
-		if(nodeInfo.length > 0){
-			for(String nodeData : nodeInfo){
-				if(nodeData.startsWith("MACid")){
-					String macAddress = nodeData.substring(6);
-					addStreetLightData("MacAddress", macAddress, paramsList);
-					return;
+		if(data.contains("MACid")){
+			String[] nodeInfo = data.split(",");
+			if(nodeInfo.length > 0){
+				for(String nodeData : nodeInfo){
+					if(nodeData.startsWith("MACid")){
+						String macAddress = nodeData.substring(6);
+						addStreetLightData("MacAddress", macAddress, paramsList);
+						return;
+					}
 				}
 			}
+		}else{
+			addStreetLightData("MacAddress", data, paramsList);
+			return;
 		}
+		
 		throw new InValidBarCodeException("Node MAC address is not valid. Value is:"+data);
 	}
 	
@@ -235,7 +243,7 @@ public class StreetlightChicagoService {
 	
 	public void buildFixtureStreetLightData(String data,List<Object> paramsList,EdgeNote edgeNote ) throws InValidBarCodeException{
 		String[] fixtureInfo = data.split(",");
-		if(fixtureInfo.length == 13){
+		if(fixtureInfo.length >= 13){
 			addStreetLightData("luminaire.brand", fixtureInfo[0], paramsList);
 			addStreetLightData("device.luminaire.partnumber", fixtureInfo[1], paramsList);
 			addStreetLightData("luminaire.model", fixtureInfo[2], paramsList);
@@ -259,7 +267,7 @@ public class StreetlightChicagoService {
 			
 			
 		}else{
-			throw new InValidBarCodeException("Fixture MAC address is not valid. Value is:"+data);
+			throw new InValidBarCodeException("Fixture MAC address is not valid ("+edgeNote.getTitle()+"). Value is:"+data);
 		}
 	}
 	
