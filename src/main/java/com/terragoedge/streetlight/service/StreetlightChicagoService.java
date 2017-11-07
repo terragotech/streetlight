@@ -211,8 +211,8 @@ public class StreetlightChicagoService {
 	}
 	
 	private void addStreetLightData(String key,String value,List<Object> paramsList){
-		paramsList.add("valueName=" + key);
-		paramsList.add("value=" + value);
+		paramsList.add("valueName=" + key.trim());
+		paramsList.add("value=" + value.trim());
 	}
 	
 	
