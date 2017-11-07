@@ -165,7 +165,7 @@ public class StreetlightChicagoService {
 			return;
 		}
 		
-		
+		paramsList.add("installStatus=Installed");
 		sync2Slv(paramsList,edgeNote.getNoteGuid());
 		noteGuids.add(edgeNote.getNoteGuid());
 	}
@@ -245,8 +245,20 @@ public class StreetlightChicagoService {
 		String[] fixtureInfo = data.split(",");
 		if(fixtureInfo.length >= 13){
 			addStreetLightData("luminaire.brand", fixtureInfo[0], paramsList);
-			addStreetLightData("device.luminaire.partnumber", fixtureInfo[1], paramsList);
-			addStreetLightData("luminaire.model", fixtureInfo[2], paramsList);
+			/**
+			 * As per Mail conversion, In the older data, the luminaire model
+			 * was the shorter version of the fixture, so for the General
+			 * Electric fixtures it was ERLH. The Luminaire Part Number would be
+			 * the longer more detailed number.
+			 */
+			String partNumber = fixtureInfo[1].trim();
+			String model = fixtureInfo[2].trim();
+			if(fixtureInfo[1].trim().length() <= fixtureInfo[2].trim().length()){
+				model = fixtureInfo[1].trim();
+				partNumber = fixtureInfo[2].trim();
+			}
+			addStreetLightData("device.luminaire.partnumber", partNumber, paramsList);
+			addStreetLightData("luminaire.model", model, paramsList);
 			addStreetLightData("device.luminaire.manufacturedate", fixtureInfo[3], paramsList);
 			addStreetLightData("power", fixtureInfo[4], paramsList);
 			addStreetLightData("ballast.dimmingtype", fixtureInfo[5], paramsList);
