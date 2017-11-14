@@ -80,6 +80,7 @@ public class StreetlightService {
 		luminareCore.put("L11", 108);
 		luminareCore.put("L12", 158);
 		luminareCore.put("L13", 80);
+		luminareCore.put("L14", 52);
 
 	}
 
