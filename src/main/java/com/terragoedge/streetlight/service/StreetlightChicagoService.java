@@ -74,6 +74,7 @@ public class StreetlightChicagoService {
 			}.getType();
 			List<EdgeNote> edgeNoteList = gson.fromJson(notesData, listType);
 			
+			
 			// Iterate each note
 			for(EdgeNote edgeNote : edgeNoteList){
 				syncData(edgeNote, noteGuids);
@@ -165,7 +166,7 @@ public class StreetlightChicagoService {
 			return;
 		}
 		
-		paramsList.add("installStatus=Installed");
+		addStreetLightData("installStatus", "Installed", paramsList);
 		sync2Slv(paramsList,edgeNote.getNoteGuid());
 		noteGuids.add(edgeNote.getNoteGuid());
 	}
@@ -179,7 +180,7 @@ public class StreetlightChicagoService {
 		paramsList.add("ser=json");
 		String params = StringUtils.join(paramsList, "&");
 		url = url + "&" + params;
-		ResponseEntity<String> response = restService.getRequest(url, true,null);
+		ResponseEntity<String> response = restService.getPostRequest(url,null);
 		String responseString = response.getBody();
 		JsonObject replaceOlcResponse = (JsonObject) jsonParser.parse(responseString);
 		int errorCode = replaceOlcResponse.get("errorCode").getAsInt();
@@ -261,7 +262,7 @@ public class StreetlightChicagoService {
 			addStreetLightData("luminaire.model", model, paramsList);
 			addStreetLightData("device.luminaire.manufacturedate", fixtureInfo[3], paramsList);
 			addStreetLightData("power", fixtureInfo[4], paramsList);
-			addStreetLightData("ballast.dimmingtype", fixtureInfo[5], paramsList);
+			addStreetLightData("fixing.type", fixtureInfo[5], paramsList);
 			addStreetLightData("device.luminaire.colortemp", fixtureInfo[6], paramsList);
 			addStreetLightData("device.luminaire.lumenoutput", fixtureInfo[7], paramsList);
 			addStreetLightData("luminaire.DistributionType", fixtureInfo[8], paramsList);
@@ -274,7 +275,7 @@ public class StreetlightChicagoService {
 			addStreetLightData("luminaire.installdate", dateFormat(edgeNote.getCreatedDateTime()), paramsList); // -- TODO
 			//luminaire.installdate - 2017-09-07 09:47:35
 			
-			addStreetLightData("controller.installdate", dateFormat_1(edgeNote.getCreatedDateTime()) , paramsList);
+			addStreetLightData("install.date", dateFormat(edgeNote.getCreatedDateTime()) , paramsList);
 			//controller.installdate  - 2017/10/10
 			
 			
