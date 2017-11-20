@@ -3,6 +3,7 @@ package com.terragoedge.streetlight.service;
 import java.lang.reflect.Type;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -59,6 +60,14 @@ public class StreetlightChicagoService {
 		url = url +PropertiesReader.getProperties().getProperty("streetlight.edge.url.notes.get");
 		
 		
+		String systemDate = PropertiesReader.getProperties().getProperty("streetlight.edge.customdate");
+		
+		if(systemDate == null || systemDate.equals("false")){
+			String yesterday = getYesterdayDate();
+			url = url +"modifiedAfter="+yesterday;
+		}
+		
+		
 		// Get NoteList from edgeserver
 		ResponseEntity<String> responseEntity = restService.getRequest(url, false, accessToken);
 		
@@ -83,6 +92,21 @@ public class StreetlightChicagoService {
 			logger.error("Unable to get message from EdgeServer. Response Code is :"+responseEntity.getStatusCode());
 		}
 	}
+	
+	
+	public String  getYesterdayDate() {
+		//2017-11-01T13:00:00.000-00:00
+	     SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS-00:00");
+	     Calendar cal = Calendar.getInstance();
+	     cal.add(Calendar.DATE, -1);
+	     cal.set(Calendar.HOUR_OF_DAY,0);
+	     cal.set(Calendar.MINUTE,0);
+	     cal.set(Calendar.SECOND,0);
+	     cal.set(Calendar.MILLISECOND,0);
+	    return dateFormat.format(cal.getTime());
+	 }
+	
+	
 	
 	private void syncData(EdgeNote edgeNote,List<String> noteGuids){
 		try{
