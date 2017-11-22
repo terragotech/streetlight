@@ -74,6 +74,24 @@ public class RestService {
 	}
 	
 	
+	public ResponseEntity<String> getPostRequest(String url,String accessToken,String contentType) {
+		logger.info("------------ Request ------------------");
+		logger.info(url);
+		logger.info("------------ Request End ------------------");
+		HttpHeaders headers = getHeaders(accessToken);
+		headers.add("Content-Type", contentType);
+		RestTemplate restTemplate = new RestTemplate();
+		HttpEntity request = new HttpEntity<>(headers);
+		ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.POST, request, String.class);
+		logger.info("------------ Response ------------------");
+		logger.info("Response Code:" + response.getStatusCode().toString());
+		String responseBody = response.getBody();
+		logger.info(responseBody);
+		logger.info("------------ Response End ------------------");
+		return response;
+	}
+	
+	
 	private HttpHeaders getHeaders(String accessToken) {
 		String userName = null;
 		String password = null;

@@ -18,14 +18,17 @@ import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.reflect.TypeToken;
+import com.terragoedge.edgeserver.DeviceMacAddress;
 import com.terragoedge.edgeserver.EdgeFormData;
 import com.terragoedge.edgeserver.EdgeNote;
 import com.terragoedge.edgeserver.FormData;
+import com.terragoedge.edgeserver.Value;
 import com.terragoedge.streetlight.PropertiesReader;
 import com.terragoedge.streetlight.dao.StreetlightDao;
 import com.terragoedge.streetlight.exception.DeviceUpdationFailedException;
 import com.terragoedge.streetlight.exception.InValidBarCodeException;
 import com.terragoedge.streetlight.exception.NoValueException;
+import com.terragoedge.streetlight.exception.QRCodeAlreadyUsedException;
 
 public class StreetlightChicagoService {
 	StreetlightDao streetlightDao = null;
@@ -33,6 +36,8 @@ public class StreetlightChicagoService {
 	Properties properties = null;
 	Gson gson = null;
 	JsonParser jsonParser = null;
+	EdgeMailService edgeMailService = null;
+	
 	
 	final Logger logger = Logger.getLogger(StreetlightChicagoService.class);
 	
@@ -41,11 +46,11 @@ public class StreetlightChicagoService {
 		this.restService = new RestService();
 		this.properties = PropertiesReader.getProperties();
 		this.gson = new Gson();
+		this.edgeMailService = new EdgeMailService();
 		this.jsonParser = new JsonParser();
 	}
 	
 	public void run(){
-		
 		// Get Already synced noteguids from Database
 		List<String> noteGuids = streetlightDao.getNoteIds();
 		String accessToken = getEdgeToken();
@@ -124,12 +129,15 @@ public class StreetlightChicagoService {
 				// Logging this note is already synced with SLV.
 				logger.info("Note "+edgeNote.getTitle()+" is already synced with SLV.");
 			}
+		}catch(QRCodeAlreadyUsedException e1){
+			logger.error("MacAddress ("+e1.getMacAddress()+")  - Already in use. So this pole is not synced with SLV. Note Title :["+edgeNote.getTitle()+" ]");
+			edgeMailService.sendMailMacAddressAlreadyUsed(e1.getMacAddress(), e1.getMessage());
 		}catch(Exception e){
 			logger.error("Error in syncData",e);
 		}
 	}
 	
-	public void syncData(Map<String, FormData> formDatas,EdgeNote edgeNote,List<String> noteGuids) throws InValidBarCodeException, DeviceUpdationFailedException{
+	public void syncData(Map<String, FormData> formDatas,EdgeNote edgeNote,List<String> noteGuids) throws InValidBarCodeException, DeviceUpdationFailedException, QRCodeAlreadyUsedException,Exception{
 		List<Object> paramsList = new ArrayList<Object>();
 		String chicagoFormTemplateGuid = properties.getProperty("streetlight.edge.formtemplateguid.chicago");
 		String fixtureFormTemplateGuid = properties.getProperty("streetlight.edge.formtemplateguid.fixture");
@@ -145,8 +153,30 @@ public class StreetlightChicagoService {
 			logger.error("No Fixture FormTemplate is not Present. So note is not processed. Note Title is :"+edgeNote.getTitle());
 			return;
 		}
+
+		// Process Fixture Form data
+		List<EdgeFormData> fixtureFromDef = fixtureFormData.getFormDef();
+
+		// Get IdOnController value
+		String idOnController = null;
+		try {
+			idOnController = value(fixtureFromDef,properties.getProperty("edge.fortemplate.fixture.label.idoncntrl"));
+			paramsList.add("idOnController=" + idOnController);
+		} catch (NoValueException e) {
+			e.printStackTrace();
+			return;
+		}
+
+		// Get ControllerStdId value
+		try {
+			String controllerStrId = value(fixtureFromDef,properties.getProperty("edge.fortemplate.fixture.label.cnrlstrid"));
+			paramsList.add("controllerStrId=" + controllerStrId);
+		} catch (NoValueException e) {
+			e.printStackTrace();
+			return;
+		}
 		
-		
+		String macAddress = null;
 		// Process Chicago Form data
 		List<EdgeFormData> chicagoFromDef =  chicagoFromData.getFormDef();
 		for(EdgeFormData edgeFormData : chicagoFromDef){
@@ -163,40 +193,20 @@ public class StreetlightChicagoService {
 					logger.info("Node MAC address is empty. So note is not processed. Note Title :"+edgeNote.getTitle());
 					return;
 				}
-				loadMACAddress(edgeFormData.getValue(), paramsList);
+				macAddress = loadMACAddress(edgeFormData.getValue(), paramsList,idOnController);
 			}
 		}
 		
 		
-		// Process Fixture Form data
 		
-		List<EdgeFormData> fixtureFromDef =  fixtureFormData.getFormDef();
-		
-		// Get IdOnController value
-		try {
-			String idOnController = value(fixtureFromDef, properties.getProperty("edge.fortemplate.fixture.label.idoncntrl"));
-			paramsList.add("idOnController=" + idOnController);
-		} catch (NoValueException e) {
-			e.printStackTrace(); 
-			return;
-		}
-		
-		// Get ControllerStdId value
-		try {
-			String controllerStrId = value(fixtureFromDef,properties.getProperty("edge.fortemplate.fixture.label.cnrlstrid"));
-			paramsList.add("controllerStrId=" + controllerStrId);
-		} catch (NoValueException e) {
-			e.printStackTrace(); 
-			return;
-		}
 		
 		addStreetLightData("installStatus", "Installed", paramsList);
-		sync2Slv(paramsList,edgeNote.getNoteGuid());
+		sync2Slv(paramsList,edgeNote.getNoteGuid(),idOnController,macAddress);
 		noteGuids.add(edgeNote.getNoteGuid());
 	}
 	
 	
-	private void sync2Slv(List<Object> paramsList,String noteGuid) throws DeviceUpdationFailedException{
+	private void sync2Slv(List<Object> paramsList,String noteGuid,String idOnController,String macAddress) throws DeviceUpdationFailedException{
 		String mainUrl = properties.getProperty("streetlight.slv.url.main");
 		String updateDeviceValues = properties.getProperty("streetlight.slv.url.updatedevice");
 		String url = mainUrl + updateDeviceValues;
@@ -243,21 +253,23 @@ public class StreetlightChicagoService {
 	
 	
 	
-	private void loadMACAddress(String data,List<Object> paramsList ) throws InValidBarCodeException{
+	private String loadMACAddress(String data,List<Object> paramsList,String idOnController ) throws InValidBarCodeException, QRCodeAlreadyUsedException,Exception{
 		if(data.contains("MACid")){
 			String[] nodeInfo = data.split(",");
 			if(nodeInfo.length > 0){
 				for(String nodeData : nodeInfo){
 					if(nodeData.startsWith("MACid")){
 						String macAddress = nodeData.substring(6);
+						checkMacAddressExists(macAddress, idOnController);
 						addStreetLightData("MacAddress", macAddress, paramsList);
-						return;
+						return macAddress;
 					}
 				}
 			}
 		}else{
+			checkMacAddressExists(data, idOnController);
 			addStreetLightData("MacAddress", data, paramsList);
-			return;
+			return data;
 		}
 		
 		throw new InValidBarCodeException("Node MAC address is not valid. Value is:"+data);
@@ -342,5 +354,57 @@ public class StreetlightChicagoService {
 		return null;
 	
 	}
+	
+	
+	
+	/**
+	 * Load Mac address and corresponding IdOnController from SLV Server
+	 * @throws Exception 
+	 */
+	public boolean checkMacAddressExists(String macAddress,String idOnController)throws Exception{
+		logger.info("Getting Mac Address from SLV.");
+		String mainUrl = properties.getProperty("streetlight.slv.url.main");
+		String updateDeviceValues = properties.getProperty("streetlight.slv.url.search.device");
+		String url = mainUrl + updateDeviceValues;
+		List<String> paramsList = new ArrayList<>();
+		paramsList.add("attribute=MacAddress");
+		paramsList.add("value="+macAddress);
+		paramsList.add("operator=eq-i");
+		paramsList.add("recurse=true");
+		paramsList.add("ser=json");
+		String params = StringUtils.join(paramsList, "&");
+		url = url + "?" + params;
+		ResponseEntity<String> response = restService.getRequest(url,true,null);
+		if(response.getStatusCodeValue() == 200){
+			String responseString = response.getBody();
+			logger.info("-------MAC Address----------");
+			logger.info(responseString);
+			logger.info("-------MAC Address End----------");
+			DeviceMacAddress deviceMacAddress = gson.fromJson(responseString, DeviceMacAddress.class);
+			List<Value> values = deviceMacAddress.getValue();
+			StringBuilder stringBuilder = new StringBuilder();
+			if(values == null || values.size() == 0){
+				return false;
+			}else{
+				for(Value value : values){
+					if(value.getIdOnController().equals(idOnController)){
+						return  false;
+					}
+					stringBuilder.append(value.getIdOnController());
+					stringBuilder.append("\n");
+				}
+			}
+			throw new QRCodeAlreadyUsedException(stringBuilder.toString(), macAddress);
+		}else{
+			throw new Exception();
+		}
+		
+	}
+	
+	
+	
+	
+	
+	
 	
 }
