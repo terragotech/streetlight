@@ -201,6 +201,10 @@ public class StreetlightChicagoService {
 		
 		
 		addStreetLightData("installStatus", "Installed", paramsList);
+		
+		addStreetLightData("DimmingGroupName", "Group Calendar 1", paramsList);
+		
+		//DimmingGroupName
 		sync2Slv(paramsList,edgeNote.getNoteGuid(),idOnController,macAddress);
 		noteGuids.add(edgeNote.getNoteGuid());
 	}
