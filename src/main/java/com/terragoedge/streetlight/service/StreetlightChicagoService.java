@@ -197,8 +197,11 @@ public class StreetlightChicagoService {
 			}
 		}
 		
+		addStreetLightData("luminaire.installdate", dateFormat(edgeNote.getCreatedDateTime()), paramsList); // -- TODO
+		//luminaire.installdate - 2017-09-07 09:47:35
 		
-		
+		addStreetLightData("install.date", dateFormat(edgeNote.getCreatedDateTime()) , paramsList);
+		//controller.installdate  - 2017/10/10
 		
 		addStreetLightData("installStatus", "Installed", paramsList);
 		
@@ -310,13 +313,6 @@ public class StreetlightChicagoService {
 			addStreetLightData("device.luminaire.drivermanufacturer", fixtureInfo[10], paramsList);
 			addStreetLightData("device.luminaire.driverpartnumber", fixtureInfo[11], paramsList);
 			addStreetLightData("ballast.dimmingtype", fixtureInfo[12], paramsList);
-			
-			
-			addStreetLightData("luminaire.installdate", dateFormat(edgeNote.getCreatedDateTime()), paramsList); // -- TODO
-			//luminaire.installdate - 2017-09-07 09:47:35
-			
-			addStreetLightData("install.date", dateFormat(edgeNote.getCreatedDateTime()) , paramsList);
-			//controller.installdate  - 2017/10/10
 			
 			
 		}else{
