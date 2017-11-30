@@ -185,6 +185,7 @@ public class StreetlightChicagoService {
 					logger.info("Fixture MAC address is empty. So note is not processed. Note Title :"+edgeNote.getTitle());
 					// return; -- TODO Need to skip or not later decide
 				}else{
+					addStreetLightData("luminaire.installdate", dateFormat(edgeNote.getCreatedDateTime()), paramsList); // -- TODO
 					buildFixtureStreetLightData(edgeFormData.getValue(), paramsList,edgeNote);
 				}
 				
@@ -197,7 +198,7 @@ public class StreetlightChicagoService {
 			}
 		}
 		
-		addStreetLightData("luminaire.installdate", dateFormat(edgeNote.getCreatedDateTime()), paramsList); // -- TODO
+		
 		//luminaire.installdate - 2017-09-07 09:47:35
 		
 		addStreetLightData("install.date", dateFormat(edgeNote.getCreatedDateTime()) , paramsList);
