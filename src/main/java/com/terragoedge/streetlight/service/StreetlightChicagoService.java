@@ -208,19 +208,18 @@ public class StreetlightChicagoService {
 		addStreetLightData("installStatus", "Installed", paramsList);
 		
 		addStreetLightData("DimmingGroupName", "Group Calendar 1", paramsList);
-		
+		String controllerStrIdValue = value(fixtureFromDef,properties.getProperty("edge.fortemplate.fixture.label.cnrlstrid"));
 		//DimmingGroupName
-		sync2Slv(paramsList,edgeNote.getNoteGuid(),idOnController,macAddress);
+		sync2Slv(paramsList,edgeNote.getNoteGuid(),idOnController,macAddress,controllerStrIdValue);
 		noteGuids.add(edgeNote.getNoteGuid());
 	}
 	
 	
-	private void sync2Slv(List<Object> paramsList,String noteGuid,String idOnController,String macAddress) throws DeviceUpdationFailedException, ReplaceOLCFailedException{
+	private void sync2Slv(List<Object> paramsList,String noteGuid,String idOnController,String macAddress, String controllerStrIdValue) throws DeviceUpdationFailedException, ReplaceOLCFailedException{
 		String mainUrl = properties.getProperty("streetlight.slv.url.main");
 		String updateDeviceValues = properties.getProperty("streetlight.slv.url.updatedevice");
 		String url = mainUrl + updateDeviceValues;
-		List<Object> dataList = new ArrayList<Object>();
-		dataList = paramsList;
+	    
 		paramsList.add("ser=json");
 		String params = StringUtils.join(paramsList, "&");
 		url = url + "&" + params;
@@ -234,7 +233,7 @@ public class StreetlightChicagoService {
 			throw new DeviceUpdationFailedException(errorCode + "");
 		}else{
 			//replace OlC
-			replaceOLC(dataList,idOnController,macAddress);
+			replaceOLC(controllerStrIdValue,idOnController,macAddress);
 			streetlightDao.insertProcessedNoteGuids(noteGuid);
 		}
 	}
@@ -245,7 +244,7 @@ public class StreetlightChicagoService {
 	 * @param slvSyncDataEntity
 	 * @throws ReplaceOLCFailedException
 	 */
-		public void replaceOLC(List<Object> paramList,String idOnController,String macAddress) throws ReplaceOLCFailedException {
+		public void replaceOLC(String controllerStrIdValue,String idOnController,String macAddress) throws ReplaceOLCFailedException {
 		try{
 			// String newNetworkId = slvSyncDataEntity.getMacAddress();
 			String newNetworkId = macAddress;
@@ -255,7 +254,7 @@ public class StreetlightChicagoService {
 			String dataUrl = properties.getProperty("streetlight.url.replaceolc");
 			String replaceOlc = properties.getProperty("streetlight.url.replaceolc.method");
 			String url = mainUrl + dataUrl;
-			String controllerStrId = paramList.get(controllerStrId);
+			String controllerStrId = controllerStrIdValue;
 			List<Object> paramsList = new ArrayList<Object>();
 			paramsList.add("methodName=" + replaceOlc);
 			paramsList.add("controllerStrId=" + controllerStrId);
