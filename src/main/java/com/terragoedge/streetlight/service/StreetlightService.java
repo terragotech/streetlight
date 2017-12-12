@@ -437,15 +437,20 @@ public class StreetlightService {
 					if (value == null || value.trim().isEmpty()) {
 						throw new InValidSLNumberException(value);// Need to tthrow
 					} else {
-						
-						edgeSLNumber.setSlNumber(value);
-						value = value.replaceAll("-", "");
-						Pattern p = Pattern.compile("^\\d+$");
-						Matcher m = p.matcher(value);
-						if (!m.matches()) {
-							throw new InValidSLNumberException(value); // Need to
-																	// throw
+						if(value.contains("New Pole")){
+							value =	value.replaceAll("", "#");
+							edgeSLNumber.setSlNumber(value);
+						}else{
+							edgeSLNumber.setSlNumber(value);
+							value = value.replaceAll("-", "");
+							Pattern p = Pattern.compile("^\\d+$");
+							Matcher m = p.matcher(value);
+							if (!m.matches()) {
+								throw new InValidSLNumberException(value); // Need to
+																		// throw
+							}
 						}
+						
 					}
 					
 				} else {
