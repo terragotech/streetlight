@@ -438,7 +438,7 @@ public class StreetlightService {
 						throw new InValidSLNumberException(value);// Need to tthrow
 					} else {
 						if(value.contains("New Pole")){
-							value =	value.replaceAll("", "#");
+							value =	value.replaceAll("#", "");
 							edgeSLNumber.setSlNumber(value);
 						}else{
 							edgeSLNumber.setSlNumber(value);
