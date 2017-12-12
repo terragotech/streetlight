@@ -29,6 +29,7 @@ import com.terragoedge.streetlight.exception.DeviceUpdationFailedException;
 import com.terragoedge.streetlight.exception.InValidBarCodeException;
 import com.terragoedge.streetlight.exception.NoValueException;
 import com.terragoedge.streetlight.exception.QRCodeAlreadyUsedException;
+import com.terragoedge.streetlight.exception.ReplaceOLCFailedException;
 
 public class StreetlightChicagoService {
 	StreetlightDao streetlightDao = null;
@@ -214,11 +215,12 @@ public class StreetlightChicagoService {
 	}
 	
 	
-	private void sync2Slv(List<Object> paramsList,String noteGuid,String idOnController,String macAddress) throws DeviceUpdationFailedException{
+	private void sync2Slv(List<Object> paramsList,String noteGuid,String idOnController,String macAddress) throws DeviceUpdationFailedException, ReplaceOLCFailedException{
 		String mainUrl = properties.getProperty("streetlight.slv.url.main");
 		String updateDeviceValues = properties.getProperty("streetlight.slv.url.updatedevice");
 		String url = mainUrl + updateDeviceValues;
-		
+		List<Object> dataList = new ArrayList<Object>();
+		dataList = paramsList;
 		paramsList.add("ser=json");
 		String params = StringUtils.join(paramsList, "&");
 		url = url + "&" + params;
@@ -231,11 +233,53 @@ public class StreetlightChicagoService {
 		if (errorCode != 0) {
 			throw new DeviceUpdationFailedException(errorCode + "");
 		}else{
+			//replace OlC
+			replaceOLC(dataList,idOnController,macAddress);
 			streetlightDao.insertProcessedNoteGuids(noteGuid);
 		}
 	}
 	
-	
+	/**
+	 * Calls ReplaceOLCs
+	 * 
+	 * @param slvSyncDataEntity
+	 * @throws ReplaceOLCFailedException
+	 */
+		public void replaceOLC(List<Object> paramList,String idOnController,String macAddress) throws ReplaceOLCFailedException {
+		try{
+			// String newNetworkId = slvSyncDataEntity.getMacAddress();
+			String newNetworkId = macAddress;
+			
+			// Get Url detail from properties
+			String mainUrl = properties.getProperty("streetlight.url.main");
+			String dataUrl = properties.getProperty("streetlight.url.replaceolc");
+			String replaceOlc = properties.getProperty("streetlight.url.replaceolc.method");
+			String url = mainUrl + dataUrl;
+			String controllerStrId = paramList.get(controllerStrId);
+			List<Object> paramsList = new ArrayList<Object>();
+			paramsList.add("methodName=" + replaceOlc);
+			paramsList.add("controllerStrId=" + controllerStrId);
+			paramsList.add("idOnController=" + idOnController);
+			paramsList.add("newNetworkId=" + newNetworkId);
+			paramsList.add("ser=json");
+			String params = StringUtils.join(paramsList, "&");
+			url = url + "?" + params;
+			ResponseEntity<String> response = restService.getPostRequest(url,null);
+			String responseString = response.getBody();
+			JsonObject replaceOlcResponse = (JsonObject) jsonParser.parse(responseString);
+			String errorStatus = replaceOlcResponse.get("status").getAsString();
+			// As per doc, errorcode is 0 for success. Otherwise, its not success.
+			if (errorStatus.equals("ERROR")) {
+				String value = replaceOlcResponse.get("value").getAsString();
+				throw new ReplaceOLCFailedException(value);
+			}
+		}catch(Exception e){
+			logger.error("Error in replaceOLC", e);
+			throw new ReplaceOLCFailedException(e.getMessage());
+		}
+		
+	}
+
 	private String value(List<EdgeFormData> edgeFormDatas,String key) throws NoValueException{
 		EdgeFormData edgeFormTemp = new EdgeFormData();
 		edgeFormTemp.setLabel(key);
