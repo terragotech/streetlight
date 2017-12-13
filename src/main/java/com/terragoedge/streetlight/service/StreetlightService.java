@@ -390,7 +390,11 @@ public class StreetlightService {
 			String currentLine;
 			while ((currentLine = csvFile.readLine()) != null) {
 				String[] stringArray = currentLine.split(",");
-				dimmingValue.put(stringArray[0], stringArray[1]);
+				String key = stringArray[0];
+				if(key.contains("New Pole")){
+					key = key.replaceAll("#", "");
+				}
+				dimmingValue.put(key, stringArray[1]);
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -546,16 +550,22 @@ public class StreetlightService {
 								}
 							}
 							StreetLightData streetLightData = new StreetLightData();
-							streetLightData.setKey(key);
-							streetLightData.setValue(value);
+							
 							if (key.equalsIgnoreCase("idOnController")) {
 								if (value.isEmpty() || value.equalsIgnoreCase("(null)")) {
 									 logger.warn("Not Processed because idonController value is empty. NoteId:"+edgeNoteDetails.getNoteId()+"-"+edgeNoteDetails.getTitle());
 									return;
 								}
 								
+								if(value.contains("New Pole")){
+									value =	value.replaceAll("#", "");
+								}
 								slvSyncDataEntity.setIdOnController(value);
 							}
+							
+							streetLightData.setKey(key);
+							streetLightData.setValue(value);
+							
 							if (key.equalsIgnoreCase("power2")) {
 								if (value != null && !(value.trim().isEmpty())
 										&& !(value.trim().equalsIgnoreCase("(null)"))) {
@@ -604,7 +614,7 @@ public class StreetlightService {
 				}
 				int watt = power2Watt - lWatt;
 				addStreetLightData("powerCorrection", watt + "", slvSyncDataEntity.getStreetLightDatas());
-				addStreetLightData("location.utillocationid", edgeNoteDetail.getTitle() + ".Lamp", slvSyncDataEntity.getStreetLightDatas());
+				addStreetLightData("location.utillocationid", slvSyncDataEntity.getIdOnController() + ".Lamp", slvSyncDataEntity.getStreetLightDatas());
 				String nodeTypeStrId = properties.getProperty("streetlight.equipment.type");
 				addStreetLightData("modelFunctionId", nodeTypeStrId, slvSyncDataEntity.getStreetLightDatas());
 

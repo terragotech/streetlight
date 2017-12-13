@@ -40,6 +40,9 @@ public class SlvSyncDataEntity {
 	}
 
 	public String getIdOnController() {
+		if(idOnController != null && idOnController.contains("New Pole")){
+			idOnController = idOnController.replaceAll("#", "");
+		}
 		return idOnController;
 	}
 

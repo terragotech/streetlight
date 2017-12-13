@@ -65,7 +65,7 @@ public class StreetlightDao extends UtilDao {
 		try {
 			queryStatement = connection.createStatement();
 			queryResponse = queryStatement.executeQuery(
-					"SELECT ef.edgenoteentity_noteid FROM edgeform ef, edgenote en  WHERE en.iscurrent = true and en.isdeleted = false and  en.noteid =  ef.edgenoteentity_noteid and ef.formtemplateguid = '" + formTemplateGuid + "'");
+					"SELECT ef.edgenoteentity_noteid FROM edgeform ef, edgenote en  WHERE  en.iscurrent = true and en.isdeleted = false and  en.noteid =  ef.edgenoteentity_noteid and ef.formtemplateguid = '" + formTemplateGuid + "'");
 			
 			while (queryResponse.next()) {
 				noteIds.add(queryResponse.getString("edgenoteentity_noteid"));
