@@ -1,5 +1,8 @@
 package com.terragoedge.streetlight.service;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.lang.reflect.Type;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -30,6 +33,8 @@ import com.terragoedge.streetlight.exception.InValidBarCodeException;
 import com.terragoedge.streetlight.exception.NoValueException;
 import com.terragoedge.streetlight.exception.QRCodeAlreadyUsedException;
 import com.terragoedge.streetlight.exception.ReplaceOLCFailedException;
+
+import sun.java2d.DataBufferNIOInt;
 
 public class StreetlightChicagoService {
 	StreetlightDao streetlightDao = null;
@@ -132,7 +137,13 @@ public class StreetlightChicagoService {
 			}
 		}catch(QRCodeAlreadyUsedException e1){
 			logger.error("MacAddress ("+e1.getMacAddress()+")  - Already in use. So this pole is not synced with SLV. Note Title :["+edgeNote.getTitle()+" ]");
-			edgeMailService.sendMailMacAddressAlreadyUsed(e1.getMacAddress(), e1.getMessage());
+			
+			DailyReportCSV qrCodeDuplicate = new DailyReportCSV();
+			qrCodeDuplicate.setQrCode(e1.getMacAddress());
+			qrCodeDuplicate.setNoteTitle(edgeNote.getTitle());
+			qrCodeDuplicate.setNoteCreatedDateTime(edgeNote.getCreatedDateTime());
+			duplicateQRCode(qrCodeDuplicate);
+			//edgeMailService.sendMailMacAddressAlreadyUsed(e1.getMacAddress(), e1.getMessage());
 		}catch(Exception e){
 			logger.error("Error in syncData",e);
 		}
@@ -142,6 +153,11 @@ public class StreetlightChicagoService {
 		List<Object> paramsList = new ArrayList<Object>();
 		String chicagoFormTemplateGuid = properties.getProperty("streetlight.edge.formtemplateguid.chicago");
 		String fixtureFormTemplateGuid = properties.getProperty("streetlight.edge.formtemplateguid.fixture");
+		
+		
+		DailyReportCSV dailyReportCSV = new DailyReportCSV();
+		dailyReportCSV.setContext(edgeNote.getLocationDescription());
+		dailyReportCSV.setNoteCreatedDateTime(edgeNote.getCreatedDateTime());
 		
 		FormData chicagoFromData = formDatas.get(chicagoFormTemplateGuid);
 		if(chicagoFromData == null){
@@ -163,6 +179,7 @@ public class StreetlightChicagoService {
 		try {
 			idOnController = value(fixtureFromDef,properties.getProperty("edge.fortemplate.fixture.label.idoncntrl"));
 			paramsList.add("idOnController=" + idOnController);
+			dailyReportCSV.setNoteTitle(idOnController);
 		} catch (NoValueException e) {
 			e.printStackTrace();
 			return;
@@ -177,6 +194,16 @@ public class StreetlightChicagoService {
 			return;
 		}
 		
+		//Get Fixture Code
+		try {
+			String fixtureCode = value(fixtureFromDef,properties.getProperty("edge.fortemplate.fixture.label.fixture.code"));
+			dailyReportCSV.setFixtureCode(fixtureCode);
+		} catch (NoValueException e) {
+			e.printStackTrace();
+			return;
+		}
+		
+		
 		String macAddress = null;
 		// Process Chicago Form data
 		List<EdgeFormData> chicagoFromDef =  chicagoFromData.getFormDef();
@@ -187,7 +214,7 @@ public class StreetlightChicagoService {
 					// return; -- TODO Need to skip or not later decide
 				}else{
 					addStreetLightData("luminaire.installdate", dateFormat(edgeNote.getCreatedDateTime()), paramsList); // -- TODO
-					buildFixtureStreetLightData(edgeFormData.getValue(), paramsList,edgeNote);
+					buildFixtureStreetLightData(edgeFormData.getValue(), paramsList,edgeNote,dailyReportCSV);
 				}
 				
 			}else if(edgeFormData.getLabel().equals(properties.getProperty("edge.fortemplate.chicago.label.node.macaddress"))){
@@ -198,7 +225,7 @@ public class StreetlightChicagoService {
 				macAddress = loadMACAddress(edgeFormData.getValue(), paramsList,idOnController);
 			}
 		}
-		
+		dailyReportCSV.setQrCode(macAddress);
 		
 		//luminaire.installdate - 2017-09-07 09:47:35
 		
@@ -210,12 +237,12 @@ public class StreetlightChicagoService {
 		addStreetLightData("DimmingGroupName", "Group Calendar 1", paramsList);
 		String controllerStrIdValue = value(fixtureFromDef,properties.getProperty("edge.fortemplate.fixture.label.cnrlstrid"));
 		//DimmingGroupName
-		sync2Slv(paramsList,edgeNote.getNoteGuid(),idOnController,macAddress,controllerStrIdValue);
+		sync2Slv(paramsList,edgeNote.getNoteGuid(),idOnController,macAddress,controllerStrIdValue,dailyReportCSV);
 		noteGuids.add(edgeNote.getNoteGuid());
 	}
 	
 	
-	private void sync2Slv(List<Object> paramsList,String noteGuid,String idOnController,String macAddress, String controllerStrIdValue) throws DeviceUpdationFailedException, ReplaceOLCFailedException{
+	private void sync2Slv(List<Object> paramsList,String noteGuid,String idOnController,String macAddress, String controllerStrIdValue,DailyReportCSV dailyReportCSV) throws DeviceUpdationFailedException, ReplaceOLCFailedException{
 		String mainUrl = properties.getProperty("streetlight.slv.url.main");
 		String updateDeviceValues = properties.getProperty("streetlight.slv.url.updatedevice");
 		String url = mainUrl + updateDeviceValues;
@@ -235,6 +262,8 @@ public class StreetlightChicagoService {
 			//replace OlC
 			replaceOLC(controllerStrIdValue,idOnController,macAddress);
 			streetlightDao.insertProcessedNoteGuids(noteGuid);
+			// Process Daily Report
+			processDailyReport(dailyReportCSV);
 		}
 	}
 	
@@ -329,7 +358,7 @@ public class StreetlightChicagoService {
 	//Philips RoadFocus, RFS-54W16LED3K-T-R2M-UNIV-DMG-PH9-RCD-SP2-GY3,
 	//RFM0455, 07/24/17, 54W, 120/277V, 4000K, 8140 Lm, R2M, Gray, Advance, 442100083510, DMG
 	
-	public void buildFixtureStreetLightData(String data,List<Object> paramsList,EdgeNote edgeNote ) throws InValidBarCodeException{
+	public void buildFixtureStreetLightData(String data,List<Object> paramsList,EdgeNote edgeNote,DailyReportCSV dailyReportCSV ) throws InValidBarCodeException{
 		String[] fixtureInfo = data.split(",");
 		if(fixtureInfo.length >= 13){
 			addStreetLightData("luminaire.brand", fixtureInfo[0], paramsList);
@@ -350,6 +379,7 @@ public class StreetlightChicagoService {
 			addStreetLightData("device.luminaire.manufacturedate", fixtureInfo[3], paramsList);
 			addStreetLightData("power", fixtureInfo[4], paramsList);
 			addStreetLightData("fixing.type", fixtureInfo[5], paramsList);
+			dailyReportCSV.setFixtureType(fixtureInfo[5]);
 			addStreetLightData("device.luminaire.colortemp", fixtureInfo[6], paramsList);
 			addStreetLightData("device.luminaire.lumenoutput", fixtureInfo[7], paramsList);
 			addStreetLightData("luminaire.DistributionType", fixtureInfo[8], paramsList);
@@ -446,8 +476,127 @@ public class StreetlightChicagoService {
 	}
 	
 	
+	public void processDailyReport(DailyReportCSV dailyReportCSV){
+		try {
+			File file =  getFile(dailyReportCSV);
+			writeData(getDailyReport(dailyReportCSV), file);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
 	
 	
+	private String getDailyReport(DailyReportCSV dailyReportCSV){
+		StringBuilder stringBuilder = new StringBuilder();
+		stringBuilder.append(dailyReportCSV.getNoteTitle());
+		stringBuilder.append(",");
+		stringBuilder.append(dailyReportCSV.getContext());
+		stringBuilder.append(",");
+		stringBuilder.append(dailyReportCSV.getContextType());
+		stringBuilder.append(",");
+		stringBuilder.append(dailyReportCSV.getFixtureCode());
+		stringBuilder.append(",");
+		stringBuilder.append(dailyReportCSV.getFixtureType());
+		stringBuilder.append(",");
+		stringBuilder.append(dailyReportCSV.getQrCode());
+		stringBuilder.append("\n");
+		return stringBuilder.toString();
+		
+	}
+	
+	
+	private String getDailyReportTitle(){
+		StringBuilder stringBuilder = new StringBuilder();
+		stringBuilder.append("Title,");
+		stringBuilder.append("Context,");
+		stringBuilder.append("Context Type,");
+		stringBuilder.append("Fixture Code,");
+		stringBuilder.append("Fixture Type,");
+		stringBuilder.append("QR Code");
+		stringBuilder.append("\n");
+		return stringBuilder.toString();
+	}
+	
+	private File getFile(DailyReportCSV dailyReportCSV) throws IOException{
+		File file = new File("./report/dailyreport_"+getCurrentDate(dailyReportCSV)+".csv");
+		if(!file.exists()){
+			file.createNewFile();
+			String data = getDailyReportTitle();
+			writeData(data, file);
+		}
+		return file;
+	}
+	
+	
+	private void writeData(String data,File file){
+		FileOutputStream fileOutputStream = null;
+		try{
+			 fileOutputStream = new FileOutputStream(file,true);
+			 fileOutputStream.write(data.getBytes());
+			 fileOutputStream.flush();
+		}catch(Exception e){
+			e.printStackTrace();
+		}finally{
+			if(fileOutputStream != null){
+				try {
+					fileOutputStream.close();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			}
+		}
+		
+	}
+	
+	
+	private String getCurrentDate(DailyReportCSV dailyReportCSV){
+		Date date = new Date(dailyReportCSV.getNoteCreatedDateTime());
+		SimpleDateFormat dateFormat = new SimpleDateFormat("MM_dd");
+		String dff = dateFormat.format(date);
+		return dff;
+	}
+	
+	
+	/** Daily QR Code Duplicate reports **/
+	private void duplicateQRCode(DailyReportCSV qrCodeDublicate){
+		try {
+			File file =  getQrCodeFile();
+			writeData(getDailyReport(qrCodeDublicate), file);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+	
+	
+	
+	private String getQRCodeDubTitle(){
+		StringBuilder stringBuilder = new StringBuilder();
+		stringBuilder.append("Title,");
+		stringBuilder.append("QRCode,");
+		stringBuilder.append("Created Date");
+		
+		stringBuilder.append("\n");
+		return stringBuilder.toString();
+	}
+	
+	private File getQrCodeFile() throws IOException{
+		File file = new File("./report/qrcodedub_"+getCurrentDate()+".csv");
+		if(!file.exists()){
+			file.createNewFile();
+			String data = getQRCodeDubTitle();
+			writeData(data, file);
+		}
+		return file;
+	}
+	
+	private String getCurrentDate(){
+		Date date = new Date(System.currentTimeMillis());
+		SimpleDateFormat dateFormat = new SimpleDateFormat("MM_dd");
+		String dff = dateFormat.format(date);
+		return dff;
+	}
 	
 	
 	
