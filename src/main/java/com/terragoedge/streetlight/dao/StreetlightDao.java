@@ -7,9 +7,12 @@ import java.sql.ResultSet;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.Set;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 
 import com.google.gson.Gson;
@@ -114,12 +117,12 @@ public class StreetlightDao extends UtilDao {
 		try {
 			queryStatement = connection.createStatement();
 			queryResponse = queryStatement.executeQuery("select title from edgenote where noteid in (select edgenoteentity_noteid from edgeform where edgeform.formdef like '%"+macAddress+"%') and title != '"+title+"'");
-			StringBuilder stringBuilder = new StringBuilder();
+			Set<String> datas = new HashSet<>();
 			while (queryResponse.next()) {
-				stringBuilder.append(queryResponse.getString("title"));
-				stringBuilder.append("|");
+				datas.add(queryResponse.getString("title"));
 			}
-			dailyReportCSV.setMacAddressNoteTitle(stringBuilder.toString());
+			String res = StringUtils.join(datas, ",");
+			dailyReportCSV.setMacAddressNoteTitle(res);
 		} catch (Exception e) {
 			logger.error("Error in getNoteIds", e);
 		} finally {

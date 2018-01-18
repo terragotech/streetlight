@@ -64,7 +64,7 @@ public class EdgeMailService {
 			message.setSubject("Daily Report - Automated");
 
 			BodyPart messageBodyPart = new MimeBodyPart();
-			messageBodyPart.setText("Please find attached the csv with the today's data.");
+			messageBodyPart.setText("Please find attached the csv with the today's data. \n \n");
 
 			Multipart multipart = new MimeMultipart();
 			multipart.addBodyPart(messageBodyPart);
@@ -77,6 +77,7 @@ public class EdgeMailService {
 			multipart.addBodyPart(messageBodyPart);
 
 			if (dupMacAddressFile != null) {
+				messageBodyPart = new MimeBodyPart();
 				source = new FileDataSource("./report/" + dupMacAddressFile);
 				messageBodyPart.setDataHandler(new DataHandler(source));
 				messageBodyPart.setFileName(dupMacAddressFile);

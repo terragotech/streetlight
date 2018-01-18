@@ -39,7 +39,9 @@ public class StreetlightChicagoService {
 		stringBuilder.append(",");
 		stringBuilder.append(dailyReportCSV.getQrCode());
 		stringBuilder.append(",");
+		stringBuilder.append("\"");
 		stringBuilder.append(dailyReportCSV.getMacAddressNoteTitle());
+		stringBuilder.append("\"");
 		stringBuilder.append("\n");
 	}
 	
@@ -67,7 +69,7 @@ public class StreetlightChicagoService {
 			stringBuilder.append(",");
 			stringBuilder.append(dailyReportCSV.getContext());
 			stringBuilder.append("\n");
-			if(dailyReportCSV.getMacAddressNoteTitle() != null){
+			if(dailyReportCSV.getMacAddressNoteTitle() != null && !dailyReportCSV.getMacAddressNoteTitle().trim().isEmpty()){
 				loadDup(dupMacStringBuilder, dailyReportCSV);
 				isMacDup = true;
 			}
@@ -89,7 +91,7 @@ public class StreetlightChicagoService {
 	private void logData(String data,String fileName){
 		FileOutputStream fileOutputStream = null;
 		try{
-			 fileOutputStream = new FileOutputStream("./report/"+fileName+".csv");
+			 fileOutputStream = new FileOutputStream("./report/"+fileName);
 			 fileOutputStream.write(data.getBytes());
 			 fileOutputStream.flush();
 		}catch(Exception e){
