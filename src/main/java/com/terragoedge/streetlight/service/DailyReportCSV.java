@@ -1,24 +1,22 @@
 package com.terragoedge.streetlight.service;
 
 public class DailyReportCSV {
-	
+
 	private String noteTitle;
 	private String context;
-	private String contextType;
-	private String fixtureCode;
+	private String fixtureQrScan;
 	private String fixtureType;
 	private String qrCode;
-	private long noteCreatedDateTime;
+	private int noteId;
 	
-	
-	
+	private String macAddressNoteTitle;
 
-	public long getNoteCreatedDateTime() {
-		return noteCreatedDateTime;
+	public String getNoteTitle() {
+		return noteTitle;
 	}
 
-	public void setNoteCreatedDateTime(long noteCreatedDateTime) {
-		this.noteCreatedDateTime = noteCreatedDateTime;
+	public void setNoteTitle(String noteTitle) {
+		this.noteTitle = noteTitle;
 	}
 
 	public String getContext() {
@@ -29,20 +27,12 @@ public class DailyReportCSV {
 		this.context = context;
 	}
 
-	public String getContextType() {
-		return contextType;
+	public String getFixtureQrScan() {
+		return fixtureQrScan;
 	}
 
-	public void setContextType(String contextType) {
-		this.contextType = contextType;
-	}
-
-	public String getFixtureCode() {
-		return fixtureCode;
-	}
-
-	public void setFixtureCode(String fixtureCode) {
-		this.fixtureCode = fixtureCode;
+	public void setFixtureQrScan(String fixtureQrScan) {
+		this.fixtureQrScan = fixtureQrScan;
 	}
 
 	public String getFixtureType() {
@@ -61,15 +51,28 @@ public class DailyReportCSV {
 		this.qrCode = qrCode;
 	}
 
-	public String getNoteTitle() {
-		return noteTitle;
+	public int getNoteId() {
+		return noteId;
 	}
 
-	public void setNoteTitle(String noteTitle) {
-		this.noteTitle = noteTitle;
+	public void setNoteId(int noteId) {
+		this.noteId = noteId;
 	}
-	
-	
+
+	@Override
+	public String toString() {
+		return "DailyReportCSV [noteTitle=" + noteTitle + ", context=" + context + ", fixtureQrScan=" + fixtureQrScan
+				+ ", fixtureType=" + fixtureType + ", qrCode=" + qrCode + ", noteId=" + noteId + "]";
+	}
+
+	public String getMacAddressNoteTitle() {
+		return macAddressNoteTitle;
+	}
+
+	public void setMacAddressNoteTitle(String macAddressNoteTitle) {
+		this.macAddressNoteTitle = macAddressNoteTitle;
+	}
+
 	
 
 }

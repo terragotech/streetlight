@@ -1,15 +1,22 @@
 package com.terragoedge.streetlight.dao;
 
+import java.lang.reflect.Type;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.List;
+import java.util.Locale;
 
 import org.apache.log4j.Logger;
 
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
+import com.terragoedge.edgeserver.EdgeFormData;
 import com.terragoedge.streetlight.StreetlightDaoConnection;
+import com.terragoedge.streetlight.service.DailyReportCSV;
 
 public class StreetlightDao extends UtilDao {
 
@@ -17,95 +24,9 @@ public class StreetlightDao extends UtilDao {
 
 	public StreetlightDao() {
 		super();
-		createStreetLightSyncTable();
 	}
 	
 	
-	private void executeStatement(String sql) {
-		PreparedStatement preparedStatement = null;
-		try {
-			preparedStatement = connection.prepareStatement(sql);
-			preparedStatement.execute();
-		} catch (Exception e) {
-			e.printStackTrace();
-		} finally {
-			closeStatement(preparedStatement);
-		}
-	}
-	
-	
-	private long exceuteSql(String sql) {
-		Statement statement = null;
-		Connection connection = null;
-		try {
-			connection = StreetlightDaoConnection.getInstance().getConnection();
-			statement = connection.createStatement();
-			ResultSet resultSet = statement.executeQuery(sql);
-			while(resultSet.next()){
-				long res = resultSet.getLong(1);
-				return res;
-			}
-		} catch (Exception e) {
-			logger.error("Error in exceuteSequence",e);
-		} finally {
-			closeStatement(statement);
-		}
-		return -1;
-	}
-
-	private void createStreetLightSyncTable() {
-		String sql = "CREATE TABLE IF NOT EXISTS notesyncdetails (streetlightsyncid integer NOT NULL,"
-				+ " processednoteid text, CONSTRAINT notesyncdetails_pkey PRIMARY KEY (streetlightsyncid));";
-		executeStatement(sql);
-		
-		//sql = "CREATE TABLE IF NOT EXISTS lastsyncstatus (lastsyncstatusid integer not null, lastsynctime text, CONSTRAINT lastsyncstatus_pkey PRIMARY KEY (lastsyncstatusid))";
-	}
-	
-	
-	
-	public long getLastSyncTime(){
-		String sql = "select lastsynctime from lastsyncstatus;";
-		return exceuteSql(sql);
-	}
-	
-	
-	public void updateSyncTime(String syncTime){
-		PreparedStatement preparedStatement = null;
-		Connection connection = null;
-		try {
-			connection = StreetlightDaoConnection.getInstance().getConnection();
-			preparedStatement = connection.prepareStatement(
-					"UPDATE lastsyncstatus SET lastsynctime = ? ;");
-			preparedStatement.setString(1, syncTime);
-			preparedStatement.execute();
-		} catch (Exception e) {
-			logger.error("Error in updateSyncTime",e);
-		} finally {
-			closeStatement(preparedStatement);
-		}
-	}
-	
-	
-	public void insertProcessedNoteGuids(String noteGuid){
-		PreparedStatement preparedStatement = null;
-		Connection connection = null;
-		try {
-			String sql = "SELECT max(streetlightsyncid) + 1 from  notesyncdetails";
-			long id = exceuteSql(sql);
-			if(id == -1 || id == 0){
-				id = 1; 
-			}
-			connection = StreetlightDaoConnection.getInstance().getConnection();
-			preparedStatement = connection.prepareStatement("INSERT INTO notesyncdetails (streetlightsyncid , processednoteid) values (?,?) ;");
-			preparedStatement.setLong(1, id);
-			preparedStatement.setString(2, noteGuid);
-			preparedStatement.execute();
-		} catch (Exception e) {
-			logger.error("Error in insertParentNoteId",e);
-		} finally {
-			closeStatement(preparedStatement);
-		}
-	}
 	
 	
 	
@@ -117,16 +38,27 @@ public class StreetlightDao extends UtilDao {
 	 * @param formTemplateGuid
 	 * @return
 	 */
-	public List<String> getNoteIds() {
+	public List<DailyReportCSV> getNoteIds() {
 		Statement queryStatement = null;
 		ResultSet queryResponse = null;
-		List<String> noteIds = new ArrayList<>();
+		List<DailyReportCSV> dailyReportCSVs = new ArrayList<>();
 		try {
+			
+			Calendar calendar = Calendar.getInstance(Locale.getDefault());
+			calendar.set(Calendar.HOUR_OF_DAY, 00);
+			calendar.set(Calendar.MINUTE, 00);
+			calendar.set(Calendar.SECOND, 00);
+			long startOfDay = calendar.getTime().getTime();
 			queryStatement = connection.createStatement();
-			queryResponse = queryStatement.executeQuery("Select processednoteid from notesyncdetails;");
+			queryResponse = queryStatement.executeQuery("select noteid, createdby,description,title,groupname from edgenoteview where isdeleted = false and iscurrent = true and createddatetime >= "+startOfDay+";");
 			
 			while (queryResponse.next()) {
-				noteIds.add(queryResponse.getString("processednoteid"));
+				DailyReportCSV dailyReportCSV = new DailyReportCSV();
+				dailyReportCSV.setContext(queryResponse.getString("description"));
+				dailyReportCSV.setFixtureType(queryResponse.getString("groupname"));
+				dailyReportCSV.setNoteTitle(queryResponse.getString("title"));
+				loadVal(queryResponse.getString("noteid"), dailyReportCSV);
+				dailyReportCSVs.add(dailyReportCSV);
 			}
 
 		} catch (Exception e) {
@@ -135,7 +67,65 @@ public class StreetlightDao extends UtilDao {
 			closeResultSet(queryResponse);
 			closeStatement(queryStatement);
 		}
-		return noteIds;
+		return dailyReportCSVs;
+	}
+	
+	
+	public void loadVal(String noteId,DailyReportCSV dailyReportCSV){
+		Statement queryStatement = null;
+		ResultSet queryResponse = null;
+		try {
+			queryStatement = connection.createStatement();
+			queryResponse = queryStatement.executeQuery("select formdef from edgeform where edgenoteentity_noteid = "+noteId);
+			
+			while (queryResponse.next()) {
+				String formDef = queryResponse.getString("formdef");
+				
+				Type listType = new TypeToken<ArrayList<EdgeFormData>>() {
+				}.getType();
+				Gson gson = new Gson();
+				List<EdgeFormData> edgeFormDatas = gson.fromJson(formDef, listType);
+				
+				for(EdgeFormData edgeFormData : edgeFormDatas){
+					if(edgeFormData.getLabel().equals("Fixture QR Scan")){
+						dailyReportCSV.setFixtureQrScan(edgeFormData.getValue());
+						
+					}else if(edgeFormData.getLabel().equals("Node MAC address")){
+						dailyReportCSV.setQrCode(edgeFormData.getValue());
+						if(edgeFormData.getValue() != null && !edgeFormData.getValue().trim().isEmpty()){
+							checkDupMacAddress(edgeFormData.getValue(), dailyReportCSV, dailyReportCSV.getNoteTitle());
+						}
+					}
+				}
+			}
+
+		} catch (Exception e) {
+			logger.error("Error in getNoteIds", e);
+		} finally {
+			closeResultSet(queryResponse);
+			closeStatement(queryStatement);
+		}
+	}
+	
+	
+	public void checkDupMacAddress(String macAddress,DailyReportCSV dailyReportCSV,String title){
+		Statement queryStatement = null;
+		ResultSet queryResponse = null;
+		try {
+			queryStatement = connection.createStatement();
+			queryResponse = queryStatement.executeQuery("select title from edgenote where noteid in (select edgenoteentity_noteid from edgeform where edgeform.formdef like '%"+macAddress+"%') and title != '"+title+"'");
+			StringBuilder stringBuilder = new StringBuilder();
+			while (queryResponse.next()) {
+				stringBuilder.append(queryResponse.getString("title"));
+				stringBuilder.append("|");
+			}
+			dailyReportCSV.setMacAddressNoteTitle(stringBuilder.toString());
+		} catch (Exception e) {
+			logger.error("Error in getNoteIds", e);
+		} finally {
+			closeResultSet(queryResponse);
+			closeStatement(queryStatement);
+		}
 	}
 
 	

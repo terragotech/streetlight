@@ -2,13 +2,20 @@ package com.terragoedge.streetlight.service;
 
 import java.util.Properties;
 
+import javax.activation.DataHandler;
+import javax.activation.DataSource;
+import javax.activation.FileDataSource;
+import javax.mail.BodyPart;
 import javax.mail.Message;
+import javax.mail.Multipart;
 import javax.mail.PasswordAuthentication;
 import javax.mail.Session;
 import javax.mail.Transport;
 import javax.mail.internet.AddressException;
 import javax.mail.internet.InternetAddress;
+import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMessage;
+import javax.mail.internet.MimeMultipart;
 
 import org.apache.log4j.Logger;
 
@@ -24,7 +31,7 @@ public class EdgeMailService {
 		properties = PropertiesReader.getProperties();
 	}
 
-	public void sendMail(String body, String subject) {
+	public void sendMail(String dupMacAddressFile,String dailyReportFile) {
 		logger.info("Mail Server Triggered");
 		Properties props = System.getProperties();
 		final String fromEmail = properties.getProperty("email.id");
@@ -54,8 +61,30 @@ public class EdgeMailService {
 			for (int i = 0; i < toAddress.length; i++) {
 				message.addRecipient(Message.RecipientType.TO, toAddress[i]);
 			}
-			message.setSubject(subject);
-			message.setText(body);
+			message.setSubject("Daily Report - Automated");
+
+			BodyPart messageBodyPart = new MimeBodyPart();
+			messageBodyPart.setText("Please find attached the csv with the today's data.");
+
+			Multipart multipart = new MimeMultipart();
+			multipart.addBodyPart(messageBodyPart);
+
+			messageBodyPart = new MimeBodyPart();
+
+			DataSource source = new FileDataSource("./report/" + dailyReportFile);
+			messageBodyPart.setDataHandler(new DataHandler(source));
+			messageBodyPart.setFileName(dailyReportFile);
+			multipart.addBodyPart(messageBodyPart);
+
+			if (dupMacAddressFile != null) {
+				source = new FileDataSource("./report/" + dupMacAddressFile);
+				messageBodyPart.setDataHandler(new DataHandler(source));
+				messageBodyPart.setFileName(dupMacAddressFile);
+				multipart.addBodyPart(messageBodyPart);
+			}
+
+			message.setContent(multipart);
+
 			Transport transport = session.getTransport("smtp");
 			transport.connect(host, fromEmail, emailPassword);
 			transport.sendMessage(message, message.getAllRecipients());
@@ -69,46 +98,6 @@ public class EdgeMailService {
 		}
 	}
 
-	public void sendMailInValidSLNumber(final String slNumber) {
-		startMailThread("SL number - wrong format",
-				"The SL number (" + slNumber + ") of this Pole is not in the expected format. So this (" + slNumber
-						+ ") Pole details is skipped and not synced to SLV server.");
-	}
-
-	public void sendMailQRCodeMissing(final String slNumber, final String replaceNodeQRCode) {
-		startMailThread("QR Code - Missing in Richmond Hill Streetlights",
-				"The QR Code ( " + replaceNodeQRCode
-						+ " ) is present in Replace Node form but not in Richmond Hill Streetlights form. So this ("
-						+ slNumber + ") Pole detail is not synced to SLV server.");
-	}
-
-	public void sendMailReplaceOLCsErrorCode(final String slNumber, final String errorCode) {
-		startMailThread("ReplaceOLCs Rest Service - Error code response",
-				"The service call to replaceOLCs rest service failed. This is the corresponding error code ("
-						+ errorCode + ") and pole number (" + slNumber + ")");
-	}
 	
-	
-	public void sendMailMacAddressAlreadyUsed(final String macAddress, final String slNumbers) {
-		startMailThread("MacAddress - Already in use",
-				"The MacAddress ("+macAddress+") is already used by following SLNumbers \n "+slNumbers);
-	}
-
-	public void sendMailDeviceNotFound(final String slNumber, final String replaceNodeQrCode,final String richmondQrCode) {
-		startMailThread("Device Not Found",
-				"The QRcode data is present in both Richmond hill ("+richmondQrCode+") and Replace node ("+replaceNodeQrCode+") forms. But the Device ("+slNumber+") is not present in SLV server.");
-	}
-
-	private void startMailThread(final String subject, final String body) {
-		Thread thread = new Thread(new Runnable() {
-
-			@Override
-			public void run() {
-				sendMail(body,subject);
-
-			}
-		});
-		thread.start();
-	}
 
 }
