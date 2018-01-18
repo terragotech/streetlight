@@ -116,7 +116,7 @@ public class StreetlightDao extends UtilDao {
 		ResultSet queryResponse = null;
 		try {
 			queryStatement = connection.createStatement();
-			queryResponse = queryStatement.executeQuery("select title from edgenote where noteid in (select edgenoteentity_noteid from edgeform where edgeform.formdef like '%"+macAddress+"%') and title != '"+title+"'");
+			queryResponse = queryStatement.executeQuery("select title from edgenote where isdeleted = false and iscurrent = true and noteid in (select edgenoteentity_noteid from edgeform where edgeform.formdef like '%"+macAddress+"%') and title != '"+title+"'");
 			Set<String> datas = new HashSet<>();
 			while (queryResponse.next()) {
 				datas.add(queryResponse.getString("title"));
