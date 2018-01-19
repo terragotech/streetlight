@@ -8,7 +8,37 @@ public class DailyReportCSV {
 	private String fixtureType;
 	private String qrCode;
 	private int noteId;
+	private String lat;
+	private String lng;
+	private String createdBy;
 	
+	
+	
+	
+	public String getCreatedBy() {
+		return createdBy;
+	}
+
+	public void setCreatedBy(String createdBy) {
+		this.createdBy = createdBy;
+	}
+
+	public String getLat() {
+		return lat;
+	}
+
+	public void setLat(String lat) {
+		this.lat = lat;
+	}
+
+	public String getLng() {
+		return lng;
+	}
+
+	public void setLng(String lng) {
+		this.lng = lng;
+	}
+
 	private String macAddressNoteTitle;
 
 	public String getNoteTitle() {

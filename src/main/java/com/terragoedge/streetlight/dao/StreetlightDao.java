@@ -53,13 +53,16 @@ public class StreetlightDao extends UtilDao {
 			calendar.set(Calendar.SECOND, 00);
 			long startOfDay = calendar.getTime().getTime();
 			queryStatement = connection.createStatement();
-			queryResponse = queryStatement.executeQuery("select noteid, createdby,description,title,groupname from edgenoteview where isdeleted = false and iscurrent = true and createddatetime >= "+startOfDay+";");
+			queryResponse = queryStatement.executeQuery("select noteid, createdby,description,title,groupname,ST_X(geometry::geometry) as lat, ST_Y(geometry::geometry) as lng from edgenoteview where isdeleted = false and iscurrent = true and createddatetime >= "+startOfDay+";");
 			
 			while (queryResponse.next()) {
 				DailyReportCSV dailyReportCSV = new DailyReportCSV();
 				dailyReportCSV.setContext(queryResponse.getString("description"));
 				dailyReportCSV.setFixtureType(queryResponse.getString("groupname"));
 				dailyReportCSV.setNoteTitle(queryResponse.getString("title"));
+				dailyReportCSV.setCreatedBy(queryResponse.getString("createdby"));
+				dailyReportCSV.setLat(String.valueOf(queryResponse.getDouble("lat")));
+				dailyReportCSV.setLng(String.valueOf(queryResponse.getDouble("lng")));
 				loadVal(queryResponse.getString("noteid"), dailyReportCSV);
 				dailyReportCSVs.add(dailyReportCSV);
 			}

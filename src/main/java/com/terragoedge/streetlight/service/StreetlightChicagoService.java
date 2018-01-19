@@ -50,9 +50,12 @@ public class StreetlightChicagoService {
 		StringBuilder stringBuilder = new StringBuilder();
 		stringBuilder.append("Title,");
 		stringBuilder.append("MAC Address,");
+		stringBuilder.append("User Id,");
 		stringBuilder.append("Fixture QR Scan,");
 		stringBuilder.append("Fixture Type,");
-		stringBuilder.append("Context");
+		stringBuilder.append("Context,");
+		stringBuilder.append("Lat,");
+		stringBuilder.append("Lng");
 		stringBuilder.append("\n");
 		StringBuilder dupMacStringBuilder = getMACDup();
 		boolean isMacDup = false;
@@ -61,6 +64,8 @@ public class StreetlightChicagoService {
 			stringBuilder.append(",");
 			stringBuilder.append(dailyReportCSV.getQrCode());
 			stringBuilder.append(",");
+			stringBuilder.append(dailyReportCSV.getCreatedBy());
+			stringBuilder.append(",");
 			stringBuilder.append("\"");
 			stringBuilder.append(dailyReportCSV.getFixtureQrScan());
 			stringBuilder.append("\"");
@@ -68,6 +73,10 @@ public class StreetlightChicagoService {
 			stringBuilder.append(dailyReportCSV.getFixtureType());
 			stringBuilder.append(",");
 			stringBuilder.append(dailyReportCSV.getContext());
+			stringBuilder.append(",");
+			stringBuilder.append(dailyReportCSV.getLat());
+			stringBuilder.append(",");
+			stringBuilder.append(dailyReportCSV.getLng());
 			stringBuilder.append("\n");
 			if(dailyReportCSV.getMacAddressNoteTitle() != null && !dailyReportCSV.getMacAddressNoteTitle().trim().isEmpty()){
 				loadDup(dupMacStringBuilder, dailyReportCSV);
