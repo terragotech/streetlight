@@ -1,5 +1,6 @@
 package com.terragoedge.streetlight.service;
 
+import java.io.File;
 import java.util.Properties;
 
 import javax.activation.DataHandler;
@@ -91,6 +92,8 @@ public class EdgeMailService {
 			transport.sendMessage(message, message.getAllRecipients());
 			transport.close();
 			logger.info("Mail Send.");
+			File file = new  File("./report/pid");
+			file.createNewFile();
 		} catch (AddressException ae) {
 			ae.printStackTrace();
 		} catch (Exception me) {
