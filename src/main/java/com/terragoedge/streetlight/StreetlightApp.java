@@ -20,6 +20,7 @@ public class StreetlightApp {
 					Calendar calendar = Calendar.getInstance(Locale.getDefault());
 					int hoursOfDay = calendar.get(Calendar.HOUR_OF_DAY);
 					System.out.println("hoursOfDay:"+hoursOfDay);
+					// 18 and 19
 					if(hoursOfDay >= 18 && hoursOfDay < 19){
 						File file  = new File("./report/pid");
 						if(!file.exists()){

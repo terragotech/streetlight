@@ -37,7 +37,9 @@ public class StreetlightChicagoService {
 	private void loadDup(StringBuilder stringBuilder,DailyReportCSV dailyReportCSV){
 		stringBuilder.append(dailyReportCSV.getNoteTitle());
 		stringBuilder.append(",");
+		stringBuilder.append("\"");
 		stringBuilder.append(dailyReportCSV.getQrCode());
+		stringBuilder.append("\"");
 		stringBuilder.append(",");
 		stringBuilder.append("\"");
 		stringBuilder.append(dailyReportCSV.getMacAddressNoteTitle());
@@ -62,7 +64,9 @@ public class StreetlightChicagoService {
 		for(DailyReportCSV dailyReportCSV : dailyReportCSVs){
 			stringBuilder.append(dailyReportCSV.getNoteTitle());
 			stringBuilder.append(",");
+			stringBuilder.append("\"");
 			stringBuilder.append(dailyReportCSV.getQrCode());
+			stringBuilder.append("\"");
 			stringBuilder.append(",");
 			stringBuilder.append(dailyReportCSV.getCreatedBy());
 			stringBuilder.append(",");
@@ -72,7 +76,9 @@ public class StreetlightChicagoService {
 			stringBuilder.append(",");
 			stringBuilder.append(dailyReportCSV.getFixtureType());
 			stringBuilder.append(",");
+			stringBuilder.append("\"");
 			stringBuilder.append(dailyReportCSV.getContext());
+			stringBuilder.append("\"");
 			stringBuilder.append(",");
 			stringBuilder.append(dailyReportCSV.getLat());
 			stringBuilder.append(",");
