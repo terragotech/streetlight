@@ -439,10 +439,14 @@ public class StreetlightService {
 					String value = edgeFormData.getValue();
 					logger.warn("SL Number is"+value);
 					if (value == null || value.trim().isEmpty()) {
-						throw new InValidSLNumberException(value);// Need to tthrow
+						throw new InValidSLNumberException(value);// Need to throw
 					} else {
 						if(value.contains("New Pole")){
 							value =	value.replaceAll("#", "");
+							edgeSLNumber.setSlNumber(value);
+						}else if(value.toLowerCase().contains("ameresco")){
+							value =	value.replaceAll(" ", "-");
+							value =	value.replaceAll("\\s+", "-");
 							edgeSLNumber.setSlNumber(value);
 						}else{
 							edgeSLNumber.setSlNumber(value);
@@ -559,6 +563,9 @@ public class StreetlightService {
 								
 								if(value.contains("New Pole")){
 									value =	value.replaceAll("#", "");
+								}else if(value.toLowerCase().contains("ameresco")){
+									value =	value.replaceAll(" ", "-");
+									value =	value.replaceAll("\\s+", "-");
 								}
 								slvSyncDataEntity.setIdOnController(value);
 							}
