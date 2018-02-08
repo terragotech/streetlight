@@ -57,7 +57,8 @@ public class StreetlightChicagoService {
 		stringBuilder.append("Fixture Type,");
 		stringBuilder.append("Context,");
 		stringBuilder.append("Lat,");
-		stringBuilder.append("Lng");
+		stringBuilder.append("Lng,");
+		stringBuilder.append("Date Time");
 		stringBuilder.append("\n");
 		StringBuilder dupMacStringBuilder = getMACDup();
 		boolean isMacDup = false;
@@ -83,6 +84,8 @@ public class StreetlightChicagoService {
 			stringBuilder.append(dailyReportCSV.getLat());
 			stringBuilder.append(",");
 			stringBuilder.append(dailyReportCSV.getLng());
+			stringBuilder.append(",");
+			stringBuilder.append(formatDateTime(dailyReportCSV.getCreateddatetime()));
 			stringBuilder.append("\n");
 			if(dailyReportCSV.getMacAddressNoteTitle() != null && !dailyReportCSV.getMacAddressNoteTitle().trim().isEmpty()){
 				loadDup(dupMacStringBuilder, dailyReportCSV);
@@ -127,6 +130,13 @@ public class StreetlightChicagoService {
 		Calendar calendar = Calendar.getInstance(Locale.getDefault());
 		Date date = new Date(calendar.getTimeInMillis());
 		SimpleDateFormat dateFormat = new SimpleDateFormat("ddMMMyyyy");
+		return dateFormat.format(date);
+	}
+	
+	
+	private String formatDateTime(long currentDateTime){
+		Date date = new Date(currentDateTime);
+		SimpleDateFormat dateFormat = new SimpleDateFormat("MM-dd-yyyy HH:mm:ss");
 		return dateFormat.format(date);
 	}
 	

@@ -11,7 +11,7 @@ public class DailyReportCSV {
 	private String lat;
 	private String lng;
 	private String createdBy;
-	
+	private long createddatetime;
 	
 	
 	
@@ -101,6 +101,14 @@ public class DailyReportCSV {
 
 	public void setMacAddressNoteTitle(String macAddressNoteTitle) {
 		this.macAddressNoteTitle = macAddressNoteTitle;
+	}
+
+	public long getCreateddatetime() {
+		return createddatetime;
+	}
+
+	public void setCreateddatetime(long createddatetime) {
+		this.createddatetime = createddatetime;
 	}
 
 	
