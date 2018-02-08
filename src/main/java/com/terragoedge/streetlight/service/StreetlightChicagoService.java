@@ -18,6 +18,7 @@ import org.apache.log4j.Logger;
 import org.springframework.http.ResponseEntity;
 
 import com.google.gson.Gson;
+import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.reflect.TypeToken;
@@ -32,6 +33,7 @@ import com.terragoedge.streetlight.exception.DeviceUpdationFailedException;
 import com.terragoedge.streetlight.exception.InValidBarCodeException;
 import com.terragoedge.streetlight.exception.NoValueException;
 import com.terragoedge.streetlight.exception.QRCodeAlreadyUsedException;
+import com.terragoedge.streetlight.exception.QRCodeNotMatchedException;
 import com.terragoedge.streetlight.exception.ReplaceOLCFailedException;
 
 import sun.java2d.DataBufferNIOInt;
@@ -153,6 +155,7 @@ public class StreetlightChicagoService {
 		List<Object> paramsList = new ArrayList<Object>();
 		String chicagoFormTemplateGuid = properties.getProperty("streetlight.edge.formtemplateguid.chicago");
 		String fixtureFormTemplateGuid = properties.getProperty("streetlight.edge.formtemplateguid.fixture");
+		String replaceOlcFormTemplateGuid = properties.getProperty("streetlight.edge.formtemplateguid.replacenode");
 		
 		
 		DailyReportCSV dailyReportCSV = new DailyReportCSV();
@@ -186,63 +189,182 @@ public class StreetlightChicagoService {
 		}
 
 		// Get ControllerStdId value
+		String controllerStrId = null;
 		try {
-			String controllerStrId = value(fixtureFromDef,properties.getProperty("edge.fortemplate.fixture.label.cnrlstrid"));
+			 controllerStrId = value(fixtureFromDef,properties.getProperty("edge.fortemplate.fixture.label.cnrlstrid"));
 			paramsList.add("controllerStrId=" + controllerStrId);
 		} catch (NoValueException e) {
 			e.printStackTrace();
 			return;
 		}
 		
-		//Get Fixture Code
+		
+		FormData replaceOLCFormData =	formDatas.get(replaceOlcFormTemplateGuid);
+		if(replaceOLCFormData != null){
+			// Get ControllerStdId value
+			String geoZoneId = null;
+			try {
+				geoZoneId = value(fixtureFromDef,"GeoZoneId");
+			} catch (NoValueException e) {
+				e.printStackTrace();
+			}
+			processReplaceOLCFormVal(replaceOLCFormData, idOnController, controllerStrId,paramsList,geoZoneId,edgeNote.getNoteGuid(),edgeNote.getCreatedDateTime(),noteGuids);
+		}else{
+			//Get Fixture Code
+			try {
+				String fixtureCode = value(fixtureFromDef,properties.getProperty("edge.fortemplate.fixture.label.fixture.code"));
+				dailyReportCSV.setFixtureCode(fixtureCode);
+			} catch (NoValueException e) {
+				e.printStackTrace();
+				return;
+			}
+			
+			
+			String macAddress = null;
+			// Process Chicago Form data
+			List<EdgeFormData> chicagoFromDef =  chicagoFromData.getFormDef();
+			for(EdgeFormData edgeFormData : chicagoFromDef){
+				if(edgeFormData.getLabel().equals(properties.getProperty("edge.fortemplate.chicago.label.fixture.macaddress"))){
+					if(edgeFormData.getValue() == null ||  edgeFormData.getValue().trim().isEmpty()){
+						logger.info("Fixture MAC address is empty. So note is not processed. Note Title :"+edgeNote.getTitle());
+						// return; -- TODO Need to skip or not later decide
+					}else{
+						addStreetLightData("luminaire.installdate", dateFormat(edgeNote.getCreatedDateTime()), paramsList); // -- TODO
+						buildFixtureStreetLightData(edgeFormData.getValue(), paramsList,edgeNote,dailyReportCSV);
+					}
+					
+				}else if(edgeFormData.getLabel().equals(properties.getProperty("edge.fortemplate.chicago.label.node.macaddress"))){
+					if(edgeFormData.getValue() == null ||  edgeFormData.getValue().trim().isEmpty()){
+						logger.info("Node MAC address is empty. So note is not processed. Note Title :"+edgeNote.getTitle());
+						return;
+					}
+					macAddress = loadMACAddress(edgeFormData.getValue(), paramsList,idOnController);
+				}
+			}
+			dailyReportCSV.setQrCode(macAddress);
+			
+			//luminaire.installdate - 2017-09-07 09:47:35
+			
+			addStreetLightData("install.date", dateFormat(edgeNote.getCreatedDateTime()) , paramsList);
+			//controller.installdate  - 2017/10/10
+			
+			addStreetLightData("installStatus", "Installed", paramsList);
+			
+			addStreetLightData("DimmingGroupName", "Group Calendar 1", paramsList);
+			String controllerStrIdValue = value(fixtureFromDef,properties.getProperty("edge.fortemplate.fixture.label.cnrlstrid"));
+			//DimmingGroupName
+			sync2Slv(paramsList,edgeNote.getNoteGuid(),idOnController,macAddress,controllerStrIdValue,dailyReportCSV);
+			noteGuids.add(edgeNote.getNoteGuid());
+		}
+		
+		
+	}
+	
+	/**
+	 * Check MAC Address is present in given IdonController or not and also if mathches get comment
+	 * @param existingNodeMacAddress
+	 * @param idOnController
+	 * @param geoZoneId
+	 * @return
+	 * @throws QRCodeNotMatchedException
+	 */
+	private String validateMACAddress(String existingNodeMacAddress,String idOnController,String geoZoneId) throws QRCodeNotMatchedException{
+		String mainUrl = properties.getProperty("streetlight.url.main");
+		String geoZoneDevices = properties.getProperty("streetlight.slv.url.getgeozone.devices");
+		String url = mainUrl + geoZoneDevices;
+		
+		List<Object> paramsList = new ArrayList<Object>();
+		if(geoZoneId != null){
+			paramsList.add("geoZoneId=" + geoZoneId);
+		}
+		
+		paramsList.add("valueNames=idOnController");
+		paramsList.add("valueNames=comment");
+		paramsList.add("valueNames=MacAddress");
+		paramsList.add("ser=json");
+		String params = StringUtils.join(paramsList, "&");
+		url = url + "&" + params;
+		ResponseEntity<String> response = restService.getPostRequest(url,null);
+		if(response.getStatusCode().is2xxSuccessful()){
+			String geoZoneDeviceDetails = response.getBody();
+			JsonObject jsonObject = (JsonObject) jsonParser.parse(geoZoneDeviceDetails);
+			JsonArray deviceValuesAsArray = jsonObject.get("values").getAsJsonArray();
+			int totalSize = deviceValuesAsArray.size();
+			for(int i = 0 ; i < totalSize; i++){
+				JsonArray deviceValues = deviceValuesAsArray.get(i).getAsJsonArray();
+				if(deviceValues.get(0).getAsString().equals(idOnController)){
+					if(deviceValues.get(2).getAsString().equals(existingNodeMacAddress)){
+						String comment = deviceValues.get(1).getAsString();
+						return comment;
+					}
+				}
+			}
+			//Throws given MAC Address not matched
+			throw new QRCodeNotMatchedException(idOnController, existingNodeMacAddress);
+		}
+		return null;
+	}
+	
+	
+	private void processReplaceOLCFormVal(FormData replaceOLCFormData,String idOnController,String controllerStrIdValue,List<Object> paramsList,String geoZoneId,String noteGuid,long noteCreatedDateTime,List<String> noteGuids) throws DeviceUpdationFailedException {
+		List<EdgeFormData> replaceOLCFromDef = replaceOLCFormData.getFormDef();
+		String existingNodeMacAddress = null;
+		String newNodeMacAddress = null;
+		// Get Existing Node MAC Address value
 		try {
-			String fixtureCode = value(fixtureFromDef,properties.getProperty("edge.fortemplate.fixture.label.fixture.code"));
-			dailyReportCSV.setFixtureCode(fixtureCode);
+			existingNodeMacAddress = value(replaceOLCFromDef,properties.getProperty("streetlight.edge.replacenode.label.existing"));
 		} catch (NoValueException e) {
 			e.printStackTrace();
 			return;
 		}
-		
-		
-		String macAddress = null;
-		// Process Chicago Form data
-		List<EdgeFormData> chicagoFromDef =  chicagoFromData.getFormDef();
-		for(EdgeFormData edgeFormData : chicagoFromDef){
-			if(edgeFormData.getLabel().equals(properties.getProperty("edge.fortemplate.chicago.label.fixture.macaddress"))){
-				if(edgeFormData.getValue() == null ||  edgeFormData.getValue().trim().isEmpty()){
-					logger.info("Fixture MAC address is empty. So note is not processed. Note Title :"+edgeNote.getTitle());
-					// return; -- TODO Need to skip or not later decide
-				}else{
-					addStreetLightData("luminaire.installdate", dateFormat(edgeNote.getCreatedDateTime()), paramsList); // -- TODO
-					buildFixtureStreetLightData(edgeFormData.getValue(), paramsList,edgeNote,dailyReportCSV);
-				}
-				
-			}else if(edgeFormData.getLabel().equals(properties.getProperty("edge.fortemplate.chicago.label.node.macaddress"))){
-				if(edgeFormData.getValue() == null ||  edgeFormData.getValue().trim().isEmpty()){
-					logger.info("Node MAC address is empty. So note is not processed. Note Title :"+edgeNote.getTitle());
-					return;
-				}
-				macAddress = loadMACAddress(edgeFormData.getValue(), paramsList,idOnController);
-			}
+		// Get New Node MAC Address value
+		try {
+			newNodeMacAddress = value(replaceOLCFromDef,properties.getProperty("streetlight.edge.replacenode.label.newnode"));
+		} catch (NoValueException e) {
+			e.printStackTrace();
+			return;
 		}
-		dailyReportCSV.setQrCode(macAddress);
+		String comment = "";
+		// Check existingNodeMacAddress is valid or not
+		try {
+			comment = validateMACAddress(existingNodeMacAddress, idOnController, geoZoneId);
+		} catch (QRCodeNotMatchedException e1) {
+			// Need to write an report
+			streetlightDao.insertProcessedNoteGuids(noteGuid);
+			return;
+		}
 		
-		//luminaire.installdate - 2017-09-07 09:47:35
 		
-		addStreetLightData("install.date", dateFormat(edgeNote.getCreatedDateTime()) , paramsList);
-		//controller.installdate  - 2017/10/10
-		
-		addStreetLightData("installStatus", "Installed", paramsList);
-		
-		addStreetLightData("DimmingGroupName", "Group Calendar 1", paramsList);
-		String controllerStrIdValue = value(fixtureFromDef,properties.getProperty("edge.fortemplate.fixture.label.cnrlstrid"));
-		//DimmingGroupName
-		sync2Slv(paramsList,edgeNote.getNoteGuid(),idOnController,macAddress,controllerStrIdValue,dailyReportCSV);
-		noteGuids.add(edgeNote.getNoteGuid());
+			// Call Empty ReplaceOLC
+			try{
+				replaceOLC(controllerStrIdValue, idOnController, "");
+			}catch(ReplaceOLCFailedException e){
+				e.printStackTrace();
+			}
+			
+			//update device with new mac address
+			addStreetLightData("MacAddress", newNodeMacAddress, paramsList);
+			comment = comment + " replaced on "+dateFormat(noteCreatedDateTime);
+			addStreetLightData("comment", comment, paramsList);
+			int errorCode = setDeviceValues(paramsList);
+			if (errorCode != 0) {
+				throw new DeviceUpdationFailedException(errorCode + "");
+			}else{
+				try{
+					// Call New Node MAC Address
+					replaceOLC(controllerStrIdValue, idOnController, newNodeMacAddress);
+				}catch(Exception e){
+					e.printStackTrace();
+				}
+				streetlightDao.insertProcessedNoteGuids(noteGuid);	
+				noteGuids.add(noteGuid);
+			}
+			
 	}
 	
 	
-	private void sync2Slv(List<Object> paramsList,String noteGuid,String idOnController,String macAddress, String controllerStrIdValue,DailyReportCSV dailyReportCSV) throws DeviceUpdationFailedException, ReplaceOLCFailedException{
+	
+	private int setDeviceValues(List<Object> paramsList){
 		String mainUrl = properties.getProperty("streetlight.slv.url.main");
 		String updateDeviceValues = properties.getProperty("streetlight.slv.url.updatedevice");
 		String url = mainUrl + updateDeviceValues;
@@ -254,6 +376,12 @@ public class StreetlightChicagoService {
 		String responseString = response.getBody();
 		JsonObject replaceOlcResponse = (JsonObject) jsonParser.parse(responseString);
 		int errorCode = replaceOlcResponse.get("errorCode").getAsInt();
+		return errorCode;
+	}
+	
+	
+	private void sync2Slv(List<Object> paramsList,String noteGuid,String idOnController,String macAddress, String controllerStrIdValue,DailyReportCSV dailyReportCSV) throws DeviceUpdationFailedException, ReplaceOLCFailedException{
+		int errorCode =  setDeviceValues(paramsList);
 		// As per doc, errorcode is 0 for success. Otherwise, its not
 		// success.
 		if (errorCode != 0) {
@@ -263,7 +391,7 @@ public class StreetlightChicagoService {
 			replaceOLC(controllerStrIdValue,idOnController,macAddress);
 			streetlightDao.insertProcessedNoteGuids(noteGuid);
 			// Process Daily Report
-			processDailyReport(dailyReportCSV);
+			//processDailyReport(dailyReportCSV);
 		}
 	}
 	
@@ -340,14 +468,14 @@ public class StreetlightChicagoService {
 				for(String nodeData : nodeInfo){
 					if(nodeData.startsWith("MACid")){
 						String macAddress = nodeData.substring(6);
-						checkMacAddressExists(macAddress, idOnController);
+						//checkMacAddressExists(macAddress, idOnController);
 						addStreetLightData("MacAddress", macAddress, paramsList);
 						return macAddress;
 					}
 				}
 			}
 		}else{
-			checkMacAddressExists(data, idOnController);
+			//checkMacAddressExists(data, idOnController);
 			addStreetLightData("MacAddress", data, paramsList);
 			return data;
 		}
