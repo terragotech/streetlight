@@ -19,6 +19,7 @@ import org.springframework.http.ResponseEntity;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.reflect.TypeToken;
@@ -260,6 +261,48 @@ public class StreetlightChicagoService {
 		
 	}
 	
+	
+	
+	private String validateMacAddress(String existingNodeMacAddress,String idOnController,String controllerStrId,String geoZoneId) throws QRCodeNotMatchedException{
+		String mainUrl = properties.getProperty("streetlight.url.main");
+		String getMacAddress = properties.getProperty("streetlight.slv.url.getmacaddress");
+		String url = mainUrl + getMacAddress;
+		
+		List<Object> paramsList = new ArrayList<Object>();
+		paramsList.add("idOnController="+idOnController);
+		paramsList.add("controllerStrId="+controllerStrId);
+		paramsList.add("valueName=MacAddress");
+		paramsList.add("ser=json");
+		String params = StringUtils.join(paramsList, "&");
+		url = url + "&" + params;
+		ResponseEntity<String> response = restService.getPostRequest(url,null);
+		if(response.getStatusCode().is2xxSuccessful()){
+			String responseString = response.getBody();
+			JsonElement jsonElement = jsonParser.parse(responseString);
+			if(jsonElement.isJsonArray()){
+				JsonArray jsonArray = jsonElement.getAsJsonArray();
+				if(jsonArray.size() > 0){
+					if(jsonArray.get(0).getAsString().equals(existingNodeMacAddress)){
+						String comment = jsonArray.get(1).getAsString();
+						return comment;
+					}else{
+						//Throws given MAC Address not matched
+						throw new QRCodeNotMatchedException(idOnController, existingNodeMacAddress);
+					}
+				
+				}else{
+					throw new QRCodeNotMatchedException(idOnController, existingNodeMacAddress);
+				}
+			}else if(jsonElement.isJsonObject()){
+				return validateMACAddress(existingNodeMacAddress, idOnController, geoZoneId);
+				
+			}
+		}else{
+			return validateMACAddress(existingNodeMacAddress, idOnController, geoZoneId);
+		}
+		throw new QRCodeNotMatchedException(idOnController, existingNodeMacAddress);
+	}
+	
 	/**
 	 * Check MAC Address is present in given IdonController or not and also if mathches get comment
 	 * @param existingNodeMacAddress
@@ -327,7 +370,8 @@ public class StreetlightChicagoService {
 		String comment = "";
 		// Check existingNodeMacAddress is valid or not
 		try {
-			comment = validateMACAddress(existingNodeMacAddress, idOnController, geoZoneId);
+			comment = validateMacAddress(existingNodeMacAddress, idOnController, controllerStrIdValue, geoZoneId);
+			//comment = validateMACAddress(existingNodeMacAddress, idOnController, geoZoneId);
 		} catch (QRCodeNotMatchedException e1) {
 			// Need to write an report
 			streetlightDao.insertProcessedNoteGuids(noteGuid);
