@@ -272,6 +272,7 @@ public class StreetlightChicagoService {
 		paramsList.add("idOnController="+idOnController);
 		paramsList.add("controllerStrId="+controllerStrId);
 		paramsList.add("valueName=MacAddress");
+		paramsList.add("valueName=comment");
 		paramsList.add("ser=json");
 		String params = StringUtils.join(paramsList, "&");
 		url = url + "&" + params;
