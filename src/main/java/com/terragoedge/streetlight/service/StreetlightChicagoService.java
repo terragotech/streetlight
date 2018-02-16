@@ -283,7 +283,7 @@ public class StreetlightChicagoService {
 			if(jsonElement.isJsonArray()){
 				JsonArray jsonArray = jsonElement.getAsJsonArray();
 				if(jsonArray.size() > 0){
-					if(jsonArray.get(0).getAsString().equals(existingNodeMacAddress)){
+					if(jsonArray.get(0).getAsString().toLowerCase().equals(existingNodeMacAddress.toLowerCase())){
 						String comment = jsonArray.get(1).getAsString();
 						return comment;
 					}else{
