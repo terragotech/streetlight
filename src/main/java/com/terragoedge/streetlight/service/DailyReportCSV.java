@@ -18,7 +18,7 @@ public class DailyReportCSV {
 	
 	
 	public String getExistingNodeMACAddress() {
-		return existingNodeMACAddress;
+		return existingNodeMACAddress != null ? existingNodeMACAddress : "";
 	}
 
 	public void setExistingNodeMACAddress(String existingNodeMACAddress) {
@@ -26,7 +26,7 @@ public class DailyReportCSV {
 	}
 
 	public String getNewNodeMACAddress() {
-		return newNodeMACAddress;
+		return newNodeMACAddress != null ? newNodeMACAddress : "";
 	}
 
 	public void setNewNodeMACAddress(String newNodeMACAddress) {

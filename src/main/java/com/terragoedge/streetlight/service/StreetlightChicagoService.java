@@ -92,9 +92,13 @@ public class StreetlightChicagoService {
 			stringBuilder.append(",");
 			stringBuilder.append(dailyReportCSV.getIsReplaceNode());
 			stringBuilder.append(",");
+			stringBuilder.append("\"");
 			stringBuilder.append(dailyReportCSV.getExistingNodeMACAddress());
+			stringBuilder.append("\"");
 			stringBuilder.append(",");
+			stringBuilder.append("\"");
 			stringBuilder.append(dailyReportCSV.getNewNodeMACAddress());
+			stringBuilder.append("\"");
 			stringBuilder.append("\n");
 			if(dailyReportCSV.getMacAddressNoteTitle() != null && !dailyReportCSV.getMacAddressNoteTitle().trim().isEmpty()){
 				loadDup(dupMacStringBuilder, dailyReportCSV);
@@ -110,7 +114,7 @@ public class StreetlightChicagoService {
 			dupMacAddressFile = "daily_mac_dup_report_"+fileName+".csv";
 			logData(dupMacStringBuilder.toString(), dupMacAddressFile);
 		}
-		edgeMailService.sendMail(dupMacAddressFile, dailyReportFile);
+		//edgeMailService.sendMail(dupMacAddressFile, dailyReportFile);
 		
 	}
 	
@@ -118,7 +122,8 @@ public class StreetlightChicagoService {
 	private void logData(String data,String fileName){
 		FileOutputStream fileOutputStream = null;
 		try{
-			 fileOutputStream = new FileOutputStream("./report/"+fileName);
+			 //fileOutputStream = new FileOutputStream("./report/"+fileName);
+			fileOutputStream = new FileOutputStream(fileName);
 			 fileOutputStream.write(data.getBytes());
 			 fileOutputStream.flush();
 		}catch(Exception e){
