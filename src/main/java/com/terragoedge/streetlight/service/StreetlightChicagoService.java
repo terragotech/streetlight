@@ -58,7 +58,10 @@ public class StreetlightChicagoService {
 		stringBuilder.append("Context,");
 		stringBuilder.append("Lat,");
 		stringBuilder.append("Lng,");
-		stringBuilder.append("Date Time");
+		stringBuilder.append("Date Time,");
+		stringBuilder.append("Is ReplaceNode,");
+		stringBuilder.append("Existing Node MAC Address,");
+		stringBuilder.append("New Node MAC Address");
 		stringBuilder.append("\n");
 		StringBuilder dupMacStringBuilder = getMACDup();
 		boolean isMacDup = false;
@@ -86,6 +89,12 @@ public class StreetlightChicagoService {
 			stringBuilder.append(dailyReportCSV.getLng());
 			stringBuilder.append(",");
 			stringBuilder.append(formatDateTime(dailyReportCSV.getCreateddatetime()));
+			stringBuilder.append(",");
+			stringBuilder.append(dailyReportCSV.getIsReplaceNode());
+			stringBuilder.append(",");
+			stringBuilder.append(dailyReportCSV.getExistingNodeMACAddress());
+			stringBuilder.append(",");
+			stringBuilder.append(dailyReportCSV.getNewNodeMACAddress());
 			stringBuilder.append("\n");
 			if(dailyReportCSV.getMacAddressNoteTitle() != null && !dailyReportCSV.getMacAddressNoteTitle().trim().isEmpty()){
 				loadDup(dupMacStringBuilder, dailyReportCSV);

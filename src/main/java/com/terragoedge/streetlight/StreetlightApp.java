@@ -14,6 +14,15 @@ public class StreetlightApp {
 	final static Logger logger = Logger.getLogger(StreetlightApp.class);
 	
 	public static void main(String[] args) {
+		StreetlightChicagoService streetlightChicagoService = new StreetlightChicagoService();
+		try {
+			streetlightChicagoService.run();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+	
+	public static void main1(String[] args) {
 		try{
 			while(true){
 				try{

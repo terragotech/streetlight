@@ -12,9 +12,27 @@ public class DailyReportCSV {
 	private String lng;
 	private String createdBy;
 	private long createddatetime;
+	private String existingNodeMACAddress;
+	private String newNodeMACAddress;
+	private String isReplaceNode = "No";
 	
 	
-	
+	public String getExistingNodeMACAddress() {
+		return existingNodeMACAddress;
+	}
+
+	public void setExistingNodeMACAddress(String existingNodeMACAddress) {
+		this.existingNodeMACAddress = existingNodeMACAddress;
+	}
+
+	public String getNewNodeMACAddress() {
+		return newNodeMACAddress;
+	}
+
+	public void setNewNodeMACAddress(String newNodeMACAddress) {
+		this.newNodeMACAddress = newNodeMACAddress;
+	}
+
 	public String getCreatedBy() {
 		return createdBy;
 	}
@@ -89,11 +107,6 @@ public class DailyReportCSV {
 		this.noteId = noteId;
 	}
 
-	@Override
-	public String toString() {
-		return "DailyReportCSV [noteTitle=" + noteTitle + ", context=" + context + ", fixtureQrScan=" + fixtureQrScan
-				+ ", fixtureType=" + fixtureType + ", qrCode=" + qrCode + ", noteId=" + noteId + "]";
-	}
 
 	public String getMacAddressNoteTitle() {
 		return macAddressNoteTitle;
@@ -109,6 +122,23 @@ public class DailyReportCSV {
 
 	public void setCreateddatetime(long createddatetime) {
 		this.createddatetime = createddatetime;
+	}
+
+	@Override
+	public String toString() {
+		return "DailyReportCSV [noteTitle=" + noteTitle + ", context=" + context + ", fixtureQrScan=" + fixtureQrScan
+				+ ", fixtureType=" + fixtureType + ", qrCode=" + qrCode + ", noteId=" + noteId + ", lat=" + lat
+				+ ", lng=" + lng + ", createdBy=" + createdBy + ", createddatetime=" + createddatetime
+				+ ", existingNodeMACAddress=" + existingNodeMACAddress + ", newNodeMACAddress=" + newNodeMACAddress
+				+ ", macAddressNoteTitle=" + macAddressNoteTitle + "]";
+	}
+
+	public String getIsReplaceNode() {
+		return isReplaceNode;
+	}
+
+	public void setIsReplaceNode(String isReplaceNode) {
+		this.isReplaceNode = isReplaceNode;
 	}
 
 	

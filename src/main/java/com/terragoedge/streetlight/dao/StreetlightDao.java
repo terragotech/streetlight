@@ -49,12 +49,22 @@ public class StreetlightDao extends UtilDao {
 			
 			Calendar calendar = Calendar.getInstance(Locale.getDefault());
 			calendar.set(Calendar.HOUR_OF_DAY, 00);
+			calendar.set(Calendar.DAY_OF_MONTH, 16);
 			calendar.set(Calendar.MINUTE, 00);
 			calendar.set(Calendar.SECOND, 00);
 			long startOfDay = calendar.getTime().getTime();
 			System.out.println(startOfDay);
+			
+			calendar = Calendar.getInstance(Locale.getDefault());
+			calendar.set(Calendar.HOUR_OF_DAY, 23);
+			calendar.set(Calendar.DAY_OF_MONTH, 16);
+			calendar.set(Calendar.MINUTE, 59);
+			calendar.set(Calendar.SECOND, 59);
+			long endOfDay = calendar.getTime().getTime();
+			System.out.println(endOfDay);
+			
 			queryStatement = connection.createStatement();
-			queryResponse = queryStatement.executeQuery("select noteid,createddatetime, createdby,description,title,groupname,ST_X(geometry::geometry) as lat, ST_Y(geometry::geometry) as lng from edgenoteview where isdeleted = false and iscurrent = true  and createddatetime >= "+startOfDay+";");
+			queryResponse = queryStatement.executeQuery("select noteid,createddatetime, createdby,description,title,groupname,ST_X(geometry::geometry) as lat, ST_Y(geometry::geometry) as lng from edgenoteview where isdeleted = false and iscurrent = true  and createddatetime >= "+startOfDay+" and createddatetime <= "+endOfDay+" ;");
 			
 			while (queryResponse.next()) {
 				DailyReportCSV dailyReportCSV = new DailyReportCSV();
@@ -97,12 +107,17 @@ public class StreetlightDao extends UtilDao {
 				for(EdgeFormData edgeFormData : edgeFormDatas){
 					if(edgeFormData.getLabel().equals("Fixture QR Scan")){
 						dailyReportCSV.setFixtureQrScan(edgeFormData.getValue());
-						
 					}else if(edgeFormData.getLabel().equals("Node MAC address")){
 						dailyReportCSV.setQrCode(edgeFormData.getValue());
 						if(edgeFormData.getValue() != null && !edgeFormData.getValue().trim().isEmpty()){
 							checkDupMacAddress(edgeFormData.getValue(), dailyReportCSV, dailyReportCSV.getNoteTitle());
 						}
+					}else if(edgeFormData.getLabel().equals("Existing Node MAC Address")){
+						dailyReportCSV.setExistingNodeMACAddress(edgeFormData.getValue());
+						dailyReportCSV.setIsReplaceNode("Yes");
+					}else if(edgeFormData.getLabel().equals("New Node MAC Address")){
+						dailyReportCSV.setNewNodeMACAddress(edgeFormData.getValue());
+						dailyReportCSV.setIsReplaceNode("Yes");
 					}
 				}
 			}
