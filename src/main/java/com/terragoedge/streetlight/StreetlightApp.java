@@ -24,6 +24,7 @@ public class StreetlightApp {
 					System.out.println("hoursOfDay:"+hoursOfDay);
 					// 18 and 19
 					if(hoursOfDay >= 18 && hoursOfDay < 19){
+					//if(hoursOfDay >= 11 && hoursOfDay < 13){
 						File file  = new File("./report/pid");
 						if(!file.exists()){
 							System.out.println("File is not present.");
