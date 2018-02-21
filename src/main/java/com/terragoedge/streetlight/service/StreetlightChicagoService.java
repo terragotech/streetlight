@@ -141,19 +141,24 @@ public class StreetlightChicagoService {
 			}
 		}catch(QRCodeAlreadyUsedException e1){
 			logger.error("MacAddress ("+e1.getMacAddress()+")  - Already in use. So this pole is not synced with SLV. Note Title :["+edgeNote.getTitle()+" ]");
-			
-			DailyReportCSV qrCodeDuplicate = new DailyReportCSV();
-			qrCodeDuplicate.setQrCode(e1.getMacAddress());
-			qrCodeDuplicate.setNoteTitle(edgeNote.getTitle());
-			qrCodeDuplicate.setNoteCreatedDateTime(edgeNote.getCreatedDateTime());
-			duplicateQRCode(qrCodeDuplicate);
-			//edgeMailService.sendMailMacAddressAlreadyUsed(e1.getMacAddress(), e1.getMessage());
-		}catch(Exception e){
+			streetlightDao.insertProcessedNoteGuids(edgeNote.getNoteGuid(), MessageConstants.ERROR, e1.getMessage(), edgeNote.getCreatedDateTime(),edgeNote.getTitle());
+		}catch(ReplaceOLCFailedException e){
 			logger.error("Error in syncData",e);
+			streetlightDao.insertProcessedNoteGuids(edgeNote.getNoteGuid(), MessageConstants.ERROR, e.getMessage(), edgeNote.getCreatedDateTime(),edgeNote.getTitle());
+		}catch(DeviceUpdationFailedException e){
+			logger.error("Error in syncData",e);
+		} catch (InValidBarCodeException e) {
+			logger.error("Error in syncData",e);
+			streetlightDao.insertProcessedNoteGuids(edgeNote.getNoteGuid(), MessageConstants.ERROR, e.getMessage(), edgeNote.getCreatedDateTime(),edgeNote.getTitle());
+		} catch (NoValueException e) {
+			logger.error("Error in syncData",e);
+		} catch (Exception e) {
+			logger.error("Error in syncData",e);
+			streetlightDao.insertProcessedNoteGuids(edgeNote.getNoteGuid(), MessageConstants.ERROR, e.getMessage(), edgeNote.getCreatedDateTime(),edgeNote.getTitle());
 		}
 	}
 	
-	public void syncData(Map<String, FormData> formDatas,EdgeNote edgeNote,List<String> noteGuids) throws InValidBarCodeException, DeviceUpdationFailedException, QRCodeAlreadyUsedException,Exception{
+	public void syncData(Map<String, FormData> formDatas,EdgeNote edgeNote,List<String> noteGuids) throws InValidBarCodeException, DeviceUpdationFailedException, QRCodeAlreadyUsedException, NoValueException, ReplaceOLCFailedException{
 		List<Object> paramsList = new ArrayList<Object>();
 		String chicagoFormTemplateGuid = properties.getProperty("streetlight.edge.formtemplateguid.chicago");
 		String fixtureFormTemplateGuid = properties.getProperty("streetlight.edge.formtemplateguid.fixture");
@@ -530,7 +535,7 @@ public class StreetlightChicagoService {
 	
 	
 	
-	private String loadMACAddress(String data,List<Object> paramsList,String idOnController ) throws InValidBarCodeException, QRCodeAlreadyUsedException,Exception{
+	private String loadMACAddress(String data,List<Object> paramsList,String idOnController ) throws InValidBarCodeException, QRCodeAlreadyUsedException{
 		if(data.contains("MACid")){
 			String[] nodeInfo = data.split(",");
 			if(nodeInfo.length > 0){
