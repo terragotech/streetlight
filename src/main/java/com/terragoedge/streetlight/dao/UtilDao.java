@@ -11,6 +11,7 @@ public abstract class UtilDao {
 	
 	Connection connection = null; 
 	
+	
 	public UtilDao(){
 		connection = StreetlightDaoConnection.getInstance().getConnection();
 	}

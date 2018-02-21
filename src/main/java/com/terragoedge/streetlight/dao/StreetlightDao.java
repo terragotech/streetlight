@@ -55,7 +55,7 @@ public class StreetlightDao extends UtilDao {
 
 	private void createStreetLightSyncTable() {
 		String sql = "CREATE TABLE IF NOT EXISTS notesyncdetails (streetlightsyncid integer NOT NULL,"
-				+ " processednoteid text, CONSTRAINT notesyncdetails_pkey PRIMARY KEY (streetlightsyncid));";
+				+ " processednoteid text, status text, errordetails text, createddatetime bigint, notename text, CONSTRAINT notesyncdetails_pkey PRIMARY KEY (streetlightsyncid));";
 		executeStatement(sql);
 		
 		//sql = "CREATE TABLE IF NOT EXISTS lastsyncstatus (lastsyncstatusid integer not null, lastsynctime text, CONSTRAINT lastsyncstatus_pkey PRIMARY KEY (lastsyncstatusid))";
@@ -86,7 +86,7 @@ public class StreetlightDao extends UtilDao {
 	}
 	
 	
-	public void insertProcessedNoteGuids(String noteGuid){
+	public void insertProcessedNoteGuids(String noteGuid,String status,String errorDetails,long createdDateTime,String noteName){
 		PreparedStatement preparedStatement = null;
 		Connection connection = null;
 		try {
@@ -96,9 +96,14 @@ public class StreetlightDao extends UtilDao {
 				id = 1; 
 			}
 			connection = StreetlightDaoConnection.getInstance().getConnection();
-			preparedStatement = connection.prepareStatement("INSERT INTO notesyncdetails (streetlightsyncid , processednoteid) values (?,?) ;");
+			preparedStatement = connection.prepareStatement(
+					"INSERT INTO notesyncdetails (streetlightsyncid , processednoteid, status,errordetails,createddatetime, notename ) values (?,?,?,?,?,?) ;");
 			preparedStatement.setLong(1, id);
 			preparedStatement.setString(2, noteGuid);
+			preparedStatement.setString(3, status);
+			preparedStatement.setString(4, errorDetails);
+			preparedStatement.setLong(5, createdDateTime);
+			preparedStatement.setString(6, noteName);
 			preparedStatement.execute();
 		} catch (Exception e) {
 			logger.error("Error in insertParentNoteId",e);
