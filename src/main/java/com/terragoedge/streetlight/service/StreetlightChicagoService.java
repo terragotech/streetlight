@@ -7,6 +7,7 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
+import java.util.TimeZone;
 
 import org.apache.log4j.Logger;
 
@@ -151,6 +152,7 @@ public class StreetlightChicagoService {
 	private String formatDateTime(long currentDateTime){
 		Date date = new Date(currentDateTime);
 		SimpleDateFormat dateFormat = new SimpleDateFormat("MM-dd-yyyy HH:mm:ss");
+		dateFormat.setTimeZone(TimeZone.getTimeZone("US/Central"));
 		return dateFormat.format(date);
 	}
 	

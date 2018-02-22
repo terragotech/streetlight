@@ -13,7 +13,16 @@ public class StreetlightApp {
 	
 	final static Logger logger = Logger.getLogger(StreetlightApp.class);
 	
-	
+	public static int getHoursOfDay(){
+		String customDate = PropertiesReader.getProperties().getProperty("amerescousa.custom.date");
+		if(customDate != null && customDate.equals("true")){
+			String hoursOfDay = PropertiesReader.getProperties().getProperty("amerescousa.reporting.time");
+			if(hoursOfDay != null){
+				return Integer.parseInt(hoursOfDay);
+			}
+		}
+		return 16;
+	}
 	
 	public static void main(String[] args) {
 		try{
@@ -23,8 +32,8 @@ public class StreetlightApp {
 					int hoursOfDay = calendar.get(Calendar.HOUR_OF_DAY);
 					System.out.println("hoursOfDay:"+hoursOfDay);
 					// 18 and 19
-					if(hoursOfDay >= 18 && hoursOfDay < 19){
-					//if(hoursOfDay >= 11 && hoursOfDay < 13){
+					if(hoursOfDay >= getHoursOfDay() && hoursOfDay < (getHoursOfDay() + 1)){
+					//if(hoursOfDay >= 10 && hoursOfDay < 13){
 						File file  = new File("./report/pid");
 						if(!file.exists()){
 							System.out.println("File is not present.");

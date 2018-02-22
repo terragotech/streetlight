@@ -18,6 +18,7 @@ import org.apache.log4j.Logger;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import com.terragoedge.edgeserver.EdgeFormData;
+import com.terragoedge.streetlight.PropertiesReader;
 import com.terragoedge.streetlight.StreetlightDaoConnection;
 import com.terragoedge.streetlight.service.DailyReportCSV;
 
@@ -31,7 +32,34 @@ public class StreetlightDao extends UtilDao {
 	
 	
 	
-	
+	private String generateSQL(){
+		String customDate = PropertiesReader.getProperties().getProperty("amerescousa.custom.date");
+		if(customDate != null && customDate.equals("true")){
+			StringBuilder stringBuilder = new StringBuilder();
+			stringBuilder.append("select noteid,createddatetime, createdby,description,title,groupname,ST_X(geometry::geometry) as lat, ST_Y(geometry::geometry) as lng from edgenoteview where isdeleted = false and iscurrent = true ");
+			String startOfDay = PropertiesReader.getProperties().getProperty("amerescousa.report.from");
+			if(startOfDay != null && !startOfDay.isEmpty()){
+				stringBuilder.append("and createddatetime >= ");
+				stringBuilder.append(startOfDay);
+			}
+			
+			String endOfDay = PropertiesReader.getProperties().getProperty("amerescousa.report.to");
+			if(endOfDay != null && !endOfDay.isEmpty()){
+				stringBuilder.append(" and createddatetime <= ");
+				stringBuilder.append(endOfDay);
+			}
+			stringBuilder.append(";");
+			return stringBuilder.toString();
+		}else{
+			Calendar calendar = Calendar.getInstance(Locale.getDefault());
+			calendar.set(Calendar.HOUR_OF_DAY, 00);
+			calendar.set(Calendar.MINUTE, 00);
+			calendar.set(Calendar.SECOND, 00);
+			long startOfDay = calendar.getTime().getTime();
+			System.out.println(startOfDay);
+			return "select noteid,createddatetime, createdby,description,title,groupname,ST_X(geometry::geometry) as lat, ST_Y(geometry::geometry) as lng from edgenoteview where isdeleted = false and iscurrent = true  and createddatetime >= "+startOfDay+";";
+		}
+	}
 	
 	
 
@@ -46,18 +74,10 @@ public class StreetlightDao extends UtilDao {
 		ResultSet queryResponse = null;
 		List<DailyReportCSV> dailyReportCSVs = new ArrayList<>();
 		try {
-			
-			Calendar calendar = Calendar.getInstance(Locale.getDefault());
-			calendar.set(Calendar.HOUR_OF_DAY, 00);
-			calendar.set(Calendar.MINUTE, 00);
-			calendar.set(Calendar.SECOND, 00);
-			long startOfDay = calendar.getTime().getTime();
-			System.out.println(startOfDay);
-			
-			
+			String sql = generateSQL();
 			
 			queryStatement = connection.createStatement();
-			queryResponse = queryStatement.executeQuery("select noteid,createddatetime, createdby,description,title,groupname,ST_X(geometry::geometry) as lat, ST_Y(geometry::geometry) as lng from edgenoteview where isdeleted = false and iscurrent = true  and createddatetime >= "+startOfDay+" ;");
+			queryResponse = queryStatement.executeQuery(sql);
 			
 			while (queryResponse.next()) {
 				DailyReportCSV dailyReportCSV = new DailyReportCSV();
