@@ -21,7 +21,7 @@ public class StreetlightApp {
 				return Integer.parseInt(hoursOfDay);
 			}
 		}
-		return 16;
+		return 17;
 	}
 	
 	public static void main(String[] args) {
