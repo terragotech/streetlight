@@ -169,16 +169,26 @@ public class StreetlightChicagoService {
 		dailyReportCSV.setContext(edgeNote.getLocationDescription());
 		dailyReportCSV.setNoteCreatedDateTime(edgeNote.getCreatedDateTime());
 		
+		boolean isQuickNote = false;
+		FormData replaceOLCFormData =	formDatas.get(replaceOlcFormTemplateGuid);
+		if(replaceOLCFormData == null){
+			replaceOLCFormData = formDatas.get("606fb4ca-40a4-466b-ac00-7c0434f82bfa");
+		}
+		
+		if(replaceOLCFormData != null){
+			isQuickNote = true;
+		}
+		
 		FormData chicagoFromData = formDatas.get(chicagoFormTemplateGuid);
 		if(chicagoFromData == null){
-			streetlightDao.insertProcessedNoteGuids(edgeNote.getNoteGuid(), MessageConstants.ERROR, MessageConstants.CHICAGO_FORM_NOT_AVAILABLE, edgeNote.getCreatedDateTime(),edgeNote.getTitle());
+			streetlightDao.insertProcessedNoteGuids(edgeNote.getNoteGuid(), MessageConstants.ERROR, MessageConstants.CHICAGO_FORM_NOT_AVAILABLE, edgeNote.getCreatedDateTime(),edgeNote.getTitle(),isQuickNote,null,null);
 			logger.error("No Chicago FormTemplate is not Present. So note is not processed. Note Title is :"+edgeNote.getTitle());
 			return;
 		}
 		
 		FormData fixtureFormData =	formDatas.get(fixtureFormTemplateGuid);
 		if(fixtureFormData == null){
-			streetlightDao.insertProcessedNoteGuids(edgeNote.getNoteGuid(), MessageConstants.ERROR, MessageConstants.FIXTURE_FORM_NOT_AVAILABLE, edgeNote.getCreatedDateTime(),edgeNote.getTitle());
+			streetlightDao.insertProcessedNoteGuids(edgeNote.getNoteGuid(), MessageConstants.ERROR, MessageConstants.FIXTURE_FORM_NOT_AVAILABLE, edgeNote.getCreatedDateTime(),edgeNote.getTitle(),isQuickNote,null,null);
 			logger.error("No Fixture FormTemplate is not Present. So note is not processed. Note Title is :"+edgeNote.getTitle());
 			return;
 		}
@@ -194,7 +204,7 @@ public class StreetlightChicagoService {
 			dailyReportCSV.setNoteTitle(idOnController);
 		} catch (NoValueException e) {
 			e.printStackTrace();
-			streetlightDao.insertProcessedNoteGuids(edgeNote.getNoteGuid(), MessageConstants.ERROR, MessageConstants.ID_ON_CONTROLLER_NOT_AVAILABLE, edgeNote.getCreatedDateTime(),edgeNote.getTitle());
+			streetlightDao.insertProcessedNoteGuids(edgeNote.getNoteGuid(), MessageConstants.ERROR, MessageConstants.ID_ON_CONTROLLER_NOT_AVAILABLE, edgeNote.getCreatedDateTime(),edgeNote.getTitle(),isQuickNote,null,null);
 			return;
 		}
 
@@ -205,12 +215,12 @@ public class StreetlightChicagoService {
 			paramsList.add("controllerStrId=" + controllerStrId);
 		} catch (NoValueException e) {
 			e.printStackTrace();
-			streetlightDao.insertProcessedNoteGuids(edgeNote.getNoteGuid(), MessageConstants.ERROR, MessageConstants.CONTROLLER_STR_ID_NOT_AVAILABLE, edgeNote.getCreatedDateTime(),edgeNote.getTitle());
+			streetlightDao.insertProcessedNoteGuids(edgeNote.getNoteGuid(), MessageConstants.ERROR, MessageConstants.CONTROLLER_STR_ID_NOT_AVAILABLE, edgeNote.getCreatedDateTime(),edgeNote.getTitle(),isQuickNote,null,null);
 			return;
 		}
 		
 		
-		FormData replaceOLCFormData =	formDatas.get(replaceOlcFormTemplateGuid);
+		
 		if(replaceOLCFormData != null){
 			// Get ControllerStdId value
 			String geoZoneId = null;
@@ -227,7 +237,7 @@ public class StreetlightChicagoService {
 				dailyReportCSV.setFixtureCode(fixtureCode);
 			} catch (NoValueException e) {
 				e.printStackTrace();
-				streetlightDao.insertProcessedNoteGuids(edgeNote.getNoteGuid(), MessageConstants.ERROR, MessageConstants.FIXTURE_CODE_NOT_AVAILABLE, edgeNote.getCreatedDateTime(),edgeNote.getTitle());
+				streetlightDao.insertProcessedNoteGuids(edgeNote.getNoteGuid(), MessageConstants.ERROR, MessageConstants.FIXTURE_CODE_NOT_AVAILABLE, edgeNote.getCreatedDateTime(),edgeNote.getTitle(),isQuickNote,null,null);
 				return;
 			}
 			
@@ -248,7 +258,7 @@ public class StreetlightChicagoService {
 				}else if(edgeFormData.getLabel().equals(properties.getProperty("edge.fortemplate.chicago.label.node.macaddress"))){
 					if(edgeFormData.getValue() == null ||  edgeFormData.getValue().trim().isEmpty()){
 						logger.info("Node MAC address is empty. So note is not processed. Note Title :"+edgeNote.getTitle());
-						streetlightDao.insertProcessedNoteGuids(edgeNote.getNoteGuid(), MessageConstants.ERROR, MessageConstants.NODE_MAC_ADDRESS_NOT_AVAILABLE, edgeNote.getCreatedDateTime(),edgeNote.getTitle());
+						streetlightDao.insertProcessedNoteGuids(edgeNote.getNoteGuid(), MessageConstants.ERROR, MessageConstants.NODE_MAC_ADDRESS_NOT_AVAILABLE, edgeNote.getCreatedDateTime(),edgeNote.getTitle(),isQuickNote,null,null);
 						return;
 					}
 					macAddress = loadMACAddress(edgeFormData.getValue(), paramsList,idOnController);
@@ -371,7 +381,7 @@ public class StreetlightChicagoService {
 			existingNodeMacAddress = value(replaceOLCFromDef,properties.getProperty("streetlight.edge.replacenode.label.existing"));
 		} catch (NoValueException e) {
 			e.printStackTrace();
-			streetlightDao.insertProcessedNoteGuids(edgeNote.getNoteGuid(), MessageConstants.ERROR, MessageConstants.OLD_MAC_ADDRESS_NOT_AVAILABLE, edgeNote.getCreatedDateTime(),edgeNote.getTitle());
+			streetlightDao.insertProcessedNoteGuids(edgeNote.getNoteGuid(), MessageConstants.ERROR, MessageConstants.OLD_MAC_ADDRESS_NOT_AVAILABLE, edgeNote.getCreatedDateTime(),edgeNote.getTitle(),true,existingNodeMacAddress,newNodeMacAddress);
 			return;
 		}
 		// Get New Node MAC Address value
@@ -379,7 +389,7 @@ public class StreetlightChicagoService {
 			newNodeMacAddress = value(replaceOLCFromDef,properties.getProperty("streetlight.edge.replacenode.label.newnode"));
 		} catch (NoValueException e) {
 			e.printStackTrace();
-			streetlightDao.insertProcessedNoteGuids(edgeNote.getNoteGuid(), MessageConstants.ERROR, MessageConstants.NEW_MAC_ADDRESS_NOT_AVAILABLE, edgeNote.getCreatedDateTime(),edgeNote.getTitle());
+			streetlightDao.insertProcessedNoteGuids(edgeNote.getNoteGuid(), MessageConstants.ERROR, MessageConstants.NEW_MAC_ADDRESS_NOT_AVAILABLE, edgeNote.getCreatedDateTime(),edgeNote.getTitle(),true,existingNodeMacAddress,newNodeMacAddress);
 			return;
 		}
 		String comment = "";
@@ -389,7 +399,7 @@ public class StreetlightChicagoService {
 			//comment = validateMACAddress(existingNodeMacAddress, idOnController, geoZoneId);
 		} catch (QRCodeNotMatchedException e1) {
 			// Need to write an report
-			streetlightDao.insertProcessedNoteGuids(edgeNote.getNoteGuid(), MessageConstants.ERROR, MessageConstants.REPLACE_MAC_NOT_MATCH, edgeNote.getCreatedDateTime(),edgeNote.getTitle());
+			streetlightDao.insertProcessedNoteGuids(edgeNote.getNoteGuid(), MessageConstants.ERROR, MessageConstants.REPLACE_MAC_NOT_MATCH, edgeNote.getCreatedDateTime(),edgeNote.getTitle(),true,existingNodeMacAddress,newNodeMacAddress);
 			return;
 		}
 		
@@ -409,10 +419,23 @@ public class StreetlightChicagoService {
 			addStreetLightData("MacAddress", newNodeMacAddress, paramsList);
 			comment = comment + " replaced on "+dateFormat(noteCreatedDateTime);
 			addStreetLightData("comment", comment, paramsList);
+			
+			try {
+				String fixtureQRScan = value(replaceOLCFromDef,"Fixture QR Scan");
+				addStreetLightData("luminaire.installdate", dateFormat(edgeNote.getCreatedDateTime()), paramsList); // -- TODO
+				buildFixtureStreetLightData(fixtureQRScan, paramsList,edgeNote,null);
+			} catch (NoValueException e) {
+				e.printStackTrace();
+			} catch (InValidBarCodeException e) {
+				e.printStackTrace();
+			}
+			
+			
+			
 			int errorCode = setDeviceValues(paramsList);
 			if (errorCode != 0) {
 				statusDescription.append(MessageConstants.ERROR_UPDATE_DEVICE_VAL+errorCode);
-				streetlightDao.insertProcessedNoteGuids(edgeNote.getNoteGuid(), MessageConstants.ERROR,statusDescription.toString(), edgeNote.getCreatedDateTime(),edgeNote.getTitle());
+				streetlightDao.insertProcessedNoteGuids(edgeNote.getNoteGuid(), MessageConstants.ERROR,statusDescription.toString(), edgeNote.getCreatedDateTime(),edgeNote.getTitle(),true,existingNodeMacAddress,newNodeMacAddress);
 				throw new DeviceUpdationFailedException(errorCode + "");
 			}else{
 				statusDescription.append(MessageConstants.SET_DEVICE_SUCCESS);
@@ -426,9 +449,9 @@ public class StreetlightChicagoService {
 					e.printStackTrace();
 				}
 				if(isError){
-					streetlightDao.insertProcessedNoteGuids(edgeNote.getNoteGuid(), MessageConstants.ERROR,statusDescription.toString(), edgeNote.getCreatedDateTime(),edgeNote.getTitle());
+					streetlightDao.insertProcessedNoteGuids(edgeNote.getNoteGuid(), MessageConstants.ERROR,statusDescription.toString(), edgeNote.getCreatedDateTime(),edgeNote.getTitle(),true,existingNodeMacAddress,newNodeMacAddress);
 				}else{
-					streetlightDao.insertProcessedNoteGuids(edgeNote.getNoteGuid(), MessageConstants.SUCCESS,"", edgeNote.getCreatedDateTime(),edgeNote.getTitle());
+					streetlightDao.insertProcessedNoteGuids(edgeNote.getNoteGuid(), MessageConstants.SUCCESS,"", edgeNote.getCreatedDateTime(),edgeNote.getTitle(),true,existingNodeMacAddress,newNodeMacAddress);
 				}
 				noteGuids.add(noteGuid);
 			}
@@ -581,7 +604,7 @@ public class StreetlightChicagoService {
 			addStreetLightData("device.luminaire.manufacturedate", fixtureInfo[3], paramsList);
 			addStreetLightData("power", fixtureInfo[4], paramsList);
 			addStreetLightData("fixing.type", fixtureInfo[5], paramsList);
-			dailyReportCSV.setFixtureType(fixtureInfo[5]);
+			//dailyReportCSV.setFixtureType(fixtureInfo[5]);
 			addStreetLightData("device.luminaire.colortemp", fixtureInfo[6], paramsList);
 			addStreetLightData("device.luminaire.lumenoutput", fixtureInfo[7], paramsList);
 			addStreetLightData("luminaire.DistributionType", fixtureInfo[8], paramsList);

@@ -86,7 +86,7 @@ public class StreetlightDao extends UtilDao {
 	}
 	
 	
-	public void insertProcessedNoteGuids(String noteGuid,String status,String errorDetails,long createdDateTime,String noteName){
+	public void insertProcessedNoteGuids(String noteGuid,String status,String errorDetails,long createdDateTime,String noteName,boolean isQuickNote,String existingNodeMACAddress,String newNodeMACAddress){
 		PreparedStatement preparedStatement = null;
 		Connection connection = null;
 		try {
@@ -97,13 +97,16 @@ public class StreetlightDao extends UtilDao {
 			}
 			connection = StreetlightDaoConnection.getInstance().getConnection();
 			preparedStatement = connection.prepareStatement(
-					"INSERT INTO notesyncdetails (streetlightsyncid , processednoteid, status,errordetails,createddatetime, notename ) values (?,?,?,?,?,?) ;");
+					"INSERT INTO notesyncdetails (streetlightsyncid , processednoteid, status,errordetails,createddatetime, notename,existingnodemacaddress, newnodemacaddress) values (?,?,?,?,?,?,?,?) ;");
 			preparedStatement.setLong(1, id);
 			preparedStatement.setString(2, noteGuid);
 			preparedStatement.setString(3, status);
 			preparedStatement.setString(4, errorDetails);
 			preparedStatement.setLong(5, createdDateTime);
 			preparedStatement.setString(6, noteName);
+			preparedStatement.setBoolean(7, isQuickNote);
+			preparedStatement.setString(8, existingNodeMACAddress);
+			preparedStatement.setString(9, newNodeMACAddress);
 			preparedStatement.execute();
 		} catch (Exception e) {
 			logger.error("Error in insertParentNoteId",e);
