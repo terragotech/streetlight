@@ -10,6 +10,7 @@ import java.util.List;
 import org.apache.log4j.Logger;
 
 import com.terragoedge.streetlight.StreetlightDaoConnection;
+import com.terragoedge.streetlight.service.LoggingModel;
 
 public class StreetlightDao extends UtilDao {
 
@@ -54,8 +55,9 @@ public class StreetlightDao extends UtilDao {
 	}
 
 	private void createStreetLightSyncTable() {
+		
 		String sql = "CREATE TABLE IF NOT EXISTS notesyncdetails (streetlightsyncid integer NOT NULL,"
-				+ " processednoteid text, status text, errordetails text, createddatetime bigint, notename text, CONSTRAINT notesyncdetails_pkey PRIMARY KEY (streetlightsyncid));";
+				+ " processednoteid text, status text, errordetails text, createddatetime bigint, notename text,existingnodemacaddress text,newnodemacaddress text,isReplaceNode text,isQuickNote text,idOnController text,macAddress text, CONSTRAINT notesyncdetails_pkey PRIMARY KEY (streetlightsyncid));";
 		executeStatement(sql);
 		
 		//sql = "CREATE TABLE IF NOT EXISTS lastsyncstatus (lastsyncstatusid integer not null, lastsynctime text, CONSTRAINT lastsyncstatus_pkey PRIMARY KEY (lastsyncstatusid))";
@@ -86,7 +88,43 @@ public class StreetlightDao extends UtilDao {
 	}
 	
 	
-	public void insertProcessedNoteGuids(String noteGuid,String status,String errorDetails,long createdDateTime,String noteName,boolean isQuickNote,String existingNodeMACAddress,String newNodeMACAddress){
+	public void insertProcessedNotes(LoggingModel loggingModel){
+		PreparedStatement preparedStatement = null;
+		Connection connection = null;
+		try{
+			String sql = "SELECT max(streetlightsyncid) + 1 from  notesyncdetails";
+			long id = exceuteSql(sql);
+			if(id == -1 || id == 0){
+				id = 1; 
+			}
+			
+			connection = StreetlightDaoConnection.getInstance().getConnection();
+			preparedStatement = connection.prepareStatement(
+					"INSERT INTO notesyncdetails (streetlightsyncid , processednoteid, status,errordetails,"
+					+ "createddatetime, notename,existingnodemacaddress, newnodemacaddress,isReplaceNode,isQuickNote"
+					+ "idOnController,macAddress) values (?,?,?,?,?,?,?,?,?,?,?,?) ;");
+			preparedStatement.setLong(1, id);
+			preparedStatement.setString(2, loggingModel.getProcessedNoteId());
+			preparedStatement.setString(3, loggingModel.getStatus());
+			preparedStatement.setString(4, loggingModel.getErrorDetails());
+			preparedStatement.setLong(5, Long.valueOf(loggingModel.getCreatedDatetime()));
+			preparedStatement.setString(6, loggingModel.getNoteName());
+			preparedStatement.setString(7, loggingModel.getExistingNodeMACaddress());
+			preparedStatement.setString(8, loggingModel.getNewNodeMACaddress());
+			preparedStatement.setString(9, loggingModel.getIsReplaceNode());
+			preparedStatement.setString(10, loggingModel.getIsQuickNote()+"");
+			preparedStatement.setString(11, loggingModel.getIdOnController());
+			preparedStatement.setString(12, loggingModel.getMacAddress());
+			preparedStatement.execute();
+		}catch (Exception e) {
+			logger.error("Error in insertParentNoteId",e);
+		} finally {
+			closeStatement(preparedStatement);
+		}
+	}
+	
+	
+	/*public void insertProcessedNoteGuids(String noteGuid,String status,String errorDetails,long createdDateTime,String noteName,boolean isQuickNote,String existingNodeMACAddress,String newNodeMACAddress){
 		PreparedStatement preparedStatement = null;
 		Connection connection = null;
 		try {
@@ -113,7 +151,7 @@ public class StreetlightDao extends UtilDao {
 		} finally {
 			closeStatement(preparedStatement);
 		}
-	}
+	}*/
 	
 	
 	
