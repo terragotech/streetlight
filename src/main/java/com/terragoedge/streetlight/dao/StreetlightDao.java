@@ -84,6 +84,9 @@ public class StreetlightDao extends UtilDao {
 				dailyReportCSV.setContext(queryResponse.getString("description"));
 				dailyReportCSV.setFixtureType(queryResponse.getString("groupname"));
 				dailyReportCSV.setNoteTitle(queryResponse.getString("title"));
+				if(dailyReportCSV.getNoteTitle().contains("Fixture")){
+					dailyReportCSV.setQuickNote(true);
+				}
 				dailyReportCSV.setCreatedBy(queryResponse.getString("createdby"));
 				dailyReportCSV.setCreateddatetime(queryResponse.getLong("createddatetime"));
 				dailyReportCSV.setLat(String.valueOf(queryResponse.getDouble("lat")));
@@ -131,6 +134,8 @@ public class StreetlightDao extends UtilDao {
 					}else if(edgeFormData.getLabel().equals("New Node MAC Address")){
 						dailyReportCSV.setNewNodeMACAddress(edgeFormData.getValue());
 						dailyReportCSV.setIsReplaceNode("Yes");
+					}else if(edgeFormData.getLabel().equals("Node MAC address")){
+						dailyReportCSV.setNodeMACAddress(edgeFormData.getValue());
 					}
 				}
 			}

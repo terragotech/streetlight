@@ -16,6 +16,10 @@ public class DailyReportCSV {
 	private String newNodeMACAddress;
 	private String isReplaceNode = "No";
 	
+	private String nodeMACAddress;
+	private boolean isQuickNote;
+	
+	
 	
 	public String getExistingNodeMACAddress() {
 		return existingNodeMACAddress != null ? existingNodeMACAddress : "";
@@ -124,14 +128,6 @@ public class DailyReportCSV {
 		this.createddatetime = createddatetime;
 	}
 
-	@Override
-	public String toString() {
-		return "DailyReportCSV [noteTitle=" + noteTitle + ", context=" + context + ", fixtureQrScan=" + fixtureQrScan
-				+ ", fixtureType=" + fixtureType + ", qrCode=" + qrCode + ", noteId=" + noteId + ", lat=" + lat
-				+ ", lng=" + lng + ", createdBy=" + createdBy + ", createddatetime=" + createddatetime
-				+ ", existingNodeMACAddress=" + existingNodeMACAddress + ", newNodeMACAddress=" + newNodeMACAddress
-				+ ", macAddressNoteTitle=" + macAddressNoteTitle + "]";
-	}
 
 	public String getIsReplaceNode() {
 		return isReplaceNode;
@@ -139,6 +135,32 @@ public class DailyReportCSV {
 
 	public void setIsReplaceNode(String isReplaceNode) {
 		this.isReplaceNode = isReplaceNode;
+	}
+
+	public String getNodeMACAddress() {
+		return nodeMACAddress;
+	}
+
+	public void setNodeMACAddress(String nodeMACAddress) {
+		this.nodeMACAddress = nodeMACAddress;
+	}
+
+	public boolean isQuickNote() {
+		return isQuickNote;
+	}
+
+	public void setQuickNote(boolean isQuickNote) {
+		this.isQuickNote = isQuickNote;
+	}
+
+	@Override
+	public String toString() {
+		return "DailyReportCSV [noteTitle=" + noteTitle + ", context=" + context + ", fixtureQrScan=" + fixtureQrScan
+				+ ", fixtureType=" + fixtureType + ", qrCode=" + qrCode + ", noteId=" + noteId + ", lat=" + lat
+				+ ", lng=" + lng + ", createdBy=" + createdBy + ", createddatetime=" + createddatetime
+				+ ", existingNodeMACAddress=" + existingNodeMACAddress + ", newNodeMACAddress=" + newNodeMACAddress
+				+ ", isReplaceNode=" + isReplaceNode + ", nodeMACAddress=" + nodeMACAddress + ", isQuickNote="
+				+ isQuickNote + ", macAddressNoteTitle=" + macAddressNoteTitle + "]";
 	}
 
 	
