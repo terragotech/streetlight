@@ -48,8 +48,47 @@ public class StreetlightChicagoService {
 		stringBuilder.append("\n");
 	}
 	
+	
+	public void quickNoteData(StringBuilder quickNoteBuilder,DailyReportCSV dailyReportCSV){
+		quickNoteBuilder.append(dailyReportCSV.getNoteTitle());
+		quickNoteBuilder.append(",");
+		quickNoteBuilder.append("\"");
+		quickNoteBuilder.append(dailyReportCSV.getQrCode());
+		quickNoteBuilder.append("\"");
+		quickNoteBuilder.append(",");
+		quickNoteBuilder.append(dailyReportCSV.getCreatedBy());
+		quickNoteBuilder.append(",");
+		quickNoteBuilder.append("\"");
+		quickNoteBuilder.append(dailyReportCSV.getFixtureQrScan());
+		quickNoteBuilder.append("\"");
+		quickNoteBuilder.append(",");
+		quickNoteBuilder.append(dailyReportCSV.getFixtureType());
+		quickNoteBuilder.append(",");
+		quickNoteBuilder.append("\"");
+		quickNoteBuilder.append(dailyReportCSV.getContext());
+		quickNoteBuilder.append("\"");
+		quickNoteBuilder.append(",");
+		quickNoteBuilder.append(dailyReportCSV.getLat());
+		quickNoteBuilder.append(",");
+		quickNoteBuilder.append(dailyReportCSV.getLng());
+		quickNoteBuilder.append(",");
+		quickNoteBuilder.append(formatDateTime(dailyReportCSV.getCreateddatetime()));
+	}
+	
 	public void run() throws IOException{
 		List<DailyReportCSV> dailyReportCSVs = streetlightDao.getNoteIds();
+		
+		StringBuilder quickNoteBuilder = new StringBuilder();
+		quickNoteBuilder.append("Title,");
+		quickNoteBuilder.append("MAC Address,");
+		quickNoteBuilder.append("User Id,");
+		quickNoteBuilder.append("Fixture QR Scan,");
+		quickNoteBuilder.append("Fixture Type,");
+		quickNoteBuilder.append("Context,");
+		quickNoteBuilder.append("Lat,");
+		quickNoteBuilder.append("Lng,");
+		quickNoteBuilder.append("Date Time");
+		
 		StringBuilder stringBuilder = new StringBuilder();
 		stringBuilder.append("Title,");
 		stringBuilder.append("MAC Address,");
