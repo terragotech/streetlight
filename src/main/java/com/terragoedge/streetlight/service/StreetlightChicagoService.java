@@ -48,8 +48,21 @@ public class StreetlightChicagoService {
 		stringBuilder.append("\n");
 	}
 	
+	private void populateQuickNoteHeader(StringBuilder quickNoteBuilder){
+		quickNoteBuilder.append("Title,");
+		quickNoteBuilder.append("MAC Address,");
+		quickNoteBuilder.append("User Id,");
+		quickNoteBuilder.append("Fixture QR Scan,");
+		quickNoteBuilder.append("Fixture Type,");
+		quickNoteBuilder.append("Context,");
+		quickNoteBuilder.append("Lat,");
+		quickNoteBuilder.append("Lng,");
+		quickNoteBuilder.append("Date Time");
+		quickNoteBuilder.append("\n");
+	}
 	
-	public void quickNoteData(StringBuilder quickNoteBuilder,DailyReportCSV dailyReportCSV){
+	
+	private void populateQuickNoteData(StringBuilder quickNoteBuilder,DailyReportCSV dailyReportCSV){
 		quickNoteBuilder.append(dailyReportCSV.getNoteTitle());
 		quickNoteBuilder.append(",");
 		quickNoteBuilder.append("\"");
@@ -75,75 +88,84 @@ public class StreetlightChicagoService {
 		quickNoteBuilder.append(formatDateTime(dailyReportCSV.getCreateddatetime()));
 	}
 	
+	private void populateNotesHeader(StringBuilder noteBuilder){
+		noteBuilder.append("Title,");
+		noteBuilder.append("MAC Address,");
+		noteBuilder.append("User Id,");
+		noteBuilder.append("Fixture QR Scan,");
+		noteBuilder.append("Fixture Type,");
+		noteBuilder.append("Context,");
+		noteBuilder.append("Lat,");
+		noteBuilder.append("Lng,");
+		noteBuilder.append("Date Time,");
+		noteBuilder.append("Is ReplaceNode,");
+		noteBuilder.append("Existing Node MAC Address,");
+		noteBuilder.append("New Node MAC Address");
+		noteBuilder.append("\n");
+	}
+	
+	
+	
+	private void populateNoteData(DailyReportCSV dailyReportCSV,StringBuilder noteBuilder){
+		noteBuilder.append(dailyReportCSV.getNoteTitle());
+		noteBuilder.append(",");
+		noteBuilder.append("\"");
+		noteBuilder.append(dailyReportCSV.getQrCode());
+		noteBuilder.append("\"");
+		noteBuilder.append(",");
+		noteBuilder.append(dailyReportCSV.getCreatedBy());
+		noteBuilder.append(",");
+		noteBuilder.append("\"");
+		noteBuilder.append(dailyReportCSV.getFixtureQrScan());
+		noteBuilder.append("\"");
+		noteBuilder.append(",");
+		noteBuilder.append(dailyReportCSV.getFixtureType());
+		noteBuilder.append(",");
+		noteBuilder.append("\"");
+		noteBuilder.append(dailyReportCSV.getContext());
+		noteBuilder.append("\"");
+		noteBuilder.append(",");
+		noteBuilder.append(dailyReportCSV.getLat());
+		noteBuilder.append(",");
+		noteBuilder.append(dailyReportCSV.getLng());
+		noteBuilder.append(",");
+		noteBuilder.append(formatDateTime(dailyReportCSV.getCreateddatetime()));
+		noteBuilder.append(",");
+		noteBuilder.append(dailyReportCSV.getIsReplaceNode());
+		noteBuilder.append(",");
+		noteBuilder.append("\"");
+		noteBuilder.append(dailyReportCSV.getExistingNodeMACAddress());
+		noteBuilder.append("\"");
+		noteBuilder.append(",");
+		noteBuilder.append("\"");
+		noteBuilder.append(dailyReportCSV.getNewNodeMACAddress());
+		noteBuilder.append("\"");
+		noteBuilder.append("\n");
+	}
+	
 	public void run() throws IOException{
 		List<DailyReportCSV> dailyReportCSVs = streetlightDao.getNoteIds();
 		
 		StringBuilder quickNoteBuilder = new StringBuilder();
-		quickNoteBuilder.append("Title,");
-		quickNoteBuilder.append("MAC Address,");
-		quickNoteBuilder.append("User Id,");
-		quickNoteBuilder.append("Fixture QR Scan,");
-		quickNoteBuilder.append("Fixture Type,");
-		quickNoteBuilder.append("Context,");
-		quickNoteBuilder.append("Lat,");
-		quickNoteBuilder.append("Lng,");
-		quickNoteBuilder.append("Date Time");
+		populateQuickNoteHeader(quickNoteBuilder);
 		
 		StringBuilder stringBuilder = new StringBuilder();
-		stringBuilder.append("Title,");
-		stringBuilder.append("MAC Address,");
-		stringBuilder.append("User Id,");
-		stringBuilder.append("Fixture QR Scan,");
-		stringBuilder.append("Fixture Type,");
-		stringBuilder.append("Context,");
-		stringBuilder.append("Lat,");
-		stringBuilder.append("Lng,");
-		stringBuilder.append("Date Time,");
-		stringBuilder.append("Is ReplaceNode,");
-		stringBuilder.append("Existing Node MAC Address,");
-		stringBuilder.append("New Node MAC Address");
-		stringBuilder.append("\n");
+		populateNotesHeader(stringBuilder);
 		StringBuilder dupMacStringBuilder = getMACDup();
 		boolean isMacDup = false;
+		boolean isQuickNote = false;
 		for(DailyReportCSV dailyReportCSV : dailyReportCSVs){
-			stringBuilder.append(dailyReportCSV.getNoteTitle());
-			stringBuilder.append(",");
-			stringBuilder.append("\"");
-			stringBuilder.append(dailyReportCSV.getQrCode());
-			stringBuilder.append("\"");
-			stringBuilder.append(",");
-			stringBuilder.append(dailyReportCSV.getCreatedBy());
-			stringBuilder.append(",");
-			stringBuilder.append("\"");
-			stringBuilder.append(dailyReportCSV.getFixtureQrScan());
-			stringBuilder.append("\"");
-			stringBuilder.append(",");
-			stringBuilder.append(dailyReportCSV.getFixtureType());
-			stringBuilder.append(",");
-			stringBuilder.append("\"");
-			stringBuilder.append(dailyReportCSV.getContext());
-			stringBuilder.append("\"");
-			stringBuilder.append(",");
-			stringBuilder.append(dailyReportCSV.getLat());
-			stringBuilder.append(",");
-			stringBuilder.append(dailyReportCSV.getLng());
-			stringBuilder.append(",");
-			stringBuilder.append(formatDateTime(dailyReportCSV.getCreateddatetime()));
-			stringBuilder.append(",");
-			stringBuilder.append(dailyReportCSV.getIsReplaceNode());
-			stringBuilder.append(",");
-			stringBuilder.append("\"");
-			stringBuilder.append(dailyReportCSV.getExistingNodeMACAddress());
-			stringBuilder.append("\"");
-			stringBuilder.append(",");
-			stringBuilder.append("\"");
-			stringBuilder.append(dailyReportCSV.getNewNodeMACAddress());
-			stringBuilder.append("\"");
-			stringBuilder.append("\n");
-			if(dailyReportCSV.getMacAddressNoteTitle() != null && !dailyReportCSV.getMacAddressNoteTitle().trim().isEmpty()){
-				loadDup(dupMacStringBuilder, dailyReportCSV);
-				isMacDup = true;
+			if(dailyReportCSV.isQuickNote()){
+				isQuickNote = true;
+				populateQuickNoteData(quickNoteBuilder, dailyReportCSV);
+			}else{
+				populateNoteData(dailyReportCSV, stringBuilder);
+				if(dailyReportCSV.getMacAddressNoteTitle() != null && !dailyReportCSV.getMacAddressNoteTitle().trim().isEmpty()){
+					loadDup(dupMacStringBuilder, dailyReportCSV);
+					isMacDup = true;
+				}
 			}
+			
 		}
 		String fileName = getDateTime();
 		String dailyReportFile = "daily_report_"+fileName+".csv";
@@ -152,6 +174,11 @@ public class StreetlightChicagoService {
 		
 		if(isMacDup){
 			dupMacAddressFile = "daily_mac_dup_report_"+fileName+".csv";
+			logData(dupMacStringBuilder.toString(), dupMacAddressFile);
+		}
+		
+		if(isQuickNote){
+			dupMacAddressFile = "daily_quick_note_report_"+fileName+".csv";
 			logData(dupMacStringBuilder.toString(), dupMacAddressFile);
 		}
 		edgeMailService.sendMail(dupMacAddressFile, dailyReportFile);

@@ -134,8 +134,6 @@ public class StreetlightDao extends UtilDao {
 					}else if(edgeFormData.getLabel().equals("New Node MAC Address")){
 						dailyReportCSV.setNewNodeMACAddress(edgeFormData.getValue());
 						dailyReportCSV.setIsReplaceNode("Yes");
-					}else if(edgeFormData.getLabel().equals("Node MAC address")){
-						dailyReportCSV.setNodeMACAddress(edgeFormData.getValue());
 					}
 				}
 			}
