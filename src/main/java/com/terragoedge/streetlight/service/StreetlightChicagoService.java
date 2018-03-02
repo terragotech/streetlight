@@ -86,6 +86,7 @@ public class StreetlightChicagoService {
 		quickNoteBuilder.append(dailyReportCSV.getLng());
 		quickNoteBuilder.append(",");
 		quickNoteBuilder.append(formatDateTime(dailyReportCSV.getCreateddatetime()));
+		quickNoteBuilder.append("\n");
 	}
 	
 	private void populateNotesHeader(StringBuilder noteBuilder){
@@ -170,6 +171,7 @@ public class StreetlightChicagoService {
 		String fileName = getDateTime();
 		String dailyReportFile = "daily_report_"+fileName+".csv";
 		String dupMacAddressFile = null;
+		String quickNoteFileName = null;
 		logData(stringBuilder.toString(), dailyReportFile);
 		
 		if(isMacDup){
@@ -178,10 +180,10 @@ public class StreetlightChicagoService {
 		}
 		
 		if(isQuickNote){
-			dupMacAddressFile = "daily_quick_note_report_"+fileName+".csv";
-			logData(dupMacStringBuilder.toString(), dupMacAddressFile);
+			quickNoteFileName = "daily_quick_note_report_"+fileName+".csv";
+			logData(quickNoteBuilder.toString(), quickNoteFileName);
 		}
-		edgeMailService.sendMail(dupMacAddressFile, dailyReportFile);
+		edgeMailService.sendMail(dupMacAddressFile, dailyReportFile,quickNoteFileName);
 		
 	}
 	
