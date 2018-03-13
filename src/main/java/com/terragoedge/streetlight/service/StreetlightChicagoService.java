@@ -173,7 +173,7 @@ public class StreetlightChicagoService {
 		}
 	}
 	
-	public void syncData(Map<String, FormData> formDatas,EdgeNote edgeNote,List<String> noteGuids,LoggingModel loggingModel) throws InValidBarCodeException, DeviceUpdationFailedException, QRCodeAlreadyUsedException, NoValueException, ReplaceOLCFailedException{
+	public void syncData(Map<String, FormData> formDatas,EdgeNote edgeNote,List<String> noteGuids,LoggingModel loggingModel) throws InValidBarCodeException, DeviceUpdationFailedException, QRCodeAlreadyUsedException, NoValueException, ReplaceOLCFailedException,Exception{
 		List<Object> paramsList = new ArrayList<Object>();
 		String chicagoFormTemplateGuid = properties.getProperty("streetlight.edge.formtemplateguid.chicago");
 		String fixtureFormTemplateGuid = properties.getProperty("streetlight.edge.formtemplateguid.fixture");
@@ -395,7 +395,7 @@ public class StreetlightChicagoService {
 	}
 	
 	
-	private void processReplaceOLCFormVal(FormData replaceOLCFormData,String idOnController,String controllerStrIdValue,List<Object> paramsList,String geoZoneId,String noteGuid,long noteCreatedDateTime,List<String> noteGuids,EdgeNote edgeNote,LoggingModel loggingModel) throws DeviceUpdationFailedException {
+	private void processReplaceOLCFormVal(FormData replaceOLCFormData,String idOnController,String controllerStrIdValue,List<Object> paramsList,String geoZoneId,String noteGuid,long noteCreatedDateTime,List<String> noteGuids,EdgeNote edgeNote,LoggingModel loggingModel) throws QRCodeAlreadyUsedException,DeviceUpdationFailedException,Exception {
 		List<EdgeFormData> replaceOLCFromDef = replaceOLCFormData.getFormDef();
 		String existingNodeMacAddress = null;
 		String newNodeMacAddress = null;
@@ -433,6 +433,8 @@ public class StreetlightChicagoService {
 			//streetlightDao.insertProcessedNoteGuids(edgeNote.getNoteGuid(), MessageConstants.ERROR, MessageConstants.REPLACE_MAC_NOT_MATCH, edgeNote.getCreatedDateTime(),edgeNote.getTitle(),true,existingNodeMacAddress,newNodeMacAddress);
 			return;
 		}
+		
+		checkMacAddressExists(newNodeMacAddress, idOnController);
 		
 		boolean isError = false;
 		StringBuffer statusDescription = new StringBuffer();
@@ -597,21 +599,21 @@ public class StreetlightChicagoService {
 	
 	
 	
-	private String loadMACAddress(String data,List<Object> paramsList,String idOnController ) throws InValidBarCodeException, QRCodeAlreadyUsedException{
+	private String loadMACAddress(String data,List<Object> paramsList,String idOnController ) throws InValidBarCodeException, QRCodeAlreadyUsedException,Exception{
 		if(data.contains("MACid")){
 			String[] nodeInfo = data.split(",");
 			if(nodeInfo.length > 0){
 				for(String nodeData : nodeInfo){
 					if(nodeData.startsWith("MACid")){
 						String macAddress = nodeData.substring(6);
-						//checkMacAddressExists(macAddress, idOnController);
+						checkMacAddressExists(macAddress, idOnController);
 						addStreetLightData("MacAddress", macAddress, paramsList);
 						return macAddress;
 					}
 				}
 			}
 		}else{
-			//checkMacAddressExists(data, idOnController);
+			checkMacAddressExists(data, idOnController);
 			addStreetLightData("MacAddress", data, paramsList);
 			return data;
 		}
@@ -699,7 +701,7 @@ public class StreetlightChicagoService {
 	 * Load Mac address and corresponding IdOnController from SLV Server
 	 * @throws Exception 
 	 */
-	public boolean checkMacAddressExists(String macAddress,String idOnController)throws Exception{
+	public boolean checkMacAddressExists(String macAddress,String idOnController)throws QRCodeAlreadyUsedException,Exception{
 		logger.info("Getting Mac Address from SLV.");
 		String mainUrl = properties.getProperty("streetlight.slv.url.main");
 		String updateDeviceValues = properties.getProperty("streetlight.slv.url.search.device");
