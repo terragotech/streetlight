@@ -102,7 +102,7 @@ public class StreetlightDao extends UtilDao {
 			preparedStatement = connection.prepareStatement(
 					"INSERT INTO notesyncdetails (streetlightsyncid , processednoteid, status,errordetails,"
 					+ "createddatetime, notename,existingnodemacaddress, newnodemacaddress,isReplaceNode,isQuickNote"
-					+ "idOnController,macAddress) values (?,?,?,?,?,?,?,?,?,?,?,?) ;");
+					+ ",idOnController,macAddress) values (?,?,?,?,?,?,?,?,?,?,?,?) ;");
 			preparedStatement.setLong(1, id);
 			preparedStatement.setString(2, loggingModel.getProcessedNoteId());
 			preparedStatement.setString(3, loggingModel.getStatus());
