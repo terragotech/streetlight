@@ -22,6 +22,12 @@ public class FormValues {
 		this.label = label;
 	}
 	public String getValue() {
+		if(value != null){
+			value = value.replace(label+"#", "");
+			if(value.equals("(null)")){
+				value = null;
+			}
+		}
 		return value;
 	}
 	public void setValue(String value) {
@@ -55,6 +61,29 @@ public class FormValues {
 	public String toString() {
 		return "FormValues [id=" + id + ", label=" + label + ", value=" + value + ", count=" + count + ", groupId="
 				+ groupId + ", groupRepeatableCount=" + groupRepeatableCount + ", isGroup=" + isGroup + "]";
+	}
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + ((label == null) ? 0 : label.hashCode());
+		return result;
+	}
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		FormValues other = (FormValues) obj;
+		if (label == null) {
+			if (other.label != null)
+				return false;
+		} else if (!label.equals(other.label))
+			return false;
+		return true;
 	}
 	
 	

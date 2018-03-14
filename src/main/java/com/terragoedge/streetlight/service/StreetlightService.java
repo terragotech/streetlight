@@ -871,8 +871,6 @@ public class StreetlightService {
 
 	private String getStreetLightMappingData() throws Exception {
 		String mappingPath = properties.getProperty("streetlight.mapping.json.path");
-		
-
 		File file = new File("./resources/" + mappingPath);
 		String streetLightMappingData = FileUtils.readFileToString(file);
 		return streetLightMappingData;

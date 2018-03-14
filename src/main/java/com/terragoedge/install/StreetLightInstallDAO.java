@@ -7,24 +7,33 @@ import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.log4j.Logger;
+
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.terragoedge.streetlight.dao.UtilDao;
 
-public class StreetLightInstallDAO extends UtilDao{
+public class StreetLightInstallDAO extends UtilDao {
 	
-	private  void createStreetLightSyncTable(){
+	public StreetLightInstallDAO(){
+		super();
+		createStreetLightSyncTable();
+	}
+	
+	static final Logger logger = Logger.getLogger(StreetLightInstallDAO.class);
+
+	private void createStreetLightSyncTable() {
 		PreparedStatement preparedStatement = null;
-		try{
-		String sql = "CREATE TABLE IF NOT EXISTS streetlightinstallformsync (strtlightinstformsyncid integer NOT NULL,"
-					+ " processednoteid integer, status text, operationtype text, error text, CONSTRAINT strtlightinstformsyncid_pkey PRIMARY KEY (strtlightinstformsyncid));";
+		try {
+			String sql = "CREATE TABLE IF NOT EXISTS streetlightinstallformsync (strtlightinstformsyncid integer NOT NULL,"
+					+ " processednoteid integer, noteGuid text, title text, status text, actionType text, totalForms text, description text,   CONSTRAINT strtlightinstformsyncid_pkey PRIMARY KEY (strtlightinstformsyncid));";
 			preparedStatement = connection.prepareStatement(sql);
 			preparedStatement.execute();
-		}catch(Exception e){
+		} catch (Exception e) {
 			e.printStackTrace();
-		}finally{
-			if(preparedStatement != null){
+		} finally {
+			if (preparedStatement != null) {
 				try {
 					preparedStatement.close();
 				} catch (SQLException e) {
@@ -33,9 +42,8 @@ public class StreetLightInstallDAO extends UtilDao{
 			}
 		}
 	}
-	
-	
-	public boolean isNoteSynced(String noteId){
+
+	public boolean isNoteSynced(String noteId) {
 		PreparedStatement preparedStatement = null;
 		ResultSet queryResponse = null;
 		try {
@@ -51,8 +59,7 @@ public class StreetLightInstallDAO extends UtilDao{
 		}
 		return false;
 	}
-	
-	
+
 	/**
 	 * Get List of NoteIds which is assigned to given formtemplate
 	 * 
@@ -65,15 +72,16 @@ public class StreetLightInstallDAO extends UtilDao{
 		List<NoteDetails> noteDetailsList = new ArrayList<>();
 		JsonParser jsonParser = new JsonParser();
 		try {
-			
+
 			queryStatement = connection.createStatement();
-			queryResponse = queryStatement.executeQuery("select title, noteguid, noteid, geojson from edgenote where iscurrent = true and isdeleted = false;");
-			
+			queryResponse = queryStatement.executeQuery(
+					"select title, noteguid, noteid, geojson from edgenote where iscurrent = true and isdeleted = false and notebookid = 1729 order by createddatetime desc  limit 3  ;");
+
 			while (queryResponse.next()) {
 				String noteId = queryResponse.getString("noteid");
 				boolean isSynced = isNoteSynced(noteId);
-				if(!isSynced){
-					NoteDetails noteDetails = new  NoteDetails();
+				if (!isSynced) {
+					NoteDetails noteDetails = new NoteDetails();
 					noteDetails.setNoteid(noteId);
 					noteDetails.setNoteGuid(queryResponse.getString("noteguid"));
 					noteDetails.setGeojson(queryResponse.getString("geojson"));
@@ -90,7 +98,7 @@ public class StreetLightInstallDAO extends UtilDao{
 						noteDetails.setLng(longitude);
 					}
 				}
-				
+
 			}
 
 		} catch (Exception e) {
@@ -101,13 +109,15 @@ public class StreetLightInstallDAO extends UtilDao{
 		}
 		return noteDetailsList;
 	}
-	
+
 	public void getFormDetails(NoteDetails noteDetails) {
 		Statement queryStatement = null;
 		ResultSet queryResponse = null;
 		try {
 			queryStatement = connection.createStatement();
-			queryResponse = queryStatement.executeQuery("select formdef,formtemplatedef,formGuid,formTemplateGuid from edgeform where edgenoteentity_noteid = "+noteDetails.getNoteid());
+			queryResponse = queryStatement.executeQuery(
+					"select formdef,formtemplatedef,formGuid,formTemplateGuid from edgeform where edgenoteentity_noteid = "
+							+ noteDetails.getNoteid());
 			while (queryResponse.next()) {
 				FormDetails formDetails = new FormDetails();
 				formDetails.setFormDef(queryResponse.getString("formdef"));
@@ -124,6 +134,54 @@ public class StreetLightInstallDAO extends UtilDao{
 			closeStatement(queryStatement);
 		}
 
+	}
+	
+	
+	public void insertProcessedNotes(LoggingDetails loggingDetails){
+		PreparedStatement preparedStatement = null;
+		try{
+			String sql = "SELECT max(strtlightinstformsyncid) + 1 from  streetlightinstallformsync;";
+			long id = exceuteSql(sql);
+			if(id == -1 || id == 0){
+				id = 1; 
+			}
+			
+			preparedStatement = connection.prepareStatement(
+					"INSERT INTO streetlightinstallformsync (strtlightinstformsyncid , processednoteid, noteGuid,title,"
+					+ "status, actionType,totalForms, description) values (?,?,?,?,?,?,?,?) ;");
+			preparedStatement.setLong(1, id);
+			preparedStatement.setInt(2, Integer.parseInt(loggingDetails.getNoteId()));
+			preparedStatement.setString(3, loggingDetails.getNoteGuid());
+			preparedStatement.setString(4, loggingDetails.getTitle());
+			preparedStatement.setString(5, loggingDetails.getStatus());
+			preparedStatement.setString(6, loggingDetails.getActionType());
+			preparedStatement.setString(7, loggingDetails.getTotalForms());
+			preparedStatement.setString(8, loggingDetails.getDescription());
+			preparedStatement.execute();
+		}catch (Exception e) {
+			e.printStackTrace();
+			logger.error("Error in insertProcessedNotes",e);
+		} finally {
+			closeStatement(preparedStatement);
+		}
+	}
+	
+	
+	private long exceuteSql(String sql) {
+		Statement statement = null;
+		try {
+			statement = connection.createStatement();
+			ResultSet resultSet = statement.executeQuery(sql);
+			while(resultSet.next()){
+				long res = resultSet.getLong(1);
+				return res;
+			}
+		} catch (Exception e) {
+			logger.error("Error in exceuteSequence",e);
+		} finally {
+			closeStatement(statement);
+		}
+		return -1;
 	}
 
 }

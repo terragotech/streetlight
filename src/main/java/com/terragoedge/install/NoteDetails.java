@@ -11,7 +11,18 @@ public class NoteDetails {
 	private String geojson;
 	private String lat;
 	private String lng;
+	private long createdDateTime;
 	private List<FormDetails> formDetails = new ArrayList<>();
+	
+	
+
+	public long getCreatedDateTime() {
+		return createdDateTime;
+	}
+
+	public void setCreatedDateTime(long createdDateTime) {
+		this.createdDateTime = createdDateTime;
+	}
 
 	public String getTitle() {
 		return title;
