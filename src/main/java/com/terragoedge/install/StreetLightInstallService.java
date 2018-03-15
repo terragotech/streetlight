@@ -79,30 +79,44 @@ public class StreetLightInstallService {
 		jsonParser = new JsonParser();
 		restService = new RestService();
 		properties = PropertiesReader.getProperties();
-		//loadDimmingValue();
+		loadDimmingValue();
 	}
 	
 
 	public void process() throws Exception {
+		List<NotebookGeoZones> notebookGeoZonesList = loadNotebookGeoZones();
 		loadSLVData();
 		formTemplateGuid = properties.getProperty("edge.streetlight.install.fromtemplateguid");
-		List<NoteDetails> noteDetailsList = streetLightInstallDAO.getUnSyncedNoteIds();
-		mappingJson = getStreetLightMappingJson();
-		for (NoteDetails noteDetails : noteDetailsList) {
-			LoggingDetails loggingDetails = new LoggingDetails();
-			try {
-				SLVDataEntity slvDataEntity = new SLVDataEntity();
-				loadLoggingDetails(noteDetails, loggingDetails);
-				process(noteDetails, loggingDetails,slvDataEntity);
-			} catch (Exception e) {
-				e.printStackTrace();
-				loggingDetails.setStatus(Constants.FAILURE);
-				loggingDetails.setDescription(e.getMessage());
-			} 
-			streetLightInstallDAO.insertProcessedNotes(loggingDetails);
+		
+		for(NotebookGeoZones notebookGeoZones : notebookGeoZonesList){
+			List<NoteDetails> noteDetailsList = streetLightInstallDAO.getUnSyncedNoteIds(notebookGeoZones.getNotebookName());
+			mappingJson = getStreetLightMappingJson();
+			for (NoteDetails noteDetails : noteDetailsList) {
+				LoggingDetails loggingDetails = new LoggingDetails();
+				try {
+					SLVDataEntity slvDataEntity = new SLVDataEntity();
+					loadLoggingDetails(noteDetails, loggingDetails);
+					process(noteDetails, loggingDetails,slvDataEntity,notebookGeoZones);
+				} catch (Exception e) {
+					e.printStackTrace();
+					loggingDetails.setStatus(Constants.FAILURE);
+					loggingDetails.setDescription(e.getMessage());
+				} 
+				streetLightInstallDAO.insertProcessedNotes(loggingDetails);
+			}
 		}
+		
+		
 	}
 	
+	
+	private List<NotebookGeoZones> loadNotebookGeoZones(){
+		String notebookGeoZoneJson = properties.getProperty("streetlight.url.load.slvmacaddress");
+		List<NotebookGeoZones> notebookGeoZones = gson.fromJson(notebookGeoZoneJson,
+				new TypeToken<List<NotebookGeoZones>>() {
+				}.getType());
+		return notebookGeoZones;
+	}
 	
 	private void loadSLVData(){
 		String mainUrl = properties.getProperty("streetlight.url.main");
@@ -137,7 +151,7 @@ public class StreetLightInstallService {
 	}
 	
 
-	private void process(NoteDetails noteDetails, LoggingDetails loggingDetails,SLVDataEntity slvDataEntity) {
+	private void process(NoteDetails noteDetails, LoggingDetails loggingDetails,SLVDataEntity slvDataEntity,NotebookGeoZones notebookGeoZones) {
 		try {
 			streetLightInstallDAO.getFormDetails(noteDetails);
 			int totalSize = noteDetails.getFormDetails().size();
@@ -145,11 +159,11 @@ public class StreetLightInstallService {
 			if (totalSize > 0) {
 				if(totalSize == 1){
 					validateFormTemplate(noteDetails);
-					processEdgeForm(noteDetails, slvDataEntity, noteDetails.getFormDetails().get(0),loggingDetails);
+					processEdgeForm(noteDetails, slvDataEntity, noteDetails.getFormDetails().get(0),loggingDetails,notebookGeoZones);
 					loggingDetails.setStatus(Constants.SUCCESS);
 				}else{
 					FormDetails formDetails = processEdgeForms(noteDetails, slvDataEntity);
-					processEdgeForm(noteDetails, slvDataEntity,formDetails,loggingDetails);
+					processEdgeForm(noteDetails, slvDataEntity,formDetails,loggingDetails,notebookGeoZones);
 					loggingDetails.setStatus(Constants.SUCCESS);
 				}
 				
@@ -196,16 +210,17 @@ public class StreetLightInstallService {
 	}
 	
 	
-	private void processEdgeForm(NoteDetails noteDetails, SLVDataEntity slvDataEntity,FormDetails formDetails,LoggingDetails loggingDetails ) throws SLNumberException, NoMacAddressException, DifferentMACAddressException, QRCodeAlreadyUsedException, ReplaceOLCFailedException, DeviceUpdationFailedException, DeviceCreationFailedException{
+	private void processEdgeForm(NoteDetails noteDetails, SLVDataEntity slvDataEntity,FormDetails formDetails,LoggingDetails loggingDetails,NotebookGeoZones notebookGeoZones ) throws SLNumberException, NoMacAddressException, DifferentMACAddressException, QRCodeAlreadyUsedException, ReplaceOLCFailedException, DeviceUpdationFailedException, DeviceCreationFailedException{
 		List<FormValues> edgeFormValuesList = gson.fromJson(formDetails.getFormDef(),
 				new TypeToken<List<FormValues>>() {
 				}.getType());
 		FormValues qrCodeFormValues = getFormValues(edgeFormValuesList, "Action");
+		loggingDetails.setActionType(qrCodeFormValues.getValue());
 		switch (qrCodeFormValues.getValue()) {
 		case "New Streetlight":
 			getSLNumber(noteDetails, slvDataEntity);
 			validateNewStreetMacAddress(noteDetails, slvDataEntity);
-			createDeviceInSLV(noteDetails, slvDataEntity);
+			createDeviceInSLV(noteDetails, slvDataEntity,notebookGeoZones);
 			updateDeviceValues( noteDetails, slvDataEntity, edgeFormValuesList);
 			replaceOLC(slvDataEntity, slvDataEntity.getMacAddress());
 			deviceList.put(slvDataEntity.getIdOnController().trim(), slvDataEntity.getMacAddress().trim().toLowerCase());
@@ -213,7 +228,7 @@ public class StreetLightInstallService {
 			
 		case "Update Streetlight":
 			getSLNumber(noteDetails, slvDataEntity);
-			updateStreetLight(edgeFormValuesList, slvDataEntity);
+			updateStreetLight(edgeFormValuesList, slvDataEntity,noteDetails);
 			break;
 			
 		case "Remove Streetlight":
@@ -228,7 +243,7 @@ public class StreetLightInstallService {
 	}
 	
 	
-	private void updateStreetLight(List<FormValues> edgeFormValuesList,SLVDataEntity slvDataEntity)throws QRCodeAlreadyUsedException, NoMacAddressException, ReplaceOLCFailedException{
+	private void updateStreetLight(List<FormValues> edgeFormValuesList,SLVDataEntity slvDataEntity,NoteDetails noteDetails)throws QRCodeAlreadyUsedException, NoMacAddressException, ReplaceOLCFailedException, DeviceUpdationFailedException{
 		// Get Existing QR Code
 		FormValues existingQRCode = getFormValues(edgeFormValuesList, "Existing SELC QR Code");
 		String existingQRCodeVal = existingQRCode.getValue();
@@ -255,6 +270,7 @@ public class StreetLightInstallService {
 		}
 		// Empty QR Code by calling set device value
 		addStreetLightData("MacAddress", "", slvDataEntity.getParamsList());
+		updateSLVData(slvDataEntity, noteDetails, slvDataEntity.getParamsList());
 		// Empty Replace OLC
 		replaceOLC(slvDataEntity, "");
 		// Replace OLC with New MAC Address
@@ -264,7 +280,7 @@ public class StreetLightInstallService {
 	}
 	
 	
-	private void createDeviceInSLV(NoteDetails noteDetails, SLVDataEntity slvDataEntity) throws DeviceCreationFailedException{
+	private void createDeviceInSLV(NoteDetails noteDetails, SLVDataEntity slvDataEntity,NotebookGeoZones notebookGeoZones) throws DeviceCreationFailedException{
 		String idOnController = slvDataEntity.getIdOnController();
 		if(!deviceList.containsKey(idOnController)){
 			String mainUrl = properties.getProperty("streetlight.url.main");
@@ -272,13 +288,14 @@ public class StreetLightInstallService {
 			mainUrl = mainUrl + createDeviceUrl;
 			String methodCreateDevice = properties.getProperty("streetlight.method.create.device");
 			String categoryStrId = properties.getProperty("streetlight.create.device.categoryStrId");
+			String controllerStrId = properties.getProperty("streetlight.controller.strid");
 			String nodeTypeStrId = properties.getProperty("streetlight.equipment.type");
 			Map<String, String> streetLightDataParams = new HashMap<>();
 			streetLightDataParams.put("methodName", methodCreateDevice);
 			streetLightDataParams.put("categoryStrId", categoryStrId);
-			streetLightDataParams.put("controllerStrId", slvDataEntity.getControllerStrId());
+			streetLightDataParams.put("controllerStrId", controllerStrId);
 			streetLightDataParams.put("idOnController", slvDataEntity.getIdOnController());
-			streetLightDataParams.put("geoZoneId", "738"); // -- TODO
+			streetLightDataParams.put("geoZoneId", notebookGeoZones.getGeoZoneId()); 
 			streetLightDataParams.put("nodeTypeStrId", nodeTypeStrId);
 			streetLightDataParams.put("lat", slvDataEntity.getLat()); 
 			streetLightDataParams.put("lng", slvDataEntity.getLng());
@@ -318,55 +335,57 @@ public class StreetLightInstallService {
 			if (streetLightKey != null && !streetLightKey.isJsonNull()) {
 				String key = streetLightKey.getAsString();
 				String value = formValues.getValue();
-				if(!key.equals("comment") && !key.equals("MacAddress")){
+				if(!key.equals("comment") && !key.equals("MacAddress") && !key.toLowerCase().equals("power")){
 					addStreetLightData(key, value, slvDataEntity.getParamsList());
 				}
 				
-			}
-
-			switch (formValues.getLabel()) {
-			case "luminaire.model":
-				if(formValues.getValue() != null){
-					String[] luminareCoreValues = formValues.getValue().split("-");
-					if (luminareCoreValues.length > 0) {
-						String luminareCoreValue = luminareCoreValues[0].trim();
-						if (luminareCore.containsKey(luminareCoreValue)) {
-							lWatt = luminareCore.get(luminareCoreValue);
+				switch (key) {
+				
+				case "luminaire.model":
+					if(formValues.getValue() != null){
+						String[] luminareCoreValues = formValues.getValue().split("-");
+						if (luminareCoreValues.length > 0) {
+							String luminareCoreValue = luminareCoreValues[0].trim();
+							if (luminareCore.containsKey(luminareCoreValue)) {
+								lWatt = luminareCore.get(luminareCoreValue);
+							}
 						}
 					}
-				}
-				
-				break;
+					
+					break;
 
-			case "power2":
-				String value = formValues.getValue();
-				if (value != null && !(value.trim().isEmpty()) && !(value.trim().equalsIgnoreCase("(null)"))) {
-					String temp = value.replaceAll("[^\\d.]", "");
-					temp = temp.trim();
-					power2Watt = Integer.parseInt(temp);
-				}
-				
-			case "location.mapnumber":
-				value = formValues.getValue();// TODO
-				String tt = "Block " + value;
-				//addStreetLightData(key, value, slvDataEntity.getParamsList());
-				break;
-				
-			case "comment":
-				break;
-				
-			case "power":
-				value = formValues.getValue();
-				if (value != null && !(value.trim().isEmpty()) && !(value.trim().equalsIgnoreCase("(null)"))) {
-					String temp = value.replaceAll("[^\\d.]", "");
-					temp = temp.trim();
-					lWatt = Integer.parseInt(temp);
-				}
-				break;
+				case "power2":
+					value = formValues.getValue();
+					if (value != null && !(value.trim().isEmpty()) && !(value.trim().equalsIgnoreCase("(null)"))) {
+						String temp = value.replaceAll("[^\\d.]", "");
+						temp = temp.trim();
+						power2Watt = Integer.parseInt(temp);
+					}
+					
+				case "location.mapnumber":
+					value = formValues.getValue();// TODO
+					String tt = "Block " + value;
+					//addStreetLightData(key, value, slvDataEntity.getParamsList());
+					break;
+					
+				case "comment":
+					comment = comment + " " + formValues.getLabel() + ":" + formValues.getValue();
+					break;
+					
+				case "power":
+					value = formValues.getValue();
+					if (value != null && !(value.trim().isEmpty()) && !(value.trim().equalsIgnoreCase("(null)"))) {
+						String temp = value.replaceAll("[^\\d.]", "");
+						temp = temp.trim();
+						lWatt = Integer.parseInt(temp);
+					}
+					break;
 
-			default:
-				break;
+				default:
+					break;
+				}
 			}
+			
 		}
 		
 		if (lWatt == 0) {
@@ -399,13 +418,15 @@ public class StreetLightInstallService {
 			String mainUrl = properties.getProperty("streetlight.url.main");
 			String dataUrl = properties.getProperty("streetlight.url.update.device");
 			String insertDevice = properties.getProperty("streetlight.method.update.device");
+			String controllerStrId = properties.getProperty("streetlight.controller.strid");
 			String url = mainUrl + dataUrl;
 			paramsList.add("methodName=" + insertDevice);
-			paramsList.add("controllerStrId=" + slvDataEntity.getControllerStrId());
+			paramsList.add("controllerStrId=" + controllerStrId);
 			paramsList.add("idOnController=" + slvDataEntity.getIdOnController());
 			paramsList.add("ser=json");
 			String params = StringUtils.join(paramsList, "&");
 			url = url + "?" + params;
+			System.out.println(url);
 			ResponseEntity<String> response = restService.getRequest(url, true);
 			String responseString = response.getBody();
 			JsonObject replaceOlcResponse = (JsonObject) jsonParser.parse(responseString);
@@ -585,10 +606,10 @@ public class StreetLightInstallService {
 			String dataUrl = properties.getProperty("streetlight.url.replaceolc");
 			String replaceOlc = properties.getProperty("streetlight.url.replaceolc.method");
 			String url = mainUrl + dataUrl;
-			//String controllerStrId = properties.getProperty("streetlight.controllerstr.id");
+			String controllerStrId = properties.getProperty("streetlight.controller.strid");
 			List<Object> paramsList = new ArrayList<Object>();
 			paramsList.add("methodName=" + replaceOlc);
-			paramsList.add("controllerStrId=" + slvSyncDataEntity.getControllerStrId());
+			paramsList.add("controllerStrId=" + controllerStrId);
 			paramsList.add("idOnController=" + slvSyncDataEntity.getIdOnController());
 			paramsList.add("newNetworkId=" + macAddress);
 			paramsList.add("ser=json");
@@ -616,7 +637,7 @@ public class StreetLightInstallService {
 	 * @throws Exception 
 	 */
 	public boolean checkMacAddressExists(String macAddress,String idOnController)throws QRCodeAlreadyUsedException{
-		String mainUrl = properties.getProperty("streetlight.slv.url.main");
+		String mainUrl = properties.getProperty("streetlight.url.main");
 		String updateDeviceValues = properties.getProperty("streetlight.slv.url.search.device");
 		String url = mainUrl + updateDeviceValues;
 		List<String> paramsList = new ArrayList<>();
@@ -634,7 +655,7 @@ public class StreetLightInstallService {
 			List<Value> values = deviceMacAddress.getValue();
 			StringBuilder stringBuilder = new StringBuilder();
 			if(values == null || values.size() == 0){
-				return false;
+				throw new QRCodeAlreadyUsedException("Existing QR Code not match.");
 			}else{
 				for(Value value : values){
 					if(value.getIdOnController().equals(idOnController)){
@@ -644,7 +665,7 @@ public class StreetLightInstallService {
 					stringBuilder.append("\n");
 				}
 			}
-			throw new QRCodeAlreadyUsedException(stringBuilder.toString());
+			throw new QRCodeAlreadyUsedException("Existing QR Code present in following IdonController "+stringBuilder.toString());
 		}else{
 			throw new QRCodeAlreadyUsedException("Error while checking Existing SELC QR Code.");
 		}

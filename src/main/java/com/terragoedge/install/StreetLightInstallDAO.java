@@ -66,7 +66,7 @@ public class StreetLightInstallDAO extends UtilDao {
 	 * @param formTemplateGuid
 	 * @return
 	 */
-	public List<NoteDetails> getUnSyncedNoteIds() {
+	public List<NoteDetails> getUnSyncedNoteIds(String notebookid) {
 		Statement queryStatement = null;
 		ResultSet queryResponse = null;
 		List<NoteDetails> noteDetailsList = new ArrayList<>();
@@ -75,7 +75,7 @@ public class StreetLightInstallDAO extends UtilDao {
 
 			queryStatement = connection.createStatement();
 			queryResponse = queryStatement.executeQuery(
-					"select title, noteguid, noteid, geojson from edgenote where iscurrent = true and isdeleted = false and notebookid = 1729 order by createddatetime desc  limit 3  ;");
+					"select title, noteguid, noteid,createddatetime, geojson from edgenote where iscurrent = true and isdeleted = false and notebookid = "+notebookid+";");
 
 			while (queryResponse.next()) {
 				String noteId = queryResponse.getString("noteid");
@@ -86,6 +86,7 @@ public class StreetLightInstallDAO extends UtilDao {
 					noteDetails.setNoteGuid(queryResponse.getString("noteguid"));
 					noteDetails.setGeojson(queryResponse.getString("geojson"));
 					noteDetails.setTitle(queryResponse.getString("title"));
+					noteDetails.setCreatedDateTime(queryResponse.getLong("createddatetime"));
 					noteDetailsList.add(noteDetails);
 					if (noteDetails.getGeojson() != null) {
 						JsonObject geoJsonData = (JsonObject) jsonParser.parse(noteDetails.getGeojson());
