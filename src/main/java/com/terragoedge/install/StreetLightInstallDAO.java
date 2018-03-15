@@ -79,6 +79,7 @@ public class StreetLightInstallDAO extends UtilDao {
 
 			while (queryResponse.next()) {
 				String noteId = queryResponse.getString("noteid");
+				//boolean isSynced =  false;
 				boolean isSynced = isNoteSynced(noteId);
 				if (!isSynced) {
 					NoteDetails noteDetails = new NoteDetails();

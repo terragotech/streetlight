@@ -90,6 +90,7 @@ public class StreetLightInstallService {
 		
 		for(NotebookGeoZones notebookGeoZones : notebookGeoZonesList){
 			List<NoteDetails> noteDetailsList = streetLightInstallDAO.getUnSyncedNoteIds(notebookGeoZones.getNotebookName());
+			
 			mappingJson = getStreetLightMappingJson();
 			for (NoteDetails noteDetails : noteDetailsList) {
 				LoggingDetails loggingDetails = new LoggingDetails();
@@ -111,7 +112,7 @@ public class StreetLightInstallService {
 	
 	
 	private List<NotebookGeoZones> loadNotebookGeoZones(){
-		String notebookGeoZoneJson = properties.getProperty("streetlight.url.load.slvmacaddress");
+		String notebookGeoZoneJson = properties.getProperty("streetlight.notebook.names");
 		List<NotebookGeoZones> notebookGeoZones = gson.fromJson(notebookGeoZoneJson,
 				new TypeToken<List<NotebookGeoZones>>() {
 				}.getType());
@@ -297,8 +298,8 @@ public class StreetLightInstallService {
 			streetLightDataParams.put("idOnController", slvDataEntity.getIdOnController());
 			streetLightDataParams.put("geoZoneId", notebookGeoZones.getGeoZoneId()); 
 			streetLightDataParams.put("nodeTypeStrId", nodeTypeStrId);
-			streetLightDataParams.put("lat", slvDataEntity.getLat()); 
-			streetLightDataParams.put("lng", slvDataEntity.getLng());
+			streetLightDataParams.put("lat", noteDetails.getLat()); 
+			streetLightDataParams.put("lng", noteDetails.getLng());
 			ResponseEntity<String> responseEntity = restService.getRequest(streetLightDataParams, mainUrl, true);
 			String status = responseEntity.getStatusCode().toString();
 			String responseBody = responseEntity.getBody();
