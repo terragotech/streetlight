@@ -75,7 +75,7 @@ public class StreetLightInstallDAO extends UtilDao {
 
 			queryStatement = connection.createStatement();
 			queryResponse = queryStatement.executeQuery(
-					"select title, noteguid, noteid,createddatetime, geojson from edgenote where iscurrent = true and isdeleted = false and notebookid = "+notebookid+";");
+					"select title, noteguid, noteid,createddatetime, geojson from edgenote where iscurrent = true and isdeleted = false  and notebookid = "+notebookid+";");
 
 			while (queryResponse.next()) {
 				String noteId = queryResponse.getString("noteid");

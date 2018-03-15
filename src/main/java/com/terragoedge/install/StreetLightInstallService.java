@@ -82,6 +82,8 @@ public class StreetLightInstallService {
 		loadDimmingValue();
 	}
 	
+	
+	
 
 	public void process() throws Exception {
 		List<NotebookGeoZones> notebookGeoZonesList = loadNotebookGeoZones();
@@ -90,7 +92,7 @@ public class StreetLightInstallService {
 		
 		for(NotebookGeoZones notebookGeoZones : notebookGeoZonesList){
 			List<NoteDetails> noteDetailsList = streetLightInstallDAO.getUnSyncedNoteIds(notebookGeoZones.getNotebookName());
-			
+			System.out.println(noteDetailsList.size());
 			mappingJson = getStreetLightMappingJson();
 			for (NoteDetails noteDetails : noteDetailsList) {
 				LoggingDetails loggingDetails = new LoggingDetails();
@@ -226,7 +228,7 @@ public class StreetLightInstallService {
 			replaceOLC(slvDataEntity, slvDataEntity.getMacAddress());
 			deviceList.put(slvDataEntity.getIdOnController().trim(), slvDataEntity.getMacAddress().trim().toLowerCase());
 			break;
-			
+		
 		case "Update Streetlight":
 			getSLNumber(noteDetails, slvDataEntity);
 			updateStreetLight(edgeFormValuesList, slvDataEntity,noteDetails);
@@ -403,7 +405,7 @@ public class StreetLightInstallService {
 		addStreetLightData("modelFunctionId", nodeTypeStrId, slvDataEntity.getParamsList());
 
 		addStreetLightData("comment", comment, slvDataEntity.getParamsList());
-
+		
 		String streetLightDate = dateFormat(noteDetails.getCreatedDateTime());
 		addStreetLightData("lamp.installdate", streetLightDate, slvDataEntity.getParamsList());
 		

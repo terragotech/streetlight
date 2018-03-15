@@ -10,13 +10,8 @@ public class StreetlightApp {
 	
 	public static void main(String[] args) {
 		StreetLightInstallService streetLightInstallService = new StreetLightInstallService();
-		try {
-			streetLightInstallService.process();
-		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		/*while(true){
+		
+		while(true){
 			try{
 				streetLightInstallService.process();
 				Thread.sleep(60000);
@@ -25,7 +20,7 @@ public class StreetlightApp {
 				e.printStackTrace();
 				logger.error("Error in main", e);
 			}
-		}*/
+		}
 	}
 	
 	
