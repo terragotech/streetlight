@@ -151,6 +151,7 @@ public class StreetLightInstallService {
 		loggingDetails.setNoteId(noteDetails.getNoteid());
 		loggingDetails.setNoteGuid(noteDetails.getNoteGuid());
 		loggingDetails.setTitle(noteDetails.getTitle());
+		loggingDetails.setCreateDateTime(noteDetails.getCreatedDateTime());
 	}
 	
 

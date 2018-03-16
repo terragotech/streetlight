@@ -27,7 +27,7 @@ public class StreetLightInstallDAO extends UtilDao {
 		PreparedStatement preparedStatement = null;
 		try {
 			String sql = "CREATE TABLE IF NOT EXISTS streetlightinstallformsync (strtlightinstformsyncid integer NOT NULL,"
-					+ " processednoteid integer, noteGuid text, title text, status text, actionType text, totalForms text, description text,   CONSTRAINT strtlightinstformsyncid_pkey PRIMARY KEY (strtlightinstformsyncid));";
+					+ " processednoteid integer, noteGuid text, title text, status text, actionType text, totalForms text, description text, createddatetime bigint  CONSTRAINT strtlightinstformsyncid_pkey PRIMARY KEY (strtlightinstformsyncid));";
 			preparedStatement = connection.prepareStatement(sql);
 			preparedStatement.execute();
 		} catch (Exception e) {
@@ -150,7 +150,7 @@ public class StreetLightInstallDAO extends UtilDao {
 			
 			preparedStatement = connection.prepareStatement(
 					"INSERT INTO streetlightinstallformsync (strtlightinstformsyncid , processednoteid, noteGuid,title,"
-					+ "status, actionType,totalForms, description) values (?,?,?,?,?,?,?,?) ;");
+					+ "status, actionType,totalForms, description, createddatetime) values (?,?,?,?,?,?,?,?,?) ;");
 			preparedStatement.setLong(1, id);
 			preparedStatement.setInt(2, Integer.parseInt(loggingDetails.getNoteId()));
 			preparedStatement.setString(3, loggingDetails.getNoteGuid());
@@ -159,6 +159,7 @@ public class StreetLightInstallDAO extends UtilDao {
 			preparedStatement.setString(6, loggingDetails.getActionType());
 			preparedStatement.setString(7, loggingDetails.getTotalForms());
 			preparedStatement.setString(8, loggingDetails.getDescription());
+			preparedStatement.setLong(9, loggingDetails.getCreateDateTime());
 			preparedStatement.execute();
 		}catch (Exception e) {
 			e.printStackTrace();

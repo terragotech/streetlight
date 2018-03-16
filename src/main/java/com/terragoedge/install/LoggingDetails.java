@@ -9,6 +9,17 @@ public class LoggingDetails {
 	private String actionType;
 	private String totalForms;
 	private String description;
+	private long createDateTime;
+	
+	
+
+	public long getCreateDateTime() {
+		return createDateTime;
+	}
+
+	public void setCreateDateTime(long createDateTime) {
+		this.createDateTime = createDateTime;
+	}
 
 	public String getNoteId() {
 		return noteId;
@@ -69,7 +80,10 @@ public class LoggingDetails {
 	@Override
 	public String toString() {
 		return "LoggingDetails [noteId=" + noteId + ", noteGuid=" + noteGuid + ", title=" + title + ", status=" + status
-				+ ", actionType=" + actionType + ", totalForms=" + totalForms + ", description=" + description + "]";
+				+ ", actionType=" + actionType + ", totalForms=" + totalForms + ", description=" + description
+				+ ", createDateTime=" + createDateTime + "]";
 	}
+
+	
 
 }
