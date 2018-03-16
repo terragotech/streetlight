@@ -643,7 +643,13 @@ public class StreetlightChicagoService {
 			addStreetLightData("device.luminaire.partnumber", partNumber, paramsList);
 			addStreetLightData("luminaire.model", model, paramsList);
 			addStreetLightData("device.luminaire.manufacturedate", fixtureInfo[3], paramsList);
-			addStreetLightData("power", fixtureInfo[4], paramsList);
+			String powerVal = fixtureInfo[4];
+			if(powerVal != null && !powerVal.isEmpty()){
+				powerVal = powerVal.replaceAll("W", "");
+				powerVal = powerVal.replaceAll("w", "");
+			}
+			
+			addStreetLightData("power", powerVal, paramsList);
 			addStreetLightData("fixing.type", fixtureInfo[5], paramsList);
 			//dailyReportCSV.setFixtureType(fixtureInfo[5]);
 			addStreetLightData("device.luminaire.colortemp", fixtureInfo[6], paramsList);
