@@ -27,7 +27,7 @@ public class StreetLightInstallDAO extends UtilDao {
 		PreparedStatement preparedStatement = null;
 		try {
 			String sql = "CREATE TABLE IF NOT EXISTS streetlightinstallformsync (strtlightinstformsyncid integer NOT NULL,"
-					+ " processednoteid integer, noteGuid text, title text, status text, actionType text, totalForms text, description text, createddatetime bigint  CONSTRAINT strtlightinstformsyncid_pkey PRIMARY KEY (strtlightinstformsyncid));";
+					+ " processednoteid integer, noteGuid text, title text, status text, actionType text, totalForms text, description text, createddatetime bigint,  CONSTRAINT strtlightinstformsyncid_pkey PRIMARY KEY (strtlightinstformsyncid));";
 			preparedStatement = connection.prepareStatement(sql);
 			preparedStatement.execute();
 		} catch (Exception e) {
