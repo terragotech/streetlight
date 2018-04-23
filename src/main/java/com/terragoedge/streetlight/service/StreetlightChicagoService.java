@@ -24,6 +24,7 @@ import com.terragoedge.edgeserver.DeviceMacAddress;
 import com.terragoedge.edgeserver.EdgeFormData;
 import com.terragoedge.edgeserver.EdgeNote;
 import com.terragoedge.edgeserver.FormData;
+import com.terragoedge.edgeserver.NotesType;
 import com.terragoedge.edgeserver.Value;
 import com.terragoedge.streetlight.PropertiesReader;
 import com.terragoedge.streetlight.dao.StreetlightDao;
@@ -35,6 +36,7 @@ import com.terragoedge.streetlight.exception.QRCodeNotMatchedException;
 import com.terragoedge.streetlight.exception.ReplaceOLCFailedException;
 
 public class StreetlightChicagoService {
+	private static final String INSTATALLATION_AND_MAINTENANCE_GUID = "8b722347-c3a7-41f4-a8a9-c35dece6f98b";
 	StreetlightDao streetlightDao = null;
 	RestService restService = null;
 	Properties properties = null;
@@ -95,6 +97,7 @@ public class StreetlightChicagoService {
 				if (!loggingModel.isNoteAlreadySynced()) {
 					streetlightDao.insertProcessedNotes(loggingModel);
 				}
+				processNewAction(edgeNote);
 
 			}
 		} else {
@@ -635,6 +638,23 @@ public class StreetlightChicagoService {
 			throw new NoValueException(key + " is not found.");
 		}
 	}
+	
+	private String valueById(List<EdgeFormData> edgeFormDatas, int id) throws NoValueException {
+		EdgeFormData edgeFormTemp = new EdgeFormData();
+		edgeFormTemp.setId(id);
+
+		int pos = edgeFormDatas.indexOf(edgeFormTemp);
+		if (pos != -1) {
+			EdgeFormData edgeFormData = edgeFormDatas.get(pos);
+			String value = edgeFormData.getValue();
+			if (value == null || value.trim().isEmpty()) {
+				throw new NoValueException("Value is Empty or null." + value);
+			}
+			return value;
+		} else {
+			throw new NoValueException(id + " is not found.");
+		}
+	}
 
 	private void addStreetLightData(String key, String value, List<Object> paramsList) {
 		paramsList.add("valueName=" + key.trim());
@@ -1025,4 +1045,54 @@ public class StreetlightChicagoService {
 		}
 	}
 
+	public void processNewAction(EdgeNote edgeNote){
+		List<FormData> formDatas = edgeNote.getFormData();
+		for(FormData formData : formDatas){
+			if(formData.getFormTemplateGuid().equals(INSTATALLATION_AND_MAINTENANCE_GUID)){
+				List<EdgeFormData> edgeFormDatas = formData.getFormDef();
+						try {
+							String value = value(edgeFormDatas, "Action");
+							switch(value){
+							case "New":
+								processNewGroup(edgeFormDatas,edgeNote);
+								break;
+							case "Repairs & Outages":
+								break;
+							case "Other Task":
+								break;
+							}
+						} catch (NoValueException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+							logger.error("error in processNewAction method", e);
+						}
+			}
+		}
+	}
+	
+	private void processNewGroup(List<EdgeFormData> edgeFormDatas, EdgeNote edgeNote){
+		try{
+		String nodeMacValue = valueById(edgeFormDatas, Integer.valueOf(properties.getProperty("action.new.node_mac_address_id")));
+		if(nodeMacValue != null){
+			String idOnController = value(edgeFormDatas, "SL");
+			String controllerStrIdValue = value(edgeFormDatas, "Controller Str Id");
+			boolean isPresent = checkMacAddressExists(nodeMacValue, idOnController);
+			if(!isPresent){// if mac address not available
+				String fixerQrScanValue = valueById(edgeFormDatas,Integer.valueOf(properties.getProperty("action.new.fixture_qr_scan")));
+				List<Object> paramsList = new ArrayList<>();
+				buildFixtureStreetLightData(fixerQrScanValue, paramsList , edgeNote);//update fixer qrscan value
+				setDeviceValues(paramsList);
+				replaceOLC(controllerStrIdValue, idOnController, nodeMacValue);// insert mac address
+			}else{// mac address already available in some other note
+				logger.info(nodeMacValue + " Mac address already available to some other note");
+			}
+		}else{
+			logger.info("Node Mac address value is null");
+		}
+		}catch (Exception e) {
+			// TODO: handle exception
+			logger.error("error in processNewGroup method", e);
+			e.printStackTrace();
+		}
+	}
 }

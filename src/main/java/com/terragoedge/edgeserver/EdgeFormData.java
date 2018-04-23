@@ -2,7 +2,7 @@ package com.terragoedge.edgeserver;
 
 public class EdgeFormData {
 
-	private int id;
+	protected int id;
 	private String label;
 	private String value;
 	private NotesType type;
