@@ -183,8 +183,6 @@ public class StreetlightChicagoService {
 		String fixtureFormTemplateGuid = properties.getProperty("streetlight.edge.formtemplateguid.fixture");
 		String replaceOlcFormTemplateGuid = properties.getProperty("streetlight.edge.formtemplateguid.replacenode");
 
-		// dailyReportCSV.setContext(edgeNote.getLocationDescription());
-
 		FormData replaceOLCFormData = formDatas.get(replaceOlcFormTemplateGuid);
 		if (replaceOLCFormData == null) {
 			replaceOLCFormData = formDatas.get("606fb4ca-40a4-466b-ac00-7c0434f82bfa");
@@ -324,7 +322,6 @@ public class StreetlightChicagoService {
 		}
 
 	}
-
 	private String validateMacAddress(String existingNodeMacAddress, String idOnController, String controllerStrId,
 			String geoZoneId) throws QRCodeNotMatchedException {
 		String mainUrl = properties.getProperty("streetlight.url.main");
@@ -826,6 +823,205 @@ public class StreetlightChicagoService {
 			// success
 		} else {
 			// failure
+		}
+	}
+
+	public void repairAndOutage(FormData replaceOLCFormData, String idOnController, String controllerStrIdValue,
+			List<Object> paramsList, String geoZoneId, EdgeNote edgeNote, LoggingModel loggingModel,
+			List<String> noteGuids, String selectedOutage) {
+
+		switch (selectedOutage) {
+		case "Replace Node and Fixture":
+			replaceNodeFixture(replaceOLCFormData, idOnController, controllerStrIdValue, paramsList, geoZoneId, edgeNote,
+					loggingModel);
+			break;
+		case "Replace Node only":
+			replaceNodeOnly(replaceOLCFormData, idOnController, controllerStrIdValue, paramsList, geoZoneId, edgeNote,
+					loggingModel, noteGuids);
+			break;
+		case "Replace Fixture only":
+			replaceFixtureOnly(replaceOLCFormData, paramsList, loggingModel, edgeNote);
+			break;
+		case "Power Issue":
+			break;
+		}
+	}
+
+	public void replaceNodeFixture(FormData replaceOLCFormData, String idOnController, String controllerStrIdValue,
+			List<Object> paramsList, String geoZoneId, EdgeNote edgeNote, LoggingModel loggingModel) {
+		List<EdgeFormData> replaceOLCFromDef = replaceOLCFormData.getFormDef();
+		String existingNodeMacAddress = null;
+		String newNodeMacAddress = null;
+		try {
+			existingNodeMacAddress = value(replaceOLCFromDef,
+					properties.getProperty("streetlight.edge.replacenode.label.existing"));
+			loggingModel.setExistingNodeMACaddress(existingNodeMacAddress);
+		} catch (NoValueException e) {
+			e.printStackTrace();
+			loggingModel.setErrorDetails(MessageConstants.OLD_MAC_ADDRESS_NOT_AVAILABLE);
+			loggingModel.setStatus(MessageConstants.ERROR);
+			return;
+		}
+		try {
+			validateMacAddress(existingNodeMacAddress, idOnController, controllerStrIdValue,
+					geoZoneId);
+		} catch (QRCodeNotMatchedException e1) {
+			loggingModel.setErrorDetails(MessageConstants.REPLACE_MAC_NOT_MATCH);
+			loggingModel.setStatus(MessageConstants.ERROR);
+			return;
+		}
+
+		// Validate NewMacAddress
+		try {
+			newNodeMacAddress = value(replaceOLCFromDef,
+					properties.getProperty("streetlight.edge.replacenode.label.newnode"));
+			loggingModel.setNewNodeMACaddress(newNodeMacAddress);
+		} catch (NoValueException e) {
+			e.printStackTrace();
+			loggingModel.setErrorDetails(MessageConstants.NEW_MAC_ADDRESS_NOT_AVAILABLE);
+			loggingModel.setStatus(MessageConstants.ERROR);
+			return;
+		}
+		try {
+			checkMacAddressExists(newNodeMacAddress, idOnController);
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
+		List<EdgeFormData> formData = replaceOLCFormData.getFormDef();
+		for (EdgeFormData edgeFormData : formData) {
+			if (edgeFormData.getLabel()
+					.equals(properties.getProperty("edge.fortemplate.chicago.label.fixture.macaddress"))) {
+				if (edgeFormData.getValue() == null || edgeFormData.getValue().trim().isEmpty()) {
+					// logger.info("Fixture MAC address is empty. So note is not processed. Note
+					// Title :"+edgeNote.getTitle());
+					// return; -- TODO Need to skip or not later decide
+				} else {
+					try {
+						addStreetLightData("luminaire.installdate", dateFormat(edgeNote.getCreatedDateTime()),
+								paramsList); // --
+						buildFixtureStreetLightData(edgeFormData.getValue(), paramsList, edgeNote);
+						addStreetLightData("install.date", dateFormat(edgeNote.getCreatedDateTime()), paramsList);
+
+						addStreetLightData("installStatus", "Installed", paramsList);
+
+						addStreetLightData("DimmingGroupName", "Group Calendar 1", paramsList);
+						int errorCode = setDeviceValues(paramsList);
+						// As per doc, errorcode is 0 for success. Otherwise, its not
+						// success.
+						if (errorCode != 0) {
+							loggingModel.setErrorDetails(MessageConstants.ERROR_UPDATE_DEVICE_VAL);
+							loggingModel.setStatus(MessageConstants.ERROR);
+							try {
+								throw new DeviceUpdationFailedException(errorCode + "");
+							} catch (DeviceUpdationFailedException e) {
+								// TODO Auto-generated catch block
+								e.printStackTrace();
+							}
+						}
+					} catch (InValidBarCodeException e) {
+						e.printStackTrace();
+					}
+				}
+
+			} else if (edgeFormData.getLabel()
+					.equals(properties.getProperty("edge.fortemplate.chicago.label.node.macaddress"))) {
+				if (edgeFormData.getValue() == null || edgeFormData.getValue().trim().isEmpty()) {
+					logger.info(
+							"Node MAC address is empty. So note is not processed. Note Title :" + edgeNote.getTitle());
+					loggingModel.setErrorDetails(MessageConstants.NODE_MAC_ADDRESS_NOT_AVAILABLE);
+					loggingModel.setStatus(MessageConstants.ERROR);
+					return;
+				}
+			}
+		}
+	}
+
+	public void replaceNodeOnly(FormData replaceOLCFormData, String idOnController, String controllerStrIdValue,
+			List<Object> paramsList, String geoZoneId, EdgeNote edgeNote, LoggingModel loggingModel,
+			List<String> noteGuids) {
+		List<EdgeFormData> replaceOLCFromDef = replaceOLCFormData.getFormDef();
+		try {
+			processReplaceOLCFormVal(replaceOLCFormData, idOnController, controllerStrIdValue, paramsList, geoZoneId,
+					edgeNote.getNoteGuid(), edgeNote.getCreatedDateTime(), noteGuids, edgeNote, loggingModel);
+		} catch (QRCodeAlreadyUsedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (DeviceUpdationFailedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+
+	public void replaceFixtureOnly(FormData replaceOLCFormData, List<Object> paramsList, LoggingModel loggingModel,
+			EdgeNote edgeNote) {
+		String existingNodeMacAddress = null;
+		String newNodeMacAddress = null;
+		List<EdgeFormData> replaceOLCFromDef = replaceOLCFormData.getFormDef();
+		// Get Existing Node MAC Address value
+		try {
+			existingNodeMacAddress = value(replaceOLCFromDef,
+					properties.getProperty("streetlight.edge.replacenode.label.existing"));
+			loggingModel.setExistingNodeMACaddress(existingNodeMacAddress);
+		} catch (NoValueException e) {
+			e.printStackTrace();
+			loggingModel.setErrorDetails(MessageConstants.OLD_MAC_ADDRESS_NOT_AVAILABLE);
+			loggingModel.setStatus(MessageConstants.ERROR);
+			return;
+		}
+		// Get New Node MAC Address value
+		try {
+			newNodeMacAddress = value(replaceOLCFromDef,
+					properties.getProperty("streetlight.edge.replacenode.label.newnode"));
+			loggingModel.setNewNodeMACaddress(newNodeMacAddress);
+		} catch (NoValueException e) {
+			e.printStackTrace();
+			loggingModel.setErrorDetails(MessageConstants.NEW_MAC_ADDRESS_NOT_AVAILABLE);
+			loggingModel.setStatus(MessageConstants.ERROR);
+			return;
+		}
+		if (existingNodeMacAddress != null && !existingNodeMacAddress.isEmpty() && newNodeMacAddress != null
+				&& !newNodeMacAddress.isEmpty()) {
+			addStreetLightData("luminaire.installdate", dateFormat(edgeNote.getCreatedDateTime()), paramsList); // --
+			List<EdgeFormData> formData = replaceOLCFormData.getFormDef();
+			for (EdgeFormData edgeFormData : formData) {
+				if (edgeFormData.getLabel()
+						.equals(properties.getProperty("edge.fortemplate.chicago.label.fixture.macaddress"))) {
+					if (edgeFormData.getValue() == null || edgeFormData.getValue().trim().isEmpty()) {
+						// logger.info("Fixture MAC address is empty. So note is not processed. Note
+						// Title :"+edgeNote.getTitle());
+						// return; -- TODO Need to skip or not later decide
+					} else {
+						try {
+							addStreetLightData("luminaire.installdate", dateFormat(edgeNote.getCreatedDateTime()),
+									paramsList); // --
+							buildFixtureStreetLightData(edgeFormData.getValue(), paramsList, edgeNote);
+							int errorCode = setDeviceValues(paramsList);
+							if (errorCode != 0) {
+								// TODO Error
+							} else {
+								// TODO Success
+							}
+						} catch (InValidBarCodeException e) {
+							e.printStackTrace();
+						}
+					}
+
+				} else if (edgeFormData.getLabel()
+						.equals(properties.getProperty("edge.fortemplate.chicago.label.node.macaddress"))) {
+					if (edgeFormData.getValue() == null || edgeFormData.getValue().trim().isEmpty()) {
+						logger.info("Node MAC address is empty. So note is not processed. Note Title :"
+								+ edgeNote.getTitle());
+						loggingModel.setErrorDetails(MessageConstants.NODE_MAC_ADDRESS_NOT_AVAILABLE);
+						loggingModel.setStatus(MessageConstants.ERROR);
+						return;
+					}
+				}
+			}
 		}
 	}
 
