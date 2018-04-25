@@ -15,6 +15,7 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
+import com.terragoedge.streetlight.exception.*;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.http.HttpStatus;
@@ -32,10 +33,6 @@ import com.terragoedge.install.exception.NoMacAddressException;
 import com.terragoedge.install.exception.SLNumberException;
 import com.terragoedge.install.slvdata.SLVDeviceDetails;
 import com.terragoedge.streetlight.PropertiesReader;
-import com.terragoedge.streetlight.exception.DeviceCreationFailedException;
-import com.terragoedge.streetlight.exception.DeviceUpdationFailedException;
-import com.terragoedge.streetlight.exception.QRCodeAlreadyUsedException;
-import com.terragoedge.streetlight.exception.ReplaceOLCFailedException;
 import com.terragoedge.streetlight.service.RestService;
 
 public class StreetLightInstallService {
@@ -175,7 +172,7 @@ public class StreetLightInstallService {
 				loggingDetails.setStatus(Constants.FAILURE);
 				loggingDetails.setDescription("No Form is present in this note.");
 			}
-		} catch (InValidFormException | SLNumberException | NoMacAddressException | DifferentMACAddressException | QRCodeAlreadyUsedException | ReplaceOLCFailedException | MultipeFormsException | DeviceUpdationFailedException | DeviceCreationFailedException e1) {
+		} catch (InValidFormException | SLNumberException | NoMacAddressException | DifferentMACAddressException | QRCodeAlreadyUsedException | ReplaceOLCFailedException | MultipeFormsException | DeviceUpdationFailedException | DeviceCreationFailedException | ClearValueException e1) {
 			loggingDetails.setStatus(Constants.FAILURE);
 			loggingDetails.setDescription(e1.getMessage());
 		} 
@@ -214,7 +211,7 @@ public class StreetLightInstallService {
 	}
 	
 	
-	private void processEdgeForm(NoteDetails noteDetails, SLVDataEntity slvDataEntity,FormDetails formDetails,LoggingDetails loggingDetails,NotebookGeoZones notebookGeoZones ) throws SLNumberException, NoMacAddressException, DifferentMACAddressException, QRCodeAlreadyUsedException, ReplaceOLCFailedException, DeviceUpdationFailedException, DeviceCreationFailedException{
+	private void processEdgeForm(NoteDetails noteDetails, SLVDataEntity slvDataEntity,FormDetails formDetails,LoggingDetails loggingDetails,NotebookGeoZones notebookGeoZones ) throws SLNumberException, NoMacAddressException, DifferentMACAddressException, QRCodeAlreadyUsedException, ReplaceOLCFailedException, DeviceUpdationFailedException, DeviceCreationFailedException,ClearValueException{
 		List<FormValues> edgeFormValuesList = gson.fromJson(formDetails.getFormDef(),
 				new TypeToken<List<FormValues>>() {
 				}.getType());
@@ -247,7 +244,7 @@ public class StreetLightInstallService {
 	}
 	
 	
-	private void updateStreetLight(List<FormValues> edgeFormValuesList,SLVDataEntity slvDataEntity,NoteDetails noteDetails)throws QRCodeAlreadyUsedException, NoMacAddressException, ReplaceOLCFailedException, DeviceUpdationFailedException{
+	private void updateStreetLight(List<FormValues> edgeFormValuesList,SLVDataEntity slvDataEntity,NoteDetails noteDetails)throws QRCodeAlreadyUsedException, NoMacAddressException, ReplaceOLCFailedException, DeviceUpdationFailedException,ClearValueException{
 		// Get Existing QR Code
 		FormValues existingQRCode = getFormValues(edgeFormValuesList, "Existing SELC QR Code");
 		String existingQRCodeVal = existingQRCode.getValue();
@@ -603,7 +600,7 @@ public class StreetLightInstallService {
 	}
 	
 	
-	public void replaceOLC(SLVDataEntity slvSyncDataEntity,String macAddress) throws ReplaceOLCFailedException {
+	public void replaceOLC(SLVDataEntity slvSyncDataEntity,String macAddress) throws ReplaceOLCFailedException ,ClearValueException{
 		try{
 			// Get Url detail from properties
 			String mainUrl = properties.getProperty("streetlight.url.main");
@@ -628,12 +625,62 @@ public class StreetLightInstallService {
 				String value = replaceOlcResponse.get("value").getAsString();
 				throw new ReplaceOLCFailedException("Replace OLC Failed."+value);
 			}
+			if(macAddress != null && !macAddress.trim().isEmpty()){
+			    try{
+                    clearAndUpdateDeviceData(slvSyncDataEntity.getIdOnController(), controllerStrId);
+                }catch (ClearValueException e){
+                    throw new ClearValueException(e.getMessage());
+                }
+
+			}
 			
 		}catch(Exception e){
 			throw new ReplaceOLCFailedException("Replace OLC Failed."+e.getMessage());
 		}
 		
 	}
+
+
+    public void clearAndUpdateDeviceData(String idOnController, String controllerStrId) throws ClearValueException{
+
+        String mainUrl = properties.getProperty("streetlight.url.main");
+        String dataUrl = properties.getProperty("streetlight.url.update.device");
+        String insertDevice = properties.getProperty("streetlight.method.update.device");
+        String url = mainUrl + dataUrl;
+        List<Object> paramsList = new ArrayList<Object>();
+        paramsList.add("methodName=" + insertDevice);
+        paramsList.add("controllerStrId=" + controllerStrId);
+        paramsList.add("idOnController=" + idOnController);
+        addStreetLightData("device.node.serialnumber", "", paramsList);
+        addStreetLightData("device.node.hwversion", "", paramsList);
+        addStreetLightData("device.node.swversion", "", paramsList);
+        addStreetLightData("device.nic.serialnumber", "", paramsList);
+        addStreetLightData("device.nic.swversion", "", paramsList);
+        addStreetLightData("device.nic.hwversion", "", paramsList);
+        addStreetLightData("device.nic.currentnode", "", paramsList);
+        addStreetLightData("device.nic.fallbackmode", "", paramsList);
+        addStreetLightData("device.node.manufdate", "", paramsList);
+        addStreetLightData("device.node.name", "", paramsList);
+        addStreetLightData("device.node.manufacturer", "", paramsList);
+        addStreetLightData("device.uiqid", "", paramsList);
+        addStreetLightData("SoftwareVersion", "", paramsList);
+        addStreetLightData("device.meter.programid", "", paramsList);
+        addStreetLightData("device.nic.catalog", "", paramsList);
+
+        paramsList.add("doLog=true");
+        paramsList.add("ser=json");
+        String params = StringUtils.join(paramsList, "&");
+        url = url + "?" + params;
+        ResponseEntity<String> response = restService.getPostRequest(url);
+        String responseString = response.getBody();
+        JsonObject replaceOlcResponse = (JsonObject) jsonParser.parse(responseString);
+        int errorCode = replaceOlcResponse.get("errorCode").getAsInt();
+        if (errorCode == 0) {
+            // success
+        } else {
+            throw new ClearValueException("Clear Value Failed."+replaceOlcResponse.toString());
+        }
+    }
 	
 	
 	/**
