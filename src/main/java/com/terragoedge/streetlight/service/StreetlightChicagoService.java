@@ -308,14 +308,9 @@ public class StreetlightChicagoService {
 				}
 			}
 			loggingModel.setMacAddress(macAddress);
-			// luminaire.installdate - 2017-09-07 09:47:35
 
-			addStreetLightData("install.date", dateFormat(edgeNote.getCreatedDateTime()), paramsList);
-			// controller.installdate - 2017/10/10
+            addOtherParams(edgeNote,paramsList);
 
-			addStreetLightData("installStatus", "Installed", paramsList);
-
-			addStreetLightData("DimmingGroupName", "Group Calendar 1", paramsList);
 			String controllerStrIdValue = value(fixtureFromDef,
 					properties.getProperty("edge.fortemplate.fixture.label.cnrlstrid"));
 			// DimmingGroupName
@@ -325,6 +320,17 @@ public class StreetlightChicagoService {
 		}
 
 	}
+
+	private void addOtherParams(EdgeNote edgeNote,List<Object> paramsList){
+        // luminaire.installdate - 2017-09-07 09:47:35
+        addStreetLightData("install.date", dateFormat(edgeNote.getCreatedDateTime()), paramsList);
+        // controller.installdate - 2017/10/10
+
+        addStreetLightData("installStatus", "Installed", paramsList);
+
+        addStreetLightData("DimmingGroupName", "Group Calendar 1", paramsList);
+    }
+
 	private String validateMacAddress(String existingNodeMacAddress, String idOnController, String controllerStrId,
 			String geoZoneId) throws QRCodeNotMatchedException {
 		String mainUrl = properties.getProperty("streetlight.url.main");
@@ -579,7 +585,6 @@ public class StreetlightChicagoService {
 	/**
 	 * Calls ReplaceOLCs
 	 * 
-	 * @param slvSyncDataEntity
 	 * @throws ReplaceOLCFailedException
 	 */
 	public void replaceOLC(String controllerStrIdValue, String idOnController, String macAddress)
@@ -1045,7 +1050,7 @@ public class StreetlightChicagoService {
 		}
 	}
 
-	public void processNewAction(EdgeNote edgeNote){
+	public void processNewAction(EdgeNote edgeNote,LoggingModel loggingModel){
 		List<FormData> formDatas = edgeNote.getFormData();
 		for(FormData formData : formDatas){
 			if(formData.getFormTemplateGuid().equals(INSTATALLATION_AND_MAINTENANCE_GUID)){
@@ -1054,7 +1059,7 @@ public class StreetlightChicagoService {
 							String value = value(edgeFormDatas, "Action");
 							switch(value){
 							case "New":
-								processNewGroup(edgeFormDatas,edgeNote);
+								processNewGroup(edgeFormDatas,edgeNote,loggingModel);
 								break;
 							case "Repairs & Outages":
 								break;
@@ -1070,29 +1075,81 @@ public class StreetlightChicagoService {
 		}
 	}
 	
-	private void processNewGroup(List<EdgeFormData> edgeFormDatas, EdgeNote edgeNote){
-		try{
-		String nodeMacValue = valueById(edgeFormDatas, Integer.valueOf(properties.getProperty("action.new.node_mac_address_id")));
-		if(nodeMacValue != null){
-			String idOnController = value(edgeFormDatas, "SL");
-			String controllerStrIdValue = value(edgeFormDatas, "Controller Str Id");
-			boolean isPresent = checkMacAddressExists(nodeMacValue, idOnController);
-			if(!isPresent){// if mac address not available
-				String fixerQrScanValue = valueById(edgeFormDatas,Integer.valueOf(properties.getProperty("action.new.fixture_qr_scan")));
-				List<Object> paramsList = new ArrayList<>();
-				buildFixtureStreetLightData(fixerQrScanValue, paramsList , edgeNote);//update fixer qrscan value
-				setDeviceValues(paramsList);
-				replaceOLC(controllerStrIdValue, idOnController, nodeMacValue);// insert mac address
-			}else{// mac address already available in some other note
-				logger.info(nodeMacValue + " Mac address already available to some other note");
-			}
-		}else{
-			logger.info("Node Mac address value is null");
-		}
-		}catch (Exception e) {
-			// TODO: handle exception
-			logger.error("error in processNewGroup method", e);
-			e.printStackTrace();
-		}
+	private void processNewGroup(List<EdgeFormData> edgeFormDatas, EdgeNote edgeNote,LoggingModel loggingModel){
+        // Get MAC Address
+        String nodeMacValue = null;
+        try {
+            nodeMacValue = valueById(edgeFormDatas, Integer.valueOf(properties.getProperty("action.new.node_mac_address_id")));
+        } catch (NoValueException e) {
+            loggingModel.setErrorDetails(MessageConstants.NODE_MAC_ADDRESS_NOT_AVAILABLE);
+            loggingModel.setStatus(MessageConstants.ERROR);
+            return;
+        }
+
+        // Get Fixer QR Scan value
+        String fixerQrScanValue = null;
+        try {
+            fixerQrScanValue = valueById(edgeFormDatas,Integer.valueOf(properties.getProperty("action.new.fixture_qr_scan")));
+        } catch (NoValueException e) {
+            loggingModel.setErrorDetails(MessageConstants.FIXTURE_CODE_NOT_AVAILABLE);
+            loggingModel.setStatus(MessageConstants.ERROR);
+            return;
+        }
+
+        try{
+
+            // Get IdonController value
+            String idOnController = value(edgeFormDatas, "SL");
+
+            // Get Controller Str value
+            String controllerStrIdValue = value(edgeFormDatas, "Controller Str Id");
+
+            // Check Whether MAC Address is already assigned to other fixtures or not.
+            try {
+                checkMacAddressExists(nodeMacValue, idOnController);
+            }catch (QRCodeAlreadyUsedException e1){
+                logger.error("MacAddress (" + e1.getMacAddress()
+                        + ")  - Already in use. So this pole is not synced with SLV. Note Title :[" + edgeNote.getTitle()
+                        + " ]");
+                loggingModel.setStatus(MessageConstants.ERROR);
+                loggingModel.setErrorDetails("MacAddress (" + e1.getMacAddress() + ")  - Already in use");
+                return;
+            }
+            List<Object> paramsList = new ArrayList<>();
+
+            paramsList.add("idOnController=" + idOnController);
+            paramsList.add("controllerStrId=" + controllerStrIdValue);
+
+            addOtherParams(edgeNote,paramsList);
+            buildFixtureStreetLightData(fixerQrScanValue, paramsList , edgeNote);//update fixer qrscan value
+           int errorCode = setDeviceValues(paramsList);
+            if (errorCode != 0) {
+                loggingModel.setErrorDetails(MessageConstants.ERROR_UPDATE_DEVICE_VAL);
+                loggingModel.setStatus(MessageConstants.ERROR);
+                return;
+            } else {
+                // replace OlC
+                replaceOLC(controllerStrIdValue, idOnController, nodeMacValue);// insert mac address
+                loggingModel.setStatus(MessageConstants.SUCCESS);
+            }
+
+		}catch (QRCodeAlreadyUsedException e1) {
+            logger.error("MacAddress (" + e1.getMacAddress()
+                    + ")  - Already in use. So this pole is not synced with SLV. Note Title :[" + edgeNote.getTitle()
+                    + " ]");
+            loggingModel.setStatus(MessageConstants.ERROR);
+            loggingModel.setErrorDetails("MacAddress (" + e1.getMacAddress() + ")  - Already in use");
+
+        } catch (ReplaceOLCFailedException | DeviceUpdationFailedException | InValidBarCodeException | NoValueException  e) {
+            logger.error("Error in processNewGroup", e);
+            loggingModel.setStatus(MessageConstants.ERROR);
+            loggingModel.setErrorDetails(e.getMessage());
+
+        }  catch (Exception e) {
+            logger.error("Error in processNewGroup", e);
+            loggingModel.setStatus(MessageConstants.ERROR);
+            loggingModel.setErrorDetails(e.getMessage());
+
+        }
 	}
 }
