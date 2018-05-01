@@ -121,6 +121,9 @@ public class StreetlightDao extends UtilDao {
 				List<EdgeFormData> edgeFormDatas = gson.fromJson(formDef, listType);
 				
 				for(EdgeFormData edgeFormData : edgeFormDatas){
+					if(edgeFormData.getLabel() == null){
+						continue;
+					}
 					if(edgeFormData.getLabel().equals("Fixture QR Scan")){
 						dailyReportCSV.setFixtureQrScan(edgeFormData.getValue());
 					}else if(edgeFormData.getLabel().equals("Node MAC address")){
@@ -139,6 +142,7 @@ public class StreetlightDao extends UtilDao {
 			}
 
 		} catch (Exception e) {
+			e.printStackTrace();
 			logger.error("Error in getNoteIds", e);
 		} finally {
 			closeResultSet(queryResponse);
