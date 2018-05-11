@@ -192,7 +192,7 @@ public class StreetlightChicagoService {
 		FileOutputStream fileOutputStream = null;
 		try{
 			 fileOutputStream = new FileOutputStream("./report/"+fileName);
-			//fileOutputStream = new FileOutputStream(fileName);
+			//fileOutputStream = new FileOutputStream("./"+fileName);
 			 fileOutputStream.write(data.getBytes());
 			 fileOutputStream.flush();
 		}catch(Exception e){

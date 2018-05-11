@@ -80,7 +80,7 @@ public class DailyReportCSV {
 	}
 
 	public String getFixtureQrScan() {
-		return fixtureQrScan;
+		return fixtureQrScan != null ? fixtureQrScan : "";
 	}
 
 	public void setFixtureQrScan(String fixtureQrScan) {
@@ -88,7 +88,7 @@ public class DailyReportCSV {
 	}
 
 	public String getFixtureType() {
-		return fixtureType;
+		return fixtureType != null ? fixtureType : "";
 	}
 
 	public void setFixtureType(String fixtureType) {
@@ -96,7 +96,7 @@ public class DailyReportCSV {
 	}
 
 	public String getQrCode() {
-		return qrCode;
+		return qrCode != null ? qrCode : "";
 	}
 
 	public void setQrCode(String qrCode) {
