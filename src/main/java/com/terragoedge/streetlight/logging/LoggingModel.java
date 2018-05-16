@@ -1,4 +1,4 @@
-package com.terragoedge.streetlight.service;
+package com.terragoedge.streetlight.logging;
 
 public class LoggingModel {
 	
@@ -14,9 +14,10 @@ public class LoggingModel {
 	private String idOnController;
 	private String macAddress;
 	private boolean isNoteAlreadySynced;
-	
-	
-	
+
+
+
+
 	public boolean isNoteAlreadySynced() {
 		return isNoteAlreadySynced;
 	}

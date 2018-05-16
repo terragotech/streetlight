@@ -10,6 +10,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
+import com.terragoedge.streetlight.logging.InstallMaintenanceLogModel;
+import com.terragoedge.streetlight.logging.LoggingModel;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 import org.springframework.http.ResponseEntity;
@@ -24,7 +26,6 @@ import com.terragoedge.edgeserver.DeviceMacAddress;
 import com.terragoedge.edgeserver.EdgeFormData;
 import com.terragoedge.edgeserver.EdgeNote;
 import com.terragoedge.edgeserver.FormData;
-import com.terragoedge.edgeserver.NotesType;
 import com.terragoedge.edgeserver.Value;
 import com.terragoedge.streetlight.PropertiesReader;
 import com.terragoedge.streetlight.dao.StreetlightDao;
@@ -35,24 +36,17 @@ import com.terragoedge.streetlight.exception.QRCodeAlreadyUsedException;
 import com.terragoedge.streetlight.exception.QRCodeNotMatchedException;
 import com.terragoedge.streetlight.exception.ReplaceOLCFailedException;
 
-public class StreetlightChicagoService {
-	private static final String INSTATALLATION_AND_MAINTENANCE_GUID = "8b722347-c3a7-41f4-a8a9-c35dece6f98b";
-	StreetlightDao streetlightDao = null;
-	RestService restService = null;
-	Properties properties = null;
-	Gson gson = null;
-	JsonParser jsonParser = null;
-	EdgeMailService edgeMailService = null;
+public class StreetlightChicagoService extends AbstractProcessor{
+
+
 
 	final Logger logger = Logger.getLogger(StreetlightChicagoService.class);
+    InstallationMaintenanceProcessor installationMaintenanceProcessor;
 
 	public StreetlightChicagoService() {
-		this.streetlightDao = new StreetlightDao();
-		this.restService = new RestService();
-		this.properties = PropertiesReader.getProperties();
-		this.gson = new Gson();
-		this.edgeMailService = new EdgeMailService();
-		this.jsonParser = new JsonParser();
+        super();
+        installationMaintenanceProcessor = new InstallationMaintenanceProcessor();
+
 	}
 
 	public void run() {
@@ -92,12 +86,34 @@ public class StreetlightChicagoService {
 
 			// Iterate each note
 			for (EdgeNote edgeNote : edgeNoteList) {
-				LoggingModel loggingModel = new LoggingModel();
-				syncData(edgeNote, noteGuids, loggingModel);
-				if (!loggingModel.isNoteAlreadySynced()) {
-					streetlightDao.insertProcessedNotes(loggingModel);
-				}
-				processNewAction(edgeNote);
+			    try{
+                    if (!noteGuids.contains(edgeNote.getNoteGuid())) {
+                        InstallMaintenanceLogModel installMaintenanceLogModel = new InstallMaintenanceLogModel();
+
+                        installMaintenanceLogModel.setProcessedNoteId(edgeNote.getNoteGuid());
+                        installMaintenanceLogModel.setNoteName(edgeNote.getTitle());
+                        installMaintenanceLogModel.setCreatedDatetime(String.valueOf(edgeNote.getCreatedDateTime()));
+
+                        installationMaintenanceProcessor.processNewAction(edgeNote,installMaintenanceLogModel);
+                        if(installMaintenanceLogModel.isProcessOtherForm()){
+                            LoggingModel loggingModel = new LoggingModel();
+                            syncData(edgeNote, noteGuids, loggingModel);
+                            if (!loggingModel.isNoteAlreadySynced()) {
+                                streetlightDao.insertProcessedNotes(loggingModel,installMaintenanceLogModel);
+                            }
+                        }else{
+                            LoggingModel loggingModel = installMaintenanceLogModel;
+                            streetlightDao.insertProcessedNotes(loggingModel,installMaintenanceLogModel);
+                        }
+                    }
+
+                }catch (Exception e){
+			        logger.error("Error while processing edge note. NoteGuid :"+edgeNote.getNoteGuid(),e);
+                }
+
+
+
+
 
 			}
 		} else {
@@ -143,16 +159,10 @@ public class StreetlightChicagoService {
 					+ " ]");
 			loggingModel.setStatus(MessageConstants.ERROR);
 			loggingModel.setErrorDetails("MacAddress (" + e1.getMacAddress() + ")  - Already in use");
-			// streetlightDao.insertProcessedNoteGuids(edgeNote.getNoteGuid(),
-			// MessageConstants.ERROR, e1.getMessage(),
-			// edgeNote.getCreatedDateTime(),edgeNote.getTitle());
 		} catch (ReplaceOLCFailedException e) {
 			logger.error("Error in syncData", e);
 			loggingModel.setStatus(MessageConstants.ERROR);
 			loggingModel.setErrorDetails(e.getMessage());
-			// streetlightDao.insertProcessedNoteGuids(edgeNote.getNoteGuid(),
-			// MessageConstants.ERROR, e.getMessage(),
-			// edgeNote.getCreatedDateTime(),edgeNote.getTitle());
 		} catch (DeviceUpdationFailedException e) {
 			logger.error("Error in syncData", e);
 			loggingModel.setStatus(MessageConstants.ERROR);
@@ -161,9 +171,6 @@ public class StreetlightChicagoService {
 			logger.error("Error in syncData", e);
 			loggingModel.setStatus(MessageConstants.ERROR);
 			loggingModel.setErrorDetails(e.getMessage());
-			// streetlightDao.insertProcessedNoteGuids(edgeNote.getNoteGuid(),
-			// MessageConstants.ERROR, e.getMessage(),
-			// edgeNote.getCreatedDateTime(),edgeNote.getTitle());
 		} catch (NoValueException e) {
 			logger.error("Error in syncData", e);
 			loggingModel.setStatus(MessageConstants.ERROR);
@@ -172,9 +179,6 @@ public class StreetlightChicagoService {
 			logger.error("Error in syncData", e);
 			loggingModel.setStatus(MessageConstants.ERROR);
 			loggingModel.setErrorDetails(e.getMessage());
-			// streetlightDao.insertProcessedNoteGuids(edgeNote.getNoteGuid(),
-			// MessageConstants.ERROR, e.getMessage(),
-			// edgeNote.getCreatedDateTime(),edgeNote.getTitle());
 		}
 	}
 
@@ -197,9 +201,6 @@ public class StreetlightChicagoService {
 
 		FormData fixtureFormData = formDatas.get(fixtureFormTemplateGuid);
 		if (fixtureFormData == null) {
-			// streetlightDao.insertProcessedNoteGuids(edgeNote.getNoteGuid(),
-			// MessageConstants.ERROR, MessageConstants.FIXTURE_FORM_NOT_AVAILABLE,
-			// edgeNote.getCreatedDateTime(),edgeNote.getTitle(),isQuickNote,null,null);
 			logger.error("No Fixture FormTemplate is not Present. So note is not processed. Note Title is :"
 					+ edgeNote.getTitle());
 			loggingModel.setErrorDetails(MessageConstants.FIXTURE_FORM_NOT_AVAILABLE);
@@ -219,9 +220,6 @@ public class StreetlightChicagoService {
 		} catch (NoValueException e) {
 			loggingModel.setErrorDetails(MessageConstants.ID_ON_CONTROLLER_NOT_AVAILABLE);
 			loggingModel.setStatus(MessageConstants.ERROR);
-			// streetlightDao.insertProcessedNoteGuids(edgeNote.getNoteGuid(),
-			// MessageConstants.ERROR, MessageConstants.ID_ON_CONTROLLER_NOT_AVAILABLE,
-			// edgeNote.getCreatedDateTime(),edgeNote.getTitle(),isQuickNote,null,null);
 			return;
 		}
 
@@ -229,9 +227,6 @@ public class StreetlightChicagoService {
 		if (chicagoFromData == null) {
 			loggingModel.setErrorDetails(MessageConstants.CHICAGO_FORM_NOT_AVAILABLE);
 			loggingModel.setStatus(MessageConstants.ERROR);
-			// streetlightDao.insertProcessedNoteGuids(edgeNote.getNoteGuid(),
-			// MessageConstants.ERROR, MessageConstants.CHICAGO_FORM_NOT_AVAILABLE,
-			// edgeNote.getCreatedDateTime(),edgeNote.getTitle(),isQuickNote,null,null);
 			logger.error("No Chicago FormTemplate is not Present. So note is not processed. Note Title is :"
 					+ edgeNote.getTitle());
 			return;
@@ -245,9 +240,6 @@ public class StreetlightChicagoService {
 		} catch (NoValueException e) {
 			loggingModel.setErrorDetails(MessageConstants.CONTROLLER_STR_ID_NOT_AVAILABLE);
 			loggingModel.setStatus(MessageConstants.ERROR);
-			// streetlightDao.insertProcessedNoteGuids(edgeNote.getNoteGuid(),
-			// MessageConstants.ERROR, MessageConstants.CONTROLLER_STR_ID_NOT_AVAILABLE,
-			// edgeNote.getCreatedDateTime(),edgeNote.getTitle(),isQuickNote,null,null);
 			return;
 		}
 
@@ -270,9 +262,6 @@ public class StreetlightChicagoService {
 				e.printStackTrace();
 				loggingModel.setErrorDetails(MessageConstants.FIXTURE_CODE_NOT_AVAILABLE);
 				loggingModel.setStatus(MessageConstants.ERROR);
-				// streetlightDao.insertProcessedNoteGuids(edgeNote.getNoteGuid(),
-				// MessageConstants.ERROR, MessageConstants.FIXTURE_CODE_NOT_AVAILABLE,
-				// edgeNote.getCreatedDateTime(),edgeNote.getTitle(),isQuickNote,null,null);
 				return;
 			}
 
@@ -299,9 +288,6 @@ public class StreetlightChicagoService {
 								+ edgeNote.getTitle());
 						loggingModel.setErrorDetails(MessageConstants.NODE_MAC_ADDRESS_NOT_AVAILABLE);
 						loggingModel.setStatus(MessageConstants.ERROR);
-						// streetlightDao.insertProcessedNoteGuids(edgeNote.getNoteGuid(),
-						// MessageConstants.ERROR, MessageConstants.NODE_MAC_ADDRESS_NOT_AVAILABLE,
-						// edgeNote.getCreatedDateTime(),edgeNote.getTitle(),isQuickNote,null,null);
 						return;
 					}
 					macAddress = loadMACAddress(edgeFormData.getValue(), paramsList, idOnController);
@@ -321,105 +307,8 @@ public class StreetlightChicagoService {
 
 	}
 
-	private void addOtherParams(EdgeNote edgeNote,List<Object> paramsList){
-        // luminaire.installdate - 2017-09-07 09:47:35
-        addStreetLightData("install.date", dateFormat(edgeNote.getCreatedDateTime()), paramsList);
-        // controller.installdate - 2017/10/10
 
-        addStreetLightData("installStatus", "Installed", paramsList);
 
-        addStreetLightData("DimmingGroupName", "Group Calendar 1", paramsList);
-    }
-
-	private String validateMacAddress(String existingNodeMacAddress, String idOnController, String controllerStrId,
-			String geoZoneId) throws QRCodeNotMatchedException {
-		String mainUrl = properties.getProperty("streetlight.url.main");
-		String getMacAddress = properties.getProperty("streetlight.slv.url.getmacaddress");
-		String url = mainUrl + getMacAddress;
-
-		List<Object> paramsList = new ArrayList<Object>();
-		paramsList.add("idOnController=" + idOnController);
-		paramsList.add("controllerStrId=" + controllerStrId);
-		paramsList.add("valueName=MacAddress");
-		paramsList.add("valueName=comment");
-		paramsList.add("ser=json");
-		String params = StringUtils.join(paramsList, "&");
-		url = url + "&" + params;
-		ResponseEntity<String> response = restService.getPostRequest(url, null);
-		if (response.getStatusCode().is2xxSuccessful()) {
-			String responseString = response.getBody();
-			JsonElement jsonElement = jsonParser.parse(responseString);
-			if (jsonElement.isJsonArray()) {
-				JsonArray jsonArray = jsonElement.getAsJsonArray();
-				if (jsonArray.size() > 0) {
-					if (jsonArray.get(0).getAsString().toLowerCase().equals(existingNodeMacAddress.toLowerCase())) {
-						String comment = jsonArray.get(1).getAsString();
-						return comment;
-					} else {
-						// Throws given MAC Address not matched
-						throw new QRCodeNotMatchedException(idOnController, existingNodeMacAddress);
-					}
-
-				} else {
-					throw new QRCodeNotMatchedException(idOnController, existingNodeMacAddress);
-				}
-			} else if (jsonElement.isJsonObject()) {
-				return validateMACAddress(existingNodeMacAddress, idOnController, geoZoneId);
-
-			}
-		} else {
-			return validateMACAddress(existingNodeMacAddress, idOnController, geoZoneId);
-		}
-		throw new QRCodeNotMatchedException(idOnController, existingNodeMacAddress);
-	}
-
-	/**
-	 * Check MAC Address is present in given IdonController or not and also if
-	 * mathches get comment
-	 * 
-	 * @param existingNodeMacAddress
-	 * @param idOnController
-	 * @param geoZoneId
-	 * @return
-	 * @throws QRCodeNotMatchedException
-	 */
-	private String validateMACAddress(String existingNodeMacAddress, String idOnController, String geoZoneId)
-			throws QRCodeNotMatchedException {
-		String mainUrl = properties.getProperty("streetlight.url.main");
-		String geoZoneDevices = properties.getProperty("streetlight.slv.url.getgeozone.devices");
-		String url = mainUrl + geoZoneDevices;
-
-		List<Object> paramsList = new ArrayList<Object>();
-		if (geoZoneId != null) {
-			paramsList.add("geoZoneId=" + geoZoneId);
-		}
-
-		paramsList.add("valueNames=idOnController");
-		paramsList.add("valueNames=comment");
-		paramsList.add("valueNames=MacAddress");
-		paramsList.add("ser=json");
-		String params = StringUtils.join(paramsList, "&");
-		url = url + "&" + params;
-		ResponseEntity<String> response = restService.getPostRequest(url, null);
-		if (response.getStatusCode().is2xxSuccessful()) {
-			String geoZoneDeviceDetails = response.getBody();
-			JsonObject jsonObject = (JsonObject) jsonParser.parse(geoZoneDeviceDetails);
-			JsonArray deviceValuesAsArray = jsonObject.get("values").getAsJsonArray();
-			int totalSize = deviceValuesAsArray.size();
-			for (int i = 0; i < totalSize; i++) {
-				JsonArray deviceValues = deviceValuesAsArray.get(i).getAsJsonArray();
-				if (deviceValues.get(0).getAsString().equals(idOnController)) {
-					if (deviceValues.get(2).getAsString().equals(existingNodeMacAddress)) {
-						String comment = deviceValues.get(1).getAsString();
-						return comment;
-					}
-				}
-			}
-			// Throws given MAC Address not matched
-			throw new QRCodeNotMatchedException(idOnController, existingNodeMacAddress);
-		}
-		return null;
-	}
 
 	private void processReplaceOLCFormVal(FormData replaceOLCFormData, String idOnController,
 			String controllerStrIdValue, List<Object> paramsList, String geoZoneId, String noteGuid,
@@ -437,9 +326,6 @@ public class StreetlightChicagoService {
 			e.printStackTrace();
 			loggingModel.setErrorDetails(MessageConstants.OLD_MAC_ADDRESS_NOT_AVAILABLE);
 			loggingModel.setStatus(MessageConstants.ERROR);
-			// streetlightDao.insertProcessedNoteGuids(edgeNote.getNoteGuid(),
-			// MessageConstants.ERROR, MessageConstants.OLD_MAC_ADDRESS_NOT_AVAILABLE,
-			// edgeNote.getCreatedDateTime(),edgeNote.getTitle(),true,existingNodeMacAddress,newNodeMacAddress);
 			return;
 		}
 		// Get New Node MAC Address value
@@ -451,9 +337,6 @@ public class StreetlightChicagoService {
 			e.printStackTrace();
 			loggingModel.setErrorDetails(MessageConstants.NEW_MAC_ADDRESS_NOT_AVAILABLE);
 			loggingModel.setStatus(MessageConstants.ERROR);
-			// streetlightDao.insertProcessedNoteGuids(edgeNote.getNoteGuid(),
-			// MessageConstants.ERROR, MessageConstants.NEW_MAC_ADDRESS_NOT_AVAILABLE,
-			// edgeNote.getCreatedDateTime(),edgeNote.getTitle(),true,existingNodeMacAddress,newNodeMacAddress);
 			return;
 		}
 		String comment = "";
@@ -465,10 +348,6 @@ public class StreetlightChicagoService {
 		} catch (QRCodeNotMatchedException e1) {
 			loggingModel.setErrorDetails(MessageConstants.REPLACE_MAC_NOT_MATCH);
 			loggingModel.setStatus(MessageConstants.ERROR);
-			// Need to write an report
-			// streetlightDao.insertProcessedNoteGuids(edgeNote.getNoteGuid(),
-			// MessageConstants.ERROR, MessageConstants.REPLACE_MAC_NOT_MATCH,
-			// edgeNote.getCreatedDateTime(),edgeNote.getTitle(),true,existingNodeMacAddress,newNodeMacAddress);
 			return;
 		}
 
@@ -507,9 +386,6 @@ public class StreetlightChicagoService {
 			statusDescription.append(MessageConstants.ERROR_UPDATE_DEVICE_VAL + errorCode);
 			loggingModel.setErrorDetails(statusDescription.toString());
 			loggingModel.setStatus(MessageConstants.ERROR);
-			// streetlightDao.insertProcessedNoteGuids(edgeNote.getNoteGuid(),
-			// MessageConstants.ERROR,statusDescription.toString(),
-			// edgeNote.getCreatedDateTime(),edgeNote.getTitle(),true,existingNodeMacAddress,newNodeMacAddress);
 			throw new DeviceUpdationFailedException(errorCode + "");
 		} else {
 			statusDescription.append(MessageConstants.SET_DEVICE_SUCCESS);
@@ -528,36 +404,17 @@ public class StreetlightChicagoService {
 			if (isError) {
 				loggingModel.setErrorDetails(statusDescription.toString());
 				loggingModel.setStatus(MessageConstants.ERROR);
-				// streetlightDao.insertProcessedNoteGuids(edgeNote.getNoteGuid(),
-				// MessageConstants.ERROR,statusDescription.toString(),
-				// edgeNote.getCreatedDateTime(),edgeNote.getTitle(),true,existingNodeMacAddress,newNodeMacAddress);
 			} else {
 				loggingModel.setStatus(MessageConstants.SUCCESS);
-				// streetlightDao.insertProcessedNoteGuids(edgeNote.getNoteGuid(),
-				// MessageConstants.SUCCESS,"",
-				// edgeNote.getCreatedDateTime(),edgeNote.getTitle(),true,existingNodeMacAddress,newNodeMacAddress);
 			}
 			noteGuids.add(noteGuid);
 		}
 
 	}
 
-	private int setDeviceValues(List<Object> paramsList) {
-		String mainUrl = properties.getProperty("streetlight.slv.url.main");
-		String updateDeviceValues = properties.getProperty("streetlight.slv.url.updatedevice");
-		String url = mainUrl + updateDeviceValues;
 
-		paramsList.add("ser=json");
-		String params = StringUtils.join(paramsList, "&");
-		url = url + "&" + params;
-		ResponseEntity<String> response = restService.getPostRequest(url, null);
-		String responseString = response.getBody();
-		JsonObject replaceOlcResponse = (JsonObject) jsonParser.parse(responseString);
-		int errorCode = replaceOlcResponse.get("errorCode").getAsInt();
-		return errorCode;
-	}
 
-	private void sync2Slv(List<Object> paramsList, String noteGuid, String idOnController, String macAddress,
+	public void sync2Slv(List<Object> paramsList, String noteGuid, String idOnController, String macAddress,
 			String controllerStrIdValue, EdgeNote edgeNote, LoggingModel loggingModel)
 			throws DeviceUpdationFailedException, ReplaceOLCFailedException {
 		int errorCode = setDeviceValues(paramsList);
@@ -566,105 +423,16 @@ public class StreetlightChicagoService {
 		if (errorCode != 0) {
 			loggingModel.setErrorDetails(MessageConstants.ERROR_UPDATE_DEVICE_VAL);
 			loggingModel.setStatus(MessageConstants.ERROR);
-			// streetlightDao.insertProcessedNoteGuids(edgeNote.getNoteGuid(),
-			// MessageConstants.ERROR, MessageConstants.ERROR_UPDATE_DEVICE_VAL,
-			// edgeNote.getCreatedDateTime(),edgeNote.getTitle());
+
 			throw new DeviceUpdationFailedException(errorCode + "");
 		} else {
 			// replace OlC
 			replaceOLC(controllerStrIdValue, idOnController, macAddress);
 			loggingModel.setStatus(MessageConstants.SUCCESS);
-			// streetlightDao.insertProcessedNoteGuids(edgeNote.getNoteGuid(),
-			// MessageConstants.SUCCESS, "",
-			// edgeNote.getCreatedDateTime(),edgeNote.getTitle());
-			// Process Daily Report
-			// processDailyReport(dailyReportCSV);
+
 		}
 	}
 
-	/**
-	 * Calls ReplaceOLCs
-	 * 
-	 * @throws ReplaceOLCFailedException
-	 */
-	public void replaceOLC(String controllerStrIdValue, String idOnController, String macAddress)
-			throws ReplaceOLCFailedException {
-		try {
-			// String newNetworkId = slvSyncDataEntity.getMacAddress();
-			String newNetworkId = macAddress;
-
-			// Get Url detail from properties
-			String mainUrl = properties.getProperty("streetlight.url.main");
-			String dataUrl = properties.getProperty("streetlight.url.replaceolc");
-			String replaceOlc = properties.getProperty("streetlight.url.replaceolc.method");
-			String url = mainUrl + dataUrl;
-			String controllerStrId = controllerStrIdValue;
-			List<Object> paramsList = new ArrayList<Object>();
-			paramsList.add("methodName=" + replaceOlc);
-			paramsList.add("controllerStrId=" + controllerStrId);
-			paramsList.add("idOnController=" + idOnController);
-			paramsList.add("newNetworkId=" + newNetworkId);
-			paramsList.add("ser=json");
-			String params = StringUtils.join(paramsList, "&");
-			url = url + "?" + params;
-			ResponseEntity<String> response = restService.getPostRequest(url, null);
-			String responseString = response.getBody();
-			JsonObject replaceOlcResponse = (JsonObject) jsonParser.parse(responseString);
-			String errorStatus = replaceOlcResponse.get("status").getAsString();
-			// As per doc, errorcode is 0 for success. Otherwise, its not success.
-			if (errorStatus.equals("ERROR")) {
-				String value = replaceOlcResponse.get("value").getAsString();
-				throw new ReplaceOLCFailedException(value);
-			} else {
-				if (macAddress != null)
-					clearAndUpdateDeviceData(idOnController, controllerStrId);
-			}
-
-		} catch (Exception e) {
-			logger.error("Error in replaceOLC", e);
-			throw new ReplaceOLCFailedException(e.getMessage());
-		}
-
-	}
-
-	private String value(List<EdgeFormData> edgeFormDatas, String key) throws NoValueException {
-		EdgeFormData edgeFormTemp = new EdgeFormData();
-		edgeFormTemp.setLabel(key);
-
-		int pos = edgeFormDatas.indexOf(edgeFormTemp);
-		if (pos != -1) {
-			EdgeFormData edgeFormData = edgeFormDatas.get(pos);
-			String value = edgeFormData.getValue();
-			if (value == null || value.trim().isEmpty()) {
-				throw new NoValueException("Value is Empty or null." + value);
-			}
-			return value;
-		} else {
-			throw new NoValueException(key + " is not found.");
-		}
-	}
-	
-	private String valueById(List<EdgeFormData> edgeFormDatas, int id) throws NoValueException {
-		EdgeFormData edgeFormTemp = new EdgeFormData();
-		edgeFormTemp.setId(id);
-
-		int pos = edgeFormDatas.indexOf(edgeFormTemp);
-		if (pos != -1) {
-			EdgeFormData edgeFormData = edgeFormDatas.get(pos);
-			String value = edgeFormData.getValue();
-			if (value == null || value.trim().isEmpty()) {
-				throw new NoValueException("Value is Empty or null." + value);
-			}
-			return value;
-		} else {
-			throw new NoValueException(id + " is not found.");
-		}
-	}
-
-	private void addStreetLightData(String key, String value, List<Object> paramsList) {
-		paramsList.add("valueName=" + key.trim());
-		paramsList.add("value=" + value.trim());
-	}
 
 	private String loadMACAddress(String data, List<Object> paramsList, String idOnController)
 			throws InValidBarCodeException, QRCodeAlreadyUsedException, Exception {
@@ -689,66 +457,6 @@ public class StreetlightChicagoService {
 		throw new InValidBarCodeException("Node MAC address is not valid. Value is:" + data);
 	}
 
-	// Philips RoadFocus, RFS-54W16LED3K-T-R2M-UNIV-DMG-PH9-RCD-SP2-GY3,
-	// RFM0455, 07/24/17, 54W, 120/277V, 4000K, 8140 Lm, R2M, Gray, Advance,
-	// 442100083510, DMG
-
-	public void buildFixtureStreetLightData(String data, List<Object> paramsList, EdgeNote edgeNote)
-			throws InValidBarCodeException {
-		String[] fixtureInfo = data.split(",");
-		if (fixtureInfo.length >= 13) {
-			addStreetLightData("luminaire.brand", fixtureInfo[0], paramsList);
-			/**
-			 * As per Mail conversion, In the older data, the luminaire model was the
-			 * shorter version of the fixture, so for the General Electric fixtures it was
-			 * ERLH. The Luminaire Part Number would be the longer more detailed number.
-			 */
-			String partNumber = fixtureInfo[1].trim();
-			String model = fixtureInfo[2].trim();
-			if (fixtureInfo[1].trim().length() <= fixtureInfo[2].trim().length()) {
-				model = fixtureInfo[1].trim();
-				partNumber = fixtureInfo[2].trim();
-			}
-			addStreetLightData("device.luminaire.partnumber", partNumber, paramsList);
-			addStreetLightData("luminaire.model", model, paramsList);
-			addStreetLightData("device.luminaire.manufacturedate", fixtureInfo[3], paramsList);
-			String powerVal = fixtureInfo[4];
-			if (powerVal != null && !powerVal.isEmpty()) {
-				powerVal = powerVal.replaceAll("W", "");
-				powerVal = powerVal.replaceAll("w", "");
-			}
-
-			addStreetLightData("power", powerVal, paramsList);
-			addStreetLightData("fixing.type", fixtureInfo[5], paramsList);
-			// dailyReportCSV.setFixtureType(fixtureInfo[5]);
-			addStreetLightData("device.luminaire.colortemp", fixtureInfo[6], paramsList);
-			addStreetLightData("device.luminaire.lumenoutput", fixtureInfo[7], paramsList);
-			addStreetLightData("luminaire.DistributionType", fixtureInfo[8], paramsList);
-			addStreetLightData("luminaire.colorcode", fixtureInfo[9], paramsList);
-			addStreetLightData("device.luminaire.drivermanufacturer", fixtureInfo[10], paramsList);
-			addStreetLightData("device.luminaire.driverpartnumber", fixtureInfo[11], paramsList);
-			addStreetLightData("ballast.dimmingtype", fixtureInfo[12], paramsList);
-
-		} else {
-			throw new InValidBarCodeException(
-					"Fixture MAC address is not valid (" + edgeNote.getTitle() + "). Value is:" + data);
-		}
-	}
-
-	private String dateFormat(Long dateTime) {
-		Date date = new Date(Long.valueOf(dateTime));
-		SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-		String dff = dateFormat.format(date);
-		return dff;
-	}
-
-	private String dateFormat_1(Long dateTime) {
-		Date date = new Date(Long.valueOf(dateTime));
-		SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd");
-		String dff = dateFormat.format(date);
-		return dff;
-	}
-
 	// http://192.168.1.9:8080/edgeServer/oauth/token?grant_type=password&username=admin&password=admin&client_id=edgerestapp
 
 	private String getEdgeToken() {
@@ -766,390 +474,4 @@ public class StreetlightChicagoService {
 
 	}
 
-	/**
-	 * Load Mac address and corresponding IdOnController from SLV Server
-	 * 
-	 * @throws Exception
-	 */
-	public boolean checkMacAddressExists(String macAddress, String idOnController)
-			throws QRCodeAlreadyUsedException, Exception {
-		logger.info("Getting Mac Address from SLV.");
-		String mainUrl = properties.getProperty("streetlight.slv.url.main");
-		String updateDeviceValues = properties.getProperty("streetlight.slv.url.search.device");
-		String url = mainUrl + updateDeviceValues;
-		List<String> paramsList = new ArrayList<>();
-		paramsList.add("attribute=MacAddress");
-		paramsList.add("value=" + macAddress);
-		paramsList.add("operator=eq-i");
-		paramsList.add("recurse=true");
-		paramsList.add("ser=json");
-		String params = StringUtils.join(paramsList, "&");
-		url = url + "?" + params;
-		ResponseEntity<String> response = restService.getRequest(url, true, null);
-		if (response.getStatusCodeValue() == 200) {
-			String responseString = response.getBody();
-			logger.info("-------MAC Address----------");
-			logger.info(responseString);
-			logger.info("-------MAC Address End----------");
-			DeviceMacAddress deviceMacAddress = gson.fromJson(responseString, DeviceMacAddress.class);
-			List<Value> values = deviceMacAddress.getValue();
-			StringBuilder stringBuilder = new StringBuilder();
-			if (values == null || values.size() == 0) {
-				return false;
-			} else {
-				for (Value value : values) {
-					if (value.getIdOnController().equals(idOnController)) {
-						return false;
-					}
-					stringBuilder.append(value.getIdOnController());
-					stringBuilder.append("\n");
-				}
-			}
-			throw new QRCodeAlreadyUsedException(stringBuilder.toString(), macAddress);
-		} else {
-			throw new Exception();
-		}
-
-	}
-
-	public void clearAndUpdateDeviceData(String idOnController, String controllerStrId) {
-		String mainUrl = properties.getProperty("streetlight.slv.url.main");
-		String updateDeviceValues = properties.getProperty("streetlight.slv.url.updatedevice");
-		String url = mainUrl + updateDeviceValues;
-
-		List<Object> paramsList = new ArrayList<Object>();
-		paramsList.add("controllerStrId=" + controllerStrId);
-		paramsList.add("idOnController=" + idOnController);
-		addStreetLightData("device.node.serialnumber", "", paramsList);
-		addStreetLightData("device.node.hwversion", "", paramsList);
-		addStreetLightData("device.node.swversion", "", paramsList);
-		addStreetLightData("device.nic.serialnumber", "", paramsList);
-		addStreetLightData("device.nic.swversion", "", paramsList);
-		addStreetLightData("device.nic.hwversion", "", paramsList);
-		addStreetLightData("device.nic.currentnode", "", paramsList);
-		addStreetLightData("device.nic.fallbackmode", "", paramsList);
-		addStreetLightData("device.node.manufdate", "", paramsList);
-		addStreetLightData("device.node.name", "", paramsList);
-		addStreetLightData("device.node.manufacturer", "", paramsList);
-		addStreetLightData("device.uiqid", "", paramsList);
-		addStreetLightData("SoftwareVersion", "", paramsList);
-		addStreetLightData("device.meter.programid", "", paramsList);
-		addStreetLightData("device.nic.catalog", "", paramsList);
-
-		paramsList.add("doLog=true");
-		paramsList.add("ser=json");
-		String params = StringUtils.join(paramsList, "&");
-		url = url + "&" + params;
-		ResponseEntity<String> response = restService.getPostRequest(url, null);
-		String responseString = response.getBody();
-		JsonObject replaceOlcResponse = (JsonObject) jsonParser.parse(responseString);
-		int errorCode = replaceOlcResponse.get("errorCode").getAsInt();
-		if (errorCode == 0) {
-			// success
-		} else {
-			// failure
-		}
-	}
-
-	public void repairAndOutage(FormData replaceOLCFormData, String idOnController, String controllerStrIdValue,
-			List<Object> paramsList, String geoZoneId, EdgeNote edgeNote, LoggingModel loggingModel,
-			List<String> noteGuids, String selectedOutage) {
-
-		switch (selectedOutage) {
-		case "Replace Node and Fixture":
-			replaceNodeFixture(replaceOLCFormData, idOnController, controllerStrIdValue, paramsList, geoZoneId, edgeNote,
-					loggingModel);
-			break;
-		case "Replace Node only":
-			replaceNodeOnly(replaceOLCFormData, idOnController, controllerStrIdValue, paramsList, geoZoneId, edgeNote,
-					loggingModel, noteGuids);
-			break;
-		case "Replace Fixture only":
-			replaceFixtureOnly(replaceOLCFormData, paramsList, loggingModel, edgeNote);
-			break;
-		case "Power Issue":
-			break;
-		}
-	}
-
-	public void replaceNodeFixture(FormData replaceOLCFormData, String idOnController, String controllerStrIdValue,
-			List<Object> paramsList, String geoZoneId, EdgeNote edgeNote, LoggingModel loggingModel) {
-		List<EdgeFormData> replaceOLCFromDef = replaceOLCFormData.getFormDef();
-		String existingNodeMacAddress = null;
-		String newNodeMacAddress = null;
-		try {
-			existingNodeMacAddress = value(replaceOLCFromDef,
-					properties.getProperty("streetlight.edge.replacenode.label.existing"));
-			loggingModel.setExistingNodeMACaddress(existingNodeMacAddress);
-		} catch (NoValueException e) {
-			e.printStackTrace();
-			loggingModel.setErrorDetails(MessageConstants.OLD_MAC_ADDRESS_NOT_AVAILABLE);
-			loggingModel.setStatus(MessageConstants.ERROR);
-			return;
-		}
-		try {
-			validateMacAddress(existingNodeMacAddress, idOnController, controllerStrIdValue,
-					geoZoneId);
-		} catch (QRCodeNotMatchedException e1) {
-			loggingModel.setErrorDetails(MessageConstants.REPLACE_MAC_NOT_MATCH);
-			loggingModel.setStatus(MessageConstants.ERROR);
-			return;
-		}
-
-		// Validate NewMacAddress
-		try {
-			newNodeMacAddress = value(replaceOLCFromDef,
-					properties.getProperty("streetlight.edge.replacenode.label.newnode"));
-			loggingModel.setNewNodeMACaddress(newNodeMacAddress);
-		} catch (NoValueException e) {
-			e.printStackTrace();
-			loggingModel.setErrorDetails(MessageConstants.NEW_MAC_ADDRESS_NOT_AVAILABLE);
-			loggingModel.setStatus(MessageConstants.ERROR);
-			return;
-		}
-		try {
-			checkMacAddressExists(newNodeMacAddress, idOnController);
-		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-
-		List<EdgeFormData> formData = replaceOLCFormData.getFormDef();
-		for (EdgeFormData edgeFormData : formData) {
-			if (edgeFormData.getLabel()
-					.equals(properties.getProperty("edge.fortemplate.chicago.label.fixture.macaddress"))) {
-				if (edgeFormData.getValue() == null || edgeFormData.getValue().trim().isEmpty()) {
-					// logger.info("Fixture MAC address is empty. So note is not processed. Note
-					// Title :"+edgeNote.getTitle());
-					// return; -- TODO Need to skip or not later decide
-				} else {
-					try {
-						addStreetLightData("luminaire.installdate", dateFormat(edgeNote.getCreatedDateTime()),
-								paramsList); // --
-						buildFixtureStreetLightData(edgeFormData.getValue(), paramsList, edgeNote);
-						addStreetLightData("install.date", dateFormat(edgeNote.getCreatedDateTime()), paramsList);
-
-						addStreetLightData("installStatus", "Installed", paramsList);
-
-						addStreetLightData("DimmingGroupName", "Group Calendar 1", paramsList);
-						int errorCode = setDeviceValues(paramsList);
-						// As per doc, errorcode is 0 for success. Otherwise, its not
-						// success.
-						if (errorCode != 0) {
-							loggingModel.setErrorDetails(MessageConstants.ERROR_UPDATE_DEVICE_VAL);
-							loggingModel.setStatus(MessageConstants.ERROR);
-							try {
-								throw new DeviceUpdationFailedException(errorCode + "");
-							} catch (DeviceUpdationFailedException e) {
-								// TODO Auto-generated catch block
-								e.printStackTrace();
-							}
-						}
-					} catch (InValidBarCodeException e) {
-						e.printStackTrace();
-					}
-				}
-
-			} else if (edgeFormData.getLabel()
-					.equals(properties.getProperty("edge.fortemplate.chicago.label.node.macaddress"))) {
-				if (edgeFormData.getValue() == null || edgeFormData.getValue().trim().isEmpty()) {
-					logger.info(
-							"Node MAC address is empty. So note is not processed. Note Title :" + edgeNote.getTitle());
-					loggingModel.setErrorDetails(MessageConstants.NODE_MAC_ADDRESS_NOT_AVAILABLE);
-					loggingModel.setStatus(MessageConstants.ERROR);
-					return;
-				}
-			}
-		}
-	}
-
-	public void replaceNodeOnly(FormData replaceOLCFormData, String idOnController, String controllerStrIdValue,
-			List<Object> paramsList, String geoZoneId, EdgeNote edgeNote, LoggingModel loggingModel,
-			List<String> noteGuids) {
-		List<EdgeFormData> replaceOLCFromDef = replaceOLCFormData.getFormDef();
-		try {
-			processReplaceOLCFormVal(replaceOLCFormData, idOnController, controllerStrIdValue, paramsList, geoZoneId,
-					edgeNote.getNoteGuid(), edgeNote.getCreatedDateTime(), noteGuids, edgeNote, loggingModel);
-		} catch (QRCodeAlreadyUsedException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (DeviceUpdationFailedException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-	}
-
-	public void replaceFixtureOnly(FormData replaceOLCFormData, List<Object> paramsList, LoggingModel loggingModel,
-			EdgeNote edgeNote) {
-		String existingNodeMacAddress = null;
-		String newNodeMacAddress = null;
-		List<EdgeFormData> replaceOLCFromDef = replaceOLCFormData.getFormDef();
-		// Get Existing Node MAC Address value
-		try {
-			existingNodeMacAddress = value(replaceOLCFromDef,
-					properties.getProperty("streetlight.edge.replacenode.label.existing"));
-			loggingModel.setExistingNodeMACaddress(existingNodeMacAddress);
-		} catch (NoValueException e) {
-			e.printStackTrace();
-			loggingModel.setErrorDetails(MessageConstants.OLD_MAC_ADDRESS_NOT_AVAILABLE);
-			loggingModel.setStatus(MessageConstants.ERROR);
-			return;
-		}
-		// Get New Node MAC Address value
-		try {
-			newNodeMacAddress = value(replaceOLCFromDef,
-					properties.getProperty("streetlight.edge.replacenode.label.newnode"));
-			loggingModel.setNewNodeMACaddress(newNodeMacAddress);
-		} catch (NoValueException e) {
-			e.printStackTrace();
-			loggingModel.setErrorDetails(MessageConstants.NEW_MAC_ADDRESS_NOT_AVAILABLE);
-			loggingModel.setStatus(MessageConstants.ERROR);
-			return;
-		}
-		if (existingNodeMacAddress != null && !existingNodeMacAddress.isEmpty() && newNodeMacAddress != null
-				&& !newNodeMacAddress.isEmpty()) {
-			addStreetLightData("luminaire.installdate", dateFormat(edgeNote.getCreatedDateTime()), paramsList); // --
-			List<EdgeFormData> formData = replaceOLCFormData.getFormDef();
-			for (EdgeFormData edgeFormData : formData) {
-				if (edgeFormData.getLabel()
-						.equals(properties.getProperty("edge.fortemplate.chicago.label.fixture.macaddress"))) {
-					if (edgeFormData.getValue() == null || edgeFormData.getValue().trim().isEmpty()) {
-						// logger.info("Fixture MAC address is empty. So note is not processed. Note
-						// Title :"+edgeNote.getTitle());
-						// return; -- TODO Need to skip or not later decide
-					} else {
-						try {
-							addStreetLightData("luminaire.installdate", dateFormat(edgeNote.getCreatedDateTime()),
-									paramsList); // --
-							buildFixtureStreetLightData(edgeFormData.getValue(), paramsList, edgeNote);
-							int errorCode = setDeviceValues(paramsList);
-							if (errorCode != 0) {
-								// TODO Error
-							} else {
-								// TODO Success
-							}
-						} catch (InValidBarCodeException e) {
-							e.printStackTrace();
-						}
-					}
-
-				} else if (edgeFormData.getLabel()
-						.equals(properties.getProperty("edge.fortemplate.chicago.label.node.macaddress"))) {
-					if (edgeFormData.getValue() == null || edgeFormData.getValue().trim().isEmpty()) {
-						logger.info("Node MAC address is empty. So note is not processed. Note Title :"
-								+ edgeNote.getTitle());
-						loggingModel.setErrorDetails(MessageConstants.NODE_MAC_ADDRESS_NOT_AVAILABLE);
-						loggingModel.setStatus(MessageConstants.ERROR);
-						return;
-					}
-				}
-			}
-		}
-	}
-
-	public void processNewAction(EdgeNote edgeNote,LoggingModel loggingModel){
-		List<FormData> formDatas = edgeNote.getFormData();
-		for(FormData formData : formDatas){
-			if(formData.getFormTemplateGuid().equals(INSTATALLATION_AND_MAINTENANCE_GUID)){
-				List<EdgeFormData> edgeFormDatas = formData.getFormDef();
-						try {
-							String value = value(edgeFormDatas, "Action");
-							switch(value){
-							case "New":
-								processNewGroup(edgeFormDatas,edgeNote,loggingModel);
-								break;
-							case "Repairs & Outages":
-								break;
-							case "Other Task":
-								break;
-							}
-						} catch (NoValueException e) {
-							// TODO Auto-generated catch block
-							e.printStackTrace();
-							logger.error("error in processNewAction method", e);
-						}
-			}
-		}
-	}
-	
-	private void processNewGroup(List<EdgeFormData> edgeFormDatas, EdgeNote edgeNote,LoggingModel loggingModel){
-        // Get MAC Address
-        String nodeMacValue = null;
-        try {
-            nodeMacValue = valueById(edgeFormDatas, Integer.valueOf(properties.getProperty("action.new.node_mac_address_id")));
-        } catch (NoValueException e) {
-            loggingModel.setErrorDetails(MessageConstants.NODE_MAC_ADDRESS_NOT_AVAILABLE);
-            loggingModel.setStatus(MessageConstants.ERROR);
-            return;
-        }
-
-        // Get Fixer QR Scan value
-        String fixerQrScanValue = null;
-        try {
-            fixerQrScanValue = valueById(edgeFormDatas,Integer.valueOf(properties.getProperty("action.new.fixture_qr_scan")));
-        } catch (NoValueException e) {
-            loggingModel.setErrorDetails(MessageConstants.FIXTURE_CODE_NOT_AVAILABLE);
-            loggingModel.setStatus(MessageConstants.ERROR);
-            return;
-        }
-
-        try{
-
-            // Get IdonController value
-            String idOnController = value(edgeFormDatas, "SL");
-
-            // Get Controller Str value
-            String controllerStrIdValue = value(edgeFormDatas, "Controller Str Id");
-
-            // Check Whether MAC Address is already assigned to other fixtures or not.
-            try {
-                checkMacAddressExists(nodeMacValue, idOnController);
-            }catch (QRCodeAlreadyUsedException e1){
-                logger.error("MacAddress (" + e1.getMacAddress()
-                        + ")  - Already in use. So this pole is not synced with SLV. Note Title :[" + edgeNote.getTitle()
-                        + " ]");
-                loggingModel.setStatus(MessageConstants.ERROR);
-                loggingModel.setErrorDetails("MacAddress (" + e1.getMacAddress() + ")  - Already in use");
-                return;
-            }
-            List<Object> paramsList = new ArrayList<>();
-
-            paramsList.add("idOnController=" + idOnController);
-            paramsList.add("controllerStrId=" + controllerStrIdValue);
-
-            addOtherParams(edgeNote,paramsList);
-            buildFixtureStreetLightData(fixerQrScanValue, paramsList , edgeNote);//update fixer qrscan value
-           int errorCode = setDeviceValues(paramsList);
-            if (errorCode != 0) {
-                loggingModel.setErrorDetails(MessageConstants.ERROR_UPDATE_DEVICE_VAL);
-                loggingModel.setStatus(MessageConstants.ERROR);
-                return;
-            } else {
-                // replace OlC
-                replaceOLC(controllerStrIdValue, idOnController, nodeMacValue);// insert mac address
-                loggingModel.setStatus(MessageConstants.SUCCESS);
-            }
-
-		}catch (QRCodeAlreadyUsedException e1) {
-            logger.error("MacAddress (" + e1.getMacAddress()
-                    + ")  - Already in use. So this pole is not synced with SLV. Note Title :[" + edgeNote.getTitle()
-                    + " ]");
-            loggingModel.setStatus(MessageConstants.ERROR);
-            loggingModel.setErrorDetails("MacAddress (" + e1.getMacAddress() + ")  - Already in use");
-
-        } catch (ReplaceOLCFailedException | DeviceUpdationFailedException | InValidBarCodeException | NoValueException  e) {
-            logger.error("Error in processNewGroup", e);
-            loggingModel.setStatus(MessageConstants.ERROR);
-            loggingModel.setErrorDetails(e.getMessage());
-
-        }  catch (Exception e) {
-            logger.error("Error in processNewGroup", e);
-            loggingModel.setStatus(MessageConstants.ERROR);
-            loggingModel.setErrorDetails(e.getMessage());
-
-        }
-	}
 }

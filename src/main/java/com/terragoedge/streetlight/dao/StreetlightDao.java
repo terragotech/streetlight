@@ -7,10 +7,11 @@ import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.terragoedge.streetlight.logging.InstallMaintenanceLogModel;
 import org.apache.log4j.Logger;
 
 import com.terragoedge.streetlight.StreetlightDaoConnection;
-import com.terragoedge.streetlight.service.LoggingModel;
+import com.terragoedge.streetlight.logging.LoggingModel;
 
 public class StreetlightDao extends UtilDao {
 
@@ -57,7 +58,7 @@ public class StreetlightDao extends UtilDao {
 	private void createStreetLightSyncTable() {
 		
 		String sql = "CREATE TABLE IF NOT EXISTS notesyncdetails (streetlightsyncid integer NOT NULL,"
-				+ " processednoteid text, status text, errordetails text, createddatetime bigint, notename text,existingnodemacaddress text,newnodemacaddress text,isReplaceNode text,isQuickNote text,idOnController text,macAddress text, CONSTRAINT notesyncdetails_pkey PRIMARY KEY (streetlightsyncid));";
+				+ " processednoteid text, status text, errordetails text,singleformerrordetails text, singleformstatus text,createddatetime bigint, notename text,existingnodemacaddress text,newnodemacaddress text,isReplaceNode text,isQuickNote text,idOnController text,macAddress text, CONSTRAINT notesyncdetails_pkey PRIMARY KEY (streetlightsyncid));";
 		executeStatement(sql);
 		
 		//sql = "CREATE TABLE IF NOT EXISTS lastsyncstatus (lastsyncstatusid integer not null, lastsynctime text, CONSTRAINT lastsyncstatus_pkey PRIMARY KEY (lastsyncstatusid))";
@@ -88,7 +89,7 @@ public class StreetlightDao extends UtilDao {
 	}
 	
 	
-	public void insertProcessedNotes(LoggingModel loggingModel){
+	public void insertProcessedNotes(LoggingModel loggingModel, InstallMaintenanceLogModel installMaintenanceLogModel){
 		PreparedStatement preparedStatement = null;
 		Connection connection = null;
 		try{
@@ -102,7 +103,7 @@ public class StreetlightDao extends UtilDao {
 			preparedStatement = connection.prepareStatement(
 					"INSERT INTO notesyncdetails (streetlightsyncid , processednoteid, status,errordetails,"
 					+ "createddatetime, notename,existingnodemacaddress, newnodemacaddress,isReplaceNode,isQuickNote"
-					+ ",idOnController,macAddress) values (?,?,?,?,?,?,?,?,?,?,?,?) ;");
+					+ ",idOnController,macAddress,singleformerrordetails,singleformstatus) values (?,?,?,?,?,?,?,?,?,?,?,?,?,?) ;");
 			preparedStatement.setLong(1, id);
 			preparedStatement.setString(2, loggingModel.getProcessedNoteId());
 			preparedStatement.setString(3, loggingModel.getStatus());
@@ -115,6 +116,14 @@ public class StreetlightDao extends UtilDao {
 			preparedStatement.setString(10, loggingModel.getIsQuickNote()+"");
 			preparedStatement.setString(11, loggingModel.getIdOnController());
 			preparedStatement.setString(12, loggingModel.getMacAddress());
+			String singleFormErrorDetails = null;
+			String singleFormStatus = null;
+			if(installMaintenanceLogModel != null){
+                singleFormErrorDetails = installMaintenanceLogModel.getErrorDetails();
+                singleFormStatus = installMaintenanceLogModel.getStatus();
+			}
+            preparedStatement.setString(13, singleFormErrorDetails);
+            preparedStatement.setString(14, singleFormStatus);
 			preparedStatement.execute();
 		}catch (Exception e) {
 			logger.error("Error in insertParentNoteId",e);
@@ -160,7 +169,6 @@ public class StreetlightDao extends UtilDao {
 	/**
 	 * Get List of NoteIds which is assigned to given formtemplate
 	 * 
-	 * @param formTemplateGuid
 	 * @return
 	 */
 	public List<String> getNoteIds() {

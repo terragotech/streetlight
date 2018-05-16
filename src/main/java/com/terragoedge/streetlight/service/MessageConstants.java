@@ -17,5 +17,6 @@ public class MessageConstants {
 	public static String SET_DEVICE_SUCCESS ="Update device value is success.";
 	public static String FIXTURE_CODE_NOT_AVAILABLE ="Fixture Code is not available";
 	public static String NODE_MAC_ADDRESS_NOT_AVAILABLE ="Node MAC Address is not available.";
+	public static String ACTION_NO_VAL ="Action option is not selected.";
 
 }
