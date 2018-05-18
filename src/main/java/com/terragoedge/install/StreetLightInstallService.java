@@ -78,9 +78,9 @@ public class StreetLightInstallService {
 		properties = PropertiesReader.getProperties();
 		loadDimmingValue();
 	}
-	
-	
-	
+
+
+
 
 	public void process() throws Exception {
 		List<NotebookGeoZones> notebookGeoZonesList = loadNotebookGeoZones();
@@ -403,6 +403,7 @@ public class StreetLightInstallService {
 		addStreetLightData("modelFunctionId", nodeTypeStrId, slvDataEntity.getParamsList());
 
 		addStreetLightData("comment", comment, slvDataEntity.getParamsList());
+        addStreetLightData("location.locationtype", "LOCATION_TYPE_PREMISE", slvDataEntity.getParamsList());
 		
 		String streetLightDate = dateFormat(noteDetails.getCreatedDateTime());
 		addStreetLightData("lamp.installdate", streetLightDate, slvDataEntity.getParamsList());
