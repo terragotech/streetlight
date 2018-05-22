@@ -192,6 +192,11 @@ if(noteIdLong.size() > 0){
             return;
         }
 
+        List<String> installQRScan =   formDatas.get("fa47c708-fb82-4877-938c-992e870ae2a4");
+        isDataLoaded =  processFormData(installQRScan,dailyReportCSV);
+        if(isDataLoaded){
+            return;
+        }
 
     }
 
