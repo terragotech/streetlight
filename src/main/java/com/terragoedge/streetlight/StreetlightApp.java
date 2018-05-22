@@ -19,6 +19,7 @@ public class StreetlightApp {
 				logger.error("Error in main", e);
 			}
 		}
+
 	}
 
 }

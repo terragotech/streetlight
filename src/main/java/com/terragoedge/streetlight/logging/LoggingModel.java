@@ -1,5 +1,7 @@
 package com.terragoedge.streetlight.logging;
 
+import java.util.Objects;
+
 public class LoggingModel {
 	
 	private String processedNoteId;
@@ -15,8 +17,15 @@ public class LoggingModel {
 	private String macAddress;
 	private boolean isNoteAlreadySynced;
 
+	private String controllerSrtId;
 
+	public String getControllerSrtId() {
+		return controllerSrtId;
+	}
 
+	public void setControllerSrtId(String controllerSrtId) {
+		this.controllerSrtId = controllerSrtId;
+	}
 
 	public boolean isNoteAlreadySynced() {
 		return isNoteAlreadySynced;
@@ -90,8 +99,38 @@ public class LoggingModel {
 	public void setMacAddress(String macAddress) {
 		this.macAddress = macAddress;
 	}
-	
-	
-	
 
+
+	@Override
+	public boolean equals(Object o) {
+		if (this == o) return true;
+		if (o == null || getClass() != o.getClass()) return false;
+		LoggingModel that = (LoggingModel) o;
+		return Objects.equals(processedNoteId, that.processedNoteId);
+	}
+
+	@Override
+	public int hashCode() {
+
+		return Objects.hash(processedNoteId);
+	}
+
+	@Override
+	public String toString() {
+		return "LoggingModel{" +
+				"processedNoteId='" + processedNoteId + '\'' +
+				", status='" + status + '\'' +
+				", errorDetails='" + errorDetails + '\'' +
+				", createdDatetime='" + createdDatetime + '\'' +
+				", noteName='" + noteName + '\'' +
+				", existingNodeMACaddress='" + existingNodeMACaddress + '\'' +
+				", newNodeMACaddress='" + newNodeMACaddress + '\'' +
+				", isReplaceNode='" + isReplaceNode + '\'' +
+				", isQuickNote=" + isQuickNote +
+				", idOnController='" + idOnController + '\'' +
+				", macAddress='" + macAddress + '\'' +
+				", isNoteAlreadySynced=" + isNoteAlreadySynced +
+				", controllerSrtId='" + controllerSrtId + '\'' +
+				'}';
+	}
 }

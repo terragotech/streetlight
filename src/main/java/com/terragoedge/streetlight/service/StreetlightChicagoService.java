@@ -1,5 +1,7 @@
 package com.terragoedge.streetlight.service;
 
+import java.io.BufferedReader;
+import java.io.FileReader;
 import java.lang.reflect.Type;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -49,6 +51,95 @@ public class StreetlightChicagoService extends AbstractProcessor{
 
 	}
 
+
+
+
+	private void reSync(String accessToken){
+        BufferedReader bufferedReader = null;
+	    try{
+	        bufferedReader = new BufferedReader(new FileReader("./data/resynclist.txt"));
+            List<LoggingModel> loggingModelList =  streetlightDao.getSyncStatus();
+	        String line = null;
+            while((line = bufferedReader.readLine()) != null){
+                logger.info("Current Note Guid:"+line);
+                LoggingModel loggingModelTemp = new LoggingModel();
+                loggingModelTemp.setProcessedNoteId(line);
+
+                int pos =  loggingModelList.indexOf(loggingModelTemp);
+                if(pos != -1){
+                    logger.info("Note is Already Synced. Previous Sync Status"+loggingModelTemp.getStatus());
+                    loggingModelTemp = loggingModelList.get(pos);
+                    if(loggingModelTemp.getStatus() == null || loggingModelTemp.getStatus().toLowerCase().equals("error")){
+                        streetlightDao.deleteProcessedNotes(loggingModelTemp.getProcessedNoteId());
+                        String utilLocId = getUtilLocationId(loggingModelTemp.getErrorDetails());
+                        reSync(line,accessToken,true,utilLocId);
+                    }
+                }else{
+                    logger.info("Note is not Synced. Syncing now.");
+                    reSync(line,accessToken,false,null);
+                }
+
+            }
+        }catch (Exception e){
+            logger.error("Error in  reSync.",e);
+        }finally {
+	        if(bufferedReader != null){
+	            try {
+                    bufferedReader.close();
+                }catch (Exception e){
+	                e.printStackTrace();
+                }
+
+            }
+        }
+    }
+
+
+    private void reSync(String noteGuid,String accessToken,boolean isResync,String utilLocId){
+        // Get Edge Server Url from properties
+        String url = PropertiesReader.getProperties().getProperty("streetlight.edge.url.main");
+
+        url = url + PropertiesReader.getProperties().getProperty("streetlight.edge.url.notes.get");
+
+        url = url +"/" + noteGuid;
+
+        // Get NoteList from edgeserver
+        ResponseEntity<String> responseEntity = restService.getRequest(url, false, accessToken);
+
+        // Process only response code as success
+        if (responseEntity.getStatusCode().is2xxSuccessful()) {
+// Get Response String
+            String notesData = responseEntity.getBody();
+
+            EdgeNote edgeNote = gson.fromJson(notesData, EdgeNote.class);
+
+            InstallMaintenanceLogModel installMaintenanceLogModel = new InstallMaintenanceLogModel();
+
+            installMaintenanceLogModel.setProcessedNoteId(edgeNote.getNoteGuid());
+            installMaintenanceLogModel.setNoteName(edgeNote.getTitle());
+            installMaintenanceLogModel.setCreatedDatetime(String.valueOf(edgeNote.getCreatedDateTime()));
+
+            installationMaintenanceProcessor.processNewAction(edgeNote,installMaintenanceLogModel,isResync,utilLocId);
+            if(installMaintenanceLogModel.isProcessOtherForm()){
+                LoggingModel loggingModel = new LoggingModel();
+                syncData(edgeNote, new ArrayList<String>(), loggingModel,isResync,utilLocId);
+                if (!loggingModel.isNoteAlreadySynced()) {
+                    streetlightDao.insertProcessedNotes(loggingModel,installMaintenanceLogModel);
+                }
+            }else{
+                LoggingModel loggingModel = installMaintenanceLogModel;
+                streetlightDao.insertProcessedNotes(loggingModel,installMaintenanceLogModel);
+            }
+
+        }
+
+
+
+        }
+
+
+
+
 	public void run() {
 		// Get Already synced noteguids from Database
 		List<String> noteGuids = streetlightDao.getNoteIds();
@@ -57,6 +148,17 @@ public class StreetlightChicagoService extends AbstractProcessor{
 			logger.error("Edge Invalid UserName and Password.");
 			return;
 		}
+
+        String dataReSync = PropertiesReader.getProperties().getProperty("streetlight.edge.data.resync");
+		if(dataReSync != null && dataReSync.trim().equals("true")){
+            logger.info("ReSync Process Starts.");
+            reSync(accessToken);
+            logger.info("ReSync Process Ends.");
+            System.exit(0);
+            return;
+        }
+
+
 		// Get Edge Server Url from properties
 		String url = PropertiesReader.getProperties().getProperty("streetlight.edge.url.main");
 
@@ -94,10 +196,10 @@ public class StreetlightChicagoService extends AbstractProcessor{
                         installMaintenanceLogModel.setNoteName(edgeNote.getTitle());
                         installMaintenanceLogModel.setCreatedDatetime(String.valueOf(edgeNote.getCreatedDateTime()));
 
-                        installationMaintenanceProcessor.processNewAction(edgeNote,installMaintenanceLogModel);
+                        installationMaintenanceProcessor.processNewAction(edgeNote,installMaintenanceLogModel,false,null);
                         if(installMaintenanceLogModel.isProcessOtherForm()){
                             LoggingModel loggingModel = new LoggingModel();
-                            syncData(edgeNote, noteGuids, loggingModel);
+                            syncData(edgeNote, noteGuids, loggingModel,false,null);
                             if (!loggingModel.isNoteAlreadySynced()) {
                                 streetlightDao.insertProcessedNotes(loggingModel,installMaintenanceLogModel);
                             }
@@ -133,7 +235,7 @@ public class StreetlightChicagoService extends AbstractProcessor{
 		return dateFormat.format(cal.getTime());
 	}
 
-	private void syncData(EdgeNote edgeNote, List<String> noteGuids, LoggingModel loggingModel) {
+	private void syncData(EdgeNote edgeNote, List<String> noteGuids, LoggingModel loggingModel,boolean isResync,String utilLocId) {
 		try {
 			// Check current note is already synced with slv or not.
 			if (!noteGuids.contains(edgeNote.getNoteGuid())) {
@@ -146,7 +248,7 @@ public class StreetlightChicagoService extends AbstractProcessor{
 				loggingModel.setProcessedNoteId(edgeNote.getNoteGuid());
 				loggingModel.setNoteName(edgeNote.getTitle());
 				loggingModel.setCreatedDatetime(String.valueOf(edgeNote.getCreatedDateTime()));
-				syncData(formDataMaps, edgeNote, noteGuids, loggingModel);
+				syncData(formDataMaps, edgeNote, noteGuids, loggingModel,isResync,utilLocId);
 
 			} else {
 				// Logging this note is already synced with SLV.
@@ -182,8 +284,11 @@ public class StreetlightChicagoService extends AbstractProcessor{
 		}
 	}
 
+
+
+
 	public void syncData(Map<String, FormData> formDatas, EdgeNote edgeNote, List<String> noteGuids,
-			LoggingModel loggingModel) throws InValidBarCodeException, DeviceUpdationFailedException,
+			LoggingModel loggingModel,boolean isResync,String utilLocId) throws InValidBarCodeException, DeviceUpdationFailedException,
 			QRCodeAlreadyUsedException, NoValueException, ReplaceOLCFailedException, Exception {
 		List<Object> paramsList = new ArrayList<Object>();
 		String chicagoFormTemplateGuid = properties.getProperty("streetlight.edge.formtemplateguid.chicago");
@@ -254,16 +359,17 @@ public class StreetlightChicagoService extends AbstractProcessor{
 			processReplaceOLCFormVal(replaceOLCFormData, idOnController, controllerStrId, paramsList, geoZoneId,
 					edgeNote.getNoteGuid(), edgeNote.getCreatedDateTime(), noteGuids, edgeNote, loggingModel);
 		} else {
+		    if(isResync){
+		        try{
+                    replaceOLC(controllerStrId,idOnController,"");
+                }catch (ReplaceOLCFailedException e){
+		            e.printStackTrace();
+                }
+
+            }
 			// Get Fixture Code
-			try {
-				String fixtureCode = value(fixtureFromDef,
-						properties.getProperty("edge.fortemplate.fixture.label.fixture.code"));
-			} catch (NoValueException e) {
-				e.printStackTrace();
-				loggingModel.setErrorDetails(MessageConstants.FIXTURE_CODE_NOT_AVAILABLE);
-				loggingModel.setStatus(MessageConstants.ERROR);
-				return;
-			}
+
+
 
 			String macAddress = null;
 			// Process Chicago Form data
@@ -295,7 +401,7 @@ public class StreetlightChicagoService extends AbstractProcessor{
 			}
 			loggingModel.setMacAddress(macAddress);
 
-            addOtherParams(edgeNote,paramsList);
+            addOtherParams(edgeNote,paramsList,idOnController,utilLocId);
 
 			String controllerStrIdValue = value(fixtureFromDef,
 					properties.getProperty("edge.fortemplate.fixture.label.cnrlstrid"));
@@ -363,8 +469,8 @@ public class StreetlightChicagoService extends AbstractProcessor{
 			statusDescription.append(e.getMessage());
 			isError = true;
 			e.printStackTrace();
-		}
 
+		}
 		// update device with new mac address
 		addStreetLightData("MacAddress", newNodeMacAddress, paramsList);
 		comment = comment + " replaced on " + dateFormat(noteCreatedDateTime);

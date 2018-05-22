@@ -57,20 +57,17 @@ public abstract class AbstractProcessor {
 
 
     protected String valueById(List<EdgeFormData> edgeFormDatas, int id) throws NoValueException {
-        EdgeFormData edgeFormTemp = new EdgeFormData();
-        edgeFormTemp.setId(id);
+       for(EdgeFormData edgeFormData : edgeFormDatas){
+           if(edgeFormData.getId() == id){
+               String value = edgeFormData.getValue();
+               if (value == null || value.trim().isEmpty()) {
+                   throw new NoValueException("Value is Empty or null." + value);
+               }
+               return value;
+           }
+       }
 
-        int pos = edgeFormDatas.indexOf(edgeFormTemp);
-        if (pos != -1) {
-            EdgeFormData edgeFormData = edgeFormDatas.get(pos);
-            String value = edgeFormData.getValue();
-            if (value == null || value.trim().isEmpty()) {
-                throw new NoValueException("Value is Empty or null." + value);
-            }
-            return value;
-        } else {
-            throw new NoValueException(id + " is not found.");
-        }
+        throw new NoValueException(id + " is not found.");
     }
 
 
@@ -121,12 +118,17 @@ public abstract class AbstractProcessor {
     }
 
 
-    protected void addOtherParams(EdgeNote edgeNote, List<Object> paramsList){
+    protected void addOtherParams(EdgeNote edgeNote, List<Object> paramsList,String idOnContoller,String utilLocId){
         // luminaire.installdate - 2017-09-07 09:47:35
         addStreetLightData("install.date", dateFormat(edgeNote.getCreatedDateTime()), paramsList);
         // controller.installdate - 2017/10/10
 
         addStreetLightData("installStatus", "Installed", paramsList);
+
+        if(utilLocId != null){
+            addStreetLightData("location.utillocationid", utilLocId, paramsList);
+        }
+
 
         addStreetLightData("DimmingGroupName", "Group Calendar 1", paramsList);
     }
@@ -153,6 +155,7 @@ public abstract class AbstractProcessor {
     public void buildFixtureStreetLightData(String data, List<Object> paramsList, EdgeNote edgeNote)
             throws InValidBarCodeException {
         String[] fixtureInfo = data.split(",");
+        logger.info("Fixture QR Scan Val lenght"+fixtureInfo.length);
         if (fixtureInfo.length >= 13) {
             addStreetLightData("luminaire.brand", fixtureInfo[0], paramsList);
             /**
@@ -238,13 +241,19 @@ public abstract class AbstractProcessor {
             String responseString = response.getBody();
             JsonObject replaceOlcResponse = (JsonObject) jsonParser.parse(responseString);
             String errorStatus = replaceOlcResponse.get("status").getAsString();
+            logger.info("Replace OLC Process End.");
             // As per doc, errorcode is 0 for success. Otherwise, its not success.
             if (errorStatus.equals("ERROR")) {
                 String value = replaceOlcResponse.get("value").getAsString();
                 throw new ReplaceOLCFailedException(value);
             } else {
-                if (macAddress != null)
+
+                if (macAddress != null){
+                    logger.info("Clear device process starts.");
                     clearAndUpdateDeviceData(idOnController, controllerStrId);
+                    logger.info("Clear device process End.");
+                }
+
             }
 
         } catch (Exception e) {
@@ -256,42 +265,47 @@ public abstract class AbstractProcessor {
 
 
     public void clearAndUpdateDeviceData(String idOnController, String controllerStrId) {
-        String mainUrl = properties.getProperty("streetlight.slv.url.main");
-        String updateDeviceValues = properties.getProperty("streetlight.slv.url.updatedevice");
-        String url = mainUrl + updateDeviceValues;
+        try{
+            String mainUrl = properties.getProperty("streetlight.slv.url.main");
+            String updateDeviceValues = properties.getProperty("streetlight.slv.url.updatedevice");
+            String url = mainUrl + updateDeviceValues;
 
-        List<Object> paramsList = new ArrayList<Object>();
-        paramsList.add("controllerStrId=" + controllerStrId);
-        paramsList.add("idOnController=" + idOnController);
-        addStreetLightData("device.node.serialnumber", "", paramsList);
-        addStreetLightData("device.node.hwversion", "", paramsList);
-        addStreetLightData("device.node.swversion", "", paramsList);
-        addStreetLightData("device.nic.serialnumber", "", paramsList);
-        addStreetLightData("device.nic.swversion", "", paramsList);
-        addStreetLightData("device.nic.hwversion", "", paramsList);
-        addStreetLightData("device.nic.currentnode", "", paramsList);
-        addStreetLightData("device.nic.fallbackmode", "", paramsList);
-        addStreetLightData("device.node.manufdate", "", paramsList);
-        addStreetLightData("device.node.name", "", paramsList);
-        addStreetLightData("device.node.manufacturer", "", paramsList);
-        addStreetLightData("device.uiqid", "", paramsList);
-        addStreetLightData("SoftwareVersion", "", paramsList);
-        addStreetLightData("device.meter.programid", "", paramsList);
-        addStreetLightData("device.nic.catalog", "", paramsList);
+            List<Object> paramsList = new ArrayList<Object>();
+            paramsList.add("controllerStrId=" + controllerStrId);
+            paramsList.add("idOnController=" + idOnController);
+            addStreetLightData("device.node.serialnumber", "", paramsList);
+            addStreetLightData("device.node.hwversion", "", paramsList);
+            addStreetLightData("device.node.swversion", "", paramsList);
+            addStreetLightData("device.nic.serialnumber", "", paramsList);
+            addStreetLightData("device.nic.swversion", "", paramsList);
+            addStreetLightData("device.nic.hwversion", "", paramsList);
+            addStreetLightData("device.nic.currentnode", "", paramsList);
+            addStreetLightData("device.nic.fallbackmode", "", paramsList);
+            addStreetLightData("device.node.manufdate", "", paramsList);
+            addStreetLightData("device.node.name", "", paramsList);
+            addStreetLightData("device.node.manufacturer", "", paramsList);
+            addStreetLightData("device.uiqid", "", paramsList);
+            addStreetLightData("SoftwareVersion", "", paramsList);
+            addStreetLightData("device.meter.programid", "", paramsList);
+            addStreetLightData("device.nic.catalog", "", paramsList);
 
-        paramsList.add("doLog=true");
-        paramsList.add("ser=json");
-        String params = StringUtils.join(paramsList, "&");
-        url = url + "&" + params;
-        ResponseEntity<String> response = restService.getPostRequest(url, null);
-        String responseString = response.getBody();
-        JsonObject replaceOlcResponse = (JsonObject) jsonParser.parse(responseString);
-        int errorCode = replaceOlcResponse.get("errorCode").getAsInt();
-        if (errorCode == 0) {
-            // success
-        } else {
-            // failure
+            paramsList.add("doLog=true");
+            paramsList.add("ser=json");
+            String params = StringUtils.join(paramsList, "&");
+            url = url + "&" + params;
+            ResponseEntity<String> response = restService.getPostRequest(url, null);
+            String responseString = response.getBody();
+            JsonObject replaceOlcResponse = (JsonObject) jsonParser.parse(responseString);
+            int errorCode = replaceOlcResponse.get("errorCode").getAsInt();
+            if (errorCode == 0) {
+                // success
+            } else {
+                // failure
+            }
+        }catch (Exception e){
+            logger.error("Error in clearAndUpdateDeviceData",e);
         }
+
     }
 
 
@@ -382,6 +396,17 @@ public abstract class AbstractProcessor {
             }
             // Throws given MAC Address not matched
             throw new QRCodeNotMatchedException(idOnController, existingNodeMacAddress);
+        }
+        return null;
+    }
+
+
+   protected String getUtilLocationId(String errorDetails){
+        if(errorDetails.contains("Service point is already associated with LocationUtilID")){
+            int startAt = errorDetails.indexOf("LocationUtilID");
+            int endAt = errorDetails.indexOf("with type",startAt);
+            String utilLocationId =  errorDetails.substring(startAt + 17,endAt);
+            return utilLocationId.trim();
         }
         return null;
     }

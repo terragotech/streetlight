@@ -87,6 +87,23 @@ public class StreetlightDao extends UtilDao {
 			closeStatement(preparedStatement);
 		}
 	}
+
+
+	public void deleteProcessedNotes(String processednoteid){
+        PreparedStatement preparedStatement = null;
+        Connection connection = null;
+        try {
+            connection = StreetlightDaoConnection.getInstance().getConnection();
+            preparedStatement = connection.prepareStatement(
+                    "DELETE FROM notesyncdetails WHERE  processednoteid = ? ;");
+            preparedStatement.setString(1, processednoteid);
+            preparedStatement.execute();
+        } catch (Exception e) {
+            logger.error("Error in deleteProcessedNotes",e);
+        } finally {
+            closeStatement(preparedStatement);
+        }
+    }
 	
 	
 	public void insertProcessedNotes(LoggingModel loggingModel, InstallMaintenanceLogModel installMaintenanceLogModel){
@@ -192,6 +209,59 @@ public class StreetlightDao extends UtilDao {
 		return noteIds;
 	}
 
+
+
+	public List<LoggingModel> getSyncStatus() {
+		Statement queryStatement = null;
+		ResultSet queryResponse = null;
+		List<LoggingModel> noteIds = new ArrayList<>();
+		try {
+			queryStatement = connection.createStatement();
+			queryResponse = queryStatement.executeQuery("Select processednoteid,status,errordetails from notesyncdetails;");
+
+			while (queryResponse.next()) {
+                LoggingModel loggingModel = new LoggingModel();
+                loggingModel.setStatus(queryResponse.getString("status"));
+                loggingModel.setProcessedNoteId(queryResponse.getString("processednoteid"));
+				loggingModel.setErrorDetails(queryResponse.getString("errordetails"));
+                //
+                noteIds.add(loggingModel);
+			}
+
+		} catch (Exception e) {
+			logger.error("Error in getNoteIds", e);
+		} finally {
+			closeResultSet(queryResponse);
+			closeStatement(queryStatement);
+		}
+		return noteIds;
+	}
+
+
+    public List<LoggingModel> getSyncError() {
+        Statement queryStatement = null;
+        ResultSet queryResponse = null;
+        List<LoggingModel> noteIds = new ArrayList<>();
+        try {
+            queryStatement = connection.createStatement();
+            queryResponse = queryStatement.executeQuery("Select processednoteid,status,errordetails from notesyncdetails where status = 'Error';");
+
+            while (queryResponse.next()) {
+                LoggingModel loggingModel = new LoggingModel();
+                loggingModel.setStatus(queryResponse.getString("status"));
+                loggingModel.setErrorDetails(queryResponse.getString("errordetails"));
+                loggingModel.setProcessedNoteId(queryResponse.getString("processednoteid"));
+                noteIds.add(loggingModel);
+            }
+
+        } catch (Exception e) {
+            logger.error("Error in getNoteIds", e);
+        } finally {
+            closeResultSet(queryResponse);
+            closeStatement(queryStatement);
+        }
+        return noteIds;
+    }
 	
 
 }

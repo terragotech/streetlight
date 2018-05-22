@@ -85,7 +85,7 @@
                             <goal>single</goal>
                         </goals>
                         <configuration>
-                            <finalName>ameresco_usa_streetlight</finalName>
+                            <finalName>ameresco_usa_streetlight_v16</finalName>
                             <archive>
                                 <manifest>
                                     <mainClass>
