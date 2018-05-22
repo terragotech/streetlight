@@ -88,7 +88,7 @@
                         <goal>single</goal>
                     </goals>
                     <configuration>
-                        <finalName>streetlight_chicago_daily_report</finalName>
+                        <finalName>streetlight_chicago_daily_report_v24</finalName>
                         <archive>
                             <manifest>
                                 <mainClass>

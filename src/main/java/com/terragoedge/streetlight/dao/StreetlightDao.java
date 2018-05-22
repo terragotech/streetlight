@@ -32,7 +32,7 @@ public class StreetlightDao extends UtilDao {
 		String customDate = PropertiesReader.getProperties().getProperty("amerescousa.custom.date");
 		if(customDate != null && customDate.equals("true")){
 			StringBuilder stringBuilder = new StringBuilder();
-			stringBuilder.append("select noteid,createddatetime, edgenoteview.createdby,description,title,groupname,ST_X(geometry::geometry) as lat, ST_Y(geometry::geometry) as lng, name as name, formtemplateguid  as formtemplateguid, formdef as formdef  from edgenoteview, edgeform where edgeform.edgenoteentity_noteid = edgenoteview.noteid and edgenoteview.isdeleted = false and edgenoteview.iscurrent = true ");
+			stringBuilder.append("select noteid,createddatetime, edgenoteview.createdby,description,title,groupname,ST_X(geometry::geometry) as lat, ST_Y(geometry::geometry) as lng  from edgenoteview where  edgenoteview.isdeleted = false and edgenoteview.iscurrent = true ");
 			String startOfDay = PropertiesReader.getProperties().getProperty("amerescousa.report.from");
 			if(startOfDay != null && !startOfDay.isEmpty()){
 				stringBuilder.append("and edgenoteview.createddatetime >= ");
@@ -69,7 +69,7 @@ public class StreetlightDao extends UtilDao {
 		List<DailyReportCSV> dailyReportCSVs = new ArrayList<>();
 		try {
 			String sql = generateSQL();
-			
+            System.out.println(sql);
 			queryStatement = connection.createStatement();
 			queryResponse = queryStatement.executeQuery(sql);
 			List<NoteData> noteDataList = new ArrayList<>();
@@ -170,8 +170,16 @@ if(noteIdLong.size() > 0){
 
 
     private void processFormData(Map<String,List<String>> formDatas,DailyReportCSV dailyReportCSV){
+
+
+        List<String> installQRScan =   formDatas.get("fa47c708-fb82-4877-938c-992e870ae2a4");
+        boolean  isDataLoaded =  processFormData(installQRScan,dailyReportCSV);
+        if(isDataLoaded){
+            return;
+        }
+
         List<String> installMaintenanceList =   formDatas.get("8b722347-c3a7-41f4-a8a9-c35dece6f98b");
-       boolean isDataLoaded = processFormData(installMaintenanceList,dailyReportCSV);
+         isDataLoaded = processFormData(installMaintenanceList,dailyReportCSV);
         if(isDataLoaded){
             return;
         }
@@ -192,11 +200,7 @@ if(noteIdLong.size() > 0){
             return;
         }
 
-        List<String> installQRScan =   formDatas.get("fa47c708-fb82-4877-938c-992e870ae2a4");
-        isDataLoaded =  processFormData(installQRScan,dailyReportCSV);
-        if(isDataLoaded){
-            return;
-        }
+
 
     }
 

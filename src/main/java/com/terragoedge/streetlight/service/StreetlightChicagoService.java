@@ -155,7 +155,13 @@ public class StreetlightChicagoService {
 		StringBuilder dupMacStringBuilder = getMACDup();
 		boolean isMacDup = false;
 		boolean isQuickNote = false;
+        logger.info("");
+        int totalSize = dailyReportCSVs.size();
+        int count = 0;
 		for(DailyReportCSV dailyReportCSV : dailyReportCSVs){
+            count = count + 1;
+		    logger.info("Current count:"+count);
+		    logger.info("Total Count:"+totalSize);
 			if(dailyReportCSV.isQuickNote()){
 				isQuickNote = true;
 				populateQuickNoteData(quickNoteBuilder, dailyReportCSV);
