@@ -53,7 +53,8 @@ public class StreetlightDao extends UtilDao {
 			calendar.set(Calendar.SECOND, 00);
 			long startOfDay = calendar.getTime().getTime();
 			System.out.println(startOfDay);
-			return "select noteid,createddatetime, createdby,description,title,groupname,ST_X(geometry::geometry) as lat, ST_Y(geometry::geometry) as lng  from edgenoteview where  edgenoteview.isdeleted = false and edgenoteview.iscurrent = true  and edgenoteview.createddatetime >= "+startOfDay+";";
+			//'92621','154247',
+			return "select noteid,createddatetime, createdby,description,title,groupname,ST_X(geometry::geometry) as lat, ST_Y(geometry::geometry) as lng  from edgenoteview where  edgenoteview.isdeleted = false and edgenoteview.iscurrent = true  and  title in ('92621','154247', '295172','installupdatereplacenode');";
 		}
 	}
 	
@@ -156,13 +157,21 @@ if(noteIdLong.size() > 0){
     }
 
 
-    private boolean processFormData(List<String> formsData, DailyReportCSV dailyReportCSV) {
+    private boolean processFormData(List<String> formsData, DailyReportCSV dailyReportCSV,boolean isInstallMaintenance) {
         if (formsData != null) {
             for (String formDef : formsData) {
-                boolean result = dataLoad(formDef, dailyReportCSV);
-                if (result) {
-                    return result;
+                if(isInstallMaintenance){
+                    boolean result =  processInstallMaintenanceForm(formDef,dailyReportCSV);
+                    if (result) {
+                        return result;
+                    }
+                }else{
+                    boolean result = dataLoad(formDef, dailyReportCSV);
+                    if (result) {
+                        return result;
+                    }
                 }
+
             }
         }
         return false;
@@ -172,21 +181,21 @@ if(noteIdLong.size() > 0){
     private void processFormData(Map<String,List<String>> formDatas,DailyReportCSV dailyReportCSV){
 
 
-        List<String> installQRScan =   formDatas.get("fa47c708-fb82-4877-938c-992e870ae2a4");
-        boolean  isDataLoaded =  processFormData(installQRScan,dailyReportCSV);
+        List<String> installMaintenanceUpdated =   formDatas.get("fa47c708-fb82-4877-938c-992e870ae2a4");
+        boolean  isDataLoaded =  processFormData(installMaintenanceUpdated,dailyReportCSV,true);
         if(isDataLoaded){
             return;
         }
 
         List<String> installMaintenanceList =   formDatas.get("8b722347-c3a7-41f4-a8a9-c35dece6f98b");
-         isDataLoaded = processFormData(installMaintenanceList,dailyReportCSV);
+         isDataLoaded = processFormData(installMaintenanceList,dailyReportCSV,true);
         if(isDataLoaded){
             return;
         }
 
 
         List<String> replaceList =   formDatas.get("606fb4ca-40a4-466b-ac00-7c0434f82bfa");
-        isDataLoaded =  processFormData(replaceList,dailyReportCSV);
+        isDataLoaded =  processFormData(replaceList,dailyReportCSV,false);
         if(isDataLoaded){
             return;
         }
@@ -195,13 +204,102 @@ if(noteIdLong.size() > 0){
 
 
         List<String> newInstallQRScan =   formDatas.get("0ea4f5d4-0a17-4a17-ba8f-600de1e2515f");
-        isDataLoaded =  processFormData(newInstallQRScan,dailyReportCSV);
+        isDataLoaded =  processFormData(newInstallQRScan,dailyReportCSV,false);
         if(isDataLoaded){
             return;
         }
 
 
 
+    }
+
+
+    private boolean processInstallMaintenanceForm(String formDef, DailyReportCSV dailyReportCSV) {
+        Type listType = new TypeToken<ArrayList<EdgeFormData>>() {
+        }.getType();
+        Gson gson = new Gson();
+        boolean isDataLoad = false;
+        List<EdgeFormData> edgeFormDatas = gson.fromJson(formDef, listType);
+        // Action id
+        String actionValue = getValue(17, edgeFormDatas);
+        if (actionValue != null) {
+            switch (actionValue) {
+                case "New":
+                    String nodeMACAddress = getValue(19, edgeFormDatas);
+                    if (nodeMACAddress != null) {
+                        isDataLoad = true;
+                        dailyReportCSV.setQrCode(nodeMACAddress);
+                        checkDupMacAddress(nodeMACAddress, dailyReportCSV, dailyReportCSV.getNoteTitle());
+                    }
+
+                    String fixtureQrScan = getValue(20, edgeFormDatas);
+                    dailyReportCSV.setFixtureQrScan(fixtureQrScan);
+                    break;
+                case "Repairs & Outages":
+                    String repairOutagesVal = getValue(24, edgeFormDatas);
+                    if (repairOutagesVal != null) {
+                        isDataLoad = true;
+                        dailyReportCSV.setIsReplaceNode("Yes");
+                        switch (repairOutagesVal) {
+                            case "Replace Node and Fixture":
+                                String newNodeMACAddress = getValue(26, edgeFormDatas);
+                                if (newNodeMACAddress != null) {
+                                    isDataLoad = true;
+                                    dailyReportCSV.setNewNodeMACAddress(newNodeMACAddress);
+                                    checkDupMacAddress(newNodeMACAddress, dailyReportCSV, dailyReportCSV.getNoteTitle());
+                                }
+
+                                fixtureQrScan = getValue(38, edgeFormDatas);
+                                dailyReportCSV.setFixtureQrScan(fixtureQrScan);
+
+                                String existingNodeMACAddress = getValue(36, edgeFormDatas);
+                                dailyReportCSV.setExistingNodeMACAddress(existingNodeMACAddress);
+                                break;
+                            case "Replace Node only":
+                                newNodeMACAddress = getValue(30, edgeFormDatas);
+                                if (newNodeMACAddress != null) {
+                                    isDataLoad = true;
+                                    dailyReportCSV.setNewNodeMACAddress(newNodeMACAddress);
+                                    checkDupMacAddress(newNodeMACAddress, dailyReportCSV, dailyReportCSV.getNoteTitle());
+                                }
+
+                                existingNodeMACAddress = getValue(29, edgeFormDatas);
+                                dailyReportCSV.setExistingNodeMACAddress(existingNodeMACAddress);
+                                break;
+                            case "Replace Fixture only":
+                                fixtureQrScan = getValue(39, edgeFormDatas);
+                                dailyReportCSV.setFixtureQrScan(fixtureQrScan);
+                                break;
+                            case "Power Issue":
+                                existingNodeMACAddress = getValue(46, edgeFormDatas);
+                                dailyReportCSV.setExistingNodeMACAddress(existingNodeMACAddress);
+                                break;
+                        }
+                    }
+
+                    break;
+
+                case "Other Task":
+                    isDataLoad = true;
+                    break;
+
+
+            }
+        }
+
+        return isDataLoad;
+
+    }
+
+    private String getValue(int id,List<EdgeFormData> edgeFormDatas){
+        EdgeFormData tempEdgeFormData = new EdgeFormData();
+        tempEdgeFormData.setId(id);
+        int pos = edgeFormDatas.indexOf(tempEdgeFormData);
+        if(pos != -1){
+            tempEdgeFormData =  edgeFormDatas.get(pos);
+           return tempEdgeFormData.getValue();
+        }
+        return null;
     }
 
 	private boolean dataLoad(String formDef,DailyReportCSV dailyReportCSV){
@@ -292,6 +390,9 @@ if(noteIdLong.size() > 0){
 			while (queryResponse.next()) {
 				datas.add(queryResponse.getString("title"));
 			}
+			if(datas.size() > 0){
+			    dailyReportCSV.setMacAddressDub(macAddress);
+            }
 			String res = StringUtils.join(datas, ",");
 			dailyReportCSV.setMacAddressNoteTitle(res);
 		} catch (Exception e) {

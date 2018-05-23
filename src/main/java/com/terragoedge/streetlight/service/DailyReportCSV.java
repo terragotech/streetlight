@@ -18,9 +18,19 @@ public class DailyReportCSV {
 	
 	private String nodeMACAddress;
 	private boolean isQuickNote;
-	
-	
-	
+
+
+	private String macAddressNoteTitle;
+	private String macAddressDub;
+
+	public String getMacAddressDub() {
+		return macAddressDub;
+	}
+
+	public void setMacAddressDub(String macAddressDub) {
+		this.macAddressDub = macAddressDub;
+	}
+
 	public String getExistingNodeMACAddress() {
 		return existingNodeMACAddress != null ? existingNodeMACAddress : "";
 	}
@@ -61,7 +71,7 @@ public class DailyReportCSV {
 		this.lng = lng;
 	}
 
-	private String macAddressNoteTitle;
+
 
 	public String getNoteTitle() {
 		return noteTitle;

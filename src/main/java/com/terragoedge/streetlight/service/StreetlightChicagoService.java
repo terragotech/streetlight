@@ -39,7 +39,7 @@ public class StreetlightChicagoService {
 		stringBuilder.append(dailyReportCSV.getNoteTitle());
 		stringBuilder.append(",");
 		stringBuilder.append("\"");
-		stringBuilder.append(dailyReportCSV.getQrCode());
+		stringBuilder.append(dailyReportCSV.getMacAddressDub());
 		stringBuilder.append("\"");
 		stringBuilder.append(",");
 		stringBuilder.append("\"");
