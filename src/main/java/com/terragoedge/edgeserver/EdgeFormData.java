@@ -29,15 +29,16 @@ public class EdgeFormData {
 	public String getValue() {
 		if(value != null){
 			value = value.replace(label+"#", "");
-			value = value.replaceAll("(null)","");
-			if(value.trim().isEmpty()){
-				return null;
-			}
+			if(value.contains("null")){
+			    return null;
+            }
 			return value;
 		}
 		return null;
 		
 	}
+
+
 
 	public void setValue(String value) {
 		this.value = value;

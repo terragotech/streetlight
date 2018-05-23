@@ -402,7 +402,7 @@ public abstract class AbstractProcessor {
 
 
    protected String getUtilLocationId(String errorDetails){
-        if(errorDetails.contains("Service point is already associated with LocationUtilID")){
+        if(errorDetails != null && errorDetails.contains("Service point is already associated with LocationUtilID")){
             int startAt = errorDetails.indexOf("LocationUtilID");
             int endAt = errorDetails.indexOf("with type",startAt);
             String utilLocationId =  errorDetails.substring(startAt + 17,endAt);
