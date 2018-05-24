@@ -52,9 +52,7 @@ public class StreetlightDao extends UtilDao {
 			calendar.set(Calendar.MINUTE, 00);
 			calendar.set(Calendar.SECOND, 00);
 			long startOfDay = calendar.getTime().getTime();
-			System.out.println(startOfDay);
-			//'92621','154247',
-			return "select noteid,createddatetime, createdby,description,title,groupname,ST_X(geometry::geometry) as lat, ST_Y(geometry::geometry) as lng  from edgenoteview where  edgenoteview.isdeleted = false and edgenoteview.iscurrent = true  and  title in ('92621','154247', '295172','installupdatereplacenode');";
+            return "select noteid,createddatetime, createdby,description,title,groupname,ST_X(geometry::geometry) as lat, ST_Y(geometry::geometry) as lng  from edgenoteview where  edgenoteview.isdeleted = false and edgenoteview.iscurrent = true  and edgenoteview.createddatetime >= "+startOfDay+";";
 		}
 	}
 	
