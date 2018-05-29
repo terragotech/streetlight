@@ -52,7 +52,7 @@ public class StreetlightDao extends UtilDao {
 			calendar.set(Calendar.MINUTE, 00);
 			calendar.set(Calendar.SECOND, 00);
 			long startOfDay = calendar.getTime().getTime();
-            return "select noteid,createddatetime, createdby,description,title,groupname,ST_X(geometry::geometry) as lat, ST_Y(geometry::geometry) as lng  from edgenoteview where  edgenoteview.isdeleted = false and edgenoteview.iscurrent = true  and edgenoteview.createddatetime >= "+startOfDay+";";
+            return "select noteid,createddatetime, createdby,description,title,groupname,ST_X(geometry::geometry) as lat, ST_Y(geometry::geometry) as lng  from edgenoteview where  edgenoteview.isdeleted = false and edgenoteview.iscurrent = true  and edgenoteview.createdby != 'admin' and edgenoteview.createddatetime >= "+startOfDay+";";
 		}
 	}
 	
@@ -178,15 +178,20 @@ if(noteIdLong.size() > 0){
 
     private void processFormData(Map<String,List<String>> formDatas,DailyReportCSV dailyReportCSV){
 
+        List<String> installMaintenanceFinal =   formDatas.get("c8acc150-6228-4a27-bc7e-0fabea0e2b93");
+        boolean  isDataLoaded =  processFormData(installMaintenanceFinal,dailyReportCSV,true);
+        if(isDataLoaded){
+            return;
+        }
 
         List<String> installMaintenanceUpdated =   formDatas.get("fa47c708-fb82-4877-938c-992e870ae2a4");
-        boolean  isDataLoaded =  processFormData(installMaintenanceUpdated,dailyReportCSV,true);
+        isDataLoaded =  processFormData(installMaintenanceUpdated,dailyReportCSV,true);
         if(isDataLoaded){
             return;
         }
 
         List<String> installMaintenanceList =   formDatas.get("8b722347-c3a7-41f4-a8a9-c35dece6f98b");
-         isDataLoaded = processFormData(installMaintenanceList,dailyReportCSV,true);
+        isDataLoaded = processFormData(installMaintenanceList,dailyReportCSV,true);
         if(isDataLoaded){
             return;
         }
@@ -269,6 +274,7 @@ if(noteIdLong.size() > 0){
                                 dailyReportCSV.setFixtureQrScan(fixtureQrScan);
                                 break;
                             case "Power Issue":
+                            case "Resolved (Other)":
                                 existingNodeMACAddress = getValue(46, edgeFormDatas);
                                 dailyReportCSV.setExistingNodeMACAddress(existingNodeMACAddress);
                                 break;
