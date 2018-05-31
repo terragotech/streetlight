@@ -8,6 +8,7 @@ import java.sql.Statement;
 import java.util.*;
 
 import com.terragoedge.edgeserver.EdgeNote;
+import com.terragoedge.edgeserver.InspectionsReport;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 
@@ -55,6 +56,15 @@ public class StreetlightDao extends UtilDao {
             return "select noteid,createddatetime, createdby,description,title,groupname,ST_X(geometry::geometry) as lat, ST_Y(geometry::geometry) as lng  from edgenoteview where  edgenoteview.isdeleted = false and edgenoteview.iscurrent = true  and edgenoteview.createdby != 'admin' and edgenoteview.createddatetime >= "+startOfDay+";";
 		}
 	}
+
+	private String generateSQLQuery(String formTemplateGuid){
+        Calendar calendar = Calendar.getInstance(Locale.getDefault());
+        calendar.set(Calendar.HOUR_OF_DAY, 00);
+        calendar.set(Calendar.MINUTE, 00);
+        calendar.set(Calendar.SECOND, 00);
+        long startOfDay = calendar.getTime().getTime();
+        return  "select notebookname, name,description,edgenoteview.createdby,edgenoteview.groupname,locationdescription, ST_Y(geometry::geometry) Longitude, title,ST_X(geometry::geometry) Latitude, replace(replace(substring(a.formdef from 'Issue Type#(.+?)count'),'\"',''),',','') fieldreport, replace(replace(substring(a.formdef from 'Add Comment#(.+?)count'),'\"',''),',','') addcomment,edgenoteview.createddatetime from edgenoteview , edgenotebook, edgeform a where edgenoteview.notebookid = edgenotebook.notebookid and a.formtemplateguid = '"+formTemplateGuid+"' and a.edgenoteentity_noteid = edgenoteview.noteid and edgenoteview.isdeleted = 'f' and edgenoteview.iscurrent = 't' and edgenoteview.createddatetime >= "+startOfDay+";";
+    }
 	
 
 	/**
@@ -150,7 +160,6 @@ if(noteIdLong.size() > 0){
             processFormData(formDatas,dailyReportCSV);
 
 
-
         }
     }
 
@@ -215,7 +224,6 @@ if(noteIdLong.size() > 0){
 
 
     }
-
 
     private boolean processInstallMaintenanceForm(String formDef, DailyReportCSV dailyReportCSV) {
         Type listType = new TypeToken<ArrayList<EdgeFormData>>() {
@@ -407,6 +415,49 @@ if(noteIdLong.size() > 0){
 		}
 	}
 
+	public List<InspectionsReport> processInspectionsReport(String formTemplateGuid){
+	    String query = generateSQLQuery(formTemplateGuid);
+        List<InspectionsReport> inspectionsReports  =new ArrayList<>();
+        Statement queryStatement = null;
+        ResultSet queryResponse = null;
+        try {
+            System.out.println(query);
+            queryStatement = connection.createStatement();
+            queryResponse = queryStatement.executeQuery(query);
+            while (queryResponse.next()) {
+                InspectionsReport inspectionsReport = new InspectionsReport();
+                String groupName = queryResponse.getString("groupname");
+                String locationDescription = queryResponse.getString("locationdescription");
+                String[] locations = locationDescription.split("\\|");
+                if(groupName.equals("Complete") || groupName.equals("Not Yet Complete") || groupName.equals("Completed")){
+                    if(locations.length == 2) {
+                        groupName = locations[1];
+                    }
+                }
+                String description = "";
+                if(locations.length == 2){
+                    description = locations[0];
+                }
+                inspectionsReport.setType(groupName);
+                inspectionsReport.setLon(queryResponse.getString("Latitude"));
+                inspectionsReport.setLat(queryResponse.getString("Longitude"));
+                inspectionsReport.setCreatedBy(queryResponse.getString("createdby"));
+                inspectionsReport.setDescription(description);
+                inspectionsReport.setAtlasPage(queryResponse.getString("notebookname"));
+                inspectionsReport.setName(queryResponse.getString("title"));
+                inspectionsReport.setAddComment(queryResponse.getString("addcomment"));
+                inspectionsReport.setDateModified(queryResponse.getLong("createddatetime"));
+                inspectionsReport.setIssueType(queryResponse.getString("fieldreport"));
+                inspectionsReports.add(inspectionsReport);
+            }
+        }catch (Exception e){
+            e.printStackTrace();
+        }finally {
+            closeResultSet(queryResponse);
+            closeStatement(queryStatement);
+        }
+        return inspectionsReports;
+    }
 	
 
 }

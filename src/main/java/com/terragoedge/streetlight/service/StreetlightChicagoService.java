@@ -9,6 +9,8 @@ import java.util.List;
 import java.util.Locale;
 import java.util.TimeZone;
 
+import com.terragoedge.edgeserver.InspectionsReport;
+import com.terragoedge.streetlight.PropertiesReader;
 import org.apache.log4j.Logger;
 
 import com.terragoedge.streetlight.dao.StreetlightDao;
@@ -145,6 +147,18 @@ public class StreetlightChicagoService {
 	}
 	
 	public void run() throws IOException{
+		String fileName = getDateTime();
+		List<InspectionsReport> inspectionsReports = streetlightDao.processInspectionsReport(PropertiesReader.getProperties().getProperty("amrescouso.inspections.formtemplate.guid"));
+		StringBuilder inspectionBuilder = new StringBuilder();
+		populateInspectionsHeader(inspectionBuilder);
+
+		for(InspectionsReport inspectionsReport : inspectionsReports){
+			populateInspectionData(inspectionBuilder,inspectionsReport);
+		}
+
+		String inspectionFileName = "daily_Inspections_note_report_"+fileName+".csv";
+		logData(inspectionBuilder.toString(), inspectionFileName);
+
 		List<DailyReportCSV> dailyReportCSVs = streetlightDao.getNoteIds();
 		
 		StringBuilder quickNoteBuilder = new StringBuilder();
@@ -174,7 +188,6 @@ public class StreetlightChicagoService {
 			}
 			
 		}
-		String fileName = getDateTime();
 		String dailyReportFile = "daily_report_"+fileName+".csv";
 		String dupMacAddressFile = null;
 		String quickNoteFileName = null;
@@ -189,8 +202,7 @@ public class StreetlightChicagoService {
 			quickNoteFileName = "daily_quick_note_report_"+fileName+".csv";
 			logData(quickNoteBuilder.toString(), quickNoteFileName);
 		}
-		edgeMailService.sendMail(dupMacAddressFile, dailyReportFile,quickNoteFileName);
-		
+		edgeMailService.sendMail(dupMacAddressFile, dailyReportFile,quickNoteFileName,inspectionFileName);
 	}
 	
 	
@@ -229,8 +241,57 @@ public class StreetlightChicagoService {
 		dateFormat.setTimeZone(TimeZone.getTimeZone("US/Central"));
 		return dateFormat.format(date);
 	}
-	
-	
-	
-	
+
+	private String formatInspectionDateTime(long currentDateTime){
+		Date date = new Date(currentDateTime);
+		SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm");
+		dateFormat.setTimeZone(TimeZone.getTimeZone("US/Central"));
+		return dateFormat.format(date);
+	}
+
+
+	private void populateInspectionsHeader(StringBuilder quickNoteBuilder){
+		quickNoteBuilder.append("Name,");
+		quickNoteBuilder.append("Date Modified,");
+		quickNoteBuilder.append("Atlas Page,");
+		quickNoteBuilder.append("Description,");
+		quickNoteBuilder.append("Created By,");
+		quickNoteBuilder.append("Type,");
+		quickNoteBuilder.append("Lat,");
+		quickNoteBuilder.append("Lon,");
+		quickNoteBuilder.append("Issue Type,");
+		quickNoteBuilder.append("Add Comment");
+		quickNoteBuilder.append("\n");
+	}
+
+
+	private void populateInspectionData(StringBuilder quickNoteBuilder,InspectionsReport inspectionsReport){
+		quickNoteBuilder.append(inspectionsReport.getName());
+		quickNoteBuilder.append(",");
+		quickNoteBuilder.append("\"");
+		long modifiedDate = inspectionsReport.getDateModified();
+		quickNoteBuilder.append(formatInspectionDateTime(modifiedDate));
+		quickNoteBuilder.append("\"");
+		quickNoteBuilder.append(",");
+		quickNoteBuilder.append(inspectionsReport.getAtlasPage());
+		quickNoteBuilder.append(",");
+		quickNoteBuilder.append("\"");
+		quickNoteBuilder.append(inspectionsReport.getDescription());
+		quickNoteBuilder.append("\"");
+		quickNoteBuilder.append(",");
+		quickNoteBuilder.append(inspectionsReport.getCreatedBy());
+		quickNoteBuilder.append(",");
+		quickNoteBuilder.append("\"");
+		quickNoteBuilder.append(inspectionsReport.getType());
+		quickNoteBuilder.append("\"");
+		quickNoteBuilder.append(",");
+		quickNoteBuilder.append(inspectionsReport.getLat());
+		quickNoteBuilder.append(",");
+		quickNoteBuilder.append(inspectionsReport.getLon());
+		quickNoteBuilder.append(",");
+		quickNoteBuilder.append(inspectionsReport.getIssueType());
+		quickNoteBuilder.append(",");
+		quickNoteBuilder.append(inspectionsReport.getAddComment());
+		quickNoteBuilder.append("\n");
+	}
 }

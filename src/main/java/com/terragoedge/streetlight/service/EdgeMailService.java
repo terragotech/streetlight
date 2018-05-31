@@ -32,7 +32,7 @@ public class EdgeMailService {
 		properties = PropertiesReader.getProperties();
 	}
 
-	public void sendMail(String dupMacAddressFile,String dailyReportFile,String quickNoteFile) {
+	public void sendMail(String dupMacAddressFile,String dailyReportFile,String quickNoteFile, String inspectionNoteFile) {
 		logger.info("Mail Server Triggered");
 		Properties props = System.getProperties();
 		final String fromEmail = properties.getProperty("email.id");
@@ -93,6 +93,15 @@ public class EdgeMailService {
 				//source = new FileDataSource( quickNoteFile);
 				messageBodyPart.setDataHandler(new DataHandler(source));
 				messageBodyPart.setFileName(quickNoteFile);
+				multipart.addBodyPart(messageBodyPart);
+			}
+
+			if(inspectionNoteFile != null){
+				messageBodyPart = new MimeBodyPart();
+				source = new FileDataSource("./report/" + inspectionNoteFile);
+				//source = new FileDataSource( quickNoteFile);
+				messageBodyPart.setDataHandler(new DataHandler(source));
+				messageBodyPart.setFileName(inspectionNoteFile);
 				multipart.addBodyPart(messageBodyPart);
 			}
 
