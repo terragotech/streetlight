@@ -11,6 +11,24 @@ public class InspectionsReport {
     private String lon;
     private String issueType;
     private String addComment;
+    private String macAddress;
+    private String address;
+
+    public String getMacAddress() {
+        return macAddress;
+    }
+
+    public void setMacAddress(String macAddress) {
+        this.macAddress = macAddress;
+    }
+
+    public String getAddress() {
+        return address;
+    }
+
+    public void setAddress(String address) {
+        this.address = address;
+    }
 
     public String getName() {
         return name;
