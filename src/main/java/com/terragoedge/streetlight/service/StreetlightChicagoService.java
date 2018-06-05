@@ -4,14 +4,10 @@ import java.io.BufferedReader;
 import java.io.FileReader;
 import java.lang.reflect.Type;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
+import com.terragoedge.streetlight.json.model.ContextList;
 import com.terragoedge.streetlight.logging.InstallMaintenanceLogModel;
 import com.terragoedge.streetlight.logging.LoggingModel;
 import org.apache.commons.lang3.StringUtils;
@@ -45,15 +41,47 @@ public class StreetlightChicagoService extends AbstractProcessor{
 	final Logger logger = Logger.getLogger(StreetlightChicagoService.class);
     InstallationMaintenanceProcessor installationMaintenanceProcessor;
 
+
+
 	public StreetlightChicagoService() {
         super();
-        installationMaintenanceProcessor = new InstallationMaintenanceProcessor();
+        loadContextList();
+        installationMaintenanceProcessor = new InstallationMaintenanceProcessor(contextListHashMap);
 
 	}
 
 
+    protected void loadContextList() {
+        String mainUrl = properties.getProperty("streetlight.url.main");
+        String dataUrl = properties.getProperty("streetlight.url.get.fxiturecode");
+        String url = mainUrl + dataUrl;
 
+        ResponseEntity<String> response = restService.getPostRequest(url, null);
+        String responseString = response.getBody();
+        if (responseString != null) {
+            ContextList contextList = gson.fromJson(responseString, ContextList.class);
+            int idOnControllerPos = -1;
+            int fixtureCodePos = -1;
+            int pos = 0;
+            for(String columnName : contextList.getColumns()){
+                switch (columnName){
+                    case "idOnController":
+                        idOnControllerPos = pos;
+                        break;
+                    case "luminaire.fixturecode":
+                        fixtureCodePos = pos;
+                        break;
+                }
+                pos = pos + 1;
+            }
 
+            for(List<String> values : contextList.getValues()){
+                contextListHashMap.put(values.get(idOnControllerPos),values.get(fixtureCodePos));
+            }
+        }
+
+    }
+//703079877   77jmb3
 	private void reSync(String accessToken){
         BufferedReader bufferedReader = null;
 	    try{
@@ -401,7 +429,7 @@ public class StreetlightChicagoService extends AbstractProcessor{
 			}
 			loggingModel.setMacAddress(macAddress);
 
-            addOtherParams(edgeNote,paramsList,idOnController,utilLocId);
+            addOtherParams(edgeNote,paramsList,idOnController,utilLocId,true);
 
 			String controllerStrIdValue = value(fixtureFromDef,
 					properties.getProperty("edge.fortemplate.fixture.label.cnrlstrid"));
@@ -479,7 +507,7 @@ public class StreetlightChicagoService extends AbstractProcessor{
 		try {
 			String fixtureQRScan = value(replaceOLCFromDef, "Fixture QR Scan");
 			addStreetLightData("luminaire.installdate", dateFormat(edgeNote.getCreatedDateTime()), paramsList); // --
-																												// TODO
+			addStreetLightData("install.date", dateFormat(edgeNote.getCreatedDateTime()), paramsList);																								// TODO
 			buildFixtureStreetLightData(fixtureQRScan, paramsList, edgeNote);
 		} catch (NoValueException e) {
 			e.printStackTrace();

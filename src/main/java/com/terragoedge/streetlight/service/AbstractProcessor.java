@@ -13,10 +13,7 @@ import org.apache.log4j.Logger;
 import org.springframework.http.ResponseEntity;
 
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.Properties;
+import java.util.*;
 
 public abstract class AbstractProcessor {
 
@@ -28,6 +25,8 @@ public abstract class AbstractProcessor {
     Gson gson = null;
     JsonParser jsonParser = null;
     EdgeMailService edgeMailService = null;
+
+    WeakHashMap<String,String> contextListHashMap = new WeakHashMap<>();
 
     public AbstractProcessor(){
         this.streetlightDao = new StreetlightDao();
@@ -118,19 +117,33 @@ public abstract class AbstractProcessor {
     }
 
 
-    protected void addOtherParams(EdgeNote edgeNote, List<Object> paramsList,String idOnContoller,String utilLocId){
+    protected void addOtherParams(EdgeNote edgeNote, List<Object> paramsList, String idOnContoller, String utilLocId, boolean isNew) {
         // luminaire.installdate - 2017-09-07 09:47:35
         addStreetLightData("install.date", dateFormat(edgeNote.getCreatedDateTime()), paramsList);
         // controller.installdate - 2017/10/10
+        addStreetLightData("luminaire.installdate", dateFormat(edgeNote.getCreatedDateTime()), paramsList);
+
+        if (isNew) {
+            addStreetLightData("cslp.node.install.date", dateFormat(edgeNote.getCreatedDateTime()), paramsList);
+            addStreetLightData("cslp.lum.install.date", dateFormat(edgeNote.getCreatedDateTime()), paramsList);
+        }
 
         addStreetLightData("installStatus", "Installed", paramsList);
 
-        if(utilLocId != null){
+        if (utilLocId != null) {
             addStreetLightData("location.utillocationid", utilLocId, paramsList);
         }
 
 
-        addStreetLightData("DimmingGroupName", "Group Calendar 1", paramsList);
+        String dimmingGroupName = contextListHashMap.get(idOnContoller);
+        String edgeNotebookName = edgeNote.getEdgeNotebook().getNotebookName();
+        if (dimmingGroupName != null && dimmingGroupName.trim().toLowerCase().contains("acorns")) {
+            edgeNotebookName = "Acorn Calendar";
+        } else {
+            edgeNotebookName = "Group Calendar 1";
+        }
+        addStreetLightData("DimmingGroupName", edgeNotebookName, paramsList);
+        // addStreetLightData("DimmingGroupName", "Group Calendar 1", paramsList);
     }
 
 
@@ -409,5 +422,10 @@ public abstract class AbstractProcessor {
             return utilLocationId.trim();
         }
         return null;
+    }
+
+
+    protected void loadFixtureContextVal(){
+
     }
 }

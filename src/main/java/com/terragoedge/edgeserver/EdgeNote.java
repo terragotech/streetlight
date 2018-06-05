@@ -43,6 +43,9 @@ public class EdgeNote {
 
 	private String altitudeAccuracy = null;
 
+
+
+private EdgeNotebook edgeNotebook = null;
 	public EdgeNote() {
 
 	}
@@ -272,10 +275,12 @@ public class EdgeNote {
 		this.altitudeAccuracy = altitudeAccuracy;
 	}
 
-	
-	
-	
-	
 
+    public EdgeNotebook getEdgeNotebook() {
+        return edgeNotebook;
+    }
 
+    public void setEdgeNotebook(EdgeNotebook edgeNotebook) {
+        this.edgeNotebook = edgeNotebook;
+    }
 }

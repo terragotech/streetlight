@@ -85,7 +85,7 @@
                             <goal>single</goal>
                         </goals>
                         <configuration>
-                            <finalName>ameresco_usa_streetlight_v16</finalName>
+                            <finalName>ameresco_usa_streetlight_v24</finalName>
                             <archive>
                                 <manifest>
                                     <mainClass>
@@ -96,6 +96,7 @@
                             <descriptorRefs>
                                 <descriptorRef>jar-with-dependencies</descriptorRef>
                             </descriptorRefs>
+                            <appendAssemblyId>false</appendAssemblyId>
                         </configuration>
                     </execution>
                 </executions>
