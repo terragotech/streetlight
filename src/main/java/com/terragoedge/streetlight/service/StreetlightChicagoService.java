@@ -123,20 +123,20 @@ public class StreetlightChicagoService extends AbstractProcessor{
     }
 
 
-    private void reSync(String noteGuid,String accessToken,boolean isResync,String utilLocId){
+    private void reSync(String noteGuid, String accessToken, boolean isResync, String utilLocId) {
         // Get Edge Server Url from properties
         String url = PropertiesReader.getProperties().getProperty("streetlight.edge.url.main");
 
         url = url + PropertiesReader.getProperties().getProperty("streetlight.edge.url.notes.get");
 
-        url = url +"/" + noteGuid;
+        url = url + "/" + noteGuid;
 
         // Get NoteList from edgeserver
         ResponseEntity<String> responseEntity = restService.getRequest(url, false, accessToken);
 
         // Process only response code as success
         if (responseEntity.getStatusCode().is2xxSuccessful()) {
-// Get Response String
+            // Get Response String
             String notesData = responseEntity.getBody();
 
             EdgeNote edgeNote = gson.fromJson(notesData, EdgeNote.class);
@@ -146,24 +146,27 @@ public class StreetlightChicagoService extends AbstractProcessor{
             installMaintenanceLogModel.setProcessedNoteId(edgeNote.getNoteGuid());
             installMaintenanceLogModel.setNoteName(edgeNote.getTitle());
             installMaintenanceLogModel.setCreatedDatetime(String.valueOf(edgeNote.getCreatedDateTime()));
-
-            installationMaintenanceProcessor.processNewAction(edgeNote,installMaintenanceLogModel,isResync,utilLocId);
-            if(installMaintenanceLogModel.isProcessOtherForm()){
+            loadDefaultVal(edgeNote, installMaintenanceLogModel);
+            installationMaintenanceProcessor.processNewAction(edgeNote, installMaintenanceLogModel, isResync, utilLocId);
+            if (installMaintenanceLogModel.isProcessOtherForm()) {
                 LoggingModel loggingModel = new LoggingModel();
-                syncData(edgeNote, new ArrayList<String>(), loggingModel,isResync,utilLocId);
+                loadDefaultVal(edgeNote, loggingModel);
+                syncData(edgeNote, new ArrayList<String>(), loggingModel, isResync, utilLocId);
                 if (!loggingModel.isNoteAlreadySynced()) {
-                    streetlightDao.insertProcessedNotes(loggingModel,installMaintenanceLogModel);
+                    streetlightDao.insertProcessedNotes(loggingModel, installMaintenanceLogModel);
                 }
-            }else{
+            } else {
                 LoggingModel loggingModel = installMaintenanceLogModel;
-                streetlightDao.insertProcessedNotes(loggingModel,installMaintenanceLogModel);
+                streetlightDao.insertProcessedNotes(loggingModel, installMaintenanceLogModel);
             }
 
         }
 
 
+    }
 
-        }
+
+
 
 
 
@@ -223,10 +226,11 @@ public class StreetlightChicagoService extends AbstractProcessor{
                         installMaintenanceLogModel.setProcessedNoteId(edgeNote.getNoteGuid());
                         installMaintenanceLogModel.setNoteName(edgeNote.getTitle());
                         installMaintenanceLogModel.setCreatedDatetime(String.valueOf(edgeNote.getCreatedDateTime()));
-
+                        loadDefaultVal(edgeNote,installMaintenanceLogModel);
                         installationMaintenanceProcessor.processNewAction(edgeNote,installMaintenanceLogModel,false,null);
                         if(installMaintenanceLogModel.isProcessOtherForm()){
                             LoggingModel loggingModel = new LoggingModel();
+                            loadDefaultVal(edgeNote,loggingModel);
                             syncData(edgeNote, noteGuids, loggingModel,false,null);
                             if (!loggingModel.isNoteAlreadySynced()) {
                                 streetlightDao.insertProcessedNotes(loggingModel,installMaintenanceLogModel);
@@ -320,7 +324,6 @@ public class StreetlightChicagoService extends AbstractProcessor{
 			QRCodeAlreadyUsedException, NoValueException, ReplaceOLCFailedException, Exception {
 		List<Object> paramsList = new ArrayList<Object>();
 		String chicagoFormTemplateGuid = properties.getProperty("streetlight.edge.formtemplateguid.chicago");
-		String fixtureFormTemplateGuid = properties.getProperty("streetlight.edge.formtemplateguid.fixture");
 		String replaceOlcFormTemplateGuid = properties.getProperty("streetlight.edge.formtemplateguid.replacenode");
 
 		FormData replaceOLCFormData = formDatas.get(replaceOlcFormTemplateGuid);
@@ -332,29 +335,11 @@ public class StreetlightChicagoService extends AbstractProcessor{
 			loggingModel.setIsQuickNote(true);
 		}
 
-		FormData fixtureFormData = formDatas.get(fixtureFormTemplateGuid);
-		if (fixtureFormData == null) {
-			logger.error("No Fixture FormTemplate is not Present. So note is not processed. Note Title is :"
-					+ edgeNote.getTitle());
-			loggingModel.setErrorDetails(MessageConstants.FIXTURE_FORM_NOT_AVAILABLE);
-			loggingModel.setStatus(MessageConstants.ERROR);
-			return;
-		}
+		String idOnController = loggingModel.getIdOnController();
+		String controllerStrId = loggingModel.getControllerSrtId();
 
-		// Process Fixture Form data
-		List<EdgeFormData> fixtureFromDef = fixtureFormData.getFormDef();
 
-		// Get IdOnController value
-		String idOnController = null;
-		try {
-			idOnController = value(fixtureFromDef, properties.getProperty("edge.fortemplate.fixture.label.idoncntrl"));
-			paramsList.add("idOnController=" + idOnController);
-			loggingModel.setIdOnController(idOnController);
-		} catch (NoValueException e) {
-			loggingModel.setErrorDetails(MessageConstants.ID_ON_CONTROLLER_NOT_AVAILABLE);
-			loggingModel.setStatus(MessageConstants.ERROR);
-			return;
-		}
+
 
 		FormData chicagoFromData = formDatas.get(chicagoFormTemplateGuid);
 		if (chicagoFromData == null) {
@@ -365,26 +350,10 @@ public class StreetlightChicagoService extends AbstractProcessor{
 			return;
 		}
 
-		// Get ControllerStdId value
-		String controllerStrId = null;
-		try {
-			controllerStrId = value(fixtureFromDef, properties.getProperty("edge.fortemplate.fixture.label.cnrlstrid"));
-			paramsList.add("controllerStrId=" + controllerStrId);
-		} catch (NoValueException e) {
-			loggingModel.setErrorDetails(MessageConstants.CONTROLLER_STR_ID_NOT_AVAILABLE);
-			loggingModel.setStatus(MessageConstants.ERROR);
-			return;
-		}
+
 
 		if (replaceOLCFormData != null) {
-			// Get ControllerStdId value
-			String geoZoneId = null;
-			try {
-				geoZoneId = value(fixtureFromDef, "GeoZoneId");
-			} catch (NoValueException e) {
-				e.printStackTrace();
-			}
-			processReplaceOLCFormVal(replaceOLCFormData, idOnController, controllerStrId, paramsList, geoZoneId,
+			processReplaceOLCFormVal(replaceOLCFormData, idOnController, controllerStrId, paramsList,
 					edgeNote.getNoteGuid(), edgeNote.getCreatedDateTime(), noteGuids, edgeNote, loggingModel);
 		} else {
 		    if(isResync){
@@ -431,10 +400,9 @@ public class StreetlightChicagoService extends AbstractProcessor{
 
             addOtherParams(edgeNote,paramsList,idOnController,utilLocId,true);
 
-			String controllerStrIdValue = value(fixtureFromDef,
-					properties.getProperty("edge.fortemplate.fixture.label.cnrlstrid"));
+
 			// DimmingGroupName
-			sync2Slv(paramsList, edgeNote.getNoteGuid(), idOnController, macAddress, controllerStrIdValue, edgeNote,
+			sync2Slv(paramsList, edgeNote.getNoteGuid(), idOnController, macAddress, controllerStrId, edgeNote,
 					loggingModel);
 			noteGuids.add(edgeNote.getNoteGuid());
 		}
@@ -445,7 +413,7 @@ public class StreetlightChicagoService extends AbstractProcessor{
 
 
 	private void processReplaceOLCFormVal(FormData replaceOLCFormData, String idOnController,
-			String controllerStrIdValue, List<Object> paramsList, String geoZoneId, String noteGuid,
+			String controllerStrIdValue, List<Object> paramsList, String noteGuid,
 			long noteCreatedDateTime, List<String> noteGuids, EdgeNote edgeNote, LoggingModel loggingModel)
 			throws QRCodeAlreadyUsedException, DeviceUpdationFailedException, Exception {
 		List<EdgeFormData> replaceOLCFromDef = replaceOLCFormData.getFormDef();
@@ -476,7 +444,7 @@ public class StreetlightChicagoService extends AbstractProcessor{
 		String comment = "";
 		// Check existingNodeMacAddress is valid or not
 		try {
-			comment = validateMacAddress(existingNodeMacAddress, idOnController, controllerStrIdValue, geoZoneId);
+			comment = validateMacAddress(existingNodeMacAddress, idOnController, controllerStrIdValue);
 			// comment = validateMACAddress(existingNodeMacAddress, idOnController,
 			// geoZoneId);
 		} catch (QRCodeNotMatchedException e1) {

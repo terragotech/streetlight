@@ -8,6 +8,7 @@ import com.terragoedge.edgeserver.Value;
 import com.terragoedge.streetlight.PropertiesReader;
 import com.terragoedge.streetlight.dao.StreetlightDao;
 import com.terragoedge.streetlight.exception.*;
+import com.terragoedge.streetlight.logging.LoggingModel;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 import org.springframework.http.ResponseEntity;
@@ -322,8 +323,7 @@ public abstract class AbstractProcessor {
     }
 
 
-    protected String validateMacAddress(String existingNodeMacAddress, String idOnController, String controllerStrId,
-                                      String geoZoneId) throws QRCodeNotMatchedException {
+    protected String validateMacAddress(String existingNodeMacAddress, String idOnController, String controllerStrId) throws QRCodeNotMatchedException {
         String mainUrl = properties.getProperty("streetlight.url.main");
         String getMacAddress = properties.getProperty("streetlight.slv.url.getmacaddress");
         String url = mainUrl + getMacAddress;
@@ -355,11 +355,11 @@ public abstract class AbstractProcessor {
                     throw new QRCodeNotMatchedException(idOnController, existingNodeMacAddress);
                 }
             } else if (jsonElement.isJsonObject()) {
-                return validateMACAddress(existingNodeMacAddress, idOnController, geoZoneId);
+                return validateMACAddress(existingNodeMacAddress, idOnController, null);
 
             }
         } else {
-            return validateMACAddress(existingNodeMacAddress, idOnController, geoZoneId);
+            return validateMACAddress(existingNodeMacAddress, idOnController, null);
         }
         throw new QRCodeNotMatchedException(idOnController, existingNodeMacAddress);
     }
@@ -425,7 +425,9 @@ public abstract class AbstractProcessor {
     }
 
 
-    protected void loadFixtureContextVal(){
-
+    protected void loadDefaultVal(EdgeNote edgeNote, LoggingModel loggingModel){
+        loggingModel.setIdOnController(edgeNote.getTitle());
+        String controllerStrId = properties.getProperty("streetlight.slv.controllerstrid");
+        loggingModel.setControllerSrtId(controllerStrId);
     }
 }

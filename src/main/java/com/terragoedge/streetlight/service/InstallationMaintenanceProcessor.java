@@ -44,9 +44,10 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
         for (FormData formData : formDatas) {
             if (formData.getFormTemplateGuid().equals(INSTATALLATION_AND_MAINTENANCE_GUID) || formData.getFormTemplateGuid().equals("fa47c708-fb82-4877-938c-992e870ae2a4") || formData.getFormTemplateGuid().equals("c8acc150-6228-4a27-bc7e-0fabea0e2b93")) {
                 installMaintenanceLogModel.setInstallFormPresent(true);
-              LoggingModel existingFixtureInfo =  getExistingIdOnContoller(edgeNote);
+                LoggingModel existingFixtureInfo =  getExistingIdOnContoller(edgeNote);
                 List<EdgeFormData> edgeFormDatas = formData.getFormDef();
                 try {
+
                     String value = value(edgeFormDatas, "Action");
                     logger.info("Action Val"+value);
                     switch (value) {
@@ -150,6 +151,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
 
     private void processNewGroup(List<EdgeFormData> edgeFormDatas, EdgeNote edgeNote, InstallMaintenanceLogModel loggingModel, boolean isResync, LoggingModel existingFixtureInfo,String utilLocId) {
         try {
+
             // Get MAC Address
             String nodeMacValue = null;
             try {
@@ -176,50 +178,9 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
                 // return;
             }
 
-            String idOnController = null;
-            try{
-                // Get IdonController value
-                 idOnController = value(edgeFormDatas, "SL");
-
-            }catch (NoValueException e){
-                e.printStackTrace();
-                if(existingFixtureInfo != null){
-                    idOnController = existingFixtureInfo.getIdOnController();
-                }else{
-                    idOnController = edgeNote.getTitle();
-                }
-
-            }
-
-
-            if(idOnController == null){
-                loggingModel.setStatus(MessageConstants.ERROR);
-                loggingModel.setProcessOtherForm(true);
-                loggingModel.setErrorDetails("idOnController is Empty.");
-                return;
-            }
-
-
-            String controllerStrIdValue = null;
-            try{
-                // Get Controller Str value
-                controllerStrIdValue = value(edgeFormDatas, "Controller Str Id");
-            }catch (NoValueException e){
-                e.printStackTrace();
-                controllerStrIdValue = existingFixtureInfo.getControllerSrtId();
-            }
-
-            if(controllerStrIdValue == null){
-                loggingModel.setStatus(MessageConstants.ERROR);
-                loggingModel.setErrorDetails("controllerStrIdValue is Empty.");
-                loggingModel.setProcessOtherForm(true);
-                return;
-            }
-
-
             if(isResync){
                 try{
-                    replaceOLC(controllerStrIdValue,idOnController,"");
+                    replaceOLC(loggingModel.getControllerSrtId(),loggingModel.getIdOnController(),"");
                 }catch (ReplaceOLCFailedException e){
                    String message =  e.getMessage();
 
@@ -229,7 +190,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
 
             // Check Whether MAC Address is already assigned to other fixtures or not.
             try {
-                checkMacAddressExists(nodeMacValue, idOnController);
+                checkMacAddressExists(nodeMacValue, loggingModel.getIdOnController());
             } catch (QRCodeAlreadyUsedException e1) {
                 logger.error("MacAddress (" + e1.getMacAddress()
                         + ")  - Already in use. So this pole is not synced with SLV. Note Title :[" + edgeNote.getTitle()
@@ -240,7 +201,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
                 return;
             }
 
-            sync2Slv(nodeMacValue, fixerQrScanValue, edgeNote, loggingModel, idOnController, controllerStrIdValue, null,utilLocId, true);
+            sync2Slv(nodeMacValue, fixerQrScanValue, edgeNote, loggingModel, loggingModel.getIdOnController(), loggingModel.getControllerSrtId(), null,utilLocId, true);
         } catch (NoValueException e) {
             logger.error("Error no value",e);
             loggingModel.setErrorDetails(e.getMessage());
@@ -323,52 +284,18 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
                 // return;
             }
 
-            String idOnController = null;
-            try{
-                // Get IdonController value
-                idOnController = value(edgeFormDatas, "SL");
-
-            }catch (NoValueException e){
-                e.printStackTrace();
-                idOnController = existingFixtureInfo.getIdOnController();
-            }
+            String idOnController = loggingModel.getIdOnController();
 
 
-            if(idOnController == null){
-                loggingModel.setStatus(MessageConstants.ERROR);
-                loggingModel.setErrorDetails("idOnController is Empty.");
-                loggingModel.setProcessOtherForm(true);
-                return;
-            }
+            String controllerStrIdValue = loggingModel.getControllerSrtId();
 
 
-            String controllerStrIdValue = null;
-            try{
-                // Get Controller Str value
-                controllerStrIdValue = value(edgeFormDatas, "Controller Str Id");
-            }catch (NoValueException e){
-                e.printStackTrace();
-                controllerStrIdValue = existingFixtureInfo.getControllerSrtId();
-            }
 
-            if(controllerStrIdValue == null){
-                loggingModel.setStatus(MessageConstants.ERROR);
-                loggingModel.setErrorDetails("controllerStrIdValue is Empty.");
-                loggingModel.setProcessOtherForm(true);
-                return;
-            }
-
-            String geoZoneId = null;
-            try {
-                geoZoneId = value(edgeFormDatas, "GeoZoneId");
-            } catch (NoValueException e) {
-                logger.error("Error while getting GeoZoneId", e);
-            }
 
             String comment = "";
             // Check existingNodeMacAddress is valid or not
             try {
-                comment = validateMacAddress(existingNodeMacAddress, idOnController, controllerStrIdValue, geoZoneId);
+                comment = validateMacAddress(existingNodeMacAddress, idOnController, controllerStrIdValue);
             } catch (QRCodeNotMatchedException e1) {
                 loggingModel.setStatus(MessageConstants.ERROR);
                 loggingModel.setProcessOtherForm(true);
@@ -444,52 +371,15 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
                 return;
             }
 
-            String idOnController = null;
-            try{
-                // Get IdonController value
-                idOnController = value(edgeFormDatas, "SL");
+            String idOnController = loggingModel.getIdOnController();
 
-            }catch (NoValueException e){
-                e.printStackTrace();
-                idOnController = existingFixtureInfo.getIdOnController();
-            }
+            String controllerStrIdValue = loggingModel.getControllerSrtId();
 
-
-            if(idOnController == null){
-                loggingModel.setStatus(MessageConstants.ERROR);
-                loggingModel.setErrorDetails("idOnController is Empty.");
-                loggingModel.setProcessOtherForm(true);
-                return;
-            }
-
-
-            String controllerStrIdValue = null;
-            try{
-                // Get Controller Str value
-                controllerStrIdValue = value(edgeFormDatas, "Controller Str Id");
-            }catch (NoValueException e){
-                e.printStackTrace();
-                controllerStrIdValue = existingFixtureInfo.getControllerSrtId();
-            }
-
-            if(controllerStrIdValue == null){
-                loggingModel.setStatus(MessageConstants.ERROR);
-                loggingModel.setErrorDetails("controllerStrIdValue is Empty.");
-                loggingModel.setProcessOtherForm(true);
-                return;
-            }
-
-            String geoZoneId = null;
-            try {
-                geoZoneId = value(edgeFormDatas, "GeoZoneId");
-            } catch (NoValueException e) {
-                logger.error("Error while getting GeoZoneId", e);
-            }
 
             String comment = null;
 
             try {
-                comment = validateMacAddress(existingNodeMacAddress, idOnController, controllerStrIdValue, geoZoneId);
+                comment = validateMacAddress(existingNodeMacAddress, idOnController, controllerStrIdValue);
             } catch (QRCodeNotMatchedException e1) {
                 loggingModel.setStatus(MessageConstants.ERROR);
                 loggingModel.setErrorDetails(MessageConstants.REPLACE_MAC_NOT_MATCH);
