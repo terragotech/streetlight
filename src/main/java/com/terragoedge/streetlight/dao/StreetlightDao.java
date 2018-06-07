@@ -522,13 +522,15 @@ if(noteIdLong.size() > 0){
                     if(locations.length == 2){
                         description = locations[0];
                     }
+                    String title = queryResponse.getString("title");
                     inspectionsReport.setType(groupName);
                     inspectionsReport.setLon(queryResponse.getString("Latitude"));
                     inspectionsReport.setLat(queryResponse.getString("Longitude"));
                     inspectionsReport.setCreatedBy(queryResponse.getString("createdby"));
-                    inspectionsReport.setDescription(description);
+                    int pos = getIndex(addressSets,title);
+                    inspectionsReport.setAddress(pos != -1 ? addressSets.: "");
                     inspectionsReport.setAtlasPage(queryResponse.getString("notebookname"));
-                    inspectionsReport.setName(queryResponse.getString("title"));
+                    inspectionsReport.setName(title);
                     inspectionsReport.setAddComment(queryResponse.getString("addcomment"));
                     inspectionsReport.setDateModified(queryResponse.getLong("createddatetime"));
                     inspectionsReport.setIssueType(queryResponse.getString("fieldreport"));
@@ -536,22 +538,6 @@ if(noteIdLong.size() > 0){
                 }catch (Exception e){
                     e.printStackTrace();
                 }
-                String description = "";
-                if(locations.length == 2){
-                    description = locations[0];
-                }
-                String title = queryResponse.getString("title");
-                inspectionsReport.setType(groupName);
-                inspectionsReport.setLon(queryResponse.getString("Latitude"));
-                inspectionsReport.setLat(queryResponse.getString("Longitude"));
-                inspectionsReport.setCreatedBy(queryResponse.getString("createdby"));
-                inspectionsReport.setAddress(addressSets.contains(title) ? addressSets. );
-                inspectionsReport.setAtlasPage(queryResponse.getString("notebookname"));
-                inspectionsReport.setName(title);
-                inspectionsReport.setAddComment(queryResponse.getString("addcomment"));
-                inspectionsReport.setDateModified(queryResponse.getLong("createddatetime"));
-                inspectionsReport.setIssueType(queryResponse.getString("fieldreport"));
-                inspectionsReports.add(inspectionsReport);
             }
         }catch (Exception e){
             e.printStackTrace();
@@ -561,6 +547,14 @@ if(noteIdLong.size() > 0){
         }
         return inspectionsReports;
     }
-	
+
+    public int getIndex(Set<? extends Object> set, Object value) {
+        int result = 0;
+        for (Object entry:set) {
+            if (entry.equals(value)) return result;
+            result++;
+        }
+        return -1;
+    }
 
 }

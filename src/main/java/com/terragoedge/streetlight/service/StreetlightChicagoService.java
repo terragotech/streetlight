@@ -276,7 +276,7 @@ public class StreetlightChicagoService {
 		quickNoteBuilder.append(inspectionsReport.getAtlasPage());
 		quickNoteBuilder.append(",");
 		quickNoteBuilder.append("\"");
-		quickNoteBuilder.append(inspectionsReport.getDescription());
+		quickNoteBuilder.append(inspectionsReport.getAddress());
 		quickNoteBuilder.append("\"");
 		quickNoteBuilder.append(",");
 		quickNoteBuilder.append(inspectionsReport.getCreatedBy());
