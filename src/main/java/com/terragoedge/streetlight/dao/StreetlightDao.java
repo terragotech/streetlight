@@ -1,13 +1,11 @@
 package com.terragoedge.streetlight.dao;
 
 import java.lang.reflect.Type;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.Statement;
 import java.util.*;
 
-import com.terragoedge.edgeserver.EdgeNote;
+import com.terragoedge.edgeserver.AddressSet;
 import com.terragoedge.edgeserver.InspectionsReport;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
@@ -16,12 +14,12 @@ import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import com.terragoedge.edgeserver.EdgeFormData;
 import com.terragoedge.streetlight.PropertiesReader;
-import com.terragoedge.streetlight.StreetlightDaoConnection;
 import com.terragoedge.streetlight.service.DailyReportCSV;
 
 public class StreetlightDao extends UtilDao {
 
 	static final Logger logger = Logger.getLogger(StreetlightDao.class);
+	private HashSet<AddressSet> addressSets = new HashSet<>();
 
 	public StreetlightDao() {
 		super();
@@ -64,6 +62,28 @@ public class StreetlightDao extends UtilDao {
         calendar.set(Calendar.SECOND, 00);
         long startOfDay = calendar.getTime().getTime();
         return  "select notebookname, name,description,edgenoteview.createdby,edgenoteview.groupname,locationdescription, ST_Y(geometry::geometry) Longitude, title,ST_X(geometry::geometry) Latitude, replace(replace(substring(a.formdef from 'Issue Type#(.+?)count'),'\"',''),',','') fieldreport, replace(replace(substring(a.formdef from 'Add Comment#(.+?)count'),'\"',''),',','') addcomment,edgenoteview.createddatetime from edgenoteview , edgenotebook, edgeform a where edgenoteview.notebookid = edgenotebook.notebookid and a.formtemplateguid = '"+formTemplateGuid+"' and a.edgenoteentity_noteid = edgenoteview.noteid and edgenoteview.isdeleted = 'f' and edgenoteview.iscurrent = 't' and edgenoteview.createddatetime >= "+startOfDay+";";
+    }
+
+    private void generateSQLQueryForTemplate(String formTemplateGuid){
+        String query = "select replace(replace(substring(a.formdef from 'Address#(.+?)count'),'\"',''),',','') address,title  from edgenote, edgeform a where    a.formtemplateguid = '"+formTemplateGuid+"' and  a.edgenoteentity_noteid = edgenote.noteid and  edgenote.parentnoteid is null";
+        Statement queryStatement = null;
+        ResultSet queryResponse = null;
+        try {
+            System.out.println(query);
+            queryStatement = connection.createStatement();
+            queryResponse = queryStatement.executeQuery(query);
+            while (queryResponse.next()) {
+                AddressSet addressSet = new AddressSet();
+                addressSet.setAddress(queryResponse.getString("address"));
+                addressSet.setTitle(queryResponse.getString("title"));
+                addressSets.add(addressSet);
+            }
+        }catch (Exception e){
+            e.printStackTrace();
+        }finally {
+            closeStatement(queryStatement);
+            closeResultSet(queryResponse);
+        }
     }
 	
 
@@ -416,6 +436,9 @@ if(noteIdLong.size() > 0){
 	}
 
 	public List<InspectionsReport> processInspectionsReport(String formTemplateGuid){
+	    addressSets.clear();
+        generateSQLQueryForTemplate(PropertiesReader.getProperties().getProperty("amrescouso.install_manintenance.formtemplate.guid"));
+        generateSQLQueryForTemplate(PropertiesReader.getProperties().getProperty("amrescouso.existing_fixture.formtemplate.guid"));
 	    String query = generateSQLQuery(formTemplateGuid);
         List<InspectionsReport> inspectionsReports  =new ArrayList<>();
         Statement queryStatement = null;
@@ -438,13 +461,14 @@ if(noteIdLong.size() > 0){
                 if(locations.length == 2){
                     description = locations[0];
                 }
+                String title = queryResponse.getString("title");
                 inspectionsReport.setType(groupName);
                 inspectionsReport.setLon(queryResponse.getString("Latitude"));
                 inspectionsReport.setLat(queryResponse.getString("Longitude"));
                 inspectionsReport.setCreatedBy(queryResponse.getString("createdby"));
-                inspectionsReport.setDescription(description);
+                inspectionsReport.setAddress(addressSets.contains(title) ? addressSets. );
                 inspectionsReport.setAtlasPage(queryResponse.getString("notebookname"));
-                inspectionsReport.setName(queryResponse.getString("title"));
+                inspectionsReport.setName(title);
                 inspectionsReport.setAddComment(queryResponse.getString("addcomment"));
                 inspectionsReport.setDateModified(queryResponse.getLong("createddatetime"));
                 inspectionsReport.setIssueType(queryResponse.getString("fieldreport"));

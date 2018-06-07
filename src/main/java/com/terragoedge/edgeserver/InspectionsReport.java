@@ -4,13 +4,30 @@ public class InspectionsReport {
     private String name;
     private long dateModified;
     private String atlasPage;
-    private String description;
     private String createdBy;
     private String type;
     private String lat;
     private String lon;
     private String issueType;
     private String addComment;
+    private String address;
+    private String macaddress;
+
+    public String getAddress() {
+        return address;
+    }
+
+    public void setAddress(String address) {
+        this.address = address;
+    }
+
+    public String getMacaddress() {
+        return macaddress;
+    }
+
+    public void setMacaddress(String macaddress) {
+        this.macaddress = macaddress;
+    }
 
     public String getName() {
         return name;
@@ -34,14 +51,6 @@ public class InspectionsReport {
 
     public void setAtlasPage(String atlasPage) {
         this.atlasPage = atlasPage;
-    }
-
-    public String getDescription() {
-        return description;
-    }
-
-    public void setDescription(String description) {
-        this.description = description;
     }
 
     public String getCreatedBy() {
@@ -90,5 +99,22 @@ public class InspectionsReport {
 
     public void setAddComment(String addComment) {
         this.addComment = addComment;
+    }
+
+    @Override
+    public String toString() {
+        return "InspectionsReport{" +
+                "name='" + name + '\'' +
+                ", dateModified=" + dateModified +
+                ", atlasPage='" + atlasPage + '\'' +
+                ", createdBy='" + createdBy + '\'' +
+                ", type='" + type + '\'' +
+                ", lat='" + lat + '\'' +
+                ", lon='" + lon + '\'' +
+                ", issueType='" + issueType + '\'' +
+                ", addComment='" + addComment + '\'' +
+                ", address='" + address + '\'' +
+                ", macaddress='" + macaddress + '\'' +
+                '}';
     }
 }
