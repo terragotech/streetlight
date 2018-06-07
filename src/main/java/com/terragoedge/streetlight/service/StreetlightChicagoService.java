@@ -339,72 +339,80 @@ public class StreetlightChicagoService extends AbstractProcessor{
 		String controllerStrId = loggingModel.getControllerSrtId();
 
 
-
-
-		FormData chicagoFromData = formDatas.get(chicagoFormTemplateGuid);
-		if (chicagoFromData == null) {
-			loggingModel.setErrorDetails(MessageConstants.CHICAGO_FORM_NOT_AVAILABLE);
-			loggingModel.setStatus(MessageConstants.ERROR);
-			logger.error("No Chicago FormTemplate is not Present. So note is not processed. Note Title is :"
-					+ edgeNote.getTitle());
-			return;
-		}
-
-
-
 		if (replaceOLCFormData != null) {
 			processReplaceOLCFormVal(replaceOLCFormData, idOnController, controllerStrId, paramsList,
 					edgeNote.getNoteGuid(), edgeNote.getCreatedDateTime(), noteGuids, edgeNote, loggingModel);
 		} else {
-		    if(isResync){
-		        try{
-                    replaceOLC(controllerStrId,idOnController,"");
-                }catch (ReplaceOLCFailedException e){
-		            e.printStackTrace();
+
+			String[] chicagoFormTemplateGuids = chicagoFormTemplateGuid.split(",");
+			for(String chicagoFormTemplateGuidTemp : chicagoFormTemplateGuids){
+				FormData chicagoFromData = formDatas.get(chicagoFormTemplateGuidTemp);
+				if (chicagoFromData == null) {
+					loggingModel.setErrorDetails(MessageConstants.CHICAGO_FORM_NOT_AVAILABLE);
+					loggingModel.setStatus(MessageConstants.ERROR);
+					logger.error("No Chicago FormTemplate is not Present. So note is not processed. Note Title is :"
+							+ edgeNote.getTitle());
+					continue;
+				}
+
+
+				if(isResync){
+					try{
+						replaceOLC(controllerStrId,idOnController,"");
+					}catch (ReplaceOLCFailedException e){
+						e.printStackTrace();
+					}
+
+				}
+				// Get Fixture Code
+				String macAddress = null;
+				// Process Chicago Form data
+				List<EdgeFormData> chicagoFromDef = chicagoFromData.getFormDef();
+				logger.info("Current From Name"+chicagoFromData.getName());
+                logger.info("From Data"+gson.toJson(chicagoFromDef));
+				for (EdgeFormData edgeFormData : chicagoFromDef) {
+				    if(edgeFormData.getLabel() == null){
+				        continue;
+                    }
+					if (edgeFormData.getLabel()
+							.equals(properties.getProperty("edge.fortemplate.chicago.label.fixture.macaddress"))) {
+						if (edgeFormData.getValue() == null || edgeFormData.getValue().trim().isEmpty()) {
+							// logger.info("Fixture MAC address is empty. So note is not processed. Note
+							// Title :"+edgeNote.getTitle());
+							// return; -- TODO Need to skip or not later decide
+						} else {
+							addStreetLightData("luminaire.installdate", dateFormat(edgeNote.getCreatedDateTime()),
+									paramsList); // -- TODO
+							buildFixtureStreetLightData(edgeFormData.getValue(), paramsList, edgeNote);
+						}
+
+					} else if (edgeFormData.getLabel()
+							.equals(properties.getProperty("edge.fortemplate.chicago.label.node.macaddress"))) {
+					    logger.info("MAC Address Value:"+edgeFormData.getValue());
+						if (edgeFormData.getValue() == null || edgeFormData.getValue().trim().isEmpty()) {
+							logger.info("Node MAC address is empty. So note is not processed. Note Title :"
+									+ edgeNote.getTitle());
+							loggingModel.setErrorDetails(MessageConstants.NODE_MAC_ADDRESS_NOT_AVAILABLE);
+							loggingModel.setStatus(MessageConstants.ERROR);
+							continue;
+						}
+						macAddress = loadMACAddress(edgeFormData.getValue(), paramsList, idOnController);
+					}
+				}
+				if(macAddress != null){
+                    loggingModel.setMacAddress(macAddress);
+
+                    addOtherParams(edgeNote,paramsList,idOnController,utilLocId,true);
+
+
+                    // DimmingGroupName
+                    sync2Slv(paramsList, edgeNote.getNoteGuid(), idOnController, macAddress, controllerStrId, edgeNote,
+                            loggingModel);
+                    noteGuids.add(edgeNote.getNoteGuid());
                 }
 
-            }
-			// Get Fixture Code
-
-
-
-			String macAddress = null;
-			// Process Chicago Form data
-			List<EdgeFormData> chicagoFromDef = chicagoFromData.getFormDef();
-			for (EdgeFormData edgeFormData : chicagoFromDef) {
-				if (edgeFormData.getLabel()
-						.equals(properties.getProperty("edge.fortemplate.chicago.label.fixture.macaddress"))) {
-					if (edgeFormData.getValue() == null || edgeFormData.getValue().trim().isEmpty()) {
-						// logger.info("Fixture MAC address is empty. So note is not processed. Note
-						// Title :"+edgeNote.getTitle());
-						// return; -- TODO Need to skip or not later decide
-					} else {
-						addStreetLightData("luminaire.installdate", dateFormat(edgeNote.getCreatedDateTime()),
-								paramsList); // -- TODO
-						buildFixtureStreetLightData(edgeFormData.getValue(), paramsList, edgeNote);
-					}
-
-				} else if (edgeFormData.getLabel()
-						.equals(properties.getProperty("edge.fortemplate.chicago.label.node.macaddress"))) {
-					if (edgeFormData.getValue() == null || edgeFormData.getValue().trim().isEmpty()) {
-						logger.info("Node MAC address is empty. So note is not processed. Note Title :"
-								+ edgeNote.getTitle());
-						loggingModel.setErrorDetails(MessageConstants.NODE_MAC_ADDRESS_NOT_AVAILABLE);
-						loggingModel.setStatus(MessageConstants.ERROR);
-						return;
-					}
-					macAddress = loadMACAddress(edgeFormData.getValue(), paramsList, idOnController);
-				}
 			}
-			loggingModel.setMacAddress(macAddress);
 
-            addOtherParams(edgeNote,paramsList,idOnController,utilLocId,true);
-
-
-			// DimmingGroupName
-			sync2Slv(paramsList, edgeNote.getNoteGuid(), idOnController, macAddress, controllerStrId, edgeNote,
-					loggingModel);
-			noteGuids.add(edgeNote.getNoteGuid());
 		}
 
 	}

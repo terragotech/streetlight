@@ -19,6 +19,9 @@ public class LoggingModel {
 
 	private String controllerSrtId;
 
+
+
+
 	public String getControllerSrtId() {
 		return controllerSrtId;
 	}
