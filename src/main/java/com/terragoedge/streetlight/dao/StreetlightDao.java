@@ -7,6 +7,7 @@ import java.util.*;
 
 import com.terragoedge.edgeserver.AddressSet;
 import com.terragoedge.edgeserver.InspectionsReport;
+import com.terragoedge.edgeserver.MacAddressDetails;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 
@@ -435,6 +436,65 @@ if(noteIdLong.size() > 0){
 		}
 	}
 
+
+
+	public MacAddressDetails processInstallMaintenance(String formTemplateGuid,String noteGuid){
+	    String query = "select replace(replace(substring(a.formdef from 'Address#(.+?)count'),'\"',''),',','') address, replace(replace(substring(a.formdef from 'Node MAC address#(.+?)count'),'\"',''),',','') nodemacaddress,  replace(replace(substring(a.formdef from 'New Node MAC Address#(.+?)count'),'\"',''),',','') newnodemacaddress,  replace(replace(substring(substring(a.formdef from(position('New Node MAC Address#' in a.formdef)+20)) from 'New Node MAC Address#(.+?)count'),'\"',''),',','') replacenewnodemacaddress  from edgenote, edgeform a where    a.formtemplateguid = '"+formTemplateGuid+"' and  a.edgenoteentity_noteid = edgenote.noteid and edgenote.isdeleted = 'f' and edgenote.iscurrent = 't' and edgenote.noteguid '"+noteGuid+"';";
+        Statement queryStatement = null;
+        ResultSet queryResponse = null;
+        try{
+            queryStatement = connection.createStatement();
+            queryResponse = queryStatement.executeQuery(query);
+            while (queryResponse.next()) {
+                MacAddressDetails macAddressDetails = new MacAddressDetails();
+                String address = queryResponse.getString("address");
+                macAddressDetails.setAddress(address);
+                String nodemacaddress = queryResponse.getString("nodemacaddress");
+                macAddressDetails.setNodeMacAddress(nodemacaddress);
+                String newnodemacaddress = queryResponse.getString("newnodemacaddress");
+                macAddressDetails.setNewNodeMacAddress(newnodemacaddress);
+                String replacenewnodemacaddress = queryResponse.getString("replacenewnodemacaddress");
+                macAddressDetails.setReplaceNewNodeMacAddress(replacenewnodemacaddress);
+                return macAddressDetails;
+            }
+        }catch (Exception e){
+            e.printStackTrace();
+        }finally {
+            closeResultSet(queryResponse);
+            closeStatement(queryStatement);
+        }
+        return  null;
+    }
+
+
+    public MacAddressDetails processNewInstallQRScan(String formTemplateGuid,String noteGuid){
+        String query = "select replace(replace(substring(a.formdef from 'Address#(.+?)count'),'\"',''),',','') address, replace(replace(substring(a.formdef from 'Node MAC address#(.+?)count'),'\"',''),',','') nodemacaddress,  replace(replace(substring(a.formdef from 'New Node MAC Address#(.+?)count'),'\"',''),',','') newnodemacaddress,  replace(replace(substring(substring(a.formdef from(position('New Node MAC Address#' in a.formdef)+20)) from 'New Node MAC Address#(.+?)count'),'\"',''),',','') replacenewnodemacaddress  from edgenote, edgeform a where    a.formtemplateguid = '"+formTemplateGuid+"' and  a.edgenoteentity_noteid = edgenote.noteid and edgenote.isdeleted = 'f' and edgenote.iscurrent = 't' and edgenote.noteguid '"+noteGuid+"';";
+        Statement queryStatement = null;
+        ResultSet queryResponse = null;
+        try{
+            queryStatement = connection.createStatement();
+            queryResponse = queryStatement.executeQuery(query);
+            while (queryResponse.next()) {
+                MacAddressDetails macAddressDetails = new MacAddressDetails();
+                String address = queryResponse.getString("address");
+                macAddressDetails.setAddress(address);
+                String nodemacaddress = queryResponse.getString("nodemacaddress");
+                macAddressDetails.setNodeMacAddress(nodemacaddress);
+                String newnodemacaddress = queryResponse.getString("newnodemacaddress");
+                macAddressDetails.setNewNodeMacAddress(newnodemacaddress);
+                String replacenewnodemacaddress = queryResponse.getString("replacenewnodemacaddress");
+                macAddressDetails.setReplaceNewNodeMacAddress(replacenewnodemacaddress);
+                return macAddressDetails;
+            }
+        }catch (Exception e){
+            e.printStackTrace();
+        }finally {
+            closeResultSet(queryResponse);
+            closeStatement(queryStatement);
+        }
+        return  null;
+    }
+
 	public List<InspectionsReport> processInspectionsReport(String formTemplateGuid){
 	    addressSets.clear();
         generateSQLQueryForTemplate(PropertiesReader.getProperties().getProperty("amrescouso.install_manintenance.formtemplate.guid"));
@@ -448,14 +508,33 @@ if(noteIdLong.size() > 0){
             queryStatement = connection.createStatement();
             queryResponse = queryStatement.executeQuery(query);
             while (queryResponse.next()) {
-                InspectionsReport inspectionsReport = new InspectionsReport();
-                String groupName = queryResponse.getString("groupname");
-                String locationDescription = queryResponse.getString("locationdescription");
-                String[] locations = locationDescription.split("\\|");
-                if(groupName.equals("Complete") || groupName.equals("Not Yet Complete") || groupName.equals("Completed")){
-                    if(locations.length == 2) {
-                        groupName = locations[1];
+                try{
+                    InspectionsReport inspectionsReport = new InspectionsReport();
+                    String groupName = queryResponse.getString("groupname");
+                    String locationDescription = queryResponse.getString("locationdescription");
+                    String[] locations = locationDescription.split("\\|");
+                    if(groupName.equals("Complete") || groupName.equals("Not Yet Complete") || groupName.equals("Completed")){
+                        if(locations.length == 2) {
+                            groupName = locations[1];
+                        }
                     }
+                    String description = "";
+                    if(locations.length == 2){
+                        description = locations[0];
+                    }
+                    inspectionsReport.setType(groupName);
+                    inspectionsReport.setLon(queryResponse.getString("Latitude"));
+                    inspectionsReport.setLat(queryResponse.getString("Longitude"));
+                    inspectionsReport.setCreatedBy(queryResponse.getString("createdby"));
+                    inspectionsReport.setDescription(description);
+                    inspectionsReport.setAtlasPage(queryResponse.getString("notebookname"));
+                    inspectionsReport.setName(queryResponse.getString("title"));
+                    inspectionsReport.setAddComment(queryResponse.getString("addcomment"));
+                    inspectionsReport.setDateModified(queryResponse.getLong("createddatetime"));
+                    inspectionsReport.setIssueType(queryResponse.getString("fieldreport"));
+                    inspectionsReports.add(inspectionsReport);
+                }catch (Exception e){
+                    e.printStackTrace();
                 }
                 String description = "";
                 if(locations.length == 2){
