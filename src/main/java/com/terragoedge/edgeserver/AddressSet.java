@@ -6,6 +6,8 @@ public class AddressSet {
     private String address;
     private String title;
 
+
+
     public String getAddress() {
         return address;
     }
@@ -32,7 +34,6 @@ public class AddressSet {
 
     @Override
     public int hashCode() {
-
         return Objects.hash(title);
     }
 

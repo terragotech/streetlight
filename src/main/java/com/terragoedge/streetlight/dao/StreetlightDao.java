@@ -8,6 +8,7 @@ import java.util.*;
 import com.terragoedge.edgeserver.AddressSet;
 import com.terragoedge.edgeserver.InspectionsReport;
 import com.terragoedge.edgeserver.MacAddressDetails;
+import com.terragoedge.streetlight.service.DataSetManager;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 
@@ -29,10 +30,11 @@ public class StreetlightDao extends UtilDao {
 	
 	
 	private String generateSQL(){
+
 		String customDate = PropertiesReader.getProperties().getProperty("amerescousa.custom.date");
 		if(customDate != null && customDate.equals("true")){
 			StringBuilder stringBuilder = new StringBuilder();
-			stringBuilder.append("select noteid,createddatetime, edgenoteview.createdby,description,title,groupname,ST_X(geometry::geometry) as lat, ST_Y(geometry::geometry) as lng  from edgenoteview where  edgenoteview.isdeleted = false and edgenoteview.iscurrent = true ");
+			stringBuilder.append("select noteid,createddatetime, edgenoteview.createdby,locationdescription,title,groupname,ST_X(geometry::geometry) as lat, ST_Y(geometry::geometry) as lng  from edgenoteview where  edgenoteview.isdeleted = false and edgenoteview.iscurrent = true ");
 			String startOfDay = PropertiesReader.getProperties().getProperty("amerescousa.report.from");
 			if(startOfDay != null && !startOfDay.isEmpty()){
 				stringBuilder.append("and edgenoteview.createddatetime >= ");
@@ -52,7 +54,7 @@ public class StreetlightDao extends UtilDao {
 			calendar.set(Calendar.MINUTE, 00);
 			calendar.set(Calendar.SECOND, 00);
 			long startOfDay = calendar.getTime().getTime();
-            return "select noteid,createddatetime, createdby,description,title,groupname,ST_X(geometry::geometry) as lat, ST_Y(geometry::geometry) as lng  from edgenoteview where  edgenoteview.isdeleted = false and edgenoteview.iscurrent = true  and edgenoteview.createdby != 'admin' and edgenoteview.createddatetime >= "+startOfDay+";";
+            return "select noteid,createddatetime, createdby,locationdescription,title,groupname,ST_X(geometry::geometry) as lat, ST_Y(geometry::geometry) as lng  from edgenoteview where  edgenoteview.isdeleted = false and edgenoteview.iscurrent = true  and edgenoteview.createdby != 'admin' and edgenoteview.createddatetime >= "+startOfDay+";";
 		}
 	}
 
@@ -104,7 +106,7 @@ public class StreetlightDao extends UtilDao {
 			queryResponse = queryStatement.executeQuery(sql);
 			List<NoteData> noteDataList = new ArrayList<>();
 			int count = 0;
-			while (queryResponse.next()) {
+            while (queryResponse.next()) {
                 NoteData noteData = new NoteData();
                 count = count + 1;
                 System.out.println(count);
@@ -112,8 +114,15 @@ public class StreetlightDao extends UtilDao {
                 noteData.setNoteId(noteId);
 
                 noteDataList.add(noteData);
-                noteData.setDescription(queryResponse.getString("description"));
-                noteData.setGroupName(queryResponse.getString("groupname"));
+                String locationdescription = queryResponse.getString("locationdescription");
+                String groupName = queryResponse.getString("groupname");
+                if (groupName != null && groupName.toLowerCase().contains("complete")) {
+                    String[] res = locationdescription.split("\\\\|");
+                    locationdescription = res[0].trim();
+                    groupName = res[1].trim();
+                }
+                noteData.setDescription(locationdescription);
+                noteData.setGroupName(groupName);
                 noteData.setTitle(queryResponse.getString("title"));
                 noteData.setCreatedBy(queryResponse.getString("createdby"));
                 noteData.setCreatedDateTime(queryResponse.getLong("createddatetime"));
@@ -132,10 +141,10 @@ public class StreetlightDao extends UtilDao {
                     noteIdLong.clear();
                 }
             }
-if(noteIdLong.size() > 0){
-    getFormData(noteIdLong,noteDataList);
-}
-            System.out.println("Total count "+noteDataList.size());
+        if(noteIdLong.size() > 0){
+            getFormData(noteIdLong,noteDataList);
+        }
+                    System.out.println("Total count "+noteDataList.size());
             processNoteData(noteDataList,dailyReportCSVs);
 
 		} catch (Exception e) {
@@ -414,7 +423,20 @@ if(noteIdLong.size() > 0){
 	
 
 	public void checkDupMacAddress(String macAddress,DailyReportCSV dailyReportCSV,String title){
-		Statement queryStatement = null;
+        Map<String,Set<String>> macAddressHolder = DataSetManager.getMacAddressHolder();
+        if(macAddress != null && !macAddress.trim().isEmpty()){
+            Set<String> noteTitle =   macAddressHolder.get(macAddress);
+            if(noteTitle != null){
+                noteTitle.remove(title);
+                if(noteTitle.size() > 0){
+                    dailyReportCSV.setMacAddressDub(macAddress);
+                    String res = StringUtils.join(noteTitle, ",");
+                    dailyReportCSV.setMacAddressNoteTitle(res);
+                }
+            }
+
+        }
+	    /*Statement queryStatement = null;
 		ResultSet queryResponse = null;
 		try {
 			queryStatement = connection.createStatement();
@@ -433,7 +455,7 @@ if(noteIdLong.size() > 0){
 		} finally {
 			closeResultSet(queryResponse);
 			closeStatement(queryStatement);
-		}
+		}*/
 	}
 
 
@@ -499,6 +521,7 @@ if(noteIdLong.size() > 0){
 	    addressSets.clear();
         generateSQLQueryForTemplate(PropertiesReader.getProperties().getProperty("amrescouso.install_manintenance.formtemplate.guid"));
         generateSQLQueryForTemplate(PropertiesReader.getProperties().getProperty("amrescouso.existing_fixture.formtemplate.guid"));
+	    List<AddressSet> addressSetList = new ArrayList<>(addressSets);
 	    String query = generateSQLQuery(formTemplateGuid);
         List<InspectionsReport> inspectionsReports  =new ArrayList<>();
         Statement queryStatement = null;
@@ -527,8 +550,9 @@ if(noteIdLong.size() > 0){
                     inspectionsReport.setLon(queryResponse.getString("Latitude"));
                     inspectionsReport.setLat(queryResponse.getString("Longitude"));
                     inspectionsReport.setCreatedBy(queryResponse.getString("createdby"));
-                    int pos = getIndex(addressSets,title);
-                    inspectionsReport.setAddress(pos != -1 ? addressSets.: "");
+                    int pos = getIndex(addressSetList,title);
+
+                    inspectionsReport.setAddress(pos != -1 ? addressSetList.get(pos).getAddress(): "");
                     inspectionsReport.setAtlasPage(queryResponse.getString("notebookname"));
                     inspectionsReport.setName(title);
                     inspectionsReport.setAddComment(queryResponse.getString("addcomment"));
@@ -548,13 +572,94 @@ if(noteIdLong.size() > 0){
         return inspectionsReports;
     }
 
-    public int getIndex(Set<? extends Object> set, Object value) {
-        int result = 0;
-        for (Object entry:set) {
-            if (entry.equals(value)) return result;
-            result++;
+    public int getIndex(List<AddressSet> set, String value) {
+        AddressSet addressSet = new AddressSet();
+        addressSet.setTitle(value);
+        return set.indexOf(addressSet);
+
+    }
+
+
+    public void getInstallMaintenanceMacAddress(String sql,Map<String,Set<String>> macAddressHolder){
+        Statement queryStatement = null;
+        ResultSet queryResponse = null;
+        try{
+            queryStatement = connection.createStatement();
+            queryResponse = queryStatement.executeQuery(sql);
+            while (queryResponse.next()) {
+                String nodeMacAddress = queryResponse.getString("nodemacaddress");
+                String title = queryResponse.getString("title");
+                String newNodeMacAddress = queryResponse.getString("newnodemacaddress");
+                String newNodeMacAddressReplace = queryResponse.getString("newnodemacaddressreplace");
+                boolean res = loadMacAddress(newNodeMacAddressReplace,macAddressHolder,title);
+                if(!res){
+                    res = loadMacAddress(newNodeMacAddress,macAddressHolder,title);
+                }
+                if(!res){
+                    res = loadMacAddress(nodeMacAddress,macAddressHolder,title);
+                }
+            }
+        }catch (Exception e){
+            e.printStackTrace();
+        }finally {
+            closeResultSet(queryResponse);
+            closeStatement(queryStatement);
         }
-        return -1;
+    }
+
+    private boolean loadMacAddress(String val,Map<String,Set<String>> macAddressHolder,String title){
+	    if(val != null && !val.trim().isEmpty()){
+            Set<String>  noteNames = macAddressHolder.get(val);
+            if(noteNames == null){
+                noteNames = new HashSet<>();
+                macAddressHolder.put(val,noteNames);
+            }
+            noteNames.add(title);
+            return true;
+        }
+        return  false;
+    }
+
+
+    public void getNewInstallMacAddress(String sql,Map<String,Set<String>> macAddressHolder){
+        Statement queryStatement = null;
+        ResultSet queryResponse = null;
+        try{
+            queryStatement = connection.createStatement();
+            queryResponse = queryStatement.executeQuery(sql);
+            while (queryResponse.next()) {
+                String nodeMacAddress = queryResponse.getString("nodemacaddress");
+                String title = queryResponse.getString("title");
+                loadMacAddress(nodeMacAddress,macAddressHolder,title);
+
+            }
+        }catch (Exception e){
+            e.printStackTrace();
+        }finally {
+            closeResultSet(queryResponse);
+            closeStatement(queryStatement);
+        }
+    }
+
+
+    public void getReplaceMacAddress(String sql,Map<String,Set<String>> macAddressHolder){
+        Statement queryStatement = null;
+        ResultSet queryResponse = null;
+        try{
+            queryStatement = connection.createStatement();
+            queryResponse = queryStatement.executeQuery(sql);
+            while (queryResponse.next()) {
+                String nodeMacAddress = queryResponse.getString("newnodemacaddressreplace");
+                String title = queryResponse.getString("title");
+                loadMacAddress(nodeMacAddress,macAddressHolder,title);
+
+            }
+        }catch (Exception e){
+            e.printStackTrace();
+        }finally {
+            closeResultSet(queryResponse);
+            closeStatement(queryStatement);
+        }
     }
 
 }

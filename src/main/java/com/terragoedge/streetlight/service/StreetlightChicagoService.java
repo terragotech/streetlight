@@ -3,14 +3,11 @@ package com.terragoedge.streetlight.service;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.List;
-import java.util.Locale;
-import java.util.TimeZone;
+import java.util.*;
 
 import com.terragoedge.edgeserver.InspectionsReport;
 import com.terragoedge.streetlight.PropertiesReader;
+import com.terragoedge.streetlight.dao.UtilDao;
 import org.apache.log4j.Logger;
 
 import com.terragoedge.streetlight.dao.StreetlightDao;
@@ -145,21 +142,55 @@ public class StreetlightChicagoService {
 		noteBuilder.append("\"");
 		noteBuilder.append("\n");
 	}
+
+	private void loadMacAddress(Map<String,Set<String>> macAddressHolder){
+        streetlightDao.getInstallMaintenanceMacAddress(UtilDao.Installation_Maintenance,macAddressHolder);
+        streetlightDao.getInstallMaintenanceMacAddress(UtilDao.Installation_Maintenance_Updated,macAddressHolder);
+        streetlightDao.getNewInstallMacAddress(UtilDao.New_Installation_QR_Scan,macAddressHolder);
+        streetlightDao.getNewInstallMacAddress(UtilDao.New_Installation_Missing_fixtures,macAddressHolder);
+        streetlightDao.getReplaceMacAddress(UtilDao.Replace_Node,macAddressHolder);
+    }
+
+    private void loadMacAddressIns(InspectionsReport inspectionsReport,List<DailyReportCSV> dailyReportCSVs){
+        DailyReportCSV dailyReportCSV = new DailyReportCSV();
+        dailyReportCSV.setNoteTitle(inspectionsReport.getName());
+
+        int pos = dailyReportCSVs.indexOf(dailyReportCSV);
+        if(pos != -1){
+            dailyReportCSV =  dailyReportCSVs.get(pos);
+            if(dailyReportCSV.getNewNodeMACAddress() != null && !dailyReportCSV.getNewNodeMACAddress().trim().isEmpty()){
+                inspectionsReport.setMacaddress(dailyReportCSV.getNewNodeMACAddress());
+            }else{
+                inspectionsReport.setMacaddress(dailyReportCSV.getNodeMACAddress());
+            }
+
+        }
+    }
 	
 	public void run() throws IOException{
 		String fileName = getDateTime();
+
+        DataSetManager.reset();
+        loadMacAddress(DataSetManager.getMacAddressHolder());
+
 		List<InspectionsReport> inspectionsReports = streetlightDao.processInspectionsReport(PropertiesReader.getProperties().getProperty("amrescouso.inspections.formtemplate.guid"));
 		StringBuilder inspectionBuilder = new StringBuilder();
-		populateInspectionsHeader(inspectionBuilder);
 
-		for(InspectionsReport inspectionsReport : inspectionsReports){
-			populateInspectionData(inspectionBuilder,inspectionsReport);
-		}
-
-		String inspectionFileName = "daily_Inspections_note_report_"+fileName+".csv";
-		logData(inspectionBuilder.toString(), inspectionFileName);
 
 		List<DailyReportCSV> dailyReportCSVs = streetlightDao.getNoteIds();
+
+        populateInspectionsHeader(inspectionBuilder);
+
+        for(InspectionsReport inspectionsReport : inspectionsReports){
+            loadMacAddressIns(inspectionsReport,dailyReportCSVs);
+
+            populateInspectionData(inspectionBuilder,inspectionsReport);
+        }
+
+        String inspectionFileName = "daily_Inspections_note_report_"+fileName+".csv";
+        logData(inspectionBuilder.toString(), inspectionFileName);
+
+
 		
 		StringBuilder quickNoteBuilder = new StringBuilder();
 		populateQuickNoteHeader(quickNoteBuilder);
@@ -260,7 +291,8 @@ public class StreetlightChicagoService {
 		quickNoteBuilder.append("Lat,");
 		quickNoteBuilder.append("Lon,");
 		quickNoteBuilder.append("Issue Type,");
-		quickNoteBuilder.append("Add Comment");
+        quickNoteBuilder.append("Add Comment,");
+        quickNoteBuilder.append("MAC Address");
 		quickNoteBuilder.append("\n");
 	}
 
@@ -292,6 +324,8 @@ public class StreetlightChicagoService {
 		quickNoteBuilder.append(inspectionsReport.getIssueType());
 		quickNoteBuilder.append(",");
 		quickNoteBuilder.append(inspectionsReport.getAddComment());
+        quickNoteBuilder.append(",");
+        quickNoteBuilder.append(inspectionsReport.getMacaddress());
 		quickNoteBuilder.append("\n");
 	}
 }

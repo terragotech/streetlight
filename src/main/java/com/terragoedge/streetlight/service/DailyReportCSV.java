@@ -1,5 +1,7 @@
 package com.terragoedge.streetlight.service;
 
+import java.util.Objects;
+
 public class DailyReportCSV {
 
 	private String noteTitle;
@@ -173,6 +175,17 @@ public class DailyReportCSV {
 				+ isQuickNote + ", macAddressNoteTitle=" + macAddressNoteTitle + "]";
 	}
 
-	
+	@Override
+	public boolean equals(Object o) {
+		if (this == o) return true;
+		if (o == null || getClass() != o.getClass()) return false;
+		DailyReportCSV that = (DailyReportCSV) o;
+		return Objects.equals(noteTitle, that.noteTitle);
+	}
 
+	@Override
+	public int hashCode() {
+
+		return Objects.hash(noteTitle);
+	}
 }
