@@ -167,12 +167,25 @@ public class DailyReportCSV {
 
 	@Override
 	public String toString() {
-		return "DailyReportCSV [noteTitle=" + noteTitle + ", context=" + context + ", fixtureQrScan=" + fixtureQrScan
-				+ ", fixtureType=" + fixtureType + ", qrCode=" + qrCode + ", noteId=" + noteId + ", lat=" + lat
-				+ ", lng=" + lng + ", createdBy=" + createdBy + ", createddatetime=" + createddatetime
-				+ ", existingNodeMACAddress=" + existingNodeMACAddress + ", newNodeMACAddress=" + newNodeMACAddress
-				+ ", isReplaceNode=" + isReplaceNode + ", nodeMACAddress=" + nodeMACAddress + ", isQuickNote="
-				+ isQuickNote + ", macAddressNoteTitle=" + macAddressNoteTitle + "]";
+		return "DailyReportCSV{" +
+				"noteTitle='" + noteTitle + '\'' +
+				", context='" + context + '\'' +
+				", fixtureQrScan='" + fixtureQrScan + '\'' +
+				", fixtureType='" + fixtureType + '\'' +
+				", qrCode='" + qrCode + '\'' +
+				", noteId=" + noteId +
+				", lat='" + lat + '\'' +
+				", lng='" + lng + '\'' +
+				", createdBy='" + createdBy + '\'' +
+				", createddatetime=" + createddatetime +
+				", existingNodeMACAddress='" + existingNodeMACAddress + '\'' +
+				", newNodeMACAddress='" + newNodeMACAddress + '\'' +
+				", isReplaceNode='" + isReplaceNode + '\'' +
+				", nodeMACAddress='" + nodeMACAddress + '\'' +
+				", isQuickNote=" + isQuickNote +
+				", macAddressNoteTitle='" + macAddressNoteTitle + '\'' +
+				", macAddressDub='" + macAddressDub + '\'' +
+				'}';
 	}
 
 	@Override

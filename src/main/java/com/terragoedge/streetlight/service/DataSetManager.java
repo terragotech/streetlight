@@ -11,6 +11,9 @@ public class DataSetManager {
 
    private static Map<String,Set<String>> macAddressHolder = new HashMap<>();
 
+    private static HashSet<AddressSet> addressSets = new HashSet<>();
+
+
    public static void reset(){
        macAddressHolder = new HashMap<>();
    }
@@ -21,5 +24,13 @@ public class DataSetManager {
 
     public static void setMacAddressHolder(Map<String, Set<String>> macAddressHolder) {
         DataSetManager.macAddressHolder = macAddressHolder;
+    }
+
+    public static HashSet<AddressSet> getAddressSets() {
+        return addressSets;
+    }
+
+    public static void setAddressSets(HashSet<AddressSet> addressSets) {
+        DataSetManager.addressSets = addressSets;
     }
 }

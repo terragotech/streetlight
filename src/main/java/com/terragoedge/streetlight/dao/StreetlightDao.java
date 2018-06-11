@@ -21,7 +21,7 @@ import com.terragoedge.streetlight.service.DailyReportCSV;
 public class StreetlightDao extends UtilDao {
 
 	static final Logger logger = Logger.getLogger(StreetlightDao.class);
-	private HashSet<AddressSet> addressSets = new HashSet<>();
+
 
 	public StreetlightDao() {
 		super();
@@ -68,7 +68,7 @@ public class StreetlightDao extends UtilDao {
     }
 
     private void generateSQLQueryForTemplate(String formTemplateGuid){
-        String query = "select replace(replace(substring(a.formdef from 'Address#(.+?)count'),'\"',''),',','') address,title  from edgenote, edgeform a where    a.formtemplateguid = '"+formTemplateGuid+"' and  a.edgenoteentity_noteid = edgenote.noteid and  edgenote.parentnoteid is null";
+        String query = "select replace(replace(substring(a.formdef from 'Address#(.+?)count'),'\"',''),',','') address,title, replace(replace(substring(a.formdef from 'Fixture Code#(.+?)count'),'\"',''),',','') fixturecode, replace(replace(substring(a.formdef from 'Proposed context#(.+?)count'),'\"',''),',','') proposedcontext  from edgenote, edgeform a where    a.formtemplateguid = '"+formTemplateGuid+"' and  a.edgenoteentity_noteid = edgenote.noteid and  edgenote.parentnoteid is null";
         Statement queryStatement = null;
         ResultSet queryResponse = null;
         try {
@@ -79,7 +79,9 @@ public class StreetlightDao extends UtilDao {
                 AddressSet addressSet = new AddressSet();
                 addressSet.setAddress(queryResponse.getString("address"));
                 addressSet.setTitle(queryResponse.getString("title"));
-                addressSets.add(addressSet);
+                addressSet.setFixtureCode(queryResponse.getString("fixturecode"));
+                addressSet.setProposedContext(queryResponse.getString("proposedcontext"));
+                DataSetManager.getAddressSets().add(addressSet);
             }
         }catch (Exception e){
             e.printStackTrace();
@@ -116,11 +118,11 @@ public class StreetlightDao extends UtilDao {
                 noteDataList.add(noteData);
                 String locationdescription = queryResponse.getString("locationdescription");
                 String groupName = queryResponse.getString("groupname");
-                if (groupName != null && groupName.toLowerCase().contains("complete")) {
+               /* if (groupName != null && groupName.toLowerCase().contains("complete")) {
                     String[] res = locationdescription.split("\\\\|");
                     locationdescription = res[0].trim();
                     groupName = res[1].trim();
-                }
+                }*/
                 noteData.setDescription(locationdescription);
                 noteData.setGroupName(groupName);
                 noteData.setTitle(queryResponse.getString("title"));
@@ -518,10 +520,10 @@ public class StreetlightDao extends UtilDao {
     }
 
 	public List<InspectionsReport> processInspectionsReport(String formTemplateGuid){
-	    addressSets.clear();
+        DataSetManager.getAddressSets().clear();
         generateSQLQueryForTemplate(PropertiesReader.getProperties().getProperty("amrescouso.install_manintenance.formtemplate.guid"));
         generateSQLQueryForTemplate(PropertiesReader.getProperties().getProperty("amrescouso.existing_fixture.formtemplate.guid"));
-	    List<AddressSet> addressSetList = new ArrayList<>(addressSets);
+	    List<AddressSet> addressSetList = new ArrayList<>(DataSetManager.getAddressSets());
 	    String query = generateSQLQuery(formTemplateGuid);
         List<InspectionsReport> inspectionsReports  =new ArrayList<>();
         Statement queryStatement = null;

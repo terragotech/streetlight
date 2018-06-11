@@ -5,8 +5,24 @@ import java.util.Objects;
 public class AddressSet {
     private String address;
     private String title;
+    private String proposedContext;
+    private String fixtureCode;
 
+    public String getProposedContext() {
+        return proposedContext;
+    }
 
+    public void setProposedContext(String proposedContext) {
+        this.proposedContext = proposedContext;
+    }
+
+    public String getFixtureCode() {
+        return fixtureCode;
+    }
+
+    public void setFixtureCode(String fixtureCode) {
+        this.fixtureCode = fixtureCode;
+    }
 
     public String getAddress() {
         return address;

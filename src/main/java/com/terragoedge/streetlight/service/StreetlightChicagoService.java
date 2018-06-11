@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
+import com.terragoedge.edgeserver.AddressSet;
 import com.terragoedge.edgeserver.InspectionsReport;
 import com.terragoedge.streetlight.PropertiesReader;
 import com.terragoedge.streetlight.dao.UtilDao;
@@ -154,14 +155,12 @@ public class StreetlightChicagoService {
     private void loadMacAddressIns(InspectionsReport inspectionsReport,List<DailyReportCSV> dailyReportCSVs){
         DailyReportCSV dailyReportCSV = new DailyReportCSV();
         dailyReportCSV.setNoteTitle(inspectionsReport.getName());
-
         int pos = dailyReportCSVs.indexOf(dailyReportCSV);
         if(pos != -1){
             dailyReportCSV =  dailyReportCSVs.get(pos);
+            inspectionsReport.setMacaddress(dailyReportCSV.getQrCode());
             if(dailyReportCSV.getNewNodeMACAddress() != null && !dailyReportCSV.getNewNodeMACAddress().trim().isEmpty()){
                 inspectionsReport.setMacaddress(dailyReportCSV.getNewNodeMACAddress());
-            }else{
-                inspectionsReport.setMacaddress(dailyReportCSV.getNodeMACAddress());
             }
 
         }
@@ -203,7 +202,17 @@ public class StreetlightChicagoService {
         logger.info("");
         int totalSize = dailyReportCSVs.size();
         int count = 0;
+        HashSet<AddressSet> addressSets =  DataSetManager.getAddressSets();
+        List<AddressSet> addressSetList = new ArrayList<>(addressSets);
 		for(DailyReportCSV dailyReportCSV : dailyReportCSVs){
+            AddressSet addressSet = new AddressSet();
+            addressSet.setTitle(dailyReportCSV.getNoteTitle());
+            int pos = addressSetList.indexOf(addressSet);
+            if(pos != -1){
+                addressSet = addressSetList.get(pos);
+                dailyReportCSV.setFixtureType(addressSet.getFixtureCode());
+                dailyReportCSV.setContext(addressSet.getProposedContext());
+            }
             count = count + 1;
 		    logger.info("Current count:"+count);
 		    logger.info("Total Count:"+totalSize);
