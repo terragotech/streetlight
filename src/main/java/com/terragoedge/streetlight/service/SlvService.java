@@ -13,16 +13,26 @@ import org.apache.log4j.Logger;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
+import java.io.BufferedReader;
+import java.io.FileReader;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-public class SlvService extends AbstractService{
+public class SlvService extends AbstractService {
     private String baseUrl;
     private JsonParser jsonParser;
     private Logger logger = Logger.getLogger(SlvService.class);
     private Gson gson;
     private StreetlightDao streetlightDao;
+    //String FILEPATH = "./context_changes.csv.csv";
+    //String FILEPATH = "./context_changes.csv";
+    String FILEPATH = "./src/main/resources/context_changes.csv";
+    //String FILEPATH = "./resources/context_changes.csv";
+    BufferedReader bufferedReader = null;
+    FileReader fileReader = null;
+
+
     public SlvService() {
         super();
         streetlightDao = new StreetlightDao();
@@ -30,103 +40,66 @@ public class SlvService extends AbstractService{
         jsonParser = new JsonParser();
         baseUrl = PropertiesReader.getProperties().getProperty("http://localhost:8182/edgeServer/");
     }
-    public void start(){
-        String[] noteTitles = {"67933","93251","221535","107162","222814","109749","156353","237899","288248","33268","174337","219485",
-        "321553","212045","163832","224108","247860","156631","26824","247043","283238","313583","230843","9094","326552","826606","166270",
-        "1063825","1063827","1063035","259450","1064219","195117","269380","115026","75503","163002","308986","268031","245391","209129","285002",
-        "1063832","108962","1064221","1061432","58310","28170","230844","1061434","205253","72967","242921","1063040","81024","1122623","31561","61517",
-        "263679","186305","35705",
-                "326113",
-                "292490",
-                "117538",
-                "302253",
-                "112285",
-                "1123423",
-                "1122624",
-                "283239",
-                "135022",
-                "263683",
-                "273253"};
-        String[] locations = {
-                "5 - Residential Intersection (66 Ft ROW 45 Deg Angle)",
-                "3 - Residential Modern (66ft ROWStaggered)",
-                "5 - Residential Intersection (66 Ft ROW 45 Deg Angle)",
-                "5 - Residential Intersection (66 Ft ROW 45 Deg Angle)",
-                "5 - Residential Intersection (66 Ft ROW 45 Deg Angle)",
-                "5 - Residential Intersection (66 Ft ROW 45 Deg Angle)",
-                "6 - Arterial (Feeder) Legacy (66 Ft ROW",
-                "5 - Residential Intersection (66 Ft ROW 45 Deg Angle)",
-                "5 - Residential Intersection (66 Ft ROW 45 Deg Angle)",
-                "3 - Residential Modern (66ft ROW Staggered)",
-                "3 - Residential Modern (66ft ROW Staggered)",
-                "3 - Residential Modern (66ft ROW Staggered)",
-                "Node Only",
-                "3 - Residential Modern (66ft ROW Staggered)",
-                "3 - Residential Modern (66ft ROWStaggered)",
-                "3 - Residential Modern (66ft ROWStaggered)",
-                "5 - Residential Intersection (66 Ft ROW 45 Deg Angle)",
-                "3 - Residential Modern (66ft ROW Staggered)",
-                "3 - Residential Modern (66ft ROW Staggered)",
-                "3 - Residential Modern (66ft ROW Staggered)",
-                "3 - Residential Modern (66ft ROWStaggered)",
-                "5 - Residential Intersection (66 Ft ROW 45 Deg Angle)",
-                "X - Out of Scope",
-                "X - Out of Scope",
-                "5 - Residential Intersection (66 Ft ROW 45 Deg Angle)",
-                "4 - Residential Coach (Retrofit)",
-                "3 - Residential Modern (66ft ROWStaggered)",
-                "3 - Residential Modern (66ft ROWStaggered)",
-                "3 - Residential Modern (66ft ROWStaggered)",
-                "3 - Residential Modern (66ft ROWStaggered)",
-                "5 - Residential Intersection (66 Ft ROW 45 Deg Angle)",
-                "3 - Residential Modern (66ft ROWStaggered)",
-                "5 - Residential Intersection (66 Ft ROW 45 Deg Angle)",
-                "3 - Residential Modern (66ft ROWStaggered)",
-                "5 - Residential Intersection (66 Ft ROW 45 Deg Angle)",
-                "3 - Residential Modern (66ft ROWStaggered)",
-                "3 - Residential Modern (66ft ROW Staggered)",
-                "4 - Residential Coach (Retrofit)",
-                "5 - Residential Intersection (66 Ft ROW 45 Deg Angle)",
-                "3 - Residential Modern (66ft ROWStaggered)",
-                "5 - Residential Intersection (66 Ft ROW 45 Deg Angle)",
-                "4 - Residential Coach (Retrofit)",
-                "3 - Residential Modern (66ft ROWStaggered)",
-                "4 - Residential Coach (Retrofit)",
-                "3 - Residential Modern (66ft ROWStaggered)",
-                "3 - Residential Modern (66ft ROWStaggered)",
-                "4 - Residential Coach (Retrofit)",
-                "1 - Residential Legacy (66 Ft ROW One-Sided)",
-                "Node Only",
-                "3 - Residential Modern (66ft ROWStaggered)",
-                "4 - Residential Coach (Retrofit)",
-                "3 - Residential Modern (66ft ROWStaggered)",
-                "5 - Residential Intersection (66 Ft ROW 45 Deg Angle)",
-                "3 - Residential Modern (66ft ROWStaggered)",
-                "14 - Viaduct",
-                "3 - Residential Modern (66ft ROWStaggered)",
-                "3 - Residential Modern (66ft ROWStaggered)",
-                "3 - Residential Modern (66ft ROWStaggered)",
-                "1 - Residential Legacy (66 Ft ROW One-Sided)",
-                "3 - Residential Modern (66ft ROWStaggered)",
-                "1 - Residential Legacy (66 Ft ROW One-Sided)",
-                "3 - Residential Modern (66ft ROWStaggered)",
-                "1 - Residential Legacy (66 Ft ROW One-Sided)",
-                "3 - Residential Modern (66ft ROWStaggered)",
-                "3 - Residential Modern (66ft ROWStaggered)",
-                "5 - Residential Intersection (66 Ft ROW 45 Deg Angle)",
-                "3 - Residential Modern (66ft ROWStaggered)",
-                "3 - Residential Modern (66ft ROWStaggered)",
-                "4 - Residential Coach (Retrofit)",
-                "3 - Residential Modern (66ft ROWStaggered)",
-                "4 - Residential Coach (Retrofit)",
-                "3 - Residential Modern (66ft ROWStaggered)",
-        };
+
+    public List<SlvData> getSlvDataFromCSV(List<String> noteTitles) {
+        List<SlvData> slvDataList = new ArrayList<SlvData>();
+        try {
+            fileReader = new FileReader(FILEPATH);
+            bufferedReader = new BufferedReader(fileReader);
+            String currentRow;
+            boolean isFirst=false;
+            while ((currentRow = bufferedReader.readLine()) != null) {
+                if(isFirst) {
+                    String values[] = currentRow.split(",");
+                    SlvData slvData = new SlvData();
+                    slvData.setGuid(values[0]);
+                    noteTitles.add(values[1]);
+                    slvData.setTitle(values[1]);
+                    slvData.setLocation(values[2]);
+                    slvDataList.add(slvData);
+                }
+                isFirst=true;
+            }
+            System.out.println("Successfully Removed");
+        } catch (Exception e) {
+            e.printStackTrace();
+            System.out.println("Error in start method : " + e.toString());
+        } finally {
+            closeBufferedReader(bufferedReader);
+            closeFileReader(fileReader);
+        }
+        return slvDataList;
+    }
+
+    public void closeBufferedReader(BufferedReader bufferedReader) {
+        if (bufferedReader != null) {
+            try {
+                bufferedReader.close();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    public void closeFileReader(FileReader fileReader) {
+        if (fileReader != null) {
+            try {
+                fileReader.close();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+
+    public void start() {
+        List<String> noteTitles = new ArrayList<>();
+        List<SlvData> slvDataList = getSlvDataFromCSV(noteTitles);
         List<SlvData> edgeDatas = streetlightDao.getNoteDetails(noteTitles);
-        List<SlvData> slvDatas = getSlvDatas(noteTitles,locations);
-        edgeDatas.removeAll(slvDatas);
-        for(SlvData slvData : edgeDatas){
-            ResponseEntity<String> response = getNoteDetails(baseUrl,slvData.getGuid());
-            if(response.getStatusCode().is2xxSuccessful()){
+        edgeDatas.removeAll(slvDataList);
+        for (SlvData slvData : edgeDatas) {
+            ResponseEntity<String> response = getNoteDetails(baseUrl, slvData.getGuid());
+            if (response.getStatusCode().is2xxSuccessful()) {
                 String noteJson = response.getBody();
                 // Gson to Edge Note
                 JsonObject edgeNote = (JsonObject) jsonParser.parse(noteJson);
@@ -152,17 +125,17 @@ public class SlvService extends AbstractService{
                 String currentNoteguid = edgeNote.get("noteGuid").getAsString();
                 JsonObject jsonObject = streetlightDao.getNotebookGuid(currentNoteguid);
                 String notebookGuid = jsonObject.get("notebookguid").getAsString();
-                if(slvData.getLocation().contains("Residential")){
+                if (slvData.getLocation().contains("Residential")) {
                     String notebookName = jsonObject.get("notebookname").getAsString();
-                    if(!notebookName.contains("Residential")){
-                        notebookName = notebookName+" Residential";// create notebook
-                        createNotebook(notebookName,notebookGuid,currentNoteguid);
+                    if (!notebookName.contains("Residential")||!notebookName.contains("alley")) {
+                        notebookName = notebookName + " Residential";// create notebook
+                        createNotebook(notebookName, notebookGuid, currentNoteguid);
                     }
-                }else{
+                } else {
                     String notebookName = jsonObject.get("notebookname").getAsString();
-                    if(notebookName.contains("Residential")){
-                        notebookName = notebookName.replace("Residential","");// create notebook
-                        createNotebook(notebookName,notebookGuid,currentNoteguid);
+                    if (notebookName.contains("Residential")) {
+                        notebookName = notebookName.replace("Residential", "");// create notebook
+                        createNotebook(notebookName, notebookGuid, currentNoteguid);
                     }
                 }
                 updateServer(edgeNote.toString(), notebookGuid, currentNoteguid, baseUrl);
@@ -171,21 +144,21 @@ public class SlvService extends AbstractService{
 
     }
 
-    private void updateFormValues(List<EdgeFormData> edgeFormDatas, String label,String expected){
+    private void updateFormValues(List<EdgeFormData> edgeFormDatas, String label, String expected) {
         EdgeFormData edgeFormData = new EdgeFormData();
         edgeFormData.setLabel(label);
         int pos = edgeFormDatas.indexOf(edgeFormData);
-        if(pos != -1){
+        if (pos != -1) {
             String value = edgeFormDatas.get(pos).getValue();
-            if(value != null && !value.equals("") && !value.equals(expected)){
+            if (value != null && !value.equals("") && !value.equals(expected)) {
                 edgeFormDatas.get(pos).setValue(expected);
             }
         }
     }
 
-    private List<SlvData> getSlvDatas(String[] titles,String[] locations){
+    private List<SlvData> getSlvDatas(String[] titles, String[] locations) {
         List<SlvData> slvDataList = new ArrayList<>();
-        for(int i=0;i<titles.length;i++){
+        for (int i = 0; i < titles.length; i++) {
             SlvData slvData = new SlvData();
             slvData.setLocation(locations[i]);
             slvData.setTitle(titles[i]);
@@ -193,13 +166,14 @@ public class SlvService extends AbstractService{
         }
         return slvDataList;
     }
-    private void createNotebook(String notebookName,String notebookGuid,String currentNoteguid){
+
+    private void createNotebook(String notebookName, String notebookGuid, String currentNoteguid) {
         FullEdgeNotebook edgeNotebook = streetlightDao.getNotebook(notebookGuid);
-        if(edgeNotebook!= null) {
+        if (edgeNotebook != null) {
             edgeNotebook.setLastupdatedtime(System.currentTimeMillis());
             edgeNotebook.setNotebookname(notebookName);
             CreateNotebook(baseUrl, edgeNotebook);
-        }else{
+        } else {
             logger.info(currentNoteguid + " -> notebook not present");
         }
     }

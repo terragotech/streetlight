@@ -16,6 +16,7 @@ import org.apache.log4j.Logger;
 
 import com.terragoedge.streetlight.StreetlightDaoConnection;
 import com.terragoedge.streetlight.logging.LoggingModel;
+import org.springframework.util.StringUtils;
 
 public class StreetlightDao extends UtilDao {
 
@@ -291,13 +292,14 @@ public class StreetlightDao extends UtilDao {
 	}
 
 
-	public List<SlvData> getNoteDetails(String[] noteTitles) {
+	public List<SlvData> getNoteDetails(List<String> noteTitles) {
+		String notetitles = org.apache.commons.lang3.StringUtils.join(noteTitles, ",");
 		Statement queryStatement = null;
 		ResultSet queryResponse = null;
 		List<SlvData> slvDataList = new ArrayList<>();
 		try {
 			queryStatement = connection.createStatement();
-			queryResponse = queryStatement.executeQuery("Select locationdescription, noteguid, title from edgenote where title in '"+ noteTitles.toString() +"';");
+			queryResponse = queryStatement.executeQuery("Select locationdescription, noteguid, title from edgenote where title in '"+ notetitles+"';");
 
 			while (queryResponse.next()) {
 				SlvData slvData = new SlvData();
