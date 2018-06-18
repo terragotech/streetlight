@@ -49,22 +49,20 @@ public class StreetlightDao extends UtilDao {
 			stringBuilder.append(";");
 			return stringBuilder.toString();
 		}else{
-			Calendar calendar = Calendar.getInstance(Locale.getDefault());
-			calendar.set(Calendar.HOUR_OF_DAY, 00);
-			calendar.set(Calendar.MINUTE, 00);
-			calendar.set(Calendar.SECOND, 00);
+            Calendar calendar = Calendar.getInstance(TimeZone.getTimeZone("CST"));
+            calendar.set(Calendar.HOUR_OF_DAY, 17);
+            calendar.set(Calendar.MINUTE, 00);
+            calendar.set(Calendar.SECOND, 00);
+            calendar.set(Calendar.DAY_OF_MONTH,calendar.get(Calendar.DAY_OF_MONTH) - 1);
 			long startOfDay = calendar.getTime().getTime();
+
+
             return "select noteid,createddatetime, createdby,locationdescription,title,groupname,ST_X(geometry::geometry) as lat, ST_Y(geometry::geometry) as lng  from edgenoteview where  edgenoteview.isdeleted = false and edgenoteview.iscurrent = true  and edgenoteview.createdby != 'admin' and edgenoteview.createddatetime >= "+startOfDay+";";
 		}
 	}
 
 	private String generateSQLQuery(String formTemplateGuid){
-        Calendar calendar = Calendar.getInstance(Locale.getDefault());
-        calendar.set(Calendar.HOUR_OF_DAY, 00);
-        calendar.set(Calendar.MINUTE, 00);
-        calendar.set(Calendar.SECOND, 00);
-        long startOfDay = calendar.getTime().getTime();
-        return  "select notebookname, name,description,edgenoteview.createdby,edgenoteview.groupname,locationdescription, ST_Y(geometry::geometry) Longitude, title,ST_X(geometry::geometry) Latitude, replace(replace(substring(a.formdef from 'Issue Type#(.+?)count'),'\"',''),',','') fieldreport, replace(replace(substring(a.formdef from 'Add Comment#(.+?)count'),'\"',''),',','') addcomment,edgenoteview.createddatetime from edgenoteview , edgenotebook, edgeform a where edgenoteview.notebookid = edgenotebook.notebookid and a.formtemplateguid = '"+formTemplateGuid+"' and a.edgenoteentity_noteid = edgenoteview.noteid and edgenoteview.isdeleted = 'f' and edgenoteview.iscurrent = 't' and edgenoteview.createddatetime >= "+startOfDay+";";
+      return  "select notebookname,noteid, name,description,edgenoteview.createdby,edgenoteview.groupname,locationdescription, ST_Y(geometry::geometry) Longitude, title,ST_X(geometry::geometry) Latitude, replace(replace(substring(a.formdef from 'Issue Type#(.+?)count'),'\"',''),',','') fieldreport, replace(replace(substring(a.formdef from 'Add Comment#(.+?)count'),'\"',''),',','') addcomment,edgenoteview.createddatetime from edgenoteview , edgenotebook, edgeform a where edgenoteview.notebookid = edgenotebook.notebookid and a.formtemplateguid = '"+formTemplateGuid+"' and a.edgenoteentity_noteid = edgenoteview.noteid and edgenoteview.isdeleted = 'f' and edgenoteview.iscurrent = 't';";
     }
 
     private void generateSQLQueryForTemplate(String formTemplateGuid){
@@ -160,8 +158,73 @@ public class StreetlightDao extends UtilDao {
 	}
 
 
-	private void processNoteData(List<NoteData> noteDataList,List<DailyReportCSV> dailyReportCSVs){
+
+    public void getNoteIds(List<DailyReportCSV> dailyReportCSVs,List<NoteData> noteDataList) {
+        Statement queryStatement = null;
+        ResultSet queryResponse = null;
+        try {
+
+            System.out.println("Total count "+noteDataList.size());
+            int size = noteDataList.size();
+            List<Long> noteIdLong = new ArrayList<>();
+            for(int i = 0; i < size; i++){
+                NoteData noteData =  noteDataList.get(i);
+                noteIdLong.add(noteData.getNoteId());
+                if((i + 1) % 100 == 0){
+                    getFormData(noteIdLong,noteDataList);
+                    noteIdLong.clear();
+                }
+            }
+            if(noteIdLong.size() > 0){
+                getFormData(noteIdLong,noteDataList);
+            }
+            System.out.println("Total count "+noteDataList.size());
+            processInsNoteData(noteDataList,dailyReportCSVs);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            logger.error("Error in getNoteIds", e);
+        } finally {
+            closeResultSet(queryResponse);
+            closeStatement(queryStatement);
+        }
+    }
+
+
+	private void processInsNoteData(List<NoteData> noteDataList,List<DailyReportCSV> dailyReportCSVs){
        int count = 0;
+        for(NoteData noteData : noteDataList){
+            count = count + 1;
+            logger.info("Current count"+count);
+
+            DailyReportCSV dailyReportCSV = new DailyReportCSV();
+            dailyReportCSV.setNoteTitle(noteData.getTitle());
+            int pos = dailyReportCSVs.indexOf(dailyReportCSV);
+
+            if(pos != -1){
+                dailyReportCSV = dailyReportCSVs.get(pos);
+            }
+
+            Map<String,List<String>> formDatas = new HashMap<>();
+            for(FormData formData : noteData.getFormDataList()){
+                String formTemplateGuid = formData.getFormTemplateGuid();
+                String formdef = formData.getFormDef();
+                List<String> formsList =  formDatas.get(formTemplateGuid);
+                if(formsList == null){
+                    formsList = new ArrayList<>();
+                    formDatas.put(formTemplateGuid,formsList);
+                }
+                formsList.add(formdef);
+            }
+            processFormData(formDatas,dailyReportCSV);
+
+
+        }
+    }
+
+
+    private void processNoteData(List<NoteData> noteDataList,List<DailyReportCSV> dailyReportCSVs){
+        int count = 0;
         for(NoteData noteData : noteDataList){
             count = count + 1;
             logger.info("Current count"+count);
@@ -265,6 +328,12 @@ public class StreetlightDao extends UtilDao {
         List<EdgeFormData> edgeFormDatas = gson.fromJson(formDef, listType);
         // Action id
         String actionValue = getValue(17, edgeFormDatas);
+
+        String proposedContext = getValue(16, edgeFormDatas);
+        if(proposedContext != null ){
+            dailyReportCSV.setContext(proposedContext);
+        }
+
         if (actionValue != null) {
             switch (actionValue) {
                 case "New":
@@ -519,13 +588,13 @@ public class StreetlightDao extends UtilDao {
         return  null;
     }
 
-	public List<InspectionsReport> processInspectionsReport(String formTemplateGuid){
+	public List<InspectionsReport> processInspectionsReport(String formTemplateGuid,List<NoteData> inspectionNoteDataList,List<DailyReportCSV> inspectionCSVList){
         DataSetManager.getAddressSets().clear();
         generateSQLQueryForTemplate(PropertiesReader.getProperties().getProperty("amrescouso.install_manintenance.formtemplate.guid"));
         generateSQLQueryForTemplate(PropertiesReader.getProperties().getProperty("amrescouso.existing_fixture.formtemplate.guid"));
 	    List<AddressSet> addressSetList = new ArrayList<>(DataSetManager.getAddressSets());
 	    String query = generateSQLQuery(formTemplateGuid);
-        List<InspectionsReport> inspectionsReports  =new ArrayList<>();
+        List<InspectionsReport> inspectionsReports  = new ArrayList<>();
         Statement queryStatement = null;
         ResultSet queryResponse = null;
         try {
@@ -536,6 +605,14 @@ public class StreetlightDao extends UtilDao {
                 try{
                     InspectionsReport inspectionsReport = new InspectionsReport();
                     String groupName = queryResponse.getString("groupname");
+                    long noteid =  queryResponse.getLong("noteid");
+                    String title = queryResponse.getString("title");
+
+                    NoteData  noteData = new NoteData();
+                    noteData.setNoteId(noteid);
+                    noteData.setTitle(title);
+
+                    inspectionNoteDataList.add(noteData);
                     String locationDescription = queryResponse.getString("locationdescription");
                     String[] locations = locationDescription.split("\\|");
                     if(groupName.equals("Complete") || groupName.equals("Not Yet Complete") || groupName.equals("Completed")){
@@ -547,7 +624,13 @@ public class StreetlightDao extends UtilDao {
                     if(locations.length == 2){
                         description = locations[0];
                     }
-                    String title = queryResponse.getString("title");
+
+
+                    DailyReportCSV inspectionDailyReport = new DailyReportCSV();
+                    inspectionDailyReport.setNoteTitle(title);
+                    inspectionCSVList.add(inspectionDailyReport);
+
+
                     inspectionsReport.setType(groupName);
                     inspectionsReport.setLon(queryResponse.getString("Latitude"));
                     inspectionsReport.setLat(queryResponse.getString("Longitude"));
@@ -654,6 +737,39 @@ public class StreetlightDao extends UtilDao {
                 String nodeMacAddress = queryResponse.getString("newnodemacaddressreplace");
                 String title = queryResponse.getString("title");
                 loadMacAddress(nodeMacAddress,macAddressHolder,title);
+
+            }
+        }catch (Exception e){
+            e.printStackTrace();
+        }finally {
+            closeResultSet(queryResponse);
+            closeStatement(queryStatement);
+        }
+    }
+
+
+    public void getResData(Map<String,List<Long>> data,Map<String,String> edgeData){
+        Statement queryStatement = null;
+        ResultSet queryResponse = null;
+        try{
+            String sql = "select title,createddatetime,revisionfromnoteid from edgenote where revisionfromnoteid in (select revisionfromnoteid from edgenote group by   revisionfromnoteid  having count(*) > 1);";
+            queryStatement = connection.createStatement();
+            queryResponse = queryStatement.executeQuery(sql);
+
+            while (queryResponse.next()) {
+
+                String revisionfromnoteid = queryResponse.getString("revisionfromnoteid");
+                String title = queryResponse.getString("title");
+                long createddatetime = queryResponse.getLong("createddatetime");
+
+                List<Long>  ls =  data.get(revisionfromnoteid);
+                if(ls == null){
+                    ls = new ArrayList<>();
+                    data.put(revisionfromnoteid,ls);
+                }
+                ls.add(createddatetime);
+                edgeData.put(revisionfromnoteid,title);
+
 
             }
         }catch (Exception e){

@@ -1,10 +1,11 @@
 package com.terragoedge.streetlight;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
-import java.util.Calendar;
-import java.util.Locale;
+import java.util.*;
 
+import com.terragoedge.streetlight.dao.StreetlightDao;
 import org.apache.log4j.Logger;
 
 import com.terragoedge.streetlight.service.StreetlightChicagoService;
@@ -29,7 +30,7 @@ public class StreetlightApp {
 
 
 	//1525944100172
-	public static void main(String[] args) {
+	public static void main_5(String[] args) {
 		try{
 			while(true){
 				try{
@@ -73,5 +74,65 @@ public class StreetlightApp {
 		
 		
 	}
+
+	public static void main(String[] rr){
+	    File ff = new File("/Users/Nithish/Documents/personal/STAR/WEDDING PHOTOS/TRADITIONAL/selected/");
+	   File[] ffList =  ff.listFiles();
+	   for(File ffTemp : ffList){
+           System.out.println(ffTemp.getName());
+       }
+        System.out.println("Done...");
+    }
+
+	/*public static void main(String[] rg){
+        StreetlightDao streetlightDao  =new StreetlightDao();
+        Map<String,List<Long>> createdList = new HashMap<>();
+        Map<String,String> ttitle = new HashMap<>();
+        StringBuffer stringBuffer = new StringBuffer();
+        stringBuffer.append("title,");
+        stringBuffer.append("revisionguid,");
+        stringBuffer.append("count");
+        stringBuffer.append("\n");
+        streetlightDao.getResData(createdList,ttitle);
+        Set<String> keys = createdList.keySet();
+        for(String key : keys){
+            List<Long>  sss =  createdList.get(key);
+            Collections.sort(sss);
+            long start = sss.get(0);
+           long end =  sss.get(sss.size() -1);
+           if(end - start  < 2000){
+               stringBuffer.append(ttitle.get(key));
+               stringBuffer.append(",");
+               stringBuffer.append(key);
+               stringBuffer.append(",");
+               stringBuffer.append(sss.size());
+               stringBuffer.append("\n");
+           }
+        }
+
+        logData(stringBuffer.toString(),"dublicate_list.csv");
+    }
+
+
+
+    private static void logData(String data,String fileName){
+        FileOutputStream fileOutputStream = null;
+        try{
+            fileOutputStream = new FileOutputStream("./report/"+fileName);
+            //fileOutputStream = new FileOutputStream("./"+fileName);
+            fileOutputStream.write(data.getBytes());
+            fileOutputStream.flush();
+        }catch(Exception e){
+            e.printStackTrace();
+        }finally{
+            if(fileOutputStream != null){
+                try {
+                    fileOutputStream.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+    }*/
 
 }

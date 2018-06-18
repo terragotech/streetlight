@@ -114,6 +114,7 @@ public class EdgeMailService {
 			logger.info("Mail Send.");
 			File file = new  File("./report/pid");
 			file.createNewFile();
+			System.out.println("File Created.");
 		} catch (AddressException ae) {
 			ae.printStackTrace();
 		} catch (Exception me) {

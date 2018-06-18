@@ -8,6 +8,7 @@ import java.util.*;
 import com.terragoedge.edgeserver.AddressSet;
 import com.terragoedge.edgeserver.InspectionsReport;
 import com.terragoedge.streetlight.PropertiesReader;
+import com.terragoedge.streetlight.dao.NoteData;
 import com.terragoedge.streetlight.dao.UtilDao;
 import org.apache.log4j.Logger;
 
@@ -159,9 +160,18 @@ public class StreetlightChicagoService {
         if(pos != -1){
             dailyReportCSV =  dailyReportCSVs.get(pos);
             inspectionsReport.setMacaddress(dailyReportCSV.getQrCode());
-            if(dailyReportCSV.getNewNodeMACAddress() != null && !dailyReportCSV.getNewNodeMACAddress().trim().isEmpty()){
-                inspectionsReport.setMacaddress(dailyReportCSV.getNewNodeMACAddress());
+
+
+            if(dailyReportCSV.getContext() != null && !dailyReportCSV.getContext().trim().isEmpty()){
+				inspectionsReport.setAddress(dailyReportCSV.getContext());
+			}
+
+			if(inspectionsReport.getMacaddress() == null || inspectionsReport.getMacaddress().trim().isEmpty()){
+                inspectionsReport.setExistingNodeMACaddress(dailyReportCSV.getExistingNodeMACAddress());
             }
+
+            inspectionsReport.setQrScan(dailyReportCSV.getFixtureQrScan());
+            inspectionsReport.setNewNodeMACAddress(dailyReportCSV.getNewNodeMACAddress());
 
         }
     }
@@ -172,20 +182,25 @@ public class StreetlightChicagoService {
         DataSetManager.reset();
         loadMacAddress(DataSetManager.getMacAddressHolder());
 
-		List<InspectionsReport> inspectionsReports = streetlightDao.processInspectionsReport(PropertiesReader.getProperties().getProperty("amrescouso.inspections.formtemplate.guid"));
+        List<NoteData> inspectionNoteDataList = new ArrayList<>();
+        List<DailyReportCSV> inspectionCSVList = new ArrayList<>();
+
+		List<InspectionsReport> inspectionsReports = streetlightDao.processInspectionsReport(PropertiesReader.getProperties().getProperty("amrescouso.inspections.formtemplate.guid"),inspectionNoteDataList,inspectionCSVList);
 		StringBuilder inspectionBuilder = new StringBuilder();
 
 
-		List<DailyReportCSV> dailyReportCSVs = streetlightDao.getNoteIds();
+        streetlightDao.getNoteIds(inspectionCSVList,inspectionNoteDataList);
 
         populateInspectionsHeader(inspectionBuilder);
 
         for(InspectionsReport inspectionsReport : inspectionsReports){
-            loadMacAddressIns(inspectionsReport,dailyReportCSVs);
+            loadMacAddressIns(inspectionsReport,inspectionCSVList);
 
             populateInspectionData(inspectionBuilder,inspectionsReport);
         }
 
+
+        List<DailyReportCSV> dailyReportCSVs = streetlightDao.getNoteIds();
         String inspectionFileName = "daily_Inspections_note_report_"+fileName+".csv";
         logData(inspectionBuilder.toString(), inspectionFileName);
 
@@ -211,15 +226,20 @@ public class StreetlightChicagoService {
             if(pos != -1){
                 addressSet = addressSetList.get(pos);
                 dailyReportCSV.setFixtureType(addressSet.getFixtureCode());
-                dailyReportCSV.setContext(addressSet.getProposedContext());
+                if(dailyReportCSV.getContext() == null || dailyReportCSV.getContext().trim().isEmpty()){
+                    dailyReportCSV.setContext(addressSet.getProposedContext());
+                }
+
             }
             count = count + 1;
 		    logger.info("Current count:"+count);
 		    logger.info("Total Count:"+totalSize);
 			if(dailyReportCSV.isQuickNote()){
+                logger.info(dailyReportCSV.toString());
 				isQuickNote = true;
 				populateQuickNoteData(quickNoteBuilder, dailyReportCSV);
 			}else{
+			    logger.info(dailyReportCSV.toString());
 				populateNoteData(dailyReportCSV, stringBuilder);
 				if(dailyReportCSV.getMacAddressNoteTitle() != null && !dailyReportCSV.getMacAddressNoteTitle().trim().isEmpty()){
 					loadDup(dupMacStringBuilder, dailyReportCSV);
@@ -231,6 +251,7 @@ public class StreetlightChicagoService {
 		String dailyReportFile = "daily_report_"+fileName+".csv";
 		String dupMacAddressFile = null;
 		String quickNoteFileName = null;
+		logger.info(stringBuilder.toString());
 		logData(stringBuilder.toString(), dailyReportFile);
 		
 		if(isMacDup){
@@ -291,17 +312,17 @@ public class StreetlightChicagoService {
 
 
 	private void populateInspectionsHeader(StringBuilder quickNoteBuilder){
-		quickNoteBuilder.append("Name,");
+		quickNoteBuilder.append("Fixture ID,");
 		quickNoteBuilder.append("Date Modified,");
 		quickNoteBuilder.append("Atlas Page,");
 		quickNoteBuilder.append("Description,");
 		quickNoteBuilder.append("Created By,");
 		quickNoteBuilder.append("Type,");
-		quickNoteBuilder.append("Lat,");
-		quickNoteBuilder.append("Lon,");
 		quickNoteBuilder.append("Issue Type,");
         quickNoteBuilder.append("Add Comment,");
-        quickNoteBuilder.append("MAC Address");
+        quickNoteBuilder.append("MAC Address,");
+        quickNoteBuilder.append("Qr Scan,");
+        quickNoteBuilder.append("Replaced MAC Address");
 		quickNoteBuilder.append("\n");
 	}
 
@@ -326,15 +347,19 @@ public class StreetlightChicagoService {
 		quickNoteBuilder.append(inspectionsReport.getType());
 		quickNoteBuilder.append("\"");
 		quickNoteBuilder.append(",");
-		quickNoteBuilder.append(inspectionsReport.getLat());
-		quickNoteBuilder.append(",");
-		quickNoteBuilder.append(inspectionsReport.getLon());
-		quickNoteBuilder.append(",");
+
 		quickNoteBuilder.append(inspectionsReport.getIssueType());
 		quickNoteBuilder.append(",");
 		quickNoteBuilder.append(inspectionsReport.getAddComment());
         quickNoteBuilder.append(",");
         quickNoteBuilder.append(inspectionsReport.getMacaddress());
+        quickNoteBuilder.append(",");
+        quickNoteBuilder.append("\"");
+        quickNoteBuilder.append(inspectionsReport.getQrScan());
+        quickNoteBuilder.append("\"");
+        quickNoteBuilder.append(",");
+
+        quickNoteBuilder.append(inspectionsReport.getNewNodeMACAddress());
 		quickNoteBuilder.append("\n");
 	}
 }

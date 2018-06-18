@@ -12,6 +12,34 @@ public class InspectionsReport {
     private String addComment;
     private String address;
     private String macaddress;
+    private String qrScan;
+    private String existingNodeMACaddress;
+    private String newNodeMACAddress;
+
+
+    public String getQrScan() {
+        return qrScan;
+    }
+
+    public void setQrScan(String qrScan) {
+        this.qrScan = qrScan;
+    }
+
+    public String getExistingNodeMACaddress() {
+        return existingNodeMACaddress;
+    }
+
+    public void setExistingNodeMACaddress(String existingNodeMACaddress) {
+        this.existingNodeMACaddress = existingNodeMACaddress;
+    }
+
+    public String getNewNodeMACAddress() {
+        return newNodeMACAddress;
+    }
+
+    public void setNewNodeMACAddress(String newNodeMACAddress) {
+        this.newNodeMACAddress = newNodeMACAddress;
+    }
 
     public String getAddress() {
         return address;
@@ -115,6 +143,9 @@ public class InspectionsReport {
                 ", addComment='" + addComment + '\'' +
                 ", address='" + address + '\'' +
                 ", macaddress='" + macaddress + '\'' +
+                ", qrScan='" + qrScan + '\'' +
+                ", existingNodeMACaddress='" + existingNodeMACaddress + '\'' +
+                ", newNodeMACAddress='" + newNodeMACAddress + '\'' +
                 '}';
     }
 }
