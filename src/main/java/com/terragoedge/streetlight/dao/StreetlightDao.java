@@ -7,6 +7,10 @@ import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.google.gson.JsonObject;
+import com.terragoedge.edgeserver.EdgeNotebook;
+import com.terragoedge.edgeserver.FullEdgeNotebook;
+import com.terragoedge.edgeserver.SlvData;
 import com.terragoedge.streetlight.logging.InstallMaintenanceLogModel;
 import org.apache.log4j.Logger;
 
@@ -262,6 +266,84 @@ public class StreetlightDao extends UtilDao {
         }
         return noteIds;
     }
-	
 
+
+	public JsonObject getNotebookGuid(String noteGuid) {
+		Statement queryStatement = null;
+		ResultSet queryResponse = null;
+		JsonObject jsonObject = new JsonObject();
+		try {
+			queryStatement = connection.createStatement();
+			queryResponse = queryStatement.executeQuery("Select notebookguid, notebookname from edgenote,edgenotebook where edgenote.notebookid = edgenotebook.notebookid and noteguid='"+ noteGuid +"';");
+
+			while (queryResponse.next()) {
+				jsonObject.addProperty("notebookguid",queryResponse.getString("notebookguid"));
+				jsonObject.addProperty("notebookname",queryResponse.getString("notebookname"));
+			}
+
+		} catch (Exception e) {
+			logger.error("Error in getNotebookGuid", e);
+		} finally {
+			closeResultSet(queryResponse);
+			closeStatement(queryStatement);
+		}
+		return jsonObject;
+	}
+
+
+	public List<SlvData> getNoteDetails(String[] noteTitles) {
+		Statement queryStatement = null;
+		ResultSet queryResponse = null;
+		List<SlvData> slvDataList = new ArrayList<>();
+		try {
+			queryStatement = connection.createStatement();
+			queryResponse = queryStatement.executeQuery("Select locationdescription, noteguid, title from edgenote where title in '"+ noteTitles.toString() +"';");
+
+			while (queryResponse.next()) {
+				SlvData slvData = new SlvData();
+				slvData.setTitle(queryResponse.getString("title"));
+				slvData.setGuid(queryResponse.getString("noteguid"));
+				slvData.setLocation(queryResponse.getString("locationdescription"));
+				slvDataList.add(slvData);
+			}
+
+		} catch (Exception e) {
+			logger.error("Error in getNotebookGuid", e);
+		} finally {
+			closeResultSet(queryResponse);
+			closeStatement(queryStatement);
+		}
+		return slvDataList;
+	}
+
+
+	public FullEdgeNotebook getNotebook(String notebookGuid) {
+		Statement queryStatement = null;
+		ResultSet queryResponse = null;
+		try {
+			queryStatement = connection.createStatement();
+			queryResponse = queryStatement.executeQuery("Select * from edgenotebook where notebookguid='"+ notebookGuid +"';");
+
+			while (queryResponse.next()) {
+				FullEdgeNotebook edgeNotebook = new FullEdgeNotebook();
+				edgeNotebook.setCreatedby("admin");
+				edgeNotebook.setCustomname(queryResponse.getString("customname"));
+				edgeNotebook.setIsdeleted(queryResponse.getBoolean("isdeleted"));
+				edgeNotebook.setIsincludedatetime(queryResponse.getBoolean("isincludedatetime"));
+				edgeNotebook.setLastupdatedtime(queryResponse.getLong("lastupdatedtime"));
+				edgeNotebook.setNotebookdesc(queryResponse.getString("notebookdesc"));
+				edgeNotebook.setNotebookname(queryResponse.getString("notebookname"));
+				edgeNotebook.setNotenametype(queryResponse.getString("notenametype"));
+				edgeNotebook.setQuicknoteformtemplateid(queryResponse.getInt("quicknoteformtemplateid"));
+				return edgeNotebook;
+			}
+
+		} catch (Exception e) {
+			logger.error("Error in getNotebookGuid", e);
+		} finally {
+			closeResultSet(queryResponse);
+			closeStatement(queryStatement);
+		}
+		return null;
+	}
 }
