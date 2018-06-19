@@ -5,7 +5,16 @@ import java.util.Objects;
 public class SlvData {
     private String guid;
     private String location;
-    private String title;
+    public String title;
+    private String layerName;
+
+    public String getLayerName() {
+        return layerName;
+    }
+
+    public void setLayerName(String layerName) {
+        this.layerName = layerName;
+    }
 
     public String getGuid() {
         return guid;
@@ -44,5 +53,15 @@ public class SlvData {
     public int hashCode() {
 
         return Objects.hash(location, title);
+    }
+
+    @Override
+    public String toString() {
+        return "SlvData{" +
+                "guid='" + guid + '\'' +
+                ", location='" + location + '\'' +
+                ", title='" + title + '\'' +
+                ", layerName='" + layerName + '\'' +
+                '}';
     }
 }

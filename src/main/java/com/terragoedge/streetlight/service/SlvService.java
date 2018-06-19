@@ -7,6 +7,7 @@ import com.google.gson.JsonParser;
 import com.terragoedge.edgeserver.EdgeFormData;
 import com.terragoedge.edgeserver.FullEdgeNotebook;
 import com.terragoedge.edgeserver.SlvData;
+import com.terragoedge.edgeserver.SlvDataDub;
 import com.terragoedge.streetlight.PropertiesReader;
 import com.terragoedge.streetlight.dao.StreetlightDao;
 import org.apache.log4j.Logger;
@@ -14,6 +15,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
 import java.io.BufferedReader;
+import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.util.ArrayList;
 import java.util.List;
@@ -27,7 +29,7 @@ public class SlvService extends AbstractService {
     private StreetlightDao streetlightDao;
     //String FILEPATH = "./context_changes.csv.csv";
     //String FILEPATH = "./context_changes.csv";
-    String FILEPATH = "./src/main/resources/context_changes.csv";
+    String FILEPATH = "/Users/Nithish/Documents/ameresco_usa_context_changes_19_june.csv";
     //String FILEPATH = "./resources/context_changes.csv";
     BufferedReader bufferedReader = null;
     FileReader fileReader = null;
@@ -38,10 +40,11 @@ public class SlvService extends AbstractService {
         streetlightDao = new StreetlightDao();
         gson = new Gson();
         jsonParser = new JsonParser();
-        baseUrl = PropertiesReader.getProperties().getProperty("http://localhost:8182/edgeServer/");
+        baseUrl = "http://localhost:8080/";
+        //baseUrl = PropertiesReader.getProperties().getProperty("http://localhost:8182/edgeServer/");
     }
 
-    public List<SlvData> getSlvDataFromCSV(List<String> noteTitles) {
+    public List<SlvData> getSlvDataFromCSV() {
         List<SlvData> slvDataList = new ArrayList<SlvData>();
         try {
             fileReader = new FileReader(FILEPATH);
@@ -52,10 +55,9 @@ public class SlvService extends AbstractService {
                 if(isFirst) {
                     String values[] = currentRow.split(",");
                     SlvData slvData = new SlvData();
-                    slvData.setGuid(values[0]);
-                    noteTitles.add(values[1]);
-                    slvData.setTitle(values[1]);
-                    slvData.setLocation(values[2]);
+                    //slvData.setGuid(values[0]);
+                    slvData.setTitle(values[0]);
+                    slvData.setLocation(values[1]);
                     slvDataList.add(slvData);
                 }
                 isFirst=true;
@@ -91,19 +93,72 @@ public class SlvService extends AbstractService {
         }
     }
 
+    /*public void getUpdated(){
+        List<String> noteTitles = new ArrayList<>();
+        List<SlvData> slvDataList = streetlightDao.getSLVData();
+        List<SlvDataDub> slvDataDubList = new ArrayList<>();
+        List<SlvData> edgeDatas = streetlightDao.getNoteDetails(slvDataDubList);
+        slvDataList.removeAll(edgeDatas);
+        StringBuffer stringBuffer = new StringBuffer();
+        for(SlvData slvData : slvDataList){
+            SlvDataDub slvDataDub = new SlvDataDub();
+            slvDataDub.setTitle(slvData.getTitle());
+            stringBuffer.append(slvData.getTitle());
+            stringBuffer.append(",");
+            stringBuffer.append(slvData.getLocation());
+            stringBuffer.append(",");
+            int pos = slvDataDubList.indexOf(slvDataDub);
+            if(pos != -1){
+                slvDataDub =  slvDataDubList.get(pos);
+                stringBuffer.append(slvDataDub.getLocation());
+            }
+
+            stringBuffer.append("\n");
+        }
+        stringBuffer.toString();
+        FileOutputStream fos = null;
+        try{
+             fos = new FileOutputStream("./res.csv");
+             fos.write(stringBuffer.toString().getBytes());
+             fos.flush();
+             fos.close();
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+
+    }*/
+
 
     public void start() {
-        List<String> noteTitles = new ArrayList<>();
-        List<SlvData> slvDataList = getSlvDataFromCSV(noteTitles);
-        List<SlvData> edgeDatas = streetlightDao.getNoteDetails(noteTitles);
-        edgeDatas.removeAll(slvDataList);
-        for (SlvData slvData : edgeDatas) {
-            ResponseEntity<String> response = getNoteDetails(baseUrl, slvData.getGuid());
+        List<SlvDataDub> slvDataDubList = new ArrayList<>();
+        List<SlvData> slvDataList = getSlvDataFromCSV();
+
+
+
+        List<SlvData> edgeDatas = streetlightDao.getNoteDetails();
+
+        for(SlvData slvData : edgeDatas){
+            SlvDataDub slvDataDub = new SlvDataDub(slvData.getTitle(),slvData.getGuid(),slvData.getLayerName());
+            slvDataDubList.add(slvDataDub);
+        }
+
+        slvDataList.removeAll(edgeDatas);
+        for (SlvData slvData : slvDataList) {
+            SlvDataDub slvDataDubTemp = new SlvDataDub(slvData.getTitle(),null,null);
+            int pos =  slvDataDubList.indexOf(slvDataDubTemp);
+            if(pos != -1){
+                slvDataDubTemp = slvDataDubList.get(pos);
+            }
+
+            ResponseEntity<String> response = getNoteDetails(baseUrl, slvDataDubTemp.getGuid());
             if (response.getStatusCode().is2xxSuccessful()) {
                 String noteJson = response.getBody();
                 // Gson to Edge Note
                 JsonObject edgeNote = (JsonObject) jsonParser.parse(noteJson);
                 JsonArray edgeFormJsonArray = edgeNote.get("formData").getAsJsonArray();
+
+
+
                 // Process Form Data
                 int size = edgeFormJsonArray.size();
                 for (int i = 0; i < size; i++) {
@@ -118,24 +173,25 @@ public class SlvService extends AbstractService {
                     edgeForm.add("formDef", gson.toJsonTree(edgeFormDatas));
                     edgeForm.addProperty("formGuid", UUID.randomUUID().toString());
                 }
-                edgeNote.addProperty("locationdescription", slvData.getLocation());
+                edgeNote.addProperty("locationDescription", slvData.getLocation() +" | "+slvDataDubTemp.getLayerName());
                 edgeNote.add("formData", edgeFormJsonArray);
                 edgeNote.addProperty("createdDateTime", System.currentTimeMillis());
                 edgeNote.addProperty("createdBy", "admin");
                 String currentNoteguid = edgeNote.get("noteGuid").getAsString();
                 JsonObject jsonObject = streetlightDao.getNotebookGuid(currentNoteguid);
                 String notebookGuid = jsonObject.get("notebookguid").getAsString();
-                if (slvData.getLocation().contains("Residential")) {
+                if (slvData.getLocation().contains("Residential") || slvData.getLocation().contains("Alley")) {
                     String notebookName = jsonObject.get("notebookname").getAsString();
-                    if (!notebookName.contains("Residential")||!notebookName.contains("alley")) {
+                    if (!notebookName.contains("Residential")) {
                         notebookName = notebookName + " Residential";// create notebook
-                        createNotebook(notebookName, notebookGuid, currentNoteguid);
+                        notebookGuid =  createNotebook(notebookName, notebookGuid, currentNoteguid);
                     }
                 } else {
                     String notebookName = jsonObject.get("notebookname").getAsString();
                     if (notebookName.contains("Residential")) {
                         notebookName = notebookName.replace("Residential", "");// create notebook
-                        createNotebook(notebookName, notebookGuid, currentNoteguid);
+                        notebookName =  notebookName.trim();
+                        notebookGuid =  createNotebook(notebookName, notebookGuid, currentNoteguid);
                     }
                 }
                 updateServer(edgeNote.toString(), notebookGuid, currentNoteguid, baseUrl);
@@ -151,7 +207,7 @@ public class SlvService extends AbstractService {
         if (pos != -1) {
             String value = edgeFormDatas.get(pos).getValue();
             if (value != null && !value.equals("") && !value.equals(expected)) {
-                edgeFormDatas.get(pos).setValue(expected);
+                edgeFormDatas.get(pos).setValue(label+"#"+expected);
             }
         }
     }
@@ -167,14 +223,23 @@ public class SlvService extends AbstractService {
         return slvDataList;
     }
 
-    private void createNotebook(String notebookName, String notebookGuid, String currentNoteguid) {
-        FullEdgeNotebook edgeNotebook = streetlightDao.getNotebook(notebookGuid);
-        if (edgeNotebook != null) {
-            edgeNotebook.setLastupdatedtime(System.currentTimeMillis());
-            edgeNotebook.setNotebookname(notebookName);
-            CreateNotebook(baseUrl, edgeNotebook);
-        } else {
-            logger.info(currentNoteguid + " -> notebook not present");
+    private String createNotebook(String notebookName, String notebookGuid, String currentNoteguid) {
+        String edgeNotebookGuid =  streetlightDao.getNotebookByName(notebookName);
+        if(edgeNotebookGuid == null){
+           FullEdgeNotebook edgeNotebook = streetlightDao.getNotebook(notebookGuid);
+            if (edgeNotebook != null) {
+                edgeNotebook.setLastUpdatedTime(System.currentTimeMillis());
+                edgeNotebook.setNotebookName(notebookName);
+                edgeNotebook.getForms().add("c8acc150-6228-4a27-bc7e-0fabea0e2b93");
+                edgeNotebook.getForms().add("4c645aab-a78d-411a-a383-eb111fb65b20");
+                return createNotebook(baseUrl, edgeNotebook);
+            } else {
+                logger.info(currentNoteguid + " -> notebook not present");
+            }
+            return null;
+        }else{
+            return edgeNotebookGuid;
         }
+
     }
 }

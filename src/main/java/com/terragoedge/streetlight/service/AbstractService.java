@@ -51,8 +51,8 @@ public class AbstractService {
             headers.add("Authorization",  "Bearer "+accessToken);
             return headers;
         }else{
-            userName = PropertiesReader.getProperties().getProperty("streetlight.edge.username");
-            password = PropertiesReader.getProperties().getProperty("streetlight.edge.password");
+            userName = "admin";
+            password = "admin";
         }
         String plainCreds = userName + ":" + password;
 
@@ -90,7 +90,7 @@ public class AbstractService {
         }
 
     }
-    protected String CreateNotebook(String baseUrl, FullEdgeNotebook edgeNotebook){
+    protected String createNotebook(String baseUrl, FullEdgeNotebook edgeNotebook){
     String notebookJson = gson.toJson(edgeNotebook);
     String notebookUrl = baseUrl+"/rest/notebooks";
     ResponseEntity<String> responseEntity = serverCall(notebookUrl,HttpMethod.POST,notebookJson);

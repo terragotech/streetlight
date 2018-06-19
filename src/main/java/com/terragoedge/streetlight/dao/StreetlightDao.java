@@ -11,6 +11,7 @@ import com.google.gson.JsonObject;
 import com.terragoedge.edgeserver.EdgeNotebook;
 import com.terragoedge.edgeserver.FullEdgeNotebook;
 import com.terragoedge.edgeserver.SlvData;
+import com.terragoedge.edgeserver.SlvDataDub;
 import com.terragoedge.streetlight.logging.InstallMaintenanceLogModel;
 import org.apache.log4j.Logger;
 
@@ -275,7 +276,7 @@ public class StreetlightDao extends UtilDao {
 		JsonObject jsonObject = new JsonObject();
 		try {
 			queryStatement = connection.createStatement();
-			queryResponse = queryStatement.executeQuery("Select notebookguid, notebookname from edgenote,edgenotebook where edgenote.notebookid = edgenotebook.notebookid and noteguid='"+ noteGuid +"';");
+			queryResponse = queryStatement.executeQuery("Select notebookguid, notebookname from edgenote,edgenotebook where  edgenotebook.notebookid = edgenote.notebookid  and noteguid='"+ noteGuid +"';");
 
 			while (queryResponse.next()) {
 				jsonObject.addProperty("notebookguid",queryResponse.getString("notebookguid"));
@@ -292,20 +293,32 @@ public class StreetlightDao extends UtilDao {
 	}
 
 
-	public List<SlvData> getNoteDetails(List<String> noteTitles) {
-		String notetitles = org.apache.commons.lang3.StringUtils.join(noteTitles, ",");
+	public List<SlvData> getNoteDetails() {
 		Statement queryStatement = null;
 		ResultSet queryResponse = null;
 		List<SlvData> slvDataList = new ArrayList<>();
 		try {
 			queryStatement = connection.createStatement();
-			queryResponse = queryStatement.executeQuery("Select locationdescription, noteguid, title from edgenote where title in '"+ notetitles+"';");
+			queryResponse = queryStatement.executeQuery("Select locationdescription, noteguid, title,groupname from edgenoteview where iscurrent = true and isdeleted = false;");
 
 			while (queryResponse.next()) {
 				SlvData slvData = new SlvData();
+
 				slvData.setTitle(queryResponse.getString("title"));
 				slvData.setGuid(queryResponse.getString("noteguid"));
 				slvData.setLocation(queryResponse.getString("locationdescription"));
+				String locDes = slvData.getLocation();
+				if(locDes != null){
+                    locDes =  locDes.replace(",","");
+                    String[] vals = locDes.split("\\|");
+                    slvData.setLocation(vals[0].trim());
+                    try{
+                        slvData.setLayerName(vals[1].trim());
+                    }catch (Exception e){
+                        slvData.setLayerName(queryResponse.getString("groupname"));
+                    }
+
+                }
 				slvDataList.add(slvData);
 			}
 
@@ -319,6 +332,38 @@ public class StreetlightDao extends UtilDao {
 	}
 
 
+    public List<SlvData> getSLVData() {
+        Statement queryStatement = null;
+        ResultSet queryResponse = null;
+        List<SlvData> slvDataList = new ArrayList<>();
+        try {
+            queryStatement = connection.createStatement();
+            queryResponse = queryStatement.executeQuery("Select location_proposedcontext, idoncontroller from slvdata_june19;");
+
+            while (queryResponse.next()) {
+                SlvData slvData = new SlvData();
+                slvData.setTitle(queryResponse.getString("idoncontroller"));
+                slvData.setLocation(queryResponse.getString("location_proposedcontext"));
+                if(slvData.getTitle() != null && !slvData.getTitle().trim().isEmpty()){
+                    if(slvData.getLocation() != null){
+                        slvData.setLocation(slvData.getLocation().replace(",",""));
+                    }
+
+                    slvDataList.add(slvData);
+                }
+
+            }
+
+        } catch (Exception e) {
+            logger.error("Error in getNotebookGuid", e);
+        } finally {
+            closeResultSet(queryResponse);
+            closeStatement(queryStatement);
+        }
+        return slvDataList;
+    }
+
+
 	public FullEdgeNotebook getNotebook(String notebookGuid) {
 		Statement queryStatement = null;
 		ResultSet queryResponse = null;
@@ -328,15 +373,13 @@ public class StreetlightDao extends UtilDao {
 
 			while (queryResponse.next()) {
 				FullEdgeNotebook edgeNotebook = new FullEdgeNotebook();
-				edgeNotebook.setCreatedby("admin");
-				edgeNotebook.setCustomname(queryResponse.getString("customname"));
-				edgeNotebook.setIsdeleted(queryResponse.getBoolean("isdeleted"));
-				edgeNotebook.setIsincludedatetime(queryResponse.getBoolean("isincludedatetime"));
-				edgeNotebook.setLastupdatedtime(queryResponse.getLong("lastupdatedtime"));
-				edgeNotebook.setNotebookdesc(queryResponse.getString("notebookdesc"));
-				edgeNotebook.setNotebookname(queryResponse.getString("notebookname"));
-				edgeNotebook.setNotenametype(queryResponse.getString("notenametype"));
-				edgeNotebook.setQuicknoteformtemplateid(queryResponse.getInt("quicknoteformtemplateid"));
+				edgeNotebook.setCreatedBy("admin");
+				edgeNotebook.setQuickNoteCustomName(queryResponse.getString("customname"));
+				edgeNotebook.setIncludeDateTime(queryResponse.getBoolean("isincludedatetime"));
+				edgeNotebook.setLastUpdatedTime(queryResponse.getLong("lastupdatedtime"));
+				edgeNotebook.setNotebookDescription(queryResponse.getString("notebookdesc"));
+				edgeNotebook.setNotebookName(queryResponse.getString("notebookname"));
+				edgeNotebook.setQuickNoteNameType(queryResponse.getString("notenametype"));
 				return edgeNotebook;
 			}
 
@@ -348,4 +391,25 @@ public class StreetlightDao extends UtilDao {
 		}
 		return null;
 	}
+
+
+    public String getNotebookByName(String notebookName) {
+        Statement queryStatement = null;
+        ResultSet queryResponse = null;
+        try {
+            queryStatement = connection.createStatement();
+            queryResponse = queryStatement.executeQuery("Select notebookguid from edgenotebook where notebookname='"+ notebookName +"';");
+
+            while (queryResponse.next()) {
+               return queryResponse.getString("notebookguid");
+            }
+
+        } catch (Exception e) {
+            logger.error("Error in getNotebookGuid", e);
+        } finally {
+            closeResultSet(queryResponse);
+            closeStatement(queryStatement);
+        }
+        return null;
+    }
 }

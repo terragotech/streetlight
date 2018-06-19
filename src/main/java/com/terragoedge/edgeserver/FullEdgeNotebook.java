@@ -1,102 +1,105 @@
 package com.terragoedge.edgeserver;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class FullEdgeNotebook {
 
-    private String createdby;
-    private long lastupdatedtime;
-    private String notebookdesc;
-    private String notebookname;
-    private int quicknoteformtemplateid;
-    private String notenametype;
-    private String customname;
-    private boolean isdeleted;
-    private boolean isincludedatetime;
+    private String createdBy;
+    private long lastUpdatedTime;
+    private String notebookDescription;
+    private String notebookName;
+    private String quickNoteFormTemplateId = "c8acc150-6228-4a27-bc7e-0fabea0e2b93";
+    private String quickNoteNameType;
+    private String quickNoteCustomName;
+    private boolean isIncludeDateTime;
+
+    private List<String> forms = new ArrayList<String>();
 
 
-    public String getCreatedby() {
-        return createdby;
+    public List<String> getForms() {
+        return forms;
     }
 
-    public void setCreatedby(String createdby) {
-        this.createdby = createdby;
+    public void setForms(List<String> forms) {
+        this.forms = forms;
     }
 
-    public long getLastupdatedtime() {
-        return lastupdatedtime;
+    public String getCreatedBy() {
+        return createdBy;
     }
 
-    public void setLastupdatedtime(long lastupdatedtime) {
-        this.lastupdatedtime = lastupdatedtime;
+    public void setCreatedBy(String createdBy) {
+        this.createdBy = createdBy;
     }
 
-    public String getNotebookdesc() {
-        return notebookdesc;
+    public long getLastUpdatedTime() {
+        return lastUpdatedTime;
     }
 
-    public void setNotebookdesc(String notebookdesc) {
-        this.notebookdesc = notebookdesc;
+    public void setLastUpdatedTime(long lastUpdatedTime) {
+        this.lastUpdatedTime = lastUpdatedTime;
     }
 
-    public String getNotebookname() {
-        return notebookname;
+    public String getNotebookDescription() {
+        return notebookDescription;
     }
 
-    public void setNotebookname(String notebookname) {
-        this.notebookname = notebookname;
+    public void setNotebookDescription(String notebookDescription) {
+        this.notebookDescription = notebookDescription;
     }
 
-    public int getQuicknoteformtemplateid() {
-        return quicknoteformtemplateid;
+    public String getNotebookName() {
+        return notebookName;
     }
 
-    public void setQuicknoteformtemplateid(int quicknoteformtemplateid) {
-        this.quicknoteformtemplateid = quicknoteformtemplateid;
+    public void setNotebookName(String notebookName) {
+        this.notebookName = notebookName;
     }
 
-    public String getNotenametype() {
-        return notenametype;
+    public String getQuickNoteFormTemplateId() {
+        return quickNoteFormTemplateId;
     }
 
-    public void setNotenametype(String notenametype) {
-        this.notenametype = notenametype;
+    public void setQuickNoteFormTemplateId(String quickNoteFormTemplateId) {
+        this.quickNoteFormTemplateId = quickNoteFormTemplateId;
     }
 
-    public String getCustomname() {
-        return customname;
+    public String getQuickNoteNameType() {
+        return quickNoteNameType;
     }
 
-    public void setCustomname(String customname) {
-        this.customname = customname;
+    public void setQuickNoteNameType(String quickNoteNameType) {
+        this.quickNoteNameType = quickNoteNameType;
     }
 
-    public boolean isIsdeleted() {
-        return isdeleted;
+    public String getQuickNoteCustomName() {
+        return quickNoteCustomName;
     }
 
-    public void setIsdeleted(boolean isdeleted) {
-        this.isdeleted = isdeleted;
+    public void setQuickNoteCustomName(String quickNoteCustomName) {
+        this.quickNoteCustomName = quickNoteCustomName;
     }
 
-    public boolean isIsincludedatetime() {
-        return isincludedatetime;
+    public boolean isIncludeDateTime() {
+        return isIncludeDateTime;
     }
 
-    public void setIsincludedatetime(boolean isincludedatetime) {
-        this.isincludedatetime = isincludedatetime;
+    public void setIncludeDateTime(boolean includeDateTime) {
+        isIncludeDateTime = includeDateTime;
     }
 
     @Override
     public String toString() {
         return "FullEdgeNotebook{" +
-                "createdby='" + createdby + '\'' +
-                ", lastupdatedtime=" + lastupdatedtime +
-                ", notebookdesc='" + notebookdesc + '\'' +
-                ", notebookname='" + notebookname + '\'' +
-                ", quicknoteformtemplateid=" + quicknoteformtemplateid +
-                ", notenametype='" + notenametype + '\'' +
-                ", customname='" + customname + '\'' +
-                ", isdeleted=" + isdeleted +
-                ", isincludedatetime=" + isincludedatetime +
+                "createdBy='" + createdBy + '\'' +
+                ", lastUpdatedTime=" + lastUpdatedTime +
+                ", notebookDescription='" + notebookDescription + '\'' +
+                ", notebookName='" + notebookName + '\'' +
+                ", quickNoteFormTemplateId=" + quickNoteFormTemplateId +
+                ", quickNoteNameType='" + quickNoteNameType + '\'' +
+                ", quickNoteCustomName='" + quickNoteCustomName + '\'' +
+                ", isIncludeDateTime=" + isIncludeDateTime +
                 '}';
     }
 }

@@ -9,6 +9,15 @@ public class EdgeFormData {
 	private int count;
 	private int groupId = -1;
 	private int groupRepeatableCount = -1;
+	private boolean isGroup;
+
+	public boolean isGroup() {
+		return isGroup;
+	}
+
+	public void setGroup(boolean group) {
+		isGroup = group;
+	}
 
 	public int getId() {
 		return id;
