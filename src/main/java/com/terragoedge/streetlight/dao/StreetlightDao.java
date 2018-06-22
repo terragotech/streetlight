@@ -5,6 +5,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 import com.google.gson.JsonObject;
@@ -126,7 +127,7 @@ public class StreetlightDao extends UtilDao {
 			preparedStatement = connection.prepareStatement(
 					"INSERT INTO notesyncdetails (streetlightsyncid , processednoteid, status,errordetails,"
 					+ "createddatetime, notename,existingnodemacaddress, newnodemacaddress,isReplaceNode,isQuickNote"
-					+ ",idOnController,macAddress,singleformerrordetails,singleformstatus) values (?,?,?,?,?,?,?,?,?,?,?,?,?,?) ;");
+					+ ",idOnController,macAddress,singleformerrordetails,singleformstatus,synctime) values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?) ;");
 			preparedStatement.setLong(1, id);
 			preparedStatement.setString(2, loggingModel.getProcessedNoteId());
 			preparedStatement.setString(3, loggingModel.getStatus());
@@ -147,6 +148,7 @@ public class StreetlightDao extends UtilDao {
 			}
             preparedStatement.setString(13, singleFormErrorDetails);
             preparedStatement.setString(14, singleFormStatus);
+			preparedStatement.setLong(15, System.currentTimeMillis());
 			preparedStatement.execute();
 		}catch (Exception e) {
 			logger.error("Error in insertParentNoteId",e);
