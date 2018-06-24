@@ -13,8 +13,17 @@ public class StreetlightApp {
 		/*InstallDateFix streetlightChicagoService = new InstallDateFix();
 		streetlightChicagoService.run();*/
 
-		StreetlightChicagoService streetlightChicagoService = new StreetlightChicagoService();
-		streetlightChicagoService.run();
+		while (true){
+		    try{
+                StreetlightChicagoService streetlightChicagoService = new StreetlightChicagoService();
+                streetlightChicagoService.run();
+                Thread.sleep(10000);
+
+            }catch (Exception e){
+		        e.printStackTrace();
+            }
+        }
+
 
 	}
 

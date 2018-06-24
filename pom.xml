@@ -85,7 +85,7 @@
                             <goal>single</goal>
                         </goals>
                         <configuration>
-                            <finalName>ameresco_usa_install_date_fix</finalName>
+                            <finalName>ameresco_usa_streetlight_v31</finalName>
                             <archive>
                                 <manifest>
                                     <mainClass>
