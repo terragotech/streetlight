@@ -72,11 +72,17 @@ public class EdgeMailService {
 
 			messageBodyPart = new MimeBodyPart();
 
-			DataSource source = new FileDataSource("./report/" + dailyReportFile);
-			//DataSource source = new FileDataSource( dailyReportFile);
-			messageBodyPart.setDataHandler(new DataHandler(source));
-			messageBodyPart.setFileName(dailyReportFile);
-			multipart.addBodyPart(messageBodyPart);
+			DataSource source = null;
+			if(dailyReportFile != null){
+                source = new FileDataSource("./report/" + dailyReportFile);
+                //DataSource source = new FileDataSource( dailyReportFile);
+                messageBodyPart.setDataHandler(new DataHandler(source));
+                messageBodyPart.setFileName(dailyReportFile);
+                multipart.addBodyPart(messageBodyPart);
+			}
+
+
+
 
 			if (dupMacAddressFile != null) {
 				messageBodyPart = new MimeBodyPart();

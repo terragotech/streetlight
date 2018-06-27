@@ -162,9 +162,9 @@ public class StreetlightChicagoService {
             inspectionsReport.setMacaddress(dailyReportCSV.getQrCode());
 
 
-            if(dailyReportCSV.getContext() != null && !dailyReportCSV.getContext().trim().isEmpty()){
+            /*if(dailyReportCSV.getContext() != null && !dailyReportCSV.getContext().trim().isEmpty()){
 				inspectionsReport.setAddress(dailyReportCSV.getContext());
-			}
+			}*/
 
 			if(inspectionsReport.getMacaddress() == null || inspectionsReport.getMacaddress().trim().isEmpty()){
                 inspectionsReport.setExistingNodeMACaddress(dailyReportCSV.getExistingNodeMACAddress());

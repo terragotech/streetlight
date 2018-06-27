@@ -22,15 +22,15 @@ public class StreetlightApp {
 				return Integer.parseInt(hoursOfDay);
 			}
 		}
-		//return 16;
-        return 17;
+		return 04;
+       // return 17;
 	}
 
 
 
 
 	//1525944100172
-	public static void main_5(String[] args) {
+	public static void main(String[] args) {
 		try{
 			while(true){
 				try{
@@ -75,14 +75,7 @@ public class StreetlightApp {
 		
 	}
 
-	public static void main(String[] rr){
-	    File ff = new File("/Users/Nithish/Documents/personal/STAR/WEDDING PHOTOS/TRADITIONAL/selected/");
-	   File[] ffList =  ff.listFiles();
-	   for(File ffTemp : ffList){
-           System.out.println(ffTemp.getName());
-       }
-        System.out.println("Done...");
-    }
+
 
 	/*public static void main(String[] rg){
         StreetlightDao streetlightDao  =new StreetlightDao();

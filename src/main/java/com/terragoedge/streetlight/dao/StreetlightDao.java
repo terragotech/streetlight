@@ -53,7 +53,7 @@ public class StreetlightDao extends UtilDao {
             calendar.set(Calendar.HOUR_OF_DAY, 17);
             calendar.set(Calendar.MINUTE, 00);
             calendar.set(Calendar.SECOND, 00);
-            calendar.set(Calendar.DAY_OF_MONTH,calendar.get(Calendar.DAY_OF_MONTH) - 1);
+            calendar.set(Calendar.DAY_OF_MONTH,calendar.get(Calendar.DAY_OF_MONTH) - 2);
 			long startOfDay = calendar.getTime().getTime();
 
 
@@ -114,14 +114,16 @@ public class StreetlightDao extends UtilDao {
                 noteData.setNoteId(noteId);
 
                 noteDataList.add(noteData);
-                String locationdescription = queryResponse.getString("locationdescription");
                 String groupName = queryResponse.getString("groupname");
-               /* if (groupName != null && groupName.toLowerCase().contains("complete")) {
-                    String[] res = locationdescription.split("\\\\|");
-                    locationdescription = res[0].trim();
-                    groupName = res[1].trim();
-                }*/
-                noteData.setDescription(locationdescription);
+
+                String locationDescription = queryResponse.getString("locationdescription");
+                String[] locations = locationDescription.split("\\|");
+
+                if(locations.length == 2){
+                    locationDescription = locations[0];
+                }
+
+                noteData.setDescription(locationDescription);
                 noteData.setGroupName(groupName);
                 noteData.setTitle(queryResponse.getString("title"));
                 noteData.setCreatedBy(queryResponse.getString("createdby"));
@@ -592,7 +594,6 @@ public class StreetlightDao extends UtilDao {
         DataSetManager.getAddressSets().clear();
         generateSQLQueryForTemplate(PropertiesReader.getProperties().getProperty("amrescouso.install_manintenance.formtemplate.guid"));
         generateSQLQueryForTemplate(PropertiesReader.getProperties().getProperty("amrescouso.existing_fixture.formtemplate.guid"));
-	    List<AddressSet> addressSetList = new ArrayList<>(DataSetManager.getAddressSets());
 	    String query = generateSQLQuery(formTemplateGuid);
         List<InspectionsReport> inspectionsReports  = new ArrayList<>();
         Statement queryStatement = null;
@@ -635,9 +636,9 @@ public class StreetlightDao extends UtilDao {
                     inspectionsReport.setLon(queryResponse.getString("Latitude"));
                     inspectionsReport.setLat(queryResponse.getString("Longitude"));
                     inspectionsReport.setCreatedBy(queryResponse.getString("createdby"));
-                    int pos = getIndex(addressSetList,title);
+                    //int pos = getIndex(addressSetList,title);
 
-                    inspectionsReport.setAddress(pos != -1 ? addressSetList.get(pos).getAddress(): "");
+                    inspectionsReport.setAddress(description);
                     inspectionsReport.setAtlasPage(queryResponse.getString("notebookname"));
                     inspectionsReport.setName(title);
                     inspectionsReport.setAddComment(queryResponse.getString("addcomment"));
