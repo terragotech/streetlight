@@ -22,8 +22,8 @@ public class StreetlightApp {
 				return Integer.parseInt(hoursOfDay);
 			}
 		}
-		return 04;
-       // return 17;
+		//return 04;
+         return 17;
 	}
 
 

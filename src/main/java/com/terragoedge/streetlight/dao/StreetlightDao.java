@@ -53,7 +53,7 @@ public class StreetlightDao extends UtilDao {
             calendar.set(Calendar.HOUR_OF_DAY, 17);
             calendar.set(Calendar.MINUTE, 00);
             calendar.set(Calendar.SECOND, 00);
-            calendar.set(Calendar.DAY_OF_MONTH,calendar.get(Calendar.DAY_OF_MONTH) - 2);
+            calendar.set(Calendar.DAY_OF_MONTH,calendar.get(Calendar.DAY_OF_MONTH) - 1);
 			long startOfDay = calendar.getTime().getTime();
 
 
