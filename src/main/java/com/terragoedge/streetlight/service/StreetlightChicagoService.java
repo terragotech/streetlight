@@ -396,6 +396,8 @@ public class StreetlightChicagoService extends AbstractProcessor{
 							loggingModel.setStatus(MessageConstants.ERROR);
 							continue;
 						}
+						paramsList.add("idOnController=" + idOnController);
+						paramsList.add("controllerStrId=" + controllerStrId);
 						macAddress = loadMACAddress(edgeFormData.getValue(), paramsList, idOnController);
 					}
 				}
