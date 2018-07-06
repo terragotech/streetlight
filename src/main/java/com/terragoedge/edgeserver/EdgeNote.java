@@ -82,6 +82,10 @@ private EdgeNotebook edgeNotebook = null;
 		this.title = title;
 	}
 
+	public void setFormData(List<FormData> formData) {
+		this.formData = formData;
+	}
+
 	public List<FormData> getFormData() {
 		System.out.println(formData);
 		System.out.println(formData.toString());

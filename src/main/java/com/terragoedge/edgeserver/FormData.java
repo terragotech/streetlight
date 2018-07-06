@@ -32,7 +32,10 @@ public class FormData {
 		return edgeFormDatas;
 	}
 
-	
+
+	public void setFormDef(String formDef) {
+		this.formDef = formDef;
+	}
 
 	public String getCategory() {
 		return category;

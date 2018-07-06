@@ -1,0 +1,686 @@
+{
+   "properties" :
+      {
+         "columnNames" :
+            [
+               "faulty",
+               "criticalFaulty",
+               "failures",
+               "eventTime",
+               "failureDuration",
+               "runningHours",
+               "runningHoursLifeTimePercent",
+               "id",
+               "name",
+               "address",
+               "geozone"
+            ],
+         "columnLabels" :
+            [
+               "Warning",
+               "Outages",
+               "Failures",
+               "Last update",
+               "Failed since",
+               "Burning hours",
+               "Lifetime %",
+               "ID",
+               "Name",
+               "Address",
+               "Geozone"
+            ],
+         "metadatas" :
+            [
+               {
+                  "label" : "Devices :",
+                  "properties" : null,
+                  "value" : "30"
+               },
+               {
+                  "label" : "Zone :",
+                  "properties" : null,
+                  "value" : "A-10"
+               },
+               {
+                  "label" : "Date :",
+                  "properties" : null,
+                  "value" : "03/07/2018 09:02"
+               }
+            ],
+         "bottomRow" :
+            {
+               "label" : "TOTAL",
+               "properties" : null,
+               "value" :
+                  [
+                     12,
+                     12,
+                     null,
+                     null,
+                     null,
+                     null,
+                     null,
+                     null,
+                     null,
+                     "?",
+                     null
+                  ]
+            },
+         "title" : "Failures report",
+         "rows" :
+            [
+               {
+                  "label" : "A10-03-2736-C",
+                  "properties" : null,
+                  "value" :
+                     [
+                        true,
+                        true,
+                        [
+                           {
+                              "label" : "Communication failure",
+                              "properties" : null,
+                              "value" : "CommunicationFailure"
+                           }
+                        ],
+                        "2018-07-03 01:15:17.0",
+                        "1 day 03h02m",
+                        678.0,
+                        null,
+                        729590,
+                        "A10-03-273644-C",
+                        "FOSTER",
+                        "A-10"
+                     ]
+               },
+               {
+                  "label" : "A10-03-219451-C",
+                  "properties" : null,
+                  "value" :
+                     [
+                        true,
+                        true,
+                        [
+                           {
+                              "label" : "Communication failure",
+                              "properties" : null,
+                              "value" : "CommunicationFailure"
+                           }
+                        ],
+                        "2018-07-03 01:15:17.0",
+                        "1 day 03h02m",
+                        678.0,
+                        null,
+                        736520,
+                        "A10-03-219451-C",
+                        "FOSTER",
+                        "A-10"
+                     ]
+               },
+               {
+                  "label" : "A10-03-88614-C",
+                  "properties" : null,
+                  "value" :
+                     [
+                        true,
+                        true,
+                        [
+                           {
+                              "label" : "Communication failure",
+                              "properties" : null,
+                              "value" : "CommunicationFailure"
+                           }
+                        ],
+                        "2018-07-03 01:15:15.0",
+                        "1 day 03h02m",
+                        631.0,
+                        null,
+                        739103,
+                        "A10-03-88614-C",
+                        "FOSTER",
+                        "A-10"
+                     ]
+               },
+               {
+                  "label" : "A10-03-314012-C",
+                  "properties" : null,
+                  "value" :
+                     [
+                        true,
+                        true,
+                        [
+                           {
+                              "label" : "Communication failure",
+                              "properties" : null,
+                              "value" : "CommunicationFailure"
+                           }
+                        ],
+                        "2018-07-03 01:15:15.0",
+                        "1 day 03h02m",
+                        678.0,
+                        null,
+                        739166,
+                        "A10-03-314012-C",
+                        "FOSTER",
+                        "A-10"
+                     ]
+               },
+               {
+                  "label" : "A10-03-126716-C",
+                  "properties" : null,
+                  "value" :
+                     [
+                        true,
+                        true,
+                        [
+                           {
+                              "label" : "Communication failure",
+                              "properties" : null,
+                              "value" : "CommunicationFailure"
+                           }
+                        ],
+                        "2018-07-03 01:15:18.0",
+                        "1 day 03h02m",
+                        678.0,
+                        null,
+                        739754,
+                        "A10-03-126716-C",
+                        "HIGGINS",
+                        "A-10"
+                     ]
+               },
+               {
+                  "label" : "A10-03-219449-C",
+                  "properties" : null,
+                  "value" :
+                     [
+                        true,
+                        true,
+                        [
+                           {
+                              "label" : "Communication failure",
+                              "properties" : null,
+                              "value" : "CommunicationFailure"
+                           }
+                        ],
+                        "2018-07-03 01:15:17.0",
+                        "1 day 03h02m",
+                        678.0,
+                        null,
+                        739824,
+                        "A10-03-219449-C",
+                        "FOSTER",
+                        "A-10"
+                     ]
+               },
+               {
+                  "label" : "A10-03-151688-C",
+                  "properties" : null,
+                  "value" :
+                     [
+                        true,
+                        true,
+                        [
+                           {
+                              "label" : "Communication failure",
+                              "properties" : null,
+                              "value" : "CommunicationFailure"
+                           }
+                        ],
+                        "2018-07-03 01:15:17.0",
+                        "1 day 03h02m",
+                        678.0,
+                        null,
+                        739880,
+                        "A10-03-151688-C",
+                        "FOSTER",
+                        "A-10"
+                     ]
+               },
+               {
+                  "label" : "A10-03-154107-C",
+                  "properties" : null,
+                  "value" :
+                     [
+                        true,
+                        true,
+                        [
+                           {
+                              "label" : "Communication failure",
+                              "properties" : null,
+                              "value" : "CommunicationFailure"
+                           }
+                        ],
+                        "2018-07-03 01:15:17.0",
+                        "1 day 03h02m",
+                        674.0,
+                        null,
+                        739922,
+                        "A10-03-154107-C",
+                        "FOSTER",
+                        "A-10"
+                     ]
+               },
+               {
+                  "label" : "A10-03-199229-C",
+                  "properties" : null,
+                  "value" :
+                     [
+                        true,
+                        true,
+                        [
+                           {
+                              "label" : "Communication failure",
+                              "properties" : null,
+                              "value" : "CommunicationFailure"
+                           }
+                        ],
+                        "2018-07-03 01:15:19.0",
+                        "1 day 03h02m",
+                        678.0,
+                        null,
+                        750023,
+                        "A10-03-199229-C",
+                        "FOSTER",
+                        "A-10"
+                     ]
+               },
+               {
+                  "label" : "A10-03-121698-C",
+                  "properties" : null,
+                  "value" :
+                     [
+                        true,
+                        true,
+                        [
+                           {
+                              "label" : "Communication failure",
+                              "properties" : null,
+                              "value" : "CommunicationFailure"
+                           }
+                        ],
+                        "2018-07-03 01:15:19.0",
+                        "1 day 03h02m",
+                        678.0,
+                        null,
+                        752816,
+                        "A10-03-121698-C",
+                        "FOSTER",
+                        "A-10"
+                     ]
+               },
+               {
+                  "label" : "A10-03-238324-C",
+                  "properties" : null,
+                  "value" :
+                     [
+                        true,
+                        true,
+                        [
+                           {
+                              "label" : "Communication failure",
+                              "properties" : null,
+                              "value" : "CommunicationFailure"
+                           }
+                        ],
+                        "2018-07-03 01:15:18.0",
+                        "1 day 03h02m",
+                        678.0,
+                        null,
+                        755658,
+                        "A10-03-238324-C",
+                        "FOSTER",
+                        "A-10"
+                     ]
+               },
+               {
+                  "label" : "A10-03-88612-C",
+                  "properties" : null,
+                  "value" :
+                     [
+                        true,
+                        true,
+                        [
+                           {
+                              "label" : "Communication failure",
+                              "properties" : null,
+                              "value" : "CommunicationFailure"
+                           }
+                        ],
+                        "2018-07-03 01:15:19.0",
+                        "1 day 03h02m",
+                        673.0,
+                        null,
+                        755945,
+                        "A10-03-88612-C",
+                        "FOSTER",
+                        "A-10"
+                     ]
+               },
+               {
+                  "label" : "A10-03-83533-C",
+                  "properties" : null,
+                  "value" :
+                     [
+                        false,
+                        false,
+                        null,
+                        "2018-06-29 06:49:18.0",
+                        null,
+                        821.5,
+                        null,
+                        729471,
+                        "A10-03-83533-C",
+                        "FOSTER",
+                        "A-10"
+                     ]
+               },
+               {
+                  "label" : "A10-03-9056-C",
+                  "properties" : null,
+                  "value" :
+                     [
+                        false,
+                        false,
+                        null,
+                        "2018-06-29 06:50:28.0",
+                        null,
+                        822.517,
+                        null,
+                        729548,
+                        "A10-03-9056-C",
+                        "FOSTER",
+                        "A-10"
+                     ]
+               },
+               {
+                  "label" : "A10-03-87308-C",
+                  "properties" : null,
+                  "value" :
+                     [
+                        false,
+                        false,
+                        null,
+                        "2018-06-29 06:50:44.0",
+                        null,
+                        822.5,
+                        null,
+                        732096,
+                        "A10-03-87308-C",
+                        "FOSTER",
+                        "A-10"
+                     ]
+               },
+               {
+                  "label" : "A10-03-170541-C",
+                  "properties" : null,
+                  "value" :
+                     [
+                        false,
+                        false,
+                        null,
+                        "2018-06-29 06:49:16.0",
+                        null,
+                        822.5,
+                        null,
+                        732159,
+                        "A10-03-170541-C",
+                        "FOSTER",
+                        "A-10"
+                     ]
+               },
+               {
+                  "label" : "A10-03-144225-C",
+                  "properties" : null,
+                  "value" :
+                     [
+                        false,
+                        false,
+                        null,
+                        "2018-06-29 06:49:16.0",
+                        null,
+                        821.5,
+                        null,
+                        739040,
+                        "A10-03-144225-C",
+                        "FOSTER",
+                        "A-10"
+                     ]
+               },
+               {
+                  "label" : "A10-15-91161-C",
+                  "properties" : null,
+                  "value" :
+                     [
+                        false,
+                        false,
+                        null,
+                        "2018-06-10 23:07:49.0",
+                        null,
+                        831.15,
+                        null,
+                        739684,
+                        "A10-15-91161-C",
+                        "HIGGINS",
+                        "A-10"
+                     ]
+               },
+               {
+                  "label" : "A10-03-17937-F",
+                  "properties" : null,
+                  "value" :
+                     [
+                        false,
+                        false,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        745249,
+                        "A10-03-17937-F",
+                        "FOSTER",
+                        "A-10"
+                     ]
+               },
+               {
+                  "label" : "A10-03-79644-C",
+                  "properties" : null,
+                  "value" :
+                     [
+                        false,
+                        false,
+                        null,
+                        "2018-06-10 02:52:15.0",
+                        null,
+                        815.967,
+                        null,
+                        745515,
+                        "A10-03-79644-C",
+                        "FOSTER",
+                        "A-10"
+                     ]
+               },
+               {
+                  "label" : "A10-03-75920-C",
+                  "properties" : null,
+                  "value" :
+                     [
+                        false,
+                        false,
+                        null,
+                        "2018-06-30 04:01:21.0",
+                        null,
+                        820.633,
+                        null,
+                        749897,
+                        "A10-03-75920-C",
+                        "FOSTER",
+                        "A-10"
+                     ]
+               },
+               {
+                  "label" : "A10-03-321473-C",
+                  "properties" : null,
+                  "value" :
+                     [
+                        false,
+                        false,
+                        null,
+                        "2018-06-29 06:49:13.0",
+                        null,
+                        821.533,
+                        null,
+                        749967,
+                        "A10-03-321473-C",
+                        "FOSTER",
+                        "A-10"
+                     ]
+               },
+               {
+                  "label" : "A10-15-30754-C",
+                  "properties" : null,
+                  "value" :
+                     [
+                        false,
+                        false,
+                        null,
+                        "2018-06-10 04:10:02.0",
+                        null,
+                        830.667,
+                        null,
+                        750100,
+                        "A10-15-30754-C",
+                        "FOSTER",
+                        "A-10"
+                     ]
+               },
+               {
+                  "label" : "A10-03-55758-C",
+                  "properties" : null,
+                  "value" :
+                     [
+                        false,
+                        false,
+                        null,
+                        "2018-06-29 06:50:25.0",
+                        null,
+                        826.533,
+                        null,
+                        752732,
+                        "A10-03-55758-C",
+                        "FOSTER",
+                        "A-10"
+                     ]
+               },
+               {
+                  "label" : "A10-03-73410-C",
+                  "properties" : null,
+                  "value" :
+                     [
+                        false,
+                        false,
+                        null,
+                        "2018-06-29 06:49:17.0",
+                        null,
+                        821.5,
+                        null,
+                        752879,
+                        "A10-03-73410-C",
+                        "FOSTER",
+                        "A-10"
+                     ]
+               },
+               {
+                  "label" : "A10-15-261096-C",
+                  "properties" : null,
+                  "value" :
+                     [
+                        false,
+                        false,
+                        null,
+                        "2018-06-10 19:23:23.0",
+                        null,
+                        831.233,
+                        null,
+                        754475,
+                        "A10-15-261096-C",
+                        "HIGGINS",
+                        "A-10"
+                     ]
+               },
+               {
+                  "label" : "A10-03-84853-C",
+                  "properties" : null,
+                  "value" :
+                     [
+                        false,
+                        false,
+                        null,
+                        "2018-06-29 06:49:15.0",
+                        null,
+                        821.533,
+                        null,
+                        755588,
+                        "A10-03-84853-C",
+                        "FOSTER",
+                        "A-10"
+                     ]
+               },
+               {
+                  "label" : "A10-03-229534-C",
+                  "properties" : null,
+                  "value" :
+                     [
+                        false,
+                        false,
+                        null,
+                        "2018-06-29 06:49:18.0",
+                        null,
+                        822.5,
+                        null,
+                        755882,
+                        "A10-03-229534-C",
+                        "FOSTER",
+                        "A-10"
+                     ]
+               },
+               {
+                  "label" : "A10-03-277365-C",
+                  "properties" : null,
+                  "value" :
+                     [
+                        false,
+                        false,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        802740,
+                        "A10-03-277365-C",
+                        "MELVINA",
+                        "A-10"
+                     ]
+               },
+               {
+                  "label" : "A10-03-23057-C",
+                  "properties" : null,
+                  "value" :
+                     [
+                        false,
+                        false,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        802775,
+                        "A10-03-23057-C",
+                        "MELVINA",
+                        "A-10"
+                     ]
+               }
+            ]
+      }
+}

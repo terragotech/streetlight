@@ -1,5 +1,6 @@
 package com.terragoedge.streetlight;
 
+import com.terragoedge.streetlight.service.FailureReportService;
 import com.terragoedge.streetlight.service.InstallDateFix;
 import com.terragoedge.streetlight.service.SlvService;
 import com.terragoedge.streetlight.service.StreetlightChicagoService;
@@ -16,7 +17,9 @@ public class StreetlightApp {
 		streetlightChicagoService.run();
 */
 
-		while (true){
+        FailureReportService failureReportService = new FailureReportService();
+        failureReportService.run();
+	/*	while (true){
 		    try{
                 StreetlightChicagoService streetlightChicagoService = new StreetlightChicagoService();
                 streetlightChicagoService.run();
@@ -25,7 +28,7 @@ public class StreetlightApp {
             }catch (Exception e){
 		        e.printStackTrace();
             }
-        }
+        }*/
 
 
 	}
