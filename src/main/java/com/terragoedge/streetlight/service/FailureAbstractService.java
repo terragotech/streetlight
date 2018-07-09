@@ -4,6 +4,7 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.terragoedge.streetlight.PropertiesReader;
+import org.apache.log4j.Logger;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 
@@ -11,6 +12,8 @@ public class FailureAbstractService {
     private String baseUrl = null;
     private RestService restService = null;
     private JsonParser jsonParser;
+
+    final Logger logger = Logger.getLogger(FailureAbstractService.class);
 
     FailureAbstractService() {
         baseUrl = PropertiesReader.getProperties().getProperty("amerescousa.edge.url.main");
@@ -37,13 +40,16 @@ public class FailureAbstractService {
     protected String getNoteDetails(String noteName) {
        try {
             String urlNew = baseUrl + "/rest/notes?search=" + noteName;
+            logger.info("Url to get Note Details:"+urlNew);
             ResponseEntity<String> responseEntity = restService.serverCall(urlNew, HttpMethod.GET, null);
             if (responseEntity.getStatusCode().is2xxSuccessful()) {
                 String response = responseEntity.getBody();
+                logger.info("----------Response-------");
+                logger.info(response);
                 return response;
             }
         } catch (Exception e) {
-            e.printStackTrace();
+           logger.error("Error in getNoteDetails",e);
         }
         return null;
     }

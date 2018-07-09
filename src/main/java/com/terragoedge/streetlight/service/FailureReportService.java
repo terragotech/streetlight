@@ -9,6 +9,7 @@ import com.terragoedge.edgeserver.FormData;
 import com.terragoedge.streetlight.PropertiesReader;
 import com.terragoedge.streetlight.comparator.GroupRepeatableComparator;
 import com.terragoedge.streetlight.dao.StreetlightDao;
+import com.terragoedge.streetlight.enumeration.PoleStatus;
 import com.terragoedge.streetlight.exception.NotesNotFoundException;
 import com.terragoedge.streetlight.json.model.ErrorMessageModel;
 import com.terragoedge.streetlight.json.model.FailureFormDBmodel;
@@ -42,14 +43,15 @@ public class FailureReportService extends FailureAbstractService {
 
     public void loadErrorFormJson() {
         try {
-            //  FileInputStream fis = new FileInputStream("./input_update.json");
-            FileInputStream fis = new FileInputStream("./src/main/resources/ErrorForm.json");
+            logger.info("Loading Error FromTemplate.");
+            FileInputStream fis = new FileInputStream("./resources/ErrorForm.json");
+           // FileInputStream fis = new FileInputStream("./src/main/resources/ErrorForm.json");
             errorFormJson = IOUtils.toString(fis);
 
-            FileInputStream fisTemp = new FileInputStream("./src/main/resources/failurereportjson.txt");
-            tempResponse = IOUtils.toString(fisTemp);
+          /* FileInputStream fisTemp = new FileInputStream("./src/main/resources/failurereportjson.txt");
+            tempResponse = IOUtils.toString(fisTemp);*/
         } catch (Exception e) {
-            e.printStackTrace();
+            logger.error("Error in loadErrorFormJson",e);
         }
     }
 
@@ -62,68 +64,84 @@ public class FailureReportService extends FailureAbstractService {
         url = url + PropertiesReader.getProperties().getProperty("streetlight.slv.geozoneUrl");
         List<GeozoneModel> geozoneModelList = getGeozoneModelList(url);
         logger.info("GeozoneModelList Size:" + geozoneModelList.size());
-        List<FailureReportModel> failureReportModelList = new ArrayList<>();
+
         for (GeozoneModel geozoneModel : geozoneModelList) {
-            processFailureReport(geozoneModel, failureReportModelList);
-        }
-        for (FailureReportModel failureReportModel : failureReportModelList) {
-            if (!fixtureIdList.contains(failureReportModel.getFixtureId())) {
-                logger.info("ProcessForm Started Title " + failureReportModel.toString());
-                FailureFormDBmodel failureFormDBmodel = new FailureFormDBmodel();
-                failureFormDBmodel.setNoteName(failureReportModel.getFixtureId());
-                processErrorForm(failureReportModel, failureFormDBmodel);
-                processedFixtureIds.add(failureReportModel.getFixtureId());
+            if(geozoneModel.getChildrenCount() == 0){
+                List<FailureReportModel> failureReportModelList = new ArrayList<>();
+                processFailureReport(geozoneModel, failureReportModelList);
+
+                for (FailureReportModel failureReportModel : failureReportModelList) {
+                    if (!fixtureIdList.contains(failureReportModel.getFixtureId())) {
+                        logger.info("ProcessForm Started Title " + failureReportModel.toString());
+                        FailureFormDBmodel failureFormDBmodel = new FailureFormDBmodel();
+                        failureFormDBmodel.setNoteName(failureReportModel.getFixtureId());
+                        failureFormDBmodel.setStatus(PoleStatus.PROBLEM.toString());
+                        processErrorForm(failureReportModel, failureFormDBmodel);
+                        processedFixtureIds.add(failureReportModel.getFixtureId());
+                    }
+                }
             }
+
         }
+
         fixtureIdList.remove(processedFixtureIds);
         for (String fixtureId : fixtureIdList) {
-            processResolvedForm(fixtureId);
+            try{
+                FailureFormDBmodel failureFormDBmodel = new FailureFormDBmodel();
+                failureFormDBmodel.setNoteName(fixtureId);
+                failureFormDBmodel.setStatus(PoleStatus.FIXED.toString());
+                processResolvedForm(fixtureId,failureFormDBmodel);
+            }catch (Exception e){
+                logger.error("Error while processing :"+fixtureId,e);
+            }
+
         }
     }
 
     public void processFailureReport(GeozoneModel geozoneModel, List<FailureReportModel> failureReportModelList) {
-        JsonObject jsonObject = getFailureReport(geozoneModel);
-        logger.info("geozoneModel id:" + geozoneModel.getId() + ": =" + jsonObject.toString());
-        JsonObject jsonSubObject = jsonObject.get("properties").getAsJsonObject();
-        JsonElement jsonElement = jsonSubObject.get("rows");
-        JsonArray jsonArray = jsonElement.getAsJsonArray();
-        if (jsonObject != null) {
-            for (JsonElement jsonElementObject : jsonArray) {
-                FailureReportModel failureReportModel = new FailureReportModel();
-                failureReportModelList.add(failureReportModel);
-                JsonObject failureObject = jsonElementObject.getAsJsonObject();
-                String title = null;
-                String properties = null;
-                if (failureObject.get("label") != null) {
-                    title = failureObject.get("label").toString();
-                    failureReportModel.setLabel(title);
-                    String splitValues[] = title.split("-");
-                    if (splitValues.length > 3) {
-                        failureReportModel.setFixtureId(splitValues[2]);
+        try{
+           // logger.info("Getting Failure Report for "+geozoneModel.getId());
+            JsonObject jsonObject = getFailureReport(geozoneModel);
+            JsonObject jsonSubObject = jsonObject.get("properties").getAsJsonObject();
+            JsonElement jsonElement = jsonSubObject.get("rows");
+            JsonArray jsonArray = jsonElement.getAsJsonArray();
+            if (jsonObject != null) {
+                for (JsonElement jsonElementObject : jsonArray) {
+                    FailureReportModel failureReportModel = new FailureReportModel();
+                    failureReportModelList.add(failureReportModel);
+                    JsonObject failureObject = jsonElementObject.getAsJsonObject();
+                    String title = null;
+                    String properties = null;
+                    if (failureObject.get("label") != null) {
+                        title = failureObject.get("label").toString();
+                        failureReportModel.setLabel(title);
+                        String splitValues[] = title.split("-");
+                        if (splitValues.length > 3) {
+                            failureReportModel.setFixtureId(splitValues[2]);
+                        }
                     }
+                    if (failureObject.get("properties") != null) {
+                        properties = failureObject.get("properties").toString();
+                        failureReportModel.setProperties(properties);
+                    }
+                    JsonArray jsonValuesArray = failureObject.get("value").getAsJsonArray();
+                    setFailureModelObject(jsonValuesArray, failureReportModel);
                 }
-                if (failureObject.get("properties") != null) {
-                    properties = failureObject.get("properties").toString();
-                    failureReportModel.setProperties(properties);
-                }
-                JsonArray jsonValuesArray = failureObject.get("value").getAsJsonArray();
-                setFailureModelObject(jsonValuesArray, failureReportModel);
             }
+        }catch (Exception e){
+            logger.error("Error in processFailureReport",e);
         }
+
     }
 
     public void processErrorForm(FailureReportModel failureReportModel, FailureFormDBmodel failureFormDBmodel) {
         try {
             String notesJson = getNoteDetails(failureReportModel.getFixtureId());
             if (notesJson == null) {
-                logger.info("Note not in Inventory.");
-                throw new NotesNotFoundException("Note [" + "] not in Inventory.");
+                logger.info("Note not in Edge.");
+                throw new NotesNotFoundException("Note ["+failureReportModel.getFixtureId() + "] not in Edge.");
             }
-            logger.info("NoteResponse Started Title " + failureReportModel.getFixtureId() + " = " + notesJson.toString());
-        /*    EdgeNote edgeNote1 = gson.fromJson(notesJson, EdgeNote.class);
-            List<EdgeNote> edgeNoteList = new ArrayList<>();
-            edgeNoteList.add(edgeNote1);
-        */
+
             Type listType = new TypeToken<ArrayList<EdgeNote>>() {
             }.getType();
             List<EdgeNote> edgeNoteList = gson.fromJson(notesJson, listType);
@@ -141,7 +159,7 @@ public class FailureReportService extends FailureAbstractService {
             }
 
         } catch (Exception e) {
-            e.printStackTrace();
+            logger.error("Error in processErrorForm",e);
         }
     }
 
@@ -190,11 +208,12 @@ public class FailureReportService extends FailureAbstractService {
         //setLayer as Outage
         String outageLayerGuid = PropertiesReader.getProperties().getProperty("outage_layer.guid");
         String notebookGuid = edgeNote.getEdgeNotebook().getNotebookGuid();
+        String oldNoteGuid = edgeNote.getNoteGuid();
         JsonObject edgeNoteJsonObject = processEdgeForms(gson.toJson(edgeNote), edgeFormDatas, formTemplateGuid);
         String newNoteGuid = edgeNoteJsonObject.get("noteGuid").getAsString();
         setGroupValue(outageLayerGuid, edgeNoteJsonObject);
         logger.info("ProcessedFormJson " + edgeNoteJsonObject.toString());
-        ResponseEntity<String> responseEntity = updateNoteDetails(edgeNoteJsonObject.toString(), edgeNote.getNoteGuid(), notebookGuid);
+        ResponseEntity<String> responseEntity = updateNoteDetails(edgeNoteJsonObject.toString(),oldNoteGuid, notebookGuid);
         failureFormDBmodel.setErrorDetails(responseEntity.getBody());
         logger.info("edgenote update to server: " + responseEntity.getBody());
         //save
@@ -217,22 +236,43 @@ public class FailureReportService extends FailureAbstractService {
                 serverEdgeForm.addProperty("formGuid", UUID.randomUUID().toString());
                 isExisterrorForm = true;
             }
+
+            String formDefJson = serverEdgeForm.get("formDef").toString();
+            formDefJson = formDefJson.replaceAll("\\\\", "");
+            List<EdgeFormData> formDataList = getEdgeFormData(formDefJson);
+            serverEdgeForm.add("formDef", gson.toJsonTree(formDataList));
+            serverEdgeForm.addProperty("formGuid", UUID.randomUUID().toString());
         }
         if (!isExisterrorForm) {
             JsonObject jsonObject = new JsonObject();
             jsonObject.add("formDef", gson.toJsonTree(edgeFormDataList));
             jsonObject.addProperty("formGuid", UUID.randomUUID().toString());
             jsonObject.addProperty("name", "Failure report");
-            jsonObject.addProperty("formTemplateGuid", "38b41f7a-da55-47a2-8343-140f73106b89");
+            String formTemplateGuid = PropertiesReader.getProperties().getProperty("streetlight.edge.formtemplateguid.errorform");
+            jsonObject.addProperty("formTemplateGuid", formTemplateGuid);
             jsonObject.addProperty("category", "Report");
             jsonObject.addProperty("formValidationAction", "Warning");
             serverEdgeFormJsonArray.add(jsonObject);
         }
-        edgeJsonObject.remove("geometry");
         edgeJsonObject.add("formData", serverEdgeFormJsonArray);
         edgeJsonObject.addProperty("createdDateTime", System.currentTimeMillis());
         edgeJsonObject.addProperty("noteGuid", UUID.randomUUID().toString());
         return edgeJsonObject;
+    }
+
+
+    protected List<EdgeFormData> getEdgeFormData(String formDefJson){
+        try{
+            List<EdgeFormData> edgeFormDatas = gson.fromJson(formDefJson, new TypeToken<List<EdgeFormData>>() {
+            }.getType());
+            return edgeFormDatas;
+        }catch (Exception e){
+            formDefJson = formDefJson.substring(1,formDefJson.length() -1);
+            List<EdgeFormData> edgeFormDatas = gson.fromJson(formDefJson, new TypeToken<List<EdgeFormData>>() {
+            }.getType());
+            return edgeFormDatas;
+        }
+
     }
 
     public EdgeNote processEdgeFormData(EdgeNote edgeNote, List<EdgeFormData> edgeFormDataList) {
@@ -323,7 +363,7 @@ public class FailureReportService extends FailureAbstractService {
     }
 
     public JsonObject getFailureReport(GeozoneModel geozoneModel) {
-        String failureReportUrl = null;
+       // return (JsonObject) jsonParser.parse(tempResponse);
         String url = PropertiesReader.getProperties().getProperty("streetlight.slv.url.main");
         String failureUrl = PropertiesReader.getProperties().getProperty("streetlight.slv.failurereport");
         List<Object> paramsList = new ArrayList<>();
@@ -334,13 +374,17 @@ public class FailureReportService extends FailureAbstractService {
         paramsList.add("reportPropertyValue=2");
         paramsList.add("time=" + System.currentTimeMillis());
         String params = StringUtils.join(paramsList, "&");
-        failureReportUrl = url + failureUrl + "?" + params;
-
+        String  failureReportUrl = url + failureUrl + "?" + params;
+        logger.info("Url to get Failure Report:");
+        logger.info("Url:"+failureReportUrl);
         ResponseEntity<String> response = restService.getPostRequest(failureReportUrl, null);
+        logger.info("Response Code:"+response.getStatusCodeValue());
         if (response.getStatusCodeValue() == 200) {
             String responseString = response.getBody();
-            return (JsonObject) jsonParser.parse(tempResponse);
-            //  return (JsonObject) jsonParser.parse(responseString);
+            logger.info("--------Response----------");
+            logger.info(responseString);
+           // return (JsonObject) jsonParser.parse(tempResponse);
+            return (JsonObject) jsonParser.parse(responseString);
         }
         return null;
     }
@@ -357,6 +401,7 @@ public class FailureReportService extends FailureAbstractService {
             logger.error("Unable to get message from EdgeServer. Response Code is :" + responseEntity.getStatusCode());
         }
         return new ArrayList<GeozoneModel>();
+
     }
 
     public void setGroupValue(String value, JsonObject notesJson) {
@@ -373,7 +418,7 @@ public class FailureReportService extends FailureAbstractService {
         return edgeFormData.getGroupRepeatableCount();
     }
 
-    public void processResolvedForm(String fixtureId) {
+    public void processResolvedForm(String fixtureId,FailureFormDBmodel failureFormDBmodel) {
         String notebookGuid = null;
         String edgenoteJson = getNoteDetails(fixtureId);
         Type listType = new TypeToken<ArrayList<EdgeNote>>() {
@@ -394,6 +439,11 @@ public class FailureReportService extends FailureAbstractService {
             ResponseEntity<String> responseEntity = updateNoteDetails(edgeJsonObject.toString(), noteguid, notebookGuid);
             logger.info("edgenote update to server: " + responseEntity.getBody());
 
+            failureFormDBmodel.setNoteid(edgeNote.getNoteGuid());
+            failureFormDBmodel.setCreatedDatetime(String.valueOf(edgeNote.getCreatedDateTime()));
+            failureFormDBmodel.setProcessDateTime(String.valueOf(System.currentTimeMillis()));
+            failureFormDBmodel.setNewNoteGuid(responseEntity.getBody());
+            streetlightDao.update(failureFormDBmodel);
         }
 
     }

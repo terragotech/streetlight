@@ -4,6 +4,15 @@ public class GeozoneModel {
     int id;
     int parentId;
     String type;
+    private int childrenCount;
+
+    public int getChildrenCount() {
+        return childrenCount;
+    }
+
+    public void setChildrenCount(int childrenCount) {
+        this.childrenCount = childrenCount;
+    }
 
     public int getId() {
         return id;

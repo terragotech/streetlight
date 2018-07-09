@@ -9,6 +9,16 @@ public class FailureFormDBmodel {
     private String modelJson;
     private String processDateTime;
     private String newNoteGuid;
+    private String poleStatus;
+
+
+    public String getPoleStatus() {
+        return poleStatus;
+    }
+
+    public void setPoleStatus(String poleStatus) {
+        this.poleStatus = poleStatus;
+    }
 
     public String getNoteid() {
         return noteid;

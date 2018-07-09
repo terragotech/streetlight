@@ -90,7 +90,7 @@
                             <goal>single</goal>
                         </goals>
                         <configuration>
-                            <finalName>ameresco_usa_streetlight_v32</finalName>
+                            <finalName>ameresco_usa_failure_form_v4</finalName>
                             <archive>
                                 <manifest>
                                     <mainClass>
