@@ -49,7 +49,7 @@ public class FailureAbstractService {
     }
 
     public ResponseEntity<String> updateNoteDetails(String noteDetails, String noteGuid, String notebookGuid) {
-        String baseUrl = PropertiesReader.getProperties().getProperty("server.edge.url.main");
+        String baseUrl = PropertiesReader.getProperties().getProperty("amerescousa.edge.url.main");
         String urlNew = baseUrl + "/rest/notebooks/" + notebookGuid + "/notes/" + noteGuid;
         return restService.serverCall(urlNew, HttpMethod.PUT, noteDetails);
     }
