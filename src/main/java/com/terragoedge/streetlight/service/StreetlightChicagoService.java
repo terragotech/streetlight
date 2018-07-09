@@ -2,6 +2,10 @@ package com.terragoedge.streetlight.service;
 
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
@@ -10,7 +14,10 @@ import com.terragoedge.edgeserver.InspectionsReport;
 import com.terragoedge.streetlight.PropertiesReader;
 import com.terragoedge.streetlight.dao.NoteData;
 import com.terragoedge.streetlight.dao.UtilDao;
+import com.terragoedge.streetlight.pdfreport.PDFReport;
+
 import org.apache.log4j.Logger;
+import org.springframework.web.client.RestTemplate;
 
 import com.terragoedge.streetlight.dao.StreetlightDao;
 
@@ -175,7 +182,7 @@ public class StreetlightChicagoService {
 
         }
     }
-	
+   
 	public void run() throws IOException{
 		String fileName = getDateTime();
 
@@ -264,6 +271,18 @@ public class StreetlightChicagoService {
 			logData(quickNoteBuilder.toString(), quickNoteFileName);
 		}
 		edgeMailService.sendMail(dupMacAddressFile, dailyReportFile,quickNoteFileName,inspectionFileName);
+		String inputFile = "./report/" + dailyReportFile;
+		Properties properties =  PropertiesReader.getProperties();
+		String destFile = properties.getProperty("dailyreport.inputfile");
+		String hostString = properties.getProperty("dailyreport.geomapservice");
+		Path source = Paths.get(inputFile);
+	    Path destination = Paths.get(destFile);
+	    Files.copy(source, destination, StandardCopyOption.REPLACE_EXISTING);
+	    
+	    PDFReport pdfReport = new PDFReport();
+		pdfReport.setHostString(hostString);
+		new Thread(pdfReport).start();
+		
 	}
 	
 	
