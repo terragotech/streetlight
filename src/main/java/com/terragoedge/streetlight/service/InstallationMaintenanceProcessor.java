@@ -314,6 +314,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
             } catch (Exception e) {
                 logger.error(e.getMessage());
                 loggingModel.setStatus(MessageConstants.ERROR);
+                return; // No need to process if mac address assigned to another device. Confirmed by vish (13 July 2018)
             }
 
 
