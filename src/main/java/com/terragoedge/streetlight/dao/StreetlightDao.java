@@ -4,16 +4,16 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.Statement;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
 
+import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.terragoedge.edgeserver.EdgeNotebook;
 import com.terragoedge.edgeserver.FullEdgeNotebook;
 import com.terragoedge.edgeserver.SlvData;
 import com.terragoedge.edgeserver.SlvDataDub;
 import com.terragoedge.streetlight.json.model.FailureFormDBmodel;
+import com.terragoedge.streetlight.json.model.FailureReportModel;
 import com.terragoedge.streetlight.logging.InstallMaintenanceLogModel;
 import org.apache.log4j.Logger;
 
@@ -68,10 +68,78 @@ public class StreetlightDao extends UtilDao {
                 + " noteid text, status text, errordetails text, createddatetime bigint, notename text,modelJson text,processDateTime text,newNoteGuid text, polestatus text, CONSTRAINT errorFormSyncdetails_pkey PRIMARY KEY (notesyncid));";
         executeStatement(query);
     }
-    public List<String> getFixtureId() {
+
+    public FailureReportModel getProcessedReportsByFixtureId(String fixtureId) {
         Statement queryStatement = null;
         ResultSet queryResponse = null;
-        List<String> noteIds = new ArrayList<>();
+        FailureReportModel failureReportModel = null;
+        Gson gson = new Gson();
+        try {
+            String sql = "select * from errorFormSyncdetails where notename='" + fixtureId + "' order by processDateTime desc limit 1";
+            System.out.println(sql);
+            queryStatement = connection.createStatement();
+            queryResponse = queryStatement.executeQuery(sql);
+            if (queryResponse.next()) {
+                String modelJson = queryResponse.getString("modelJson");
+                if (modelJson != null && !modelJson.isEmpty()) {
+                    failureReportModel = gson.fromJson(modelJson, FailureReportModel.class);
+                }
+            }
+            return failureReportModel;
+        } catch (Exception e) {
+            logger.info("error while processedreportBy fixtureId", e);
+        }
+        return null;
+    }
+
+    public void getFailureModelList() {
+        Statement queryStatement = null;
+        ResultSet queryResponse = null;
+        List<FailureFormDBmodel> failureFormDBmodels = new ArrayList<>();
+        Gson gson = new Gson();
+        try {
+            String sql = "select * from errorFormSyncdetails";
+            System.out.println(sql);
+            queryStatement = connection.createStatement();
+            queryResponse = queryStatement.executeQuery(sql);
+            while (queryResponse.next()) {
+                String noteName = queryResponse.getString("notename");
+                System.out.println(noteName);
+                String modelJson = queryResponse.getString("modelJson");
+                if (modelJson != null && !modelJson.isEmpty()) {
+                    String data = "FailureReportModel";
+                    String insertJson = modelJson.replaceAll(data, "");
+                    FailureReportModel failureReportModel = gson.fromJson(insertJson, FailureReportModel.class);
+                    updateModelJson(noteName, gson.toJson(failureReportModel));
+                }
+            }
+        } catch (Exception e) {
+            logger.info("error while processedreportBy fixtureId", e);
+        }
+    }
+
+    public void updateModelJson(String fixtureId, String modelJson) {
+        PreparedStatement preparedStatement = null;
+        Connection connection = null;
+        try {
+            connection = StreetlightDaoConnection.getInstance().getConnection();
+            preparedStatement = connection.prepareStatement(
+                    "UPDATE errorFormSyncdetails SET modeljson = ? where notename = ?;");
+            preparedStatement.setString(1, modelJson);
+            preparedStatement.setString(2, fixtureId);
+
+            preparedStatement.executeUpdate();
+        } catch (Exception e) {
+            logger.error("Error in update", e);
+        } finally {
+            closeStatement(preparedStatement);
+        }
+    }
+
+    public Set<String> getFixtureId() {
+        Statement queryStatement = null;
+        ResultSet queryResponse = null;
+        Set<String> noteIds = new TreeSet<>();
         try {
             queryStatement = connection.createStatement();
             queryResponse = queryStatement.executeQuery("Select notename from errorformsyncdetails where polestatus != 'FIXED';");
@@ -121,8 +189,6 @@ public class StreetlightDao extends UtilDao {
     }
 
 
-
-
     public void update(FailureFormDBmodel loggingModel) {
         PreparedStatement preparedStatement = null;
         Connection connection = null;
@@ -132,7 +198,7 @@ public class StreetlightDao extends UtilDao {
                     "UPDATE errorFormSyncdetails SET noteid = ?, status = ?,createddatetime = ?, notename = ?,processDateTime = ?,newNoteGuid = ?,polestatus = ? where notename = ?;");
             preparedStatement.setString(1, loggingModel.getNoteid());
             preparedStatement.setString(2, loggingModel.getStatus());
-            preparedStatement.setString(3, loggingModel.getCreatedDatetime());
+            preparedStatement.setLong(3, Long.valueOf(loggingModel.getCreatedDatetime()));
             preparedStatement.setString(4, loggingModel.getNoteName());
             preparedStatement.setString(5, loggingModel.getProcessDateTime());
             preparedStatement.setString(6, loggingModel.getNewNoteGuid());

@@ -3,6 +3,7 @@ package com.terragoedge.streetlight.json.model;
 import java.util.Arrays;
 
 public class FailureReportModel {
+    private int syncid;
     private String fixtureId;
     private String label;
     private String properties;
@@ -94,10 +95,19 @@ public class FailureReportModel {
         this.lifeTime = lifeTime;
     }
 
+    public int getSyncid() {
+        return syncid;
+    }
+
+    public void setSyncid(int syncid) {
+        this.syncid = syncid;
+    }
+
     @Override
     public String toString() {
         return "FailureReportModel{" +
-                "fixtureId='" + fixtureId + '\'' +
+                "syncid=" + syncid +
+                ", fixtureId='" + fixtureId + '\'' +
                 ", label='" + label + '\'' +
                 ", properties='" + properties + '\'' +
                 ", warning=" + warning +

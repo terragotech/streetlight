@@ -1,0 +1,58 @@
+ {
+                                 "label" : "U39-02-65744-C",
+                                 "properties" : null,
+                                 "value" :
+                                    [
+                                       true,
+                                       true,
+                                       [
+                                          {
+                                             "label" : "Communication failure",
+                                             "properties" : null,
+                                             "value" : "CommunicationFailure"
+                                          },
+                                          {
+                                             "label" : "Power Supply Failure",
+                                             "properties" : null,
+                                             "value" : "PowerSupplyFailure"
+                                          }
+                                       ],
+                                       "2018-07-03 06:00:05.0",
+                                       "8 days 22h37m",
+                                       3441.3,
+                                       null,
+                                       274,
+                                       "U39-02-65744-C",
+                                       "71ST",
+                                       "U-39"
+                                    ]
+                              },
+                              {
+                                 "label" : "U39-02-80898-C",
+                                 "properties" : null,
+                                 "value" :
+                                    [
+                                       true,
+                                       true,
+                                       [
+                                          {
+                                             "label" : "Communication failure",
+                                             "properties" : null,
+                                             "value" : "CommunicationFailure"
+                                          },
+                                          {
+                                             "label" : "Power Supply Failure",
+                                             "properties" : null,
+                                             "value" : "PowerSupplyFailure"
+                                          }
+                                       ],
+                                       "2018-07-03 06:00:05.0",
+                                       "8 days 22h37m",
+                                       3443.28,
+                                       null,
+                                       275,
+                                       "U39-02-80898-C",
+                                       "71ST",
+                                       "U-39"
+                                    ]
+                              }

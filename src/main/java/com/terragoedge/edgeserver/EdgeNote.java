@@ -2,7 +2,6 @@ package com.terragoedge.edgeserver;
 
 import java.lang.reflect.Type;
 import java.util.ArrayList;
-import java.util.Dictionary;
 import java.util.List;
 
 import javax.annotation.Resources;
@@ -40,7 +39,7 @@ public class EdgeNote {
 	private String corrected = null;
 	private String resourceRef = null;
 	private String sourceType = null;
-
+	private List<Dictionary> dictionary = new ArrayList<>();
 	private String altitudeAccuracy = null;
 
 
@@ -287,4 +286,20 @@ private EdgeNotebook edgeNotebook = null;
     public void setEdgeNotebook(EdgeNotebook edgeNotebook) {
         this.edgeNotebook = edgeNotebook;
     }
+
+	public Boolean getTaskNote() {
+		return isTaskNote;
+	}
+
+	public void setTaskNote(Boolean taskNote) {
+		isTaskNote = taskNote;
+	}
+
+	public List<Dictionary> getDictionary() {
+		return dictionary;
+	}
+
+	public void setDictionary(List<Dictionary> dictionary) {
+		this.dictionary = dictionary;
+	}
 }

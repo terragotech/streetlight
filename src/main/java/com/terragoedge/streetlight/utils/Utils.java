@@ -35,5 +35,19 @@ public class Utils {
         }
         return "";
     }
+    public static String getRepeatableFormValue(List<EdgeFormData> edgeFormDatas,int groupid, int id,int groupRepCount) {
+        EdgeFormData tempEdgeFormData = new EdgeFormData();
+        tempEdgeFormData.setId(id);
+        tempEdgeFormData.setGroupRepeatableCount(groupRepCount);
+        if(groupid!=-1){
+            tempEdgeFormData.setGroupId(groupid);
+        }
+        int pos = edgeFormDatas.indexOf(tempEdgeFormData);
+        if (pos != -1) {
+            EdgeFormData edgeFormData = edgeFormDatas.get(pos);
+            return edgeFormData.getValue();
+        }
+        return null;
+    }
 
 }
