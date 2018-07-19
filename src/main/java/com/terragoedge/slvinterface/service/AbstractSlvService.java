@@ -1,9 +1,8 @@
 package com.terragoedge.slvinterface.service;
 
-import com.google.gson.Gson;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
+import com.google.gson.*;
+import com.terragoedge.slvinterface.dao.ConnectionDAO;
+import com.terragoedge.slvinterface.dao.tables.SlvSyncDetails;
 import com.terragoedge.slvinterface.exception.QRCodeAlreadyUsedException;
 import com.terragoedge.slvinterface.exception.QRCodeNotMatchedException;
 import com.terragoedge.slvinterface.model.DeviceMacAddress;
@@ -22,12 +21,14 @@ public class AbstractSlvService {
     private SlvRestService slvRestService = null;
     private Gson gson=null;
     private static Logger logger = Logger.getLogger(AbstractSlvService.class);
+    private ConnectionDAO connectionDAO;
 
     public AbstractSlvService() {
         gson=new Gson();
         jsonParser = new JsonParser();
         properties = PropertiesReader.getProperties();
         slvRestService = new SlvRestService();
+        connectionDAO = ConnectionDAO.INSTANCE;
     }
 
     public List<String> getSlvDeviceList() {
@@ -215,5 +216,29 @@ public class AbstractSlvService {
         paramsList.add("value=" + value.trim());
     }
 
+    protected void getTalqAddress(){
+        String slvBaseUrl = properties.getProperty("streetlight.slv.url.main");
+        String talqAddressApi = properties.getProperty("streetlight.slv.url.gettalqaddress");
+        ResponseEntity<String> responseEntity = slvRestService.getRequest(slvBaseUrl+talqAddressApi, true);
+        if (responseEntity.getStatusCode().is2xxSuccessful()) {
+            String response = responseEntity.getBody();
+            JsonObject jsonObject = (JsonObject) jsonParser.parse(response);
+            JsonArray deviceValuesAsArray = jsonObject.get("values").getAsJsonArray();
+            for(JsonElement jsonElement : deviceValuesAsArray){
+                JsonArray slvDetails = jsonElement.getAsJsonArray();
+                if(slvDetails.size() == 2){
+                    String idOnController = slvDetails.get(0).getAsString();
+                    String talqAddress = slvDetails.get(1).getAsString();
+                    SlvSyncDetails slvSyncDetails = connectionDAO.getSlvSyncDetailWithoutTalq(idOnController);
+                    if(slvSyncDetails != null){
+                        slvSyncDetails.setTalcAddress(talqAddress);
+                        slvSyncDetails.setTalcAddressDateTime(new Date().getTime());
+                        connectionDAO.saveSlvSyncDetails(slvSyncDetails);
+                    }
+                }
 
+            }
+        }
+
+    }
 }

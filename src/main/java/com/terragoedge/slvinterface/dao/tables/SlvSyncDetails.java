@@ -5,6 +5,8 @@ import com.j256.ormlite.table.DatabaseTable;
 
 @DatabaseTable(tableName = "SlvSyncDetails")
 public class SlvSyncDetails {
+    public static final String TALQ_ADDRESS = "TalcAddress";
+    public static final String NOTE_GUID = "NoteGuid";
     @DatabaseField(columnName = "Id", generatedId = true)
     private int id;
     @DatabaseField(columnName = "NoteName")
