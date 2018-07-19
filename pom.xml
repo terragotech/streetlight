@@ -85,7 +85,7 @@
                             <goal>single</goal>
                         </goals>
                         <configuration>
-                            <finalName>ameresco_usa_streetlight_v32</finalName>
+                            <finalName>slv_interface</finalName>
                             <archive>
                                 <manifest>
                                     <mainClass>
