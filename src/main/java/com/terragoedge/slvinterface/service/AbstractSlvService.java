@@ -5,10 +5,12 @@ import com.terragoedge.slvinterface.dao.ConnectionDAO;
 import com.terragoedge.slvinterface.dao.tables.SlvSyncDetails;
 import com.terragoedge.slvinterface.exception.QRCodeAlreadyUsedException;
 import com.terragoedge.slvinterface.exception.QRCodeNotMatchedException;
+import com.terragoedge.slvinterface.exception.ReplaceOLCFailedException;
 import com.terragoedge.slvinterface.model.DeviceMacAddress;
 import com.terragoedge.slvinterface.model.EdgeNote;
 import com.terragoedge.slvinterface.model.Value;
 import com.terragoedge.slvinterface.utils.PropertiesReader;
+import com.terragoedge.slvinterface.utils.Utils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 import org.springframework.http.ResponseEntity;
@@ -62,7 +64,7 @@ public class AbstractSlvService {
     }
 
 
-    public ResponseEntity<String> createDevice(EdgeNote edgenote, KingCitySyncModel kingCitySyncModel,
+    public ResponseEntity<String> createDevice(EdgeNote edgenote,
                                                String geoZoneId) {
         String mainUrl = properties.getProperty("streetlight.slv.url.main");
         String serveletApiUrl = properties.getProperty("streetlight.slv.url.device.create");
@@ -79,7 +81,7 @@ public class AbstractSlvService {
         return slvRestService.getRequest(streetLightDataParams, url, true);
     }
 
-    private String validateMACAddress(String existingNodeMacAddress, String idOnController, String geoZoneId)
+    public String validateMACAddress(String existingNodeMacAddress, String idOnController, String geoZoneId)
             throws QRCodeNotMatchedException {
         String mainUrl = properties.getProperty("streetlight.slv.url.main");
         String geoZoneDevices = properties.getProperty("streetlight.slv.url.getgeozone.devices");
@@ -158,7 +160,7 @@ public class AbstractSlvService {
 
     }
 
-    private int setDeviceValues(List<Object> paramsList) {
+    public int setDeviceValues(List<Object> paramsList) {
         String mainUrl = properties.getProperty("streetlight.slv.url.main");
         String updateDeviceValues = properties.getProperty("streetlight.slv.url.updatedevice");
         String url = mainUrl + updateDeviceValues;
@@ -216,7 +218,17 @@ public class AbstractSlvService {
         paramsList.add("value=" + value.trim());
     }
 
-    protected void getTalqAddress(){
+    public void addOtherParams(EdgeNote edgeNote, List<Object> paramsList) {
+        // luminaire.installdate - 2017-09-07 09:47:35
+        addStreetLightData("install.date", Utils.dateFormat(edgeNote.getCreatedDateTime()), paramsList);
+        // controller.installdate - 2017/10/10
+
+        addStreetLightData("installStatus", "Installed", paramsList);
+
+        addStreetLightData("DimmingGroupName", "Group Calendar 1", paramsList);
+    }
+
+    public void getTalqAddress(){
         String slvBaseUrl = properties.getProperty("streetlight.slv.url.main");
         String talqAddressApi = properties.getProperty("streetlight.slv.url.gettalqaddress");
         ResponseEntity<String> responseEntity = slvRestService.getRequest(slvBaseUrl+talqAddressApi, true);
@@ -238,6 +250,46 @@ public class AbstractSlvService {
                 }
 
             }
+        }
+
+    }
+
+    public void replaceOLC(String controllerStrIdValue, String idOnController, String macAddress)
+            throws ReplaceOLCFailedException {
+        try {
+            // String newNetworkId = slvSyncDataEntity.getMacAddress();
+            String newNetworkId = macAddress;
+
+            // Get Url detail from properties
+            String mainUrl = properties.getProperty("streetlight.kingcity.url.main");
+            String dataUrl = properties.getProperty("streetlight.url.replaceolc");
+            String replaceOlc = properties.getProperty("streetlight.url.replaceolc.method");
+            String url = mainUrl + dataUrl;
+            String controllerStrId = controllerStrIdValue;
+            List<Object> paramsList = new ArrayList<Object>();
+            paramsList.add("methodName=" + replaceOlc);
+            paramsList.add("controllerStrId=" + controllerStrId);
+            paramsList.add("idOnController=" + idOnController);
+            paramsList.add("newNetworkId=" + newNetworkId);
+            paramsList.add("ser=json");
+            String params = StringUtils.join(paramsList, "&");
+            url = url + "?" + params;
+            ResponseEntity<String> response = slvRestService.getPostRequest(url, null);
+            String responseString = response.getBody();
+            JsonObject replaceOlcResponse = (JsonObject) jsonParser.parse(responseString);
+            String errorStatus = replaceOlcResponse.get("status").getAsString();
+            // As per doc, errorcode is 0 for success. Otherwise, its not success.
+            if (errorStatus.equals("ERROR")) {
+                String value = replaceOlcResponse.get("value").getAsString();
+                throw new ReplaceOLCFailedException(value);
+            } else {
+                if (macAddress != null)
+                    clearAndUpdateDeviceData(idOnController, controllerStrId);
+            }
+
+        } catch (Exception e) {
+            logger.error("Error in replaceOLC", e);
+            throw new ReplaceOLCFailedException(e.getMessage());
         }
 
     }

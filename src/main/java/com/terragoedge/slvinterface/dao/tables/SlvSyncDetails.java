@@ -27,6 +27,8 @@ public class SlvSyncDetails {
     private String talcAddress;
     @DatabaseField(columnName = "TalcAddressDateTime")
     private long talcAddressDateTime;
+    @DatabaseField(columnName = "MacAddress")
+    private String macAddress;
 
     public int getId() {
         return id;
@@ -106,6 +108,14 @@ public class SlvSyncDetails {
 
     public void setTalcAddressDateTime(long talcAddressDateTime) {
         this.talcAddressDateTime = talcAddressDateTime;
+    }
+
+    public String getMacAddress() {
+        return macAddress;
+    }
+
+    public void setMacAddress(String macAddress) {
+        this.macAddress = macAddress;
     }
 
     @Override

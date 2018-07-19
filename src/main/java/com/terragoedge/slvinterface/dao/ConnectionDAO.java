@@ -7,6 +7,8 @@ import com.j256.ormlite.support.ConnectionSource;
 import com.terragoedge.slvinterface.dao.tables.SlvDevice;
 import com.terragoedge.slvinterface.dao.tables.SlvSyncDetails;
 
+import java.util.List;
+
 public enum ConnectionDAO {
 
     INSTANCE;
@@ -47,6 +49,34 @@ public enum ConnectionDAO {
             e.printStackTrace();
         }
     }
+
+    /**
+     * Get List of NoteIds which is assigned to given formtemplate
+     *
+     * @param
+     * @return
+     */
+    public List<String> getNoteIds() {
+        Statement queryStatement = null;
+        ResultSet queryResponse = null;
+        List<String> noteIds = new ArrayList<>();
+        try {
+            queryStatement = connection.createStatement();
+            queryResponse = queryStatement.executeQuery("Select processednoteid from notesyncdetails;");
+
+            while (queryResponse.next()) {
+                noteIds.add(queryResponse.getString("processednoteid"));
+            }
+
+        } catch (Exception e) {
+            logger.error("Error in getNoteIds", e);
+        } finally {
+            closeResultSet(queryResponse);
+            closeStatement(queryStatement);
+        }
+        return noteIds;
+    }
+
     public ConnectionSource getConnection() {
         return connectionSource;
     }
