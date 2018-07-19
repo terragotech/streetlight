@@ -30,14 +30,45 @@ public class AbstractSlvService {
         slvRestService = new SlvRestService();
     }
 
+    public List<String> getSlvDeviceList() {
+        List<String> slvDeviceList = new ArrayList<String>();
+        String mainUrl = properties.getProperty("streetlight.url.main");
+        String getMacAddress = properties.getProperty("streetlight.slv.url.getmacaddress");
+        String url = mainUrl + getMacAddress;
+        List<Object> paramsList = new ArrayList<Object>();
+        paramsList.add("valueNames=idOnController");
+        paramsList.add("valueNames=comment");
+        paramsList.add("valueNames=MacAddress");
+        paramsList.add("ser=json");
+        String params = StringUtils.join(paramsList, "&");
+        url = url + "&" + params;
+        ResponseEntity<String> responseEntity = slvRestService.getPostRequest(url, null);
+        if (responseEntity.getStatusCode().is2xxSuccessful()) {
+            String deviceJson = responseEntity.getBody();
+            JsonObject jsonObject = (JsonObject) jsonParser.parse(deviceJson);
+            JsonArray deviceValuesAsArray = jsonObject.get("values").getAsJsonArray();
+            int totalSize = deviceValuesAsArray.size();
+            for (int i = 0; i < totalSize; i++) {
+                JsonArray deviceValues = deviceValuesAsArray.get(i).getAsJsonArray();
+                slvDeviceList.add(deviceValues.get(0).getAsString());
+            }
+            System.out.println("TotalSize " + slvDeviceList.size());
+            return slvDeviceList;
+        } else {
+            logger.error("Unable to get message from EdgeServer. Response Code is :" + responseEntity.getStatusCode());
+        }
+        return new ArrayList<String>();
+    }
+
+
     public ResponseEntity<String> createDevice(EdgeNote edgenote, KingCitySyncModel kingCitySyncModel,
                                                String geoZoneId) {
-        String mainUrl = properties.getProperty("streetlight.kingcity.url.main");
-        String serveletApiUrl = properties.getProperty("streetlight.kingcity.url.device.create");
+        String mainUrl = properties.getProperty("streetlight.slv.url.main");
+        String serveletApiUrl = properties.getProperty("streetlight.slv.url.device.create");
         String url = mainUrl + serveletApiUrl;
-        String methodName = properties.getProperty("streetlight.kingcity.url.device.create.methodName");
-        String categoryStrId = properties.getProperty("streetlight.kingcity.categorystr.id");
-        String nodeTypeStrId = properties.getProperty("streetlight.kingcity.equipment.type");
+        String methodName = properties.getProperty("streetlight.url.device.create.methodName");
+        String categoryStrId = properties.getProperty("streetlight.categorystr.id");
+        String nodeTypeStrId = properties.getProperty("streetlight.equipment.type");
         Map<String, String> streetLightDataParams = new HashMap<String, String>();
         streetLightDataParams.put("methodName", methodName);
         streetLightDataParams.put("categoryStrId", categoryStrId);
@@ -49,7 +80,7 @@ public class AbstractSlvService {
 
     private String validateMACAddress(String existingNodeMacAddress, String idOnController, String geoZoneId)
             throws QRCodeNotMatchedException {
-        String mainUrl = properties.getProperty("streetlight.url.main");
+        String mainUrl = properties.getProperty("streetlight.slv.url.main");
         String geoZoneDevices = properties.getProperty("streetlight.slv.url.getgeozone.devices");
         String url = mainUrl + geoZoneDevices;
 
@@ -127,7 +158,7 @@ public class AbstractSlvService {
     }
 
     private int setDeviceValues(List<Object> paramsList) {
-        String mainUrl = properties.getProperty("streetlight.kingcity.url.main");
+        String mainUrl = properties.getProperty("streetlight.slv.url.main");
         String updateDeviceValues = properties.getProperty("streetlight.slv.url.updatedevice");
         String url = mainUrl + updateDeviceValues;
 
@@ -142,7 +173,7 @@ public class AbstractSlvService {
     }
 
     public void clearAndUpdateDeviceData(String idOnController, String controllerStrId) {
-        String mainUrl = properties.getProperty("streetlight.kingcity.url.main");
+        String mainUrl = properties.getProperty("streetlight.slv.url.main");
         String updateDeviceValues = properties.getProperty("streetlight.slv.url.updatedevice");
         String url = mainUrl + updateDeviceValues;
 
