@@ -32,6 +32,19 @@ public class AbstractSlvService {
         slvRestService = new SlvRestService();
         connectionDAO = ConnectionDAO.INSTANCE;
     }
+    protected String getEdgeToken() {
+        String url = PropertiesReader.getProperties().getProperty("streetlight.edge.url.main");
+        String userName = properties.getProperty("streetlight.edge.username");
+        String password = properties.getProperty("streetlight.edge.password");
+        url = url + "/oauth/token?grant_type=password&username=" + userName + "&password=" + password
+                + "&client_id=edgerestapp";
+        ResponseEntity<String> responseEntity = slvRestService.getRequest(url);
+        if (responseEntity.getStatusCode().is2xxSuccessful()) {
+            JsonObject jsonObject = (JsonObject) jsonParser.parse(responseEntity.getBody());
+            return jsonObject.get("access_token").getAsString();
+        }
+        return null;
+    }
 
     public List<String> getSlvDeviceList() {
         List<String> slvDeviceList = new ArrayList<String>();

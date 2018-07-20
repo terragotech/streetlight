@@ -19,4 +19,5 @@ public class Id {
     public void setType(String type) {
         this.type = type;
     }
+
 }

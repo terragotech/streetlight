@@ -7,6 +7,9 @@ import com.j256.ormlite.support.ConnectionSource;
 import com.terragoedge.slvinterface.dao.tables.SlvDevice;
 import com.terragoedge.slvinterface.dao.tables.SlvSyncDetails;
 
+import java.sql.ResultSet;
+import java.sql.Statement;
+import java.util.ArrayList;
 import java.util.List;
 
 public enum ConnectionDAO {
@@ -61,7 +64,7 @@ public enum ConnectionDAO {
         ResultSet queryResponse = null;
         List<String> noteIds = new ArrayList<>();
         try {
-            queryStatement = connection.createStatement();
+       //     queryStatement = connection.createStatement();
             queryResponse = queryStatement.executeQuery("Select processednoteid from notesyncdetails;");
 
             while (queryResponse.next()) {
@@ -69,10 +72,10 @@ public enum ConnectionDAO {
             }
 
         } catch (Exception e) {
-            logger.error("Error in getNoteIds", e);
+         //   logger.error("Error in getNoteIds", e);
         } finally {
-            closeResultSet(queryResponse);
-            closeStatement(queryStatement);
+         //   closeResultSet(queryResponse);
+          //  closeStatement(queryStatement);
         }
         return noteIds;
     }

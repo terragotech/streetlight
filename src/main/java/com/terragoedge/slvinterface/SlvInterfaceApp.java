@@ -4,6 +4,7 @@ import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import com.terragoedge.slvinterface.json.slvInterface.ConfigurationJson;
 import com.terragoedge.slvinterface.service.AbstractSlvService;
+import com.terragoedge.slvinterface.service.SlvInterfaceService;
 import com.terragoedge.slvinterface.utils.PropertiesReader;
 
 import java.util.ArrayList;
@@ -14,7 +15,9 @@ public class SlvInterfaceApp extends AbstractSlvService {
     public static List<ConfigurationJson> configurationJsons = new ArrayList<>();
     public static void main(String[] args) {
         getFormConfiguration();
-        while (true) {
+        SlvInterfaceService slvInterfaceService = new SlvInterfaceService();
+        slvInterfaceService.start();
+       /* while (true) {
             try{
                 AbstractSlvService abstractSlvService = new AbstractSlvService();
                 abstractSlvService.getTalqAddress();
@@ -22,7 +25,7 @@ public class SlvInterfaceApp extends AbstractSlvService {
             }catch (Exception e){
                 e.printStackTrace();
             }
-        }
+        }*/
     }
     private static void getFormConfiguration(){
         Gson gson = new Gson();

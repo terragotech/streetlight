@@ -5,11 +5,17 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.reflect.TypeToken;
+import com.sun.xml.internal.bind.v2.TODO;
 import com.terragoedge.slvinterface.dao.tables.SlvSyncDetails;
+import com.terragoedge.slvinterface.enumeration.EdgeComponentType;
+import com.terragoedge.slvinterface.enumeration.SLVProcess;
 import com.terragoedge.slvinterface.enumeration.Status;
 import com.terragoedge.slvinterface.exception.DeviceCreationFailedException;
 import com.terragoedge.slvinterface.exception.NoValueException;
 import com.terragoedge.slvinterface.exception.QRCodeNotMatchedException;
+import com.terragoedge.slvinterface.json.slvInterface.Action;
+import com.terragoedge.slvinterface.json.slvInterface.ConfigurationJson;
+import com.terragoedge.slvinterface.json.slvInterface.Id;
 import com.terragoedge.slvinterface.model.EdgeFormData;
 import com.terragoedge.slvinterface.model.EdgeNote;
 import com.terragoedge.slvinterface.model.FormData;
@@ -19,6 +25,9 @@ import org.apache.log4j.Logger;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
 import java.lang.reflect.Type;
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -30,6 +39,7 @@ public class SlvInterfaceService extends AbstractSlvService {
     final Logger logger = Logger.getLogger(SlvInterfaceService.class);
     private EdgeService edgeService = null;
     private SlvRestService slvRestService = null;
+    private List<ConfigurationJson> configurationJsonList = null;
 
     public SlvInterfaceService() {
         this.properties = PropertiesReader.getProperties();
@@ -42,9 +52,12 @@ public class SlvInterfaceService extends AbstractSlvService {
     public void start() {
         System.out.println("Started");
         logger.info("Process Started");
-        List<String> noteGuids = streetlightDao.getNoteIds();
+        configurationJsonList = getConfigJson();
+        // TODO getNoteguids
+        List<String> noteGuids = new ArrayList<>();
+        //  List<String> noteGuids = streetlightDao.getNoteIds();
         String accessToken = getEdgeToken();
-        logger.info("AccessToken is :" +accessToken);
+        logger.info("AccessToken is :" + accessToken);
         if (accessToken == null) {
             logger.error("Edge Invalid UserName and Password.");
             return;
@@ -58,13 +71,13 @@ public class SlvInterfaceService extends AbstractSlvService {
         String systemDate = PropertiesReader.getProperties().getProperty("streetlight.edge.customdate");
 
         if (systemDate == null || systemDate.equals("false")) {
-//            String yesterday = getYesterdayDate();
-            //     url = url + "modifiedAfter=" + yesterday;
+            String yesterday = getYesterdayDate();
+            url = url + "modifiedAfter=" + yesterday;
         }
-        url ="https://kingcity.terragoedge.com//rest/notes/37c3453a-c630-4efa-9711-00bffc928001";
         logger.info("GetNotesUrl :" + url);
-        System.out.println("Url"+url);
-        ResponseEntity<String> responseEntity = slvRestService.getRequest(url);
+        url = "https://amerescousa.terragoedge.com/edgeServer//rest/notes/68fc6ade-f043-4e3f-8e5c-ecab20bc2b63";
+        System.out.println("Url" + url);
+        ResponseEntity<String> responseEntity = slvRestService.getRequest(url, false, accessToken);
         logger.info("notes response :" + url);
         if (responseEntity.getStatusCode().is2xxSuccessful()) {
             String notesData = responseEntity.getBody();
@@ -73,8 +86,8 @@ public class SlvInterfaceService extends AbstractSlvService {
             // Convert notes Json to List of notes object
             Type listType = new TypeToken<ArrayList<EdgeNote>>() {
             }.getType();
-            List<EdgeNote> edgeNoteList=new ArrayList<>();
-            EdgeNote edgeNote = gson.fromJson(notesData,EdgeNote.class);
+            List<EdgeNote> edgeNoteList = new ArrayList<>();
+            EdgeNote edgeNote = gson.fromJson(notesData, EdgeNote.class);
             edgeNoteList.add(edgeNote);
             //  List<EdgeNote> edgeNoteList = gson.fromJson(notesData, listType);
             for (EdgeNote edgenote : edgeNoteList) {
@@ -89,9 +102,10 @@ public class SlvInterfaceService extends AbstractSlvService {
                         for (FormData formData : formDatasList) {
                             formDataMaps.put(formData.getFormTemplateGuid(), formData);
                         }
-                        logger.info("processedNoteTitle : " +edgenote.getTitle()+"-"+edgenote.getNoteGuid());
-                        checkFormNoteProcess(formDataMaps, edgenote, kingCitySyncModel, paramsList, formTemplateGuid, controllerStrIdValue);
-                        kingCityDao.insertProcessedNotes(kingCitySyncModel);
+                        logger.info("processedNoteTitle : " + edgenote.getTitle() + "-" + edgenote.getNoteGuid());
+                        // checkFormNoteProcess(formDataMaps, edgenote, kingCitySyncModel, paramsList, formTemplateGuid, controllerStrIdValue);
+                        processSingleForm(formDataMaps.get(formTemplateGuid), edgeNote, kingCitySyncModel, configurationJsonList);
+                        //   kingCityDao.insertProcessedNotes(kingCitySyncModel);
                     }
                 } catch (Exception e) {
                     e.printStackTrace();
@@ -100,6 +114,44 @@ public class SlvInterfaceService extends AbstractSlvService {
         }
     }
 
+    public void processSingleForm(FormData formData, EdgeNote edgeNote, SlvSyncDetails slvSyncDetails, List<ConfigurationJson> configurationJsonList) {
+        List<EdgeFormData> edgeFormDataList = formData.getFormDef();
+        for (ConfigurationJson configurationJson : configurationJsonList) {
+            List<Action> actionList = configurationJson.getAction();
+            if (checkActionType(edgeFormDataList, actionList)) {
+                switch (SLVProcess.valueOf(configurationJson.getType())) {
+                    case NEW_DEVICE:
+                        List<Id> idList = configurationJson.getIds();
+                        //TODO create
+                        break;
+                    case UPDATE_DEVICE:
+                        //TODO updatedevice
+                        break;
+                    case REPLACE_DEVICE:
+                        //TODO replacedevice
+                        break;
+                    case UPDATE_REPLACE:
+                        //TODO updatereplace
+                        break;
+                }
+            }
+        }
+    }
+
+    public boolean checkActionType(List<EdgeFormData> edgeFormData, List<Action> actionList) {
+        String actionValue = null;
+        for (Action action : actionList) {
+            try {
+                actionValue = valueById(edgeFormData, action.getId());
+                if (actionValue.equals(action.getValue())) {
+                    return false;
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+        return true;
+    }
 
     public void checkFormNoteProcess(Map<String, FormData> formDataMaps, EdgeNote edgeNote, SlvSyncDetails kingCitySyncModel, List<Object> paramsList, String formTemplateGuid, String controllerStrIdValue) {
         kingCitySyncModel.setNoteGuid(edgeNote.getNoteGuid());
@@ -112,7 +164,7 @@ public class SlvInterfaceService extends AbstractSlvService {
         String action = null;
         try {
             action = valueById(fixtureFromDef, Integer.parseInt(properties.getProperty("streetlight.edge.action")));
-            logger.info("FormTemplateActionValue : "+ action);
+            logger.info("FormTemplateActionValue : " + action);
             if (action.equals("New Streetlight")) {
                 newStreetLightData(controllerStrIdValue, fixtureFromDef, paramsList, kingCitySyncModel,
                         edgeNote);
@@ -120,8 +172,7 @@ public class SlvInterfaceService extends AbstractSlvService {
                 updateStreetLight(controllerStrIdValue, fixtureFromDef, paramsList, kingCitySyncModel,
                         edgeNote);
             } else if (action.equals("Remove Streetlight")) {
-                removeStreetLightData(controllerStrIdValue, fixtureFromDef, paramsList, kingCitySyncModel,
-                        edgeNote);
+                // removeStreetLightData(controllerStrIdValue, fixtureFromDef, paramsList, kingCitySyncModel,edgeNote);
             }
         } catch (NoValueException e) {
             kingCitySyncModel.setErrorDetails(MessageConstants.ACTION_NO_VAL);
@@ -130,25 +181,12 @@ public class SlvInterfaceService extends AbstractSlvService {
         }
     }
 
-    private String getEdgeToken() {
-        String url = PropertiesReader.getProperties().getProperty("streetlight.edge.url.main");
-        String userName = properties.getProperty("streetlight.edge.username");
-        String password = properties.getProperty("streetlight.edge.password");
-        url = url + "/oauth/token?grant_type=password&username=" + userName + "&password=" + password
-                + "&client_id=edgerestapp";
-        ResponseEntity<String> responseEntity = slvRestService.getRequest(url);
-        if (responseEntity.getStatusCode().is2xxSuccessful()) {
-            JsonObject jsonObject = (JsonObject) jsonParser.parse(responseEntity.getBody());
-            return jsonObject.get("access_token").getAsString();
-        }
-        return null;
-    }
 
     public void newStreetLightData(String controllerStrIdValue, List<EdgeFormData> edgeFormDatas, List<Object> paramsList, SlvSyncDetails kingCitySyncModel,
                                    EdgeNote edgenote) {
         String geoZoneId = PropertiesReader.getProperties().getProperty("streetlight.kingcity.url.geozoneid");
         if (geoZoneId != null) {
-            try{
+            try {
                 ResponseEntity<String> responseEntity = createDevice(edgenote, geoZoneId);
                 String status = responseEntity.getStatusCode().toString();
                 String responseBody = responseEntity.getBody();
@@ -157,7 +195,7 @@ public class SlvInterfaceService extends AbstractSlvService {
                     logger.info("Device Created Successfully, NoteId:" + edgenote.getNoteGuid() + "-"
                             + edgenote.getTitle());
                     kingCitySyncModel.setStatus(Status.Success.toString());
-                    kingCityDao.insertDeviceId(edgenote.getTitle());
+                    // kingCityDao.insertDeviceId(edgenote.getTitle());
                 } else {
                     try {
                         logger.info("Device Created Failure, NoteId:" + edgenote.getNoteGuid() + "-"
@@ -166,13 +204,12 @@ public class SlvInterfaceService extends AbstractSlvService {
                         kingCitySyncModel.setErrorDetails(status);
                         throw new DeviceCreationFailedException(edgenote.getNoteGuid() + "-" + edgenote.getTitle());
                     } catch (DeviceCreationFailedException e) {
-                        logger.info("Device creation DeviceCreationFailedException",e);
+                        logger.info("Device creation DeviceCreationFailedException", e);
                         e.printStackTrace();
                     }
                 }
-            }
-            catch (Exception e){
-                logger.info("Device Created Exception",e);
+            } catch (Exception e) {
+                logger.info("Device Created Exception", e);
                 kingCitySyncModel.setStatus(MessageConstants.ERROR);
                 kingCitySyncModel.setErrorDetails(MessageConstants.DEVICE_CREATION_EXCEPTION);
                 return;
@@ -181,9 +218,9 @@ public class SlvInterfaceService extends AbstractSlvService {
             String newNodeMacAddress = null;
             // Get New Node MAC Address value
             try {
-                newNodeMacAddress = valueById(edgeFormDatas,Integer.parseInt(properties.getProperty("streetlight.kingcity.url.new_mac_address")));
+                newNodeMacAddress = valueById(edgeFormDatas, Integer.parseInt(properties.getProperty("streetlight.kingcity.url.new_mac_address")));
                 kingCitySyncModel.setMacAddress(newNodeMacAddress);
-                logger.info("newNodeMacAddress : "+newNodeMacAddress);
+                logger.info("newNodeMacAddress : " + newNodeMacAddress);
             } catch (NoValueException e) {
                 kingCitySyncModel.setStatus(MessageConstants.ERROR);
                 kingCitySyncModel.setErrorDetails(MessageConstants.NEW_MAC_ADDRESS_NOT_AVAILABLE);
@@ -196,7 +233,7 @@ public class SlvInterfaceService extends AbstractSlvService {
             } catch (Exception e) {
                 kingCitySyncModel.setStatus(MessageConstants.ERROR);
                 kingCitySyncModel.setErrorDetails(MessageConstants.MAC_ALREADY_USED + "- " + e.getMessage());
-                logger.info("checkMacAddressExists error : ",e);
+                logger.info("checkMacAddressExists error : ", e);
                 return;
             }
             try {
@@ -204,7 +241,7 @@ public class SlvInterfaceService extends AbstractSlvService {
                 addOtherParams(edgenote, paramsList);
                 int errorCode = setDeviceValues(paramsList);
                 if (errorCode != 0) {
-                    logger.info("setDeviceValue  error code: "+errorCode);
+                    logger.info("setDeviceValue  error code: " + errorCode);
                     kingCitySyncModel.setErrorDetails(MessageConstants.ERROR_UPDATE_DEVICE_VAL);
                     kingCitySyncModel.setStatus(MessageConstants.ERROR);
                     return;
@@ -214,7 +251,7 @@ public class SlvInterfaceService extends AbstractSlvService {
                     kingCitySyncModel.setStatus(MessageConstants.SUCCESS);
                 }
             } catch (Exception e) {
-                logger.info("setDeviceValues error : ",e);
+                logger.info("setDeviceValues error : ", e);
             }
             clearAndUpdateDeviceData(edgenote.getTitle(), controllerStrIdValue);
 
@@ -231,10 +268,10 @@ public class SlvInterfaceService extends AbstractSlvService {
             existingNodeMacAddress = valueById(edgeFormDatas,
                     Integer.parseInt(properties.getProperty("streetlight.kingcity.url.existing_mac_address")));
             loggingModel.setMacAddress(existingNodeMacAddress);
-            logger.info("Existing NodeMacAddress "+existingNodeMacAddress);
+            logger.info("Existing NodeMacAddress " + existingNodeMacAddress);
         } catch (NoValueException e) {
             e.printStackTrace();
-            logger.info("Existing NodeMacAddressException ",e);
+            logger.info("Existing NodeMacAddressException ", e);
             loggingModel.setErrorDetails(MessageConstants.OLD_MAC_ADDRESS_NOT_AVAILABLE);
             loggingModel.setStatus(MessageConstants.ERROR);
             return;
@@ -242,12 +279,12 @@ public class SlvInterfaceService extends AbstractSlvService {
 
         // Get New Node MAC Address value
         try {
-            newNodeMacAddress = valueById(edgeFormDatas,Integer.parseInt(properties.getProperty("streetlight.kingcity.url.new_mac_address")));
+            newNodeMacAddress = valueById(edgeFormDatas, Integer.parseInt(properties.getProperty("streetlight.kingcity.url.new_mac_address")));
             loggingModel.setMacAddress(newNodeMacAddress);
-            logger.info("New NodeMacAddress "+newNodeMacAddress);
+            logger.info("New NodeMacAddress " + newNodeMacAddress);
         } catch (NoValueException e) {
             e.printStackTrace();
-            logger.info("New NodeMacAddressException ",e);
+            logger.info("New NodeMacAddressException ", e);
             loggingModel.setErrorDetails(MessageConstants.NEW_MAC_ADDRESS_NOT_AVAILABLE);
             loggingModel.setStatus(MessageConstants.ERROR);
             return;
@@ -256,7 +293,7 @@ public class SlvInterfaceService extends AbstractSlvService {
         try {
             validateMACAddress(existingNodeMacAddress, edgeNote.getTitle(), geoZoneId);
         } catch (QRCodeNotMatchedException e1) {
-            logger.info("Validate macAddress Exception",e1);
+            logger.info("Validate macAddress Exception", e1);
             loggingModel.setErrorDetails(MessageConstants.REPLACE_MAC_NOT_MATCH);
             loggingModel.setStatus(MessageConstants.ERROR);
             return;
@@ -265,7 +302,7 @@ public class SlvInterfaceService extends AbstractSlvService {
         try {
             checkMacAddressExists(newNodeMacAddress, edgeNote.getTitle());
         } catch (Exception e) {
-            logger.info("checkMacAddressExists  Exception",e);
+            logger.info("checkMacAddressExists  Exception", e);
             loggingModel.setErrorDetails(MessageConstants.MAC_ALREADY_USED + "- " + e.getMessage());
             loggingModel.setStatus(MessageConstants.ERROR);
             return;
@@ -281,7 +318,7 @@ public class SlvInterfaceService extends AbstractSlvService {
             } else {
                 // replace OlC
                 replaceOLC(controllerStrIdValue, edgeNote.getTitle(), newNodeMacAddress);// insert mac address
-                logger.info("ReplaceOlcCalled :"+edgeNote.getTitle()+" - "+newNodeMacAddress);
+                logger.info("ReplaceOlcCalled :" + edgeNote.getTitle() + " - " + newNodeMacAddress);
                 loggingModel.setStatus(MessageConstants.SUCCESS);
             }
         } catch (Exception e) {
@@ -308,4 +345,35 @@ public class SlvInterfaceService extends AbstractSlvService {
         }
     }
 
+    public List<ConfigurationJson> getConfigJson() {
+        JsonParser jsonParser = new JsonParser();
+        // String path = "./resources/config.json";
+        String path = "./src/main/resources/config.json";
+        try (FileReader reader = new FileReader(path)) {
+            String configjson = jsonParser.parse(reader).toString();
+            Type listType = new TypeToken<ArrayList<ConfigurationJson>>() {
+            }.getType();
+            List<ConfigurationJson> configurationJsons = gson.fromJson(configjson, listType);
+            return configurationJsons;
+
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return new ArrayList<>();
+
+    }
+
+    public String getYesterdayDate() {
+        // 2017-11-01T13:00:00.000-00:00
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS-00:00");
+        Calendar cal = Calendar.getInstance();
+        cal.add(Calendar.DATE, -1);
+        cal.set(Calendar.HOUR_OF_DAY, 0);
+        cal.set(Calendar.MINUTE, 0);
+        cal.set(Calendar.SECOND, 0);
+        cal.set(Calendar.MILLISECOND, 0);
+        return dateFormat.format(cal.getTime());
+    }
 }
