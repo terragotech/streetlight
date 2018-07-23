@@ -12,6 +12,7 @@ import com.terragoedge.slvinterface.enumeration.SLVProcess;
 import com.terragoedge.slvinterface.enumeration.Status;
 import com.terragoedge.slvinterface.exception.DeviceCreationFailedException;
 import com.terragoedge.slvinterface.exception.NoValueException;
+import com.terragoedge.slvinterface.exception.QRCodeAlreadyUsedException;
 import com.terragoedge.slvinterface.exception.QRCodeNotMatchedException;
 import com.terragoedge.slvinterface.json.slvInterface.Action;
 import com.terragoedge.slvinterface.json.slvInterface.ConfigurationJson;
@@ -104,7 +105,7 @@ public class SlvInterfaceService extends AbstractSlvService {
                         }
                         logger.info("processedNoteTitle : " + edgenote.getTitle() + "-" + edgenote.getNoteGuid());
                         // checkFormNoteProcess(formDataMaps, edgenote, kingCitySyncModel, paramsList, formTemplateGuid, controllerStrIdValue);
-                        processSingleForm(formDataMaps.get(formTemplateGuid), edgeNote, kingCitySyncModel, configurationJsonList);
+                        processSingleForm(formDataMaps.get(formTemplateGuid), edgeNote, kingCitySyncModel, paramsList, configurationJsonList);
                         //   kingCityDao.insertProcessedNotes(kingCitySyncModel);
                     }
                 } catch (Exception e) {
@@ -114,7 +115,7 @@ public class SlvInterfaceService extends AbstractSlvService {
         }
     }
 
-    public void processSingleForm(FormData formData, EdgeNote edgeNote, SlvSyncDetails slvSyncDetails, List<ConfigurationJson> configurationJsonList) {
+    public void processSingleForm(FormData formData, EdgeNote edgeNote, SlvSyncDetails slvSyncDetail, List<Object> paramsList, List<ConfigurationJson> configurationJsonList) {
         List<EdgeFormData> edgeFormDataList = formData.getFormDef();
         for (ConfigurationJson configurationJson : configurationJsonList) {
             List<Action> actionList = configurationJson.getAction();
@@ -125,7 +126,7 @@ public class SlvInterfaceService extends AbstractSlvService {
                         //TODO create
                         break;
                     case UPDATE_DEVICE:
-                        //TODO updatedevice
+                        processUpdateDevice(edgeFormDataList, configurationJson, edgeNote, paramsList, slvSyncDetail);
                         break;
                     case REPLACE_DEVICE:
                         //TODO replacedevice
@@ -135,6 +136,87 @@ public class SlvInterfaceService extends AbstractSlvService {
                         break;
                 }
             }
+        }
+    }
+
+    public void processUpdateDevice(List<EdgeFormData> edgeFormDataList, ConfigurationJson configurationJson, EdgeNote edgeNote, List<Object> paramsList, SlvSyncDetails slvSyncDetails) {
+        List<Id> idList = configurationJson.getIds();
+        String existingNodeMacAddress = null;
+        String newNodeMacAddress = null;
+        String fixtureScan = null;
+        String geoZoneId = properties.getProperty("streetlight.url.geozoneid");
+        String controllerStrIdValue = null;  //TODO controllerStarValue
+        // Get Existing Node MAC Address value
+        Id existingMacID = getIDByType(idList, EdgeComponentType.MAC.toString());
+        if (existingMacID != null) {
+            try {
+                existingNodeMacAddress = valueById(edgeFormDataList, existingMacID.getId());
+                slvSyncDetails.setMacAddress(existingNodeMacAddress);
+                logger.info("Existing NodeMacAddress " + existingNodeMacAddress);
+                if (existingMacID.isRequired()) {
+                    validateMACAddress(existingNodeMacAddress, edgeNote.getTitle(), geoZoneId);
+                }
+            } catch (QRCodeNotMatchedException e1) {
+                logger.info("Validate macAddress Exception", e1);
+                slvSyncDetails.setErrorDetails(MessageConstants.REPLACE_MAC_NOT_MATCH);
+                slvSyncDetails.setStatus(MessageConstants.ERROR);
+                return;
+            } catch (Exception e) {
+                slvSyncDetails.setErrorDetails(MessageConstants.OLD_MAC_ADDRESS_NOT_AVAILABLE);
+                slvSyncDetails.setStatus(MessageConstants.ERROR);
+                logger.info("Existing macAddress Exception", e);
+            }
+        }
+        Id newMacID = getIDByType(idList, EdgeComponentType.MAC.toString());
+        if (newMacID != null) {
+            try {
+                newNodeMacAddress = valueById(edgeFormDataList, newMacID.getId());
+                logger.info("New NodeMacAddress " + newNodeMacAddress);
+                if (existingMacID.isRequired()) {
+                    checkMacAddressExists(newNodeMacAddress, edgeNote.getTitle());
+                }
+            } catch (QRCodeAlreadyUsedException e1) {
+                logger.info("Validate macAddress Exception", e1);
+                slvSyncDetails.setErrorDetails(MessageConstants.REPLACE_MAC_NOT_MATCH);
+                slvSyncDetails.setStatus(MessageConstants.ERROR);
+                return;
+            } catch (Exception e) {
+                slvSyncDetails.setErrorDetails(MessageConstants.NEW_MAC_ADDRESS_NOT_AVAILABLE);
+                slvSyncDetails.setStatus(MessageConstants.ERROR);
+                logger.info("NewNode macAddress Exception", e);
+            }
+        }
+        Id fixureID = getIDByType(idList, EdgeComponentType.FIXTURE.toString());
+        if (fixureID != null) {
+            try {
+                fixtureScan = valueById(edgeFormDataList, fixureID.getId());
+                if (fixtureScan != null && !fixtureScan.isEmpty())
+                    buildFixtureStreetLightData(fixtureScan, paramsList, edgeNote);
+            } catch (Exception e) {
+                slvSyncDetails.setErrorDetails(MessageConstants.FIXTURE_CODE_NOT_AVAILABLE);
+                slvSyncDetails.setStatus(MessageConstants.ERROR);
+                logger.info("Fixture Value Exception", e);
+            }
+        }
+        //check mac addrees exist
+        try {
+            paramsList.add("idOnController=" + edgeNote.getTitle());
+            addOtherParams(edgeNote, paramsList);
+            int errorCode = setDeviceValues(paramsList);
+            if (errorCode != 0) {
+                slvSyncDetails.setErrorDetails(MessageConstants.ERROR_UPDATE_DEVICE_VAL);
+                slvSyncDetails.setStatus(MessageConstants.ERROR);
+                return;
+            } else {
+                // replace OlC
+                replaceOLC(controllerStrIdValue, edgeNote.getTitle(), newNodeMacAddress);// insert mac address
+                logger.info("ReplaceOlcCalled :" + edgeNote.getTitle() + " - " + newNodeMacAddress);
+                slvSyncDetails.setStatus(MessageConstants.SUCCESS);
+            }
+        } catch (Exception e) {
+            slvSyncDetails.setErrorDetails(e.getMessage());
+            slvSyncDetails.setStatus(MessageConstants.ERROR);
+            e.printStackTrace();
         }
     }
 

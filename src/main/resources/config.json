@@ -54,11 +54,13 @@
     "ids":[
       {
         "id":18,
-        "type":"EXISTING_MAC"
+        "type":"EXISTING_MAC",
+         "isRequired":true
       },
       {
         "id":20,
-        "type":"MAC"
+        "type":"MAC",
+        "isRequired":true
       }
     ],
     "action":[
