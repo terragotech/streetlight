@@ -180,9 +180,11 @@ public class SlvInterfaceService extends AbstractSlvService {
                 newNodeMacAddress = valueById(edgeFormDataList, newMacID.getId());
                 addStreetLightData("MacAddress", newNodeMacAddress, paramsList);
                 logger.info("New NodeMacAddress " + newNodeMacAddress);
-                if (existingMacID.isRequired()) {
-                    checkMacAddressExists(newNodeMacAddress, edgeNote.getTitle());
+                if (newMacID.isRequired() && newNodeMacAddress == null || newNodeMacAddress.isEmpty()) {
+                    logger.info("New MacAddress is Empty");
+                    return;
                 }
+                checkMacAddressExists(newNodeMacAddress, edgeNote.getTitle());
             } catch (QRCodeAlreadyUsedException e1) {
                 logger.info("Validate macAddress Exception", e1);
                 slvSyncDetails.setErrorDetails(MessageConstants.REPLACE_MAC_NOT_MATCH);
