@@ -6,6 +6,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.reflect.TypeToken;
 import com.sun.xml.internal.bind.v2.TODO;
+import com.terragoedge.slvinterface.dao.SLVInterfaceDAO;
 import com.terragoedge.slvinterface.dao.tables.SlvSyncDetails;
 import com.terragoedge.slvinterface.enumeration.EdgeComponentType;
 import com.terragoedge.slvinterface.enumeration.SLVProcess;
@@ -22,6 +23,7 @@ import com.terragoedge.slvinterface.model.EdgeNote;
 import com.terragoedge.slvinterface.model.FormData;
 import com.terragoedge.slvinterface.utils.MessageConstants;
 import com.terragoedge.slvinterface.utils.PropertiesReader;
+import com.terragoedge.slvinterface.utils.ResourceDetails;
 import org.apache.log4j.Logger;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
@@ -40,34 +42,35 @@ public class SlvInterfaceService extends AbstractSlvService {
     Gson gson = null;
     JsonParser jsonParser = null;
     final Logger logger = Logger.getLogger(SlvInterfaceService.class);
-    private EdgeService edgeService = null;
     private SlvRestService slvRestService = null;
     private List<ConfigurationJson> configurationJsonList = null;
+    private SLVInterfaceDAO slvInterfaceDAO = null;
 
     public SlvInterfaceService() {
         this.properties = PropertiesReader.getProperties();
         this.gson = new Gson();
         this.jsonParser = new JsonParser();
-        edgeService = new EdgeService();
         slvRestService = new SlvRestService();
+        slvInterfaceDAO = new SLVInterfaceDAO();
     }
 
     public void start() {
-        System.out.println("Started");
-        logger.info("Process Started");
+        // Get Configuration JSON
         configurationJsonList = getConfigJson();
-        // TODO getNoteguids
-        List<String> noteGuids = new ArrayList<>();
-        //  List<String> noteGuids = streetlightDao.getNoteIds();
+
         String accessToken = getEdgeToken();
         logger.info("AccessToken is :" + accessToken);
         if (accessToken == null) {
             logger.error("Edge Invalid UserName and Password.");
             return;
         }
-        List<EdgeNote> edgenoteList = null;
-        String formTemplateGuid = properties.getProperty("streetlight.kingcity.streetlight_installation_formtemplate_guid");
-        String controllerStrIdValue = properties.getProperty("streetlight.edge.form.controllerStrIdValue");
+
+        List<String> noteGuids = slvInterfaceDAO.getNoteGuids();
+        if(noteGuids == null){
+            logger.error("Error while getting already process note list.");
+            return;
+        }
+        String formTemplateGuid = properties.getProperty("streetlight.formtemplate.guid");
         String url = PropertiesReader.getProperties().getProperty("streetlight.edge.url.main");
 
         url = url + PropertiesReader.getProperties().getProperty("streetlight.edge.url.notes.get");
@@ -80,6 +83,7 @@ public class SlvInterfaceService extends AbstractSlvService {
         logger.info("GetNotesUrl :" + url);
         url = "https://amerescousa.terragoedge.com/edgeServer//rest/notes/68fc6ade-f043-4e3f-8e5c-ecab20bc2b63";
         System.out.println("Url" + url);
+        // Get data from server.
         ResponseEntity<String> responseEntity = slvRestService.getRequest(url, false, accessToken);
         logger.info("notes response :" + url);
         if (responseEntity.getStatusCode().is2xxSuccessful()) {
@@ -96,19 +100,23 @@ public class SlvInterfaceService extends AbstractSlvService {
             for (EdgeNote edgenote : edgeNoteList) {
                 try {
                     if (!noteGuids.contains(edgenote.getNoteGuid())) {
-                        SlvSyncDetails kingCitySyncModel = new SlvSyncDetails();
-                        kingCitySyncModel.setNoteGuid(edgenote.getNoteGuid());
-                        kingCitySyncModel.setNoteName(edgenote.getTitle());
+                        SlvSyncDetails slvSyncDetailsError = new SlvSyncDetails();
+                        slvSyncDetailsError.setNoteGuid(edgenote.getNoteGuid());
+                        slvSyncDetailsError.setNoteName(edgenote.getTitle());
                         List<Object> paramsList = new ArrayList<Object>();
                         List<FormData> formDatasList = edgenote.getFormData();
                         Map<String, FormData> formDataMaps = new HashMap<String, FormData>();
+                        boolean isFormTemplatePresent = false;
                         for (FormData formData : formDatasList) {
                             formDataMaps.put(formData.getFormTemplateGuid(), formData);
+                            if(formData.getFormTemplateGuid().equals(formTemplateGuid)){
+                                isFormTemplatePresent = true;
+                            }
                         }
                         logger.info("processedNoteTitle : " + edgenote.getTitle() + "-" + edgenote.getNoteGuid());
-                        // checkFormNoteProcess(formDataMaps, edgenote, kingCitySyncModel, paramsList, formTemplateGuid, controllerStrIdValue);
-                        processSingleForm(formDataMaps.get(formTemplateGuid), edgeNote, kingCitySyncModel, paramsList, configurationJsonList);
-                        //   kingCityDao.insertProcessedNotes(kingCitySyncModel);
+                        // checkFormNoteProcess(formDataMaps, edgenote, slvSyncDetailsError, paramsList, formTemplateGuid, controllerStrIdValue);
+                        processSingleForm(formDataMaps.get(formTemplateGuid), edgeNote, slvSyncDetailsError, paramsList, configurationJsonList);
+                        //   kingCityDao.insertProcessedNotes(slvSyncDetailsError);
                     }
                 } catch (Exception e) {
                     e.printStackTrace();
@@ -446,9 +454,7 @@ public class SlvInterfaceService extends AbstractSlvService {
 
     public List<ConfigurationJson> getConfigJson() {
         JsonParser jsonParser = new JsonParser();
-        // String path = "./resources/config.json";
-        String path = "./src/main/resources/config.json";
-        try (FileReader reader = new FileReader(path)) {
+        try (FileReader reader = new FileReader(ResourceDetails.CONFIG_JSON_PATH)) {
             String configjson = jsonParser.parse(reader).toString();
             Type listType = new TypeToken<ArrayList<ConfigurationJson>>() {
             }.getType();
