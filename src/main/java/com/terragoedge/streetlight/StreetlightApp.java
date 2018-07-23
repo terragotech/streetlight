@@ -3,6 +3,7 @@ package com.terragoedge.streetlight;
 import com.terragoedge.streetlight.service.InstallDateFix;
 import com.terragoedge.streetlight.service.SlvService;
 import com.terragoedge.streetlight.service.StreetlightChicagoService;
+import com.terragoedge.streetlight.service.TalkAddressService;
 
 
 public class StreetlightApp {
@@ -18,9 +19,17 @@ public class StreetlightApp {
 
 		while (true){
 		    try{
-                StreetlightChicagoService streetlightChicagoService = new StreetlightChicagoService();
+              /*  StreetlightChicagoService streetlightChicagoService = new StreetlightChicagoService();
                 streetlightChicagoService.run();
-                Thread.sleep(10000);
+                Thread.sleep(10000);*/
+
+                try{
+                    TalkAddressService talkAddressService = new TalkAddressService();
+                    talkAddressService.getTalqAddress();
+                    Thread.sleep(5000);
+                }catch (Exception e){
+                    e.printStackTrace();
+                }
 
             }catch (Exception e){
 		        e.printStackTrace();

@@ -19,6 +19,8 @@ public class LoggingModel {
 
 	private String controllerSrtId;
 
+	private long talqCreatedTime;
+	private String talqAddress;
 
 
 
@@ -103,6 +105,29 @@ public class LoggingModel {
 		this.macAddress = macAddress;
 	}
 
+	public boolean isQuickNote() {
+		return isQuickNote;
+	}
+
+	public void setQuickNote(boolean quickNote) {
+		isQuickNote = quickNote;
+	}
+
+	public long getTalqCreatedTime() {
+		return talqCreatedTime;
+	}
+
+	public void setTalqCreatedTime(long talqCreatedTime) {
+		this.talqCreatedTime = talqCreatedTime;
+	}
+
+	public String getTalqAddress() {
+		return talqAddress;
+	}
+
+	public void setTalqAddress(String talqAddress) {
+		this.talqAddress = talqAddress;
+	}
 
 	@Override
 	public boolean equals(Object o) {
@@ -134,6 +159,8 @@ public class LoggingModel {
 				", macAddress='" + macAddress + '\'' +
 				", isNoteAlreadySynced=" + isNoteAlreadySynced +
 				", controllerSrtId='" + controllerSrtId + '\'' +
+				", talqCreatedTime=" + talqCreatedTime +
+				", talqAddress='" + talqAddress + '\'' +
 				'}';
 	}
 }
