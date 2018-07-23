@@ -98,33 +98,56 @@ public class SlvInterfaceService extends AbstractSlvService {
             edgeNoteList.add(edgeNote);
             //  List<EdgeNote> edgeNoteList = gson.fromJson(notesData, listType);
             for (EdgeNote edgenote : edgeNoteList) {
-                try {
-                    if (!noteGuids.contains(edgenote.getNoteGuid())) {
-                        SlvSyncDetails slvSyncDetailsError = new SlvSyncDetails();
-                        slvSyncDetailsError.setNoteGuid(edgenote.getNoteGuid());
-                        slvSyncDetailsError.setNoteName(edgenote.getTitle());
-                        List<Object> paramsList = new ArrayList<Object>();
-                        List<FormData> formDatasList = edgenote.getFormData();
-                        Map<String, FormData> formDataMaps = new HashMap<String, FormData>();
-                        boolean isFormTemplatePresent = false;
-                        for (FormData formData : formDatasList) {
-                            formDataMaps.put(formData.getFormTemplateGuid(), formData);
-                            if(formData.getFormTemplateGuid().equals(formTemplateGuid)){
-                                isFormTemplatePresent = true;
-                            }
-                        }
-                        logger.info("processedNoteTitle : " + edgenote.getTitle() + "-" + edgenote.getNoteGuid());
-                        // checkFormNoteProcess(formDataMaps, edgenote, slvSyncDetailsError, paramsList, formTemplateGuid, controllerStrIdValue);
-                        processSingleForm(formDataMaps.get(formTemplateGuid), edgeNote, slvSyncDetailsError, paramsList, configurationJsonList);
-                        //   kingCityDao.insertProcessedNotes(slvSyncDetailsError);
-                    }
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
+
             }
         }
     }
 
+
+    private void processEdgeNote(EdgeNote edgeNote,List<String> noteGuids,String formTemplateGuid){
+        try {
+            // Check whether this note is already processed or not.
+            if (!noteGuids.contains(edgeNote.getNoteGuid())) {
+                SlvSyncDetails slvSyncDetailsError = new SlvSyncDetails();
+                try{
+                    slvSyncDetailsError.setNoteGuid(edgeNote.getNoteGuid());
+                    slvSyncDetailsError.setNoteName(edgeNote.getTitle());
+                    List<Object> paramsList = new ArrayList<Object>();
+                    List<FormData> formDatasList = edgeNote.getFormData();
+                    Map<String, FormData> formDataMaps = new HashMap<String, FormData>();
+                    boolean isFormTemplatePresent = false;
+                    for (FormData formData : formDatasList) {
+                        formDataMaps.put(formData.getFormTemplateGuid(), formData);
+                        if(formData.getFormTemplateGuid().equals(formTemplateGuid)){
+                            isFormTemplatePresent = true;
+                        }
+                    }
+                    // Check Note has correct form template or not. If not present no need to process.
+                    if(!isFormTemplatePresent){
+                        slvSyncDetailsError.setErrorDetails("Form Template ["+formTemplateGuid+"] is not present in this note.");
+                    }else{
+                        processSingleForm(formDataMaps.get(formTemplateGuid), edgeNote, slvSyncDetailsError, paramsList, configurationJsonList);
+                    }
+                }catch (Exception e){
+                    e.printStackTrace();
+                }finally {
+                    // TODO
+                }
+
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * Based on configuration corresponding process going to take place.
+     * @param formData
+     * @param edgeNote
+     * @param slvSyncDetail
+     * @param paramsList
+     * @param configurationJsonList
+     */
     public void processSingleForm(FormData formData, EdgeNote edgeNote, SlvSyncDetails slvSyncDetail, List<Object> paramsList, List<ConfigurationJson> configurationJsonList) {
         List<EdgeFormData> edgeFormDataList = formData.getFormDef();
         for (ConfigurationJson configurationJson : configurationJsonList) {
@@ -144,6 +167,7 @@ public class SlvInterfaceService extends AbstractSlvService {
                     case UPDATE_REPLACE:
                         //TODO updatereplace
                         break;
+
                 }
             }
         }

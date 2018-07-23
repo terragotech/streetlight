@@ -91,7 +91,7 @@ public class SlvSyncDetails {
     }
 
     public void setErrorDetails(String errorDetails) {
-        this.errorDetails = errorDetails;
+        this.errorDetails = this.errorDetails +".\n"+errorDetails;
     }
 
     public String getTalcAddress() {
