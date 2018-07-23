@@ -282,7 +282,7 @@ public class AbstractSlvService {
         }
     }
 
-    private void addStreetLightData(String key, String value, List<Object> paramsList) {
+    public void addStreetLightData(String key, String value, List<Object> paramsList) {
         paramsList.add("valueName=" + key.trim());
         paramsList.add("value=" + value.trim());
     }

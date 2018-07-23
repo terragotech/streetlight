@@ -33,6 +33,8 @@ import java.lang.reflect.Type;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
+import static com.terragoedge.slvinterface.utils.Utils.dateFormat;
+
 public class SlvInterfaceService extends AbstractSlvService {
     Properties properties = null;
     Gson gson = null;
@@ -144,6 +146,7 @@ public class SlvInterfaceService extends AbstractSlvService {
         String existingNodeMacAddress = null;
         String newNodeMacAddress = null;
         String fixtureScan = null;
+        String validMacAddressResult = "";
         String geoZoneId = properties.getProperty("streetlight.url.geozoneid");
         String controllerStrIdValue = null;  //TODO controllerStarValue
         // Get Existing Node MAC Address value
@@ -153,9 +156,13 @@ public class SlvInterfaceService extends AbstractSlvService {
                 existingNodeMacAddress = valueById(edgeFormDataList, existingMacID.getId());
                 slvSyncDetails.setMacAddress(existingNodeMacAddress);
                 logger.info("Existing NodeMacAddress " + existingNodeMacAddress);
-                if (existingMacID.isRequired()) {
-                    validateMACAddress(existingNodeMacAddress, edgeNote.getTitle(), geoZoneId);
+                if (existingMacID.isRequired() && existingNodeMacAddress == null || existingNodeMacAddress.isEmpty()) {
+                    logger.info("Given ExistingmacAddress is Empty");
+                    return;
                 }
+                validMacAddressResult = validateMACAddress(existingNodeMacAddress, edgeNote.getTitle(), geoZoneId);
+                validMacAddressResult = validMacAddressResult + " replaced on " + dateFormat(edgeNote.getCreatedDateTime());
+                addStreetLightData("comment", validMacAddressResult, paramsList);
             } catch (QRCodeNotMatchedException e1) {
                 logger.info("Validate macAddress Exception", e1);
                 slvSyncDetails.setErrorDetails(MessageConstants.REPLACE_MAC_NOT_MATCH);
@@ -171,6 +178,7 @@ public class SlvInterfaceService extends AbstractSlvService {
         if (newMacID != null) {
             try {
                 newNodeMacAddress = valueById(edgeFormDataList, newMacID.getId());
+                addStreetLightData("MacAddress", newNodeMacAddress, paramsList);
                 logger.info("New NodeMacAddress " + newNodeMacAddress);
                 if (existingMacID.isRequired()) {
                     checkMacAddressExists(newNodeMacAddress, edgeNote.getTitle());
@@ -190,18 +198,24 @@ public class SlvInterfaceService extends AbstractSlvService {
         if (fixureID != null) {
             try {
                 fixtureScan = valueById(edgeFormDataList, fixureID.getId());
-                if (fixtureScan != null && !fixtureScan.isEmpty())
+                if (fixtureScan != null && !fixtureScan.isEmpty() && fixureID.isRequired()) {
+                    addStreetLightData("luminaire.installdate", dateFormat(edgeNote.getCreatedDateTime()), paramsList); // --
+                    addStreetLightData("install.date", dateFormat(edgeNote.getCreatedDateTime()), paramsList);                                                                                                // TODO
                     buildFixtureStreetLightData(fixtureScan, paramsList, edgeNote);
+                }
             } catch (Exception e) {
                 slvSyncDetails.setErrorDetails(MessageConstants.FIXTURE_CODE_NOT_AVAILABLE);
                 slvSyncDetails.setStatus(MessageConstants.ERROR);
                 logger.info("Fixture Value Exception", e);
             }
         }
-        //check mac addrees exist
+
+        //setValues and Empty ReplaceOLC
         try {
             paramsList.add("idOnController=" + edgeNote.getTitle());
+            paramsList.add("controllerStrId=" + controllerStrIdValue);
             addOtherParams(edgeNote, paramsList);
+            replaceOLC(controllerStrIdValue, edgeNote.getTitle(), "");
             int errorCode = setDeviceValues(paramsList);
             if (errorCode != 0) {
                 slvSyncDetails.setErrorDetails(MessageConstants.ERROR_UPDATE_DEVICE_VAL);
@@ -391,6 +405,7 @@ public class SlvInterfaceService extends AbstractSlvService {
         }
         try {
             paramsList.add("idOnController=" + edgeNote.getTitle());
+            paramsList.add("idOnController=" + idOnController);
             addOtherParams(edgeNote, paramsList);
             int errorCode = setDeviceValues(paramsList);
             if (errorCode != 0) {
