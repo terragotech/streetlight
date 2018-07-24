@@ -75,17 +75,17 @@
                   "value" :
                      [
                         true,
-                        false,
+                        true,
                         [
                            {
-                              "label" : "Communication failure-test",
+                              "label" : "Communication failure",
                               "properties" : null,
-                              "value" : "CommunicationFailure-test"
+                              "value" : "CommunicationFailure"
                            },
                            {
-                              "label" : "Power Supplyt",
+                              "label" : "Power Supply Failure",
                               "properties" : null,
-                              "value" : "PowerSupplyt"
+                              "value" : "PowerSupplyFailure"
                            }
                         ],
                         "2018-07-13 06:00:05.0",
@@ -97,8 +97,41 @@
                         "69TH",
                         "R-38"
                      ]
+               },
+			   {
+                  "label" : "R38-11-288509-C",
+                  "properties" : null,
+                  "value" :
+                     [
+                        true,
+                        true,
+                        [
+                           {
+                              "label" : "Power Supply Failure",
+                              "properties" : null,
+                              "value" : "PowerSupplyFailure"
+                           },
+                           {
+                              "label" : "Day burner",
+                              "properties" : null,
+                              "value" : "DayBurner"
+                           },
+						   {
+                              "label" : "Day burner-new",
+                              "properties" : null,
+                              "value" : "DayBurner"
+                           }
+                        ],
+                        "2018-07-13 05:46:45.0",
+                        "06h23m",
+                        30.6333,
+                        null,
+                        27879,
+                        "R38-11-288509-C",
+                        "KEEFE",
+                        "R-38"
+                     ]
                }
-
 
                ]
 

@@ -33,9 +33,9 @@ public class FailureReportService extends FailureAbstractService {
     private JsonParser jsonParser = null;
     private Gson gson = null;
     private String errorFormJson;
-    private String tempResponse;
+    //  private String tempResponse;
     private StreetlightDao streetlightDao = null;
-    ExecutorService executor = Executors.newFixedThreadPool(12);
+    ExecutorService executor = Executors.newFixedThreadPool(1);
 
     public FailureReportService() {
         restService = new RestService();
@@ -47,13 +47,13 @@ public class FailureReportService extends FailureAbstractService {
     public void loadErrorFormJson() {
         try {
             logger.info("Loading Error FromTemplate.");
-             FileInputStream fis = new FileInputStream("./resources/ErrorForm.json");
-            // FileInputStream fis = new FileInputStream("./src/main/resources/ErrorForm.json");
+            FileInputStream fis = new FileInputStream("./resources/ErrorForm.json");
+            //FileInputStream fis = new FileInputStream("./src/main/resources/ErrorForm.json");
             errorFormJson = IOUtils.toString(fis);
 
-          //  FileInputStream fisTemp = new FileInputStream("./src/main/resources/failurereportjson.txt");
-         /*   FileInputStream fisTemp = new FileInputStream("./resources/failurereportjson.txt");
-            tempResponse = IOUtils.toString(fisTemp);*/
+            // FileInputStream fisTemp = new FileInputStream("./src/main/resources/failurereportjson.txt");
+            // FileInputStream fisTemp = new FileInputStream("./resources/failurereportjson.txt");
+            //tempResponse = IOUtils.toString(fisTemp);
 
         } catch (Exception e) {
             logger.error("Error in loadErrorFormJson", e);
@@ -81,6 +81,7 @@ public class FailureReportService extends FailureAbstractService {
                 for (FailureReportModel failureReportModel : failureReportModelList) {
                     logger.info("ProcessForm Started Title " + failureReportModel.toString());
                     System.out.println("title is:" + failureReportModel.getFixtureId());
+
                     if (failureReportModel.isOutage() || failureReportModel.isWarning()) {
                         Runnable processTask = new ProcessTask(failureReportModel);
                         executor.execute(processTask);
@@ -88,7 +89,6 @@ public class FailureReportService extends FailureAbstractService {
                     // processErrorForm(failureReportModel);
                     processedFixtureIds.add(failureReportModel.getFixtureId());
                 }
-
             }
         }
         executor.shutdown();
@@ -185,8 +185,8 @@ public class FailureReportService extends FailureAbstractService {
     }
 
     public void processErrorFormTemplate(FormData formData, EdgeNote edgeNote, FailureReportModel failureReportModel, String formTemplateGuid, FailureFormDBmodel failureFormDBmodel) throws Exception {
-        if(gson==null){
-            gson=new Gson();
+        if (gson == null) {
+            gson = new Gson();
         }
         failureFormDBmodel.setModelJson(gson.toJson(failureReportModel));
         List<EdgeFormData> edgeFormDataList = null;
@@ -393,7 +393,7 @@ public class FailureReportService extends FailureAbstractService {
     }
 
     public JsonObject getFailureReport(GeozoneModel geozoneModel) {
-       // return (JsonObject) jsonParser.parse(tempResponse);
+        //return (JsonObject) jsonParser.parse(tempResponse);
         String url = PropertiesReader.getProperties().getProperty("streetlight.slv.url.main");
         String failureUrl = PropertiesReader.getProperties().getProperty("streetlight.slv.failurereport");
         List<Object> paramsList = new ArrayList<>();
@@ -417,6 +417,7 @@ public class FailureReportService extends FailureAbstractService {
             return (JsonObject) jsonParser.parse(responseString);
         }
         return null;
+
     }
 
     public List<GeozoneModel> getGeozoneModelList(String url) {

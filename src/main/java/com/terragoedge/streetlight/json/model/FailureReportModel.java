@@ -9,6 +9,7 @@ public class FailureReportModel {
     private String properties;
     private boolean warning;
     private boolean outage;
+    private boolean isComplete;
     private String failureReason;
     private String lastUpdate;
     private String failedSince;
@@ -103,6 +104,14 @@ public class FailureReportModel {
         this.syncid = syncid;
     }
 
+    public boolean isComplete() {
+        return isComplete;
+    }
+
+    public void setComplete(boolean complete) {
+        isComplete = complete;
+    }
+
     @Override
     public String toString() {
         return "FailureReportModel{" +
@@ -112,6 +121,7 @@ public class FailureReportModel {
                 ", properties='" + properties + '\'' +
                 ", warning=" + warning +
                 ", outage=" + outage +
+                ", isComplete=" + isComplete +
                 ", failureReason='" + failureReason + '\'' +
                 ", lastUpdate='" + lastUpdate + '\'' +
                 ", failedSince='" + failedSince + '\'' +

@@ -28,14 +28,16 @@ public class ProcessTask extends FailureAbstractService implements Runnable {
     Gson gson = null;
     private StreetlightDao streetlightDao = null;
     JsonParser jsonParser = null;
-    // private String tempResponse=null;
+ //   private String tempResponse = null;
     private String errorFormJson;
+    private FailureReportService failureReportService = null;
 
     public ProcessTask(FailureReportModel failureReportModel) {
         this.failureReportModel = failureReportModel;
         streetlightDao = new StreetlightDao();
         jsonParser = new JsonParser();
         gson = new Gson();
+        failureReportService = new FailureReportService();
         loadErrorFormJson();
     }
 
@@ -50,9 +52,12 @@ public class ProcessTask extends FailureAbstractService implements Runnable {
                 if (dbFailureReportModel.getFailureReason() != null && dbFailureReportModel.getFailureReason().equals(failureReportModel.getFailureReason())) {
                     System.out.println("Already Exist LocalDB: " + failureReportModel.getFixtureId());
                     return;
+                } else if (dbFailureReportModel.isOutage() != failureReportModel.isOutage()) {
+                    System.out.println("Set CompleteLayer"+failureReportModel.getFixtureId());
+                    failureReportModel.setComplete(true);
                 }
             }
-
+            System.out.println("Set OutageLayer"+failureReportModel.getFixtureId());
             String notesJson = getNoteDetails(failureReportModel.getFixtureId());
             if (notesJson == null) {
                 logger.info("Note not in Edge.");
@@ -82,8 +87,8 @@ public class ProcessTask extends FailureAbstractService implements Runnable {
     }
 
     public void processErrorFormTemplate(FormData formData, EdgeNote edgeNote, FailureReportModel failureReportModel, String formTemplateGuid, FailureFormDBmodel failureFormDBmodel) throws Exception {
-        if(gson==null){
-            gson=new Gson();
+        if (gson == null) {
+            gson = new Gson();
         }
         failureFormDBmodel.setModelJson(gson.toJson(failureReportModel));
         List<EdgeFormData> edgeFormDataList = null;
@@ -134,6 +139,7 @@ public class ProcessTask extends FailureAbstractService implements Runnable {
         }
         //setLayer as Outage
         String outageLayerGuid = PropertiesReader.getProperties().getProperty("outage_layer.guid");
+        String completeLayerGuid = PropertiesReader.getProperties().getProperty("complete_layer.guid");
         String notebookGuid = edgeNote.getEdgeNotebook().getNotebookGuid();
         String oldNoteGuid = edgeNote.getNoteGuid();
         JsonObject edgeNoteJsonObject = processEdgeForms(gson.toJson(edgeNote), edgeFormDatas, formTemplateGuid);
@@ -141,6 +147,10 @@ public class ProcessTask extends FailureAbstractService implements Runnable {
         if (failureReportModel.isOutage()) {
             edgeNoteJsonObject.remove("dictionary");
             setGroupValue(outageLayerGuid, edgeNoteJsonObject);
+        } else if (failureReportModel.isComplete()) {
+            edgeNoteJsonObject.remove("dictionary");
+            setGroupValue(completeLayerGuid, edgeNoteJsonObject);
+            logger.info("CompletedLayer : " + edgeNote.getTitle());
         }
         logger.info("ProcessedFormJson " + edgeNoteJsonObject.toString());
         ResponseEntity<String> responseEntity = updateNoteDetails(edgeNoteJsonObject.toString(), oldNoteGuid, notebookGuid);
@@ -248,12 +258,12 @@ public class ProcessTask extends FailureAbstractService implements Runnable {
     public void loadErrorFormJson() {
         try {
             logger.info("Loading Error FromTemplate.");
-             FileInputStream fis = new FileInputStream("./resources/ErrorForm.json");
-           // FileInputStream fis = new FileInputStream("./src/main/resources/ErrorForm.json");
+            FileInputStream fis = new FileInputStream("./resources/ErrorForm.json");
+            //FileInputStream fis = new FileInputStream("./src/main/resources/ErrorForm.json");
             errorFormJson = IOUtils.toString(fis);
 
-            //  FileInputStream fisTemp = new FileInputStream("./resources/failurereportjson.txt");
-            //  tempResponse = IOUtils.toString(fisTemp);
+           // FileInputStream fisTemp = new FileInputStream("./src/main/resources/failurereportjson.txt");
+           // tempResponse = IOUtils.toString(fisTemp);
         } catch (Exception e) {
             logger.error("Error in loadErrorFormJson", e);
         }
