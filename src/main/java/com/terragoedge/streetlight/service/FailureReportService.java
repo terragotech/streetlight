@@ -35,7 +35,7 @@ public class FailureReportService extends FailureAbstractService {
     private String errorFormJson;
     //  private String tempResponse;
     private StreetlightDao streetlightDao = null;
-    ExecutorService executor = Executors.newFixedThreadPool(7);
+    ExecutorService executor = Executors.newFixedThreadPool(2);
 
     public FailureReportService() {
         restService = new RestService();
