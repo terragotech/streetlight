@@ -8,6 +8,7 @@ import com.google.gson.reflect.TypeToken;
 import com.sun.xml.internal.bind.v2.TODO;
 import com.terragoedge.slvinterface.dao.ConnectionDAO;
 import com.terragoedge.slvinterface.dao.tables.SlvDevice;
+import com.terragoedge.slvinterface.dao.SLVInterfaceDAO;
 import com.terragoedge.slvinterface.dao.tables.SlvSyncDetails;
 import com.terragoedge.slvinterface.enumeration.EdgeComponentType;
 import com.terragoedge.slvinterface.enumeration.SLVProcess;
@@ -21,6 +22,7 @@ import com.terragoedge.slvinterface.model.EdgeNote;
 import com.terragoedge.slvinterface.model.FormData;
 import com.terragoedge.slvinterface.utils.MessageConstants;
 import com.terragoedge.slvinterface.utils.PropertiesReader;
+import com.terragoedge.slvinterface.utils.ResourceDetails;
 import org.apache.log4j.Logger;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
@@ -39,36 +41,37 @@ public class SlvInterfaceService extends AbstractSlvService {
     Gson gson = null;
     JsonParser jsonParser = null;
     final Logger logger = Logger.getLogger(SlvInterfaceService.class);
-    private EdgeService edgeService = null;
     private SlvRestService slvRestService = null;
     private List<ConfigurationJson> configurationJsonList = null;
     private ConnectionDAO connectionDAO = null;
+    private SLVInterfaceDAO slvInterfaceDAO = null;
 
     public SlvInterfaceService() {
         this.properties = PropertiesReader.getProperties();
         this.gson = new Gson();
         this.jsonParser = new JsonParser();
-        edgeService = new EdgeService();
         slvRestService = new SlvRestService();
         connectionDAO = ConnectionDAO.INSTANCE;
+        slvInterfaceDAO = new SLVInterfaceDAO();
     }
 
     public void start() {
-        System.out.println("Started");
-        logger.info("Process Started");
+        // Get Configuration JSON
         configurationJsonList = getConfigJson();
-        // TODO getNoteguids
-        List<String> noteGuids = new ArrayList<>();
-        //  List<String> noteGuids = streetlightDao.getNoteIds();
+
         String accessToken = getEdgeToken();
         logger.info("AccessToken is :" + accessToken);
         if (accessToken == null) {
             logger.error("Edge Invalid UserName and Password.");
             return;
         }
-        List<EdgeNote> edgenoteList = null;
-        String formTemplateGuid = properties.getProperty("streetlight.kingcity.streetlight_installation_formtemplate_guid");
-        String controllerStrIdValue = properties.getProperty("streetlight.edge.form.controllerStrIdValue");
+
+        List<String> noteGuids = slvInterfaceDAO.getNoteGuids();
+        if(noteGuids == null){
+            logger.error("Error while getting already process note list.");
+            return;
+        }
+        String formTemplateGuid = properties.getProperty("streetlight.formtemplate.guid");
         String url = PropertiesReader.getProperties().getProperty("streetlight.edge.url.main");
 
         url = url + PropertiesReader.getProperties().getProperty("streetlight.edge.url.notes.get");
@@ -81,6 +84,7 @@ public class SlvInterfaceService extends AbstractSlvService {
         logger.info("GetNotesUrl :" + url);
         url = "https://amerescousa.terragoedge.com/edgeServer//rest/notes/68fc6ade-f043-4e3f-8e5c-ecab20bc2b63";
         System.out.println("Url" + url);
+        // Get data from server.
         ResponseEntity<String> responseEntity = slvRestService.getRequest(url, false, accessToken);
         logger.info("notes response :" + url);
         if (responseEntity.getStatusCode().is2xxSuccessful()) {
@@ -95,30 +99,59 @@ public class SlvInterfaceService extends AbstractSlvService {
             edgeNoteList.add(edgeNote);
             //  List<EdgeNote> edgeNoteList = gson.fromJson(notesData, listType);
             for (EdgeNote edgenote : edgeNoteList) {
-                try {
-                    if (!noteGuids.contains(edgenote.getNoteGuid())) {
-                        SlvSyncDetails kingCitySyncModel = new SlvSyncDetails();
-                        kingCitySyncModel.setNoteGuid(edgenote.getNoteGuid());
-                        kingCitySyncModel.setNoteName(edgenote.getTitle());
-                        List<Object> paramsList = new ArrayList<Object>();
-                        List<FormData> formDatasList = edgenote.getFormData();
-                        Map<String, FormData> formDataMaps = new HashMap<String, FormData>();
-                        for (FormData formData : formDatasList) {
-                            formDataMaps.put(formData.getFormTemplateGuid(), formData);
-                        }
-                        logger.info("processedNoteTitle : " + edgenote.getTitle() + "-" + edgenote.getNoteGuid());
-                        // checkFormNoteProcess(formDataMaps, edgenote, kingCitySyncModel, paramsList, formTemplateGuid, controllerStrIdValue);
-                        processSingleForm(formDataMaps.get(formTemplateGuid), edgeNote, kingCitySyncModel, paramsList, configurationJsonList);
-                        //   kingCityDao.insertProcessedNotes(kingCitySyncModel);
-                    }
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
+
             }
         }
     }
 
-    public void processSingleForm(FormData formData, EdgeNote edgeNote, SlvSyncDetails slvSyncDetail, List<Object> paramsList, List<ConfigurationJson> configurationJsonList, String geozoneId, String controllerStrIdValue) {
+
+    private void processEdgeNote(EdgeNote edgeNote,List<String> noteGuids,String formTemplateGuid){
+        try {
+            // Check whether this note is already processed or not.
+            if (!noteGuids.contains(edgeNote.getNoteGuid())) {
+                SlvSyncDetails slvSyncDetailsError = new SlvSyncDetails();
+                try{
+                    slvSyncDetailsError.setNoteGuid(edgeNote.getNoteGuid());
+                    slvSyncDetailsError.setNoteName(edgeNote.getTitle());
+                    List<Object> paramsList = new ArrayList<Object>();
+                    List<FormData> formDatasList = edgeNote.getFormData();
+                    Map<String, FormData> formDataMaps = new HashMap<String, FormData>();
+                    boolean isFormTemplatePresent = false;
+                    for (FormData formData : formDatasList) {
+                        formDataMaps.put(formData.getFormTemplateGuid(), formData);
+                        if(formData.getFormTemplateGuid().equals(formTemplateGuid)){
+                            isFormTemplatePresent = true;
+                        }
+                    }
+                    // Check Note has correct form template or not. If not present no need to process.
+                    if(!isFormTemplatePresent){
+                        slvSyncDetailsError.setErrorDetails("Form Template ["+formTemplateGuid+"] is not present in this note.");
+                    }else{
+                        String geozoneId=null;
+                        String controllerStrIdValue = null;
+                        processSingleForm(formDataMaps.get(formTemplateGuid), edgeNote, slvSyncDetailsError, paramsList, configurationJsonList,geozoneId, controllerStrIdValue);
+                    }
+                }catch (Exception e){
+                    e.printStackTrace();
+                }finally {
+                    // TODO
+                }
+
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * Based on configuration corresponding process going to take place.
+     * @param formData
+     * @param edgeNote
+     * @param slvSyncDetail
+     * @param paramsList
+     * @param configurationJsonList
+     */
+    public void processSingleForm(FormData formData, EdgeNote edgeNote, SlvSyncDetails slvSyncDetail, List<Object> paramsList, List<ConfigurationJson> configurationJsonList,String geozoneId, String controllerStrIdValue) {
         List<EdgeFormData> edgeFormDataList = formData.getFormDef();
         for (ConfigurationJson configurationJson : configurationJsonList) {
             List<Action> actionList = configurationJson.getAction();
@@ -137,6 +170,7 @@ public class SlvInterfaceService extends AbstractSlvService {
                     case REPLACE_DEVICE:
                         processReplaceDevice(edgeFormDataList, configurationJson, edgeNote, paramsList, slvSyncDetail, geozoneId, controllerStrIdValue);
                         break;
+
                 }
             }
         }
@@ -499,7 +533,6 @@ public class SlvInterfaceService extends AbstractSlvService {
         }
         try {
             paramsList.add("idOnController=" + edgeNote.getTitle());
-            paramsList.add("idOnController=" + idOnController);
             addOtherParams(edgeNote, paramsList);
             int errorCode = setDeviceValues(paramsList);
             if (errorCode != 0) {
@@ -538,9 +571,7 @@ public class SlvInterfaceService extends AbstractSlvService {
 
     public List<ConfigurationJson> getConfigJson() {
         JsonParser jsonParser = new JsonParser();
-        // String path = "./resources/config.json";
-        String path = "./src/main/resources/config.json";
-        try (FileReader reader = new FileReader(path)) {
+        try (FileReader reader = new FileReader(ResourceDetails.CONFIG_JSON_PATH)) {
             String configjson = jsonParser.parse(reader).toString();
             Type listType = new TypeToken<ArrayList<ConfigurationJson>>() {
             }.getType();
