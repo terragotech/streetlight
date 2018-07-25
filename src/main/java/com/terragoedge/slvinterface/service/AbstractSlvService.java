@@ -303,6 +303,7 @@ public class AbstractSlvService {
         ResponseEntity<String> responseEntity = slvRestService.getRequest(slvBaseUrl + talqAddressApi, true);
         if (responseEntity.getStatusCode().is2xxSuccessful()) {
             String response = responseEntity.getBody();
+
             JsonObject jsonObject = (JsonObject) jsonParser.parse(response);
             JsonArray deviceValuesAsArray = jsonObject.get("values").getAsJsonArray();
             for (JsonElement jsonElement : deviceValuesAsArray) {

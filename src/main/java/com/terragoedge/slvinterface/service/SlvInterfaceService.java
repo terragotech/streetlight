@@ -6,14 +6,13 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.reflect.TypeToken;
 import com.sun.xml.internal.bind.v2.TODO;
+import com.terragoedge.slvinterface.dao.ConnectionDAO;
+import com.terragoedge.slvinterface.dao.tables.SlvDevice;
 import com.terragoedge.slvinterface.dao.tables.SlvSyncDetails;
 import com.terragoedge.slvinterface.enumeration.EdgeComponentType;
 import com.terragoedge.slvinterface.enumeration.SLVProcess;
 import com.terragoedge.slvinterface.enumeration.Status;
-import com.terragoedge.slvinterface.exception.DeviceCreationFailedException;
-import com.terragoedge.slvinterface.exception.NoValueException;
-import com.terragoedge.slvinterface.exception.QRCodeAlreadyUsedException;
-import com.terragoedge.slvinterface.exception.QRCodeNotMatchedException;
+import com.terragoedge.slvinterface.exception.*;
 import com.terragoedge.slvinterface.json.slvInterface.Action;
 import com.terragoedge.slvinterface.json.slvInterface.ConfigurationJson;
 import com.terragoedge.slvinterface.json.slvInterface.Id;
@@ -43,6 +42,7 @@ public class SlvInterfaceService extends AbstractSlvService {
     private EdgeService edgeService = null;
     private SlvRestService slvRestService = null;
     private List<ConfigurationJson> configurationJsonList = null;
+    private ConnectionDAO connectionDAO = null;
 
     public SlvInterfaceService() {
         this.properties = PropertiesReader.getProperties();
@@ -50,6 +50,7 @@ public class SlvInterfaceService extends AbstractSlvService {
         this.jsonParser = new JsonParser();
         edgeService = new EdgeService();
         slvRestService = new SlvRestService();
+        connectionDAO = ConnectionDAO.INSTANCE;
     }
 
     public void start() {
@@ -117,102 +118,141 @@ public class SlvInterfaceService extends AbstractSlvService {
         }
     }
 
-    public void processSingleForm(FormData formData, EdgeNote edgeNote, SlvSyncDetails slvSyncDetail, List<Object> paramsList, List<ConfigurationJson> configurationJsonList) {
+    public void processSingleForm(FormData formData, EdgeNote edgeNote, SlvSyncDetails slvSyncDetail, List<Object> paramsList, List<ConfigurationJson> configurationJsonList, String geozoneId, String controllerStrIdValue) {
         List<EdgeFormData> edgeFormDataList = formData.getFormDef();
         for (ConfigurationJson configurationJson : configurationJsonList) {
             List<Action> actionList = configurationJson.getAction();
             if (checkActionType(edgeFormDataList, actionList)) {
                 switch (SLVProcess.valueOf(configurationJson.getType())) {
                     case NEW_DEVICE:
-                        List<Id> idList = configurationJson.getIds();
-                        //TODO create
+                        boolean isDeviceExist = isAvailableDevice(edgeNote.getTitle());
+                        if (isDeviceExist) {
+                            processNewForms(edgeNote, slvSyncDetail, geozoneId);
+                        }
+                        processUpdateDevice(edgeFormDataList, configurationJson, edgeNote, paramsList, slvSyncDetail, controllerStrIdValue);
                         break;
                     case UPDATE_DEVICE:
-                        processUpdateDevice(edgeFormDataList, configurationJson, edgeNote, paramsList, slvSyncDetail);
+                        processUpdateDevice(edgeFormDataList, configurationJson, edgeNote, paramsList, slvSyncDetail, controllerStrIdValue);
                         break;
                     case REPLACE_DEVICE:
-                        //TODO replacedevice
-                        break;
-                    case UPDATE_REPLACE:
-                        //TODO updatereplace
+                        processReplaceDevice(edgeFormDataList, configurationJson, edgeNote, paramsList, slvSyncDetail, geozoneId, controllerStrIdValue);
                         break;
                 }
+            }
+        }
+        connectionDAO.saveSlvSyncDetails(slvSyncDetail);
+    }
+
+    public boolean isAvailableDevice(String idOnController) {
+        SlvDevice slvDevice = connectionDAO.getSlvDevices(idOnController);
+        if (slvDevice == null) {
+            return true;
+        }
+        return false;
+    }
+
+    public void processNewForms(EdgeNote edgeNote, SlvSyncDetails slvSyncDetails, String geoZoneId) {
+        if (geoZoneId != null) {
+            try {
+                ResponseEntity<String> responseEntity = createDevice(edgeNote, geoZoneId);
+                String status = responseEntity.getStatusCode().toString();
+                String responseBody = responseEntity.getBody();
+                if ((status.equalsIgnoreCase("200") || status.equalsIgnoreCase("ok"))
+                        && !responseBody.contains("<status>ERROR</status>")) {
+                    logger.info("Device Created Successfully, NoteId:" + edgeNote.getNoteGuid() + "-"
+                            + edgeNote.getTitle());
+                    slvSyncDetails.setDeviceCreationStatus(Status.Success.toString());
+                    createSLVDevice(edgeNote.getTitle());
+                } else {
+                    try {
+                        logger.info("Device Created Failure, NoteId:" + edgeNote.getNoteGuid() + "-"
+                                + edgeNote.getTitle());
+                        slvSyncDetails.setDeviceCreationStatus(Status.Failure.toString());
+                        slvSyncDetails.setErrorDetails(status);
+                        throw new DeviceCreationFailedException(edgeNote.getNoteGuid() + "-" + edgeNote.getTitle());
+                    } catch (DeviceCreationFailedException e) {
+                        logger.info("Device creation DeviceCreationFailedException", e);
+                        e.printStackTrace();
+                    }
+                }
+
+            } catch (Exception e) {
+                e.printStackTrace();
             }
         }
     }
 
-    public void processUpdateDevice(List<EdgeFormData> edgeFormDataList, ConfigurationJson configurationJson, EdgeNote edgeNote, List<Object> paramsList, SlvSyncDetails slvSyncDetails) {
+    public void createSLVDevice(String title) {
+        SlvDevice slvDevice = new SlvDevice();
+        slvDevice.setDeviceId(title);
+        slvDevice.setProcessedDateTime(new Date().getTime());
+    }
+
+    public void processReplaceDevice(List<EdgeFormData> edgeFormDataList, ConfigurationJson configurationJson, EdgeNote edgeNote, List<Object> paramsList, SlvSyncDetails slvSyncDetails, String geozoneId, String controllerStrIdValue) {
         List<Id> idList = configurationJson.getIds();
-        String existingNodeMacAddress = null;
         String newNodeMacAddress = null;
-        String fixtureScan = null;
-        String validMacAddressResult = "";
-        String geoZoneId = properties.getProperty("streetlight.url.geozoneid");
-        String controllerStrIdValue = null;  //TODO controllerStarValue
-        // Get Existing Node MAC Address value
-        Id existingMacID = getIDByType(idList, EdgeComponentType.MAC.toString());
-        if (existingMacID != null) {
-            try {
-                existingNodeMacAddress = valueById(edgeFormDataList, existingMacID.getId());
-                slvSyncDetails.setMacAddress(existingNodeMacAddress);
-                logger.info("Existing NodeMacAddress " + existingNodeMacAddress);
-                if (existingMacID.isRequired() && existingNodeMacAddress == null || existingNodeMacAddress.isEmpty()) {
-                    logger.info("Given ExistingmacAddress is Empty");
-                    return;
-                }
-                validMacAddressResult = validateMACAddress(existingNodeMacAddress, edgeNote.getTitle(), geoZoneId);
-                validMacAddressResult = validMacAddressResult + " replaced on " + dateFormat(edgeNote.getCreatedDateTime());
-                addStreetLightData("comment", validMacAddressResult, paramsList);
-            } catch (QRCodeNotMatchedException e1) {
-                logger.info("Validate macAddress Exception", e1);
-                slvSyncDetails.setErrorDetails(MessageConstants.REPLACE_MAC_NOT_MATCH);
-                slvSyncDetails.setStatus(MessageConstants.ERROR);
-                return;
-            } catch (Exception e) {
-                slvSyncDetails.setErrorDetails(MessageConstants.OLD_MAC_ADDRESS_NOT_AVAILABLE);
-                slvSyncDetails.setStatus(MessageConstants.ERROR);
-                logger.info("Existing macAddress Exception", e);
-            }
-        }
         Id newMacID = getIDByType(idList, EdgeComponentType.MAC.toString());
         if (newMacID != null) {
             try {
-                newNodeMacAddress = valueById(edgeFormDataList, newMacID.getId());
-                addStreetLightData("MacAddress", newNodeMacAddress, paramsList);
-                logger.info("New NodeMacAddress " + newNodeMacAddress);
-                if (newMacID.isRequired() && newNodeMacAddress == null || newNodeMacAddress.isEmpty()) {
-                    logger.info("New MacAddress is Empty");
-                    return;
-                }
-                checkMacAddressExists(newNodeMacAddress, edgeNote.getTitle());
-            } catch (QRCodeAlreadyUsedException e1) {
-                logger.info("Validate macAddress Exception", e1);
-                slvSyncDetails.setErrorDetails(MessageConstants.REPLACE_MAC_NOT_MATCH);
-                slvSyncDetails.setStatus(MessageConstants.ERROR);
-                return;
+                newNodeMacAddress = processNewMacAddress(edgeFormDataList, newMacID, edgeNote, paramsList, slvSyncDetails);
             } catch (Exception e) {
-                slvSyncDetails.setErrorDetails(MessageConstants.NEW_MAC_ADDRESS_NOT_AVAILABLE);
-                slvSyncDetails.setStatus(MessageConstants.ERROR);
-                logger.info("NewNode macAddress Exception", e);
+                logger.info("NewNodeMacaddress Error", e);
+                return;
             }
         }
-        Id fixureID = getIDByType(idList, EdgeComponentType.FIXTURE.toString());
-        if (fixureID != null) {
-            try {
-                fixtureScan = valueById(edgeFormDataList, fixureID.getId());
-                if (fixtureScan != null && !fixtureScan.isEmpty() && fixureID.isRequired()) {
-                    addStreetLightData("luminaire.installdate", dateFormat(edgeNote.getCreatedDateTime()), paramsList); // --
-                    addStreetLightData("install.date", dateFormat(edgeNote.getCreatedDateTime()), paramsList);                                                                                                // TODO
-                    buildFixtureStreetLightData(fixtureScan, paramsList, edgeNote);
-                }
-            } catch (Exception e) {
-                slvSyncDetails.setErrorDetails(MessageConstants.FIXTURE_CODE_NOT_AVAILABLE);
-                slvSyncDetails.setStatus(MessageConstants.ERROR);
-                logger.info("Fixture Value Exception", e);
-            }
+        try {
+            setDeviceAndReplaceOlc(paramsList, edgeNote, controllerStrIdValue, newNodeMacAddress, slvSyncDetails);
+        } catch (Exception e) {
+            return;
         }
 
+
+    }
+
+    public void processUpdateDevice(List<EdgeFormData> edgeFormDataList, ConfigurationJson configurationJson, EdgeNote edgeNote, List<Object> paramsList, SlvSyncDetails slvSyncDetails, String controllerStrIdValue) {
+        List<Id> idList = configurationJson.getIds();
+        // Process Existing Node MAC Address value
+        Id fixureID = getIDByType(idList, EdgeComponentType.FIXTURE.toString());
+        if (fixureID != null) {
+            processFixtureScan(edgeFormDataList, fixureID, edgeNote, paramsList, slvSyncDetails);
+        }
         //setValues and Empty ReplaceOLC
+        try {
+            paramsList.add("idOnController=" + edgeNote.getTitle());
+            paramsList.add("controllerStrId=" + controllerStrIdValue);
+            addOtherParams(edgeNote, paramsList);
+            int errorCode = setDeviceValues(paramsList);
+            if (errorCode != 0) {
+                slvSyncDetails.setErrorDetails(MessageConstants.ERROR_UPDATE_DEVICE_VAL);
+                slvSyncDetails.setStatus(MessageConstants.ERROR);
+                return;
+            } else {
+                slvSyncDetails.setStatus(MessageConstants.SUCCESS);
+            }
+        } catch (Exception e) {
+            return;
+        }
+
+    }
+
+    public void processFixtureScan(List<EdgeFormData> edgeFormDataList, Id fixureID, EdgeNote edgeNote, List<Object> paramsList, SlvSyncDetails slvSyncDetails) {
+        String fixtureScan = null;
+        try {
+            fixtureScan = valueById(edgeFormDataList, fixureID.getId());
+            if (fixtureScan != null && !fixtureScan.isEmpty() && fixureID.isRequired()) {
+                addStreetLightData("luminaire.installdate", dateFormat(edgeNote.getCreatedDateTime()), paramsList); // --
+                addStreetLightData("install.date", dateFormat(edgeNote.getCreatedDateTime()), paramsList);                                                                                                // TODO
+                buildFixtureStreetLightData(fixtureScan, paramsList, edgeNote);
+            }
+        } catch (Exception e) {
+            slvSyncDetails.setErrorDetails(MessageConstants.FIXTURE_CODE_NOT_AVAILABLE);
+            slvSyncDetails.setStatus(MessageConstants.ERROR);
+            logger.info("Fixture Value Exception", e);
+        }
+
+    }
+
+    public void setDeviceAndReplaceOlc(List<Object> paramsList, EdgeNote edgeNote, String controllerStrIdValue, String newNodeMacAddress, SlvSyncDetails slvSyncDetails) {
         try {
             paramsList.add("idOnController=" + edgeNote.getTitle());
             paramsList.add("controllerStrId=" + controllerStrIdValue);
@@ -234,6 +274,58 @@ public class SlvInterfaceService extends AbstractSlvService {
             slvSyncDetails.setStatus(MessageConstants.ERROR);
             e.printStackTrace();
         }
+
+    }
+
+    public String processExistingMacAddressValue(List<EdgeFormData> edgeFormDataList, Id existingId, EdgeNote edgeNote, List<Object> paramsList, SlvSyncDetails slvSyncDetails, String geoZoneId) throws QRCodeAlreadyUsedException, NewMacAddressException {
+        String existingNodeMacAddress = null;
+        String validMacAddressResult = null;
+        try {
+            existingNodeMacAddress = valueById(edgeFormDataList, existingId.getId());
+            slvSyncDetails.setMacAddress(existingNodeMacAddress);
+            logger.info("Existing NodeMacAddress " + existingNodeMacAddress);
+            if (existingId.isRequired() && existingNodeMacAddress == null || existingNodeMacAddress.isEmpty()) {
+                logger.info("Given ExistingmacAddress is Empty");
+                throw new NewMacAddressException("EmptyExistingMacAddressException : " + edgeNote.getTitle());
+            }
+            validMacAddressResult = validateMACAddress(existingNodeMacAddress, edgeNote.getTitle(), geoZoneId);
+            validMacAddressResult = validMacAddressResult + " replaced on " + dateFormat(edgeNote.getCreatedDateTime());
+            addStreetLightData("comment", validMacAddressResult, paramsList);
+        } catch (QRCodeNotMatchedException e1) {
+            logger.info("Validate macAddress Exception", e1);
+            slvSyncDetails.setErrorDetails(MessageConstants.REPLACE_MAC_NOT_MATCH);
+            slvSyncDetails.setStatus(MessageConstants.ERROR);
+            throw new QRCodeAlreadyUsedException("ExistingQRcode AlreadyUsed : " + edgeNote.getTitle(), existingNodeMacAddress);
+        } catch (Exception e) {
+            slvSyncDetails.setErrorDetails(MessageConstants.OLD_MAC_ADDRESS_NOT_AVAILABLE);
+            slvSyncDetails.setStatus(MessageConstants.ERROR);
+            logger.info("Existing macAddress Exception", e);
+        }
+        return existingNodeMacAddress;
+    }
+
+    public String processNewMacAddress(List<EdgeFormData> edgeFormDataList, Id existingId, EdgeNote edgeNote, List<Object> paramsList, SlvSyncDetails slvSyncDetails) throws NewMacAddressException, QRCodeAlreadyUsedException {
+        String newNodeMacAddress = null;
+        try {
+            newNodeMacAddress = valueById(edgeFormDataList, existingId.getId());
+            addStreetLightData("MacAddress", newNodeMacAddress, paramsList);
+            logger.info("New NodeMacAddress " + newNodeMacAddress);
+            if (existingId.isRequired() && newNodeMacAddress == null || newNodeMacAddress.isEmpty()) {
+                logger.info("New MacAddress is Empty");
+                throw new NewMacAddressException("EmptyMacAddressException : " + edgeNote.getTitle());
+            }
+            checkMacAddressExists(newNodeMacAddress, edgeNote.getTitle());
+        } catch (QRCodeAlreadyUsedException e1) {
+            logger.info("Validate macAddress Exception", e1);
+            slvSyncDetails.setErrorDetails(MessageConstants.REPLACE_MAC_NOT_MATCH);
+            slvSyncDetails.setStatus(MessageConstants.ERROR);
+            throw new QRCodeAlreadyUsedException("QRcode AlreadyUsed : " + edgeNote.getTitle(), newNodeMacAddress);
+        } catch (Exception e) {
+            slvSyncDetails.setErrorDetails(MessageConstants.NEW_MAC_ADDRESS_NOT_AVAILABLE);
+            slvSyncDetails.setStatus(MessageConstants.ERROR);
+            logger.info("NewNode macAddress Exception", e);
+        }
+        return newNodeMacAddress;
     }
 
     public boolean checkActionType(List<EdgeFormData> edgeFormData, List<Action> actionList) {

@@ -5,12 +5,13 @@ import com.j256.ormlite.table.DatabaseTable;
 
 @DatabaseTable(tableName = "SlvDevice")
 public class SlvDevice {
+    public static final String SLV_DEVICE_ID = "DeviceId";
     @DatabaseField(columnName = "Id", generatedId = true)
     private int id;
     @DatabaseField(columnName = "DeviceName")
     private String deviceName;
     @DatabaseField(columnName = "DeviceId")
-    private int deviceId;
+    private String deviceId;
     @DatabaseField(columnName = "ProcessedDateTime")
     private long processedDateTime;
 
@@ -30,11 +31,11 @@ public class SlvDevice {
         this.deviceName = deviceName;
     }
 
-    public int getDeviceId() {
+    public String getDeviceId() {
         return deviceId;
     }
 
-    public void setDeviceId(int deviceId) {
+    public void setDeviceId(String deviceId) {
         this.deviceId = deviceId;
     }
 

@@ -20,35 +20,53 @@ public enum ConnectionDAO {
 
     ConnectionSource connectionSource = null;
     private Dao<SlvSyncDetails, String> slvSyncDetailsDao;
+    public Dao<SlvDevice, String> slvDeviceDao = null;
 
-    ConnectionDAO(){
+     ConnectionDAO() {
 
-        try{
+        try {
             connectionSource = new JdbcConnectionSource(DATABASE_URL);
             slvSyncDetailsDao = DaoManager.createDao(connectionSource, SlvSyncDetails.class);
-        }catch (Exception e) {
+            slvDeviceDao = DaoManager.createDao(connectionSource, SlvDevice.class);
+        } catch (Exception e) {
             e.printStackTrace();
         }
 
     }
 
-    public void setupDatabase(){
+    public void setupDatabase() {
 
     }
 
-    public SlvSyncDetails getSlvSyncDetailWithoutTalq(String deviceId){
+    public void saveSlvDevices(SlvDevice slvDevice) {
+        try {
+            slvDeviceDao.create(slvDevice);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+    public SlvDevice getSlvDevices(String deviceId){
         try{
-            return slvSyncDetailsDao.queryBuilder().where().eq(SlvSyncDetails.NOTE_GUID, deviceId).and().isNull(SlvSyncDetails.TALQ_ADDRESS).queryForFirst();
+            return slvDeviceDao.queryBuilder().where().eq(SlvDevice.SLV_DEVICE_ID,deviceId).queryForFirst();
         }catch (Exception e){
             e.printStackTrace();
         }
         return null;
     }
 
-    public void saveSlvSyncDetails(SlvSyncDetails slvSyncDetails){
+    public SlvSyncDetails getSlvSyncDetailWithoutTalq(String deviceId) {
+        try {
+            return slvSyncDetailsDao.queryBuilder().where().eq(SlvSyncDetails.NOTE_GUID, deviceId).and().isNull(SlvSyncDetails.TALQ_ADDRESS).queryForFirst();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    public void saveSlvSyncDetails(SlvSyncDetails slvSyncDetails) {
         try {
             slvSyncDetailsDao.createOrUpdate(slvSyncDetails);
-        }catch (Exception e){
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }
@@ -64,7 +82,7 @@ public enum ConnectionDAO {
         ResultSet queryResponse = null;
         List<String> noteIds = new ArrayList<>();
         try {
-       //     queryStatement = connection.createStatement();
+            //     queryStatement = connection.createStatement();
             queryResponse = queryStatement.executeQuery("Select processednoteid from notesyncdetails;");
 
             while (queryResponse.next()) {
@@ -72,10 +90,10 @@ public enum ConnectionDAO {
             }
 
         } catch (Exception e) {
-         //   logger.error("Error in getNoteIds", e);
+            //   logger.error("Error in getNoteIds", e);
         } finally {
-         //   closeResultSet(queryResponse);
-          //  closeStatement(queryStatement);
+            //   closeResultSet(queryResponse);
+            //  closeStatement(queryStatement);
         }
         return noteIds;
     }

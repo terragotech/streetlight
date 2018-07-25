@@ -29,6 +29,8 @@ public class SlvSyncDetails {
     private long talcAddressDateTime;
     @DatabaseField(columnName = "MacAddress")
     private String macAddress;
+    @DatabaseField(columnName = "DeviceCreationStatus")
+    private String deviceCreationStatus;
 
     public int getId() {
         return id;
@@ -118,6 +120,14 @@ public class SlvSyncDetails {
         this.macAddress = macAddress;
     }
 
+    public String getDeviceCreationStatus() {
+        return deviceCreationStatus;
+    }
+
+    public void setDeviceCreationStatus(String deviceCreationStatus) {
+        this.deviceCreationStatus = deviceCreationStatus;
+    }
+
     @Override
     public String toString() {
         return "SlvSyncDetails{" +
@@ -131,6 +141,8 @@ public class SlvSyncDetails {
                 ", errorDetails='" + errorDetails + '\'' +
                 ", talcAddress='" + talcAddress + '\'' +
                 ", talcAddressDateTime=" + talcAddressDateTime +
+                ", macAddress='" + macAddress + '\'' +
+                ", deviceCreationStatus='" + deviceCreationStatus + '\'' +
                 '}';
     }
 }

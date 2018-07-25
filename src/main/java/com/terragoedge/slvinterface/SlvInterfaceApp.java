@@ -14,10 +14,10 @@ import java.util.Properties;
 public class SlvInterfaceApp extends AbstractSlvService {
     public static List<ConfigurationJson> configurationJsons = new ArrayList<>();
     public static void main(String[] args) {
-        getFormConfiguration();
-        SlvInterfaceService slvInterfaceService = new SlvInterfaceService();
-        slvInterfaceService.start();
-       /* while (true) {
+       // getFormConfiguration();
+       // SlvInterfaceService slvInterfaceService = new SlvInterfaceService();
+       // slvInterfaceService.start();
+        while (true) {
             try{
                 AbstractSlvService abstractSlvService = new AbstractSlvService();
                 abstractSlvService.getTalqAddress();
@@ -25,7 +25,7 @@ public class SlvInterfaceApp extends AbstractSlvService {
             }catch (Exception e){
                 e.printStackTrace();
             }
-        }*/
+        }
     }
     private static void getFormConfiguration(){
         Gson gson = new Gson();
