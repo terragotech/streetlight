@@ -58,6 +58,8 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
                             repairAndOutage(edgeFormDatas, edgeNote, installMaintenanceLogModel,existingFixtureInfo,utilLocId);
                             return;
                         case "Other Task":
+                            installMaintenanceLogModel.setErrorDetails("Action option is Other Task.");
+                            installMaintenanceLogModel.setStatus(MessageConstants.ERROR);
                             return;
                     }
                 } catch (NoValueException e) {
@@ -149,6 +151,9 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
     }
 
 
+
+
+
     private void processNewGroup(List<EdgeFormData> edgeFormDatas, EdgeNote edgeNote, InstallMaintenanceLogModel loggingModel, boolean isResync, LoggingModel existingFixtureInfo,String utilLocId) {
         try {
 
@@ -172,10 +177,16 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
                 logger.info("Fixture QR Scan Val"+fixerQrScanValue);
             } catch (NoValueException e) {
                 logger.error("Error in while getting MAC Fixture QR Scan",e);
-                loggingModel.setErrorDetails(MessageConstants.FIXTURE_CODE_NOT_AVAILABLE);
-                loggingModel.setStatus(MessageConstants.ERROR);
+                /*loggingModel.setErrorDetails(MessageConstants.FIXTURE_CODE_NOT_AVAILABLE);
+                loggingModel.setStatus(MessageConstants.ERROR);*/
                 // loggingModel.setProcessOtherForm(true);
                 // return;
+            }
+
+            if (!nodeMacValue.startsWith("00") && (fixerQrScanValue != null && fixerQrScanValue.startsWith("00"))) {
+                String temp = nodeMacValue;
+                nodeMacValue = fixerQrScanValue;
+                fixerQrScanValue = temp;
             }
 
             if(isResync){
@@ -238,8 +249,12 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
                 replaceNodeOnly(edgeFormDatas, edgeNote, loggingModel,existingFixtureInfo,utilLocId);
                 break;
             case "Replace Fixture only":
+                loggingModel.setStatus(MessageConstants.ERROR);
+                loggingModel.setErrorDetails("Replace Fixture only option is selected.");
                 break;
             case "Power Issue":
+                loggingModel.setStatus(MessageConstants.ERROR);
+                loggingModel.setErrorDetails("Power Issue option is not selected.");
                 break;
         }
     }
@@ -266,10 +281,10 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
                 existingNodeMacAddress = valueById(edgeFormDatas, 36);
                 loggingModel.setExistingNodeMACaddress(existingNodeMacAddress);
             } catch (NoValueException e) {
-                loggingModel.setErrorDetails(MessageConstants.OLD_MAC_ADDRESS_NOT_AVAILABLE);
+                /*loggingModel.setErrorDetails(MessageConstants.OLD_MAC_ADDRESS_NOT_AVAILABLE);
                 loggingModel.setProcessOtherForm(true);
                 loggingModel.setStatus(MessageConstants.ERROR);
-                return;
+                return;*/
             }
 
             // Get Fixer QR Scan value
@@ -277,11 +292,18 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
             try {
                 fixerQrScanValue = valueById(edgeFormDatas, 38);
             } catch (NoValueException e) {
-                loggingModel.setProcessOtherForm(true);
+               /* loggingModel.setProcessOtherForm(true);
                 loggingModel.setErrorDetails(MessageConstants.FIXTURE_CODE_NOT_AVAILABLE);
                 loggingModel.setStatus(MessageConstants.ERROR);
-                // loggingModel.setProcessOtherForm(true);
+                // loggingModel.setProcessOtherForm(true);*/
                 // return;
+            }
+
+
+            if (!newNodeMacAddress.startsWith("00") && (fixerQrScanValue != null && fixerQrScanValue.startsWith("00"))) {
+                String temp = newNodeMacAddress;
+                newNodeMacAddress = fixerQrScanValue;
+                fixerQrScanValue = temp;
             }
 
             String idOnController = loggingModel.getIdOnController();
@@ -294,14 +316,17 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
 
             String comment = "";
             // Check existingNodeMacAddress is valid or not
-            try {
-                comment = validateMacAddress(existingNodeMacAddress, idOnController, controllerStrIdValue);
-            } catch (QRCodeNotMatchedException e1) {
-                loggingModel.setStatus(MessageConstants.ERROR);
-                loggingModel.setProcessOtherForm(true);
-                loggingModel.setErrorDetails(MessageConstants.REPLACE_MAC_NOT_MATCH);
-                return;
+            if(existingNodeMacAddress != null && !existingNodeMacAddress.trim().isEmpty()){
+                try {
+                    comment = validateMacAddress(existingNodeMacAddress, idOnController, controllerStrIdValue);
+                } catch (QRCodeNotMatchedException e1) {
+                    loggingModel.setStatus(MessageConstants.ERROR);
+                    loggingModel.setProcessOtherForm(true);
+                    loggingModel.setErrorDetails(MessageConstants.REPLACE_MAC_NOT_MATCH);
+                    return;
+                }
             }
+
 
             try {
                 checkMacAddressExists(newNodeMacAddress, idOnController);
@@ -366,10 +391,10 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
                 existingNodeMacAddress = valueById(edgeFormDatas, 29);
                 loggingModel.setExistingNodeMACaddress(existingNodeMacAddress);
             } catch (NoValueException e) {
-                loggingModel.setErrorDetails(MessageConstants.OLD_MAC_ADDRESS_NOT_AVAILABLE);
+                /*loggingModel.setErrorDetails(MessageConstants.OLD_MAC_ADDRESS_NOT_AVAILABLE);
                 loggingModel.setStatus(MessageConstants.ERROR);
                 loggingModel.setProcessOtherForm(true);
-                return;
+                return;*/
             }
 
             String idOnController = loggingModel.getIdOnController();
@@ -379,14 +404,18 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
 
             String comment = null;
 
-            try {
-                comment = validateMacAddress(existingNodeMacAddress, idOnController, controllerStrIdValue);
-            } catch (QRCodeNotMatchedException e1) {
-                loggingModel.setStatus(MessageConstants.ERROR);
-                loggingModel.setErrorDetails(MessageConstants.REPLACE_MAC_NOT_MATCH);
-                loggingModel.setProcessOtherForm(true);
-                return;
+
+            if(existingNodeMacAddress != null && !existingNodeMacAddress.trim().isEmpty()){
+                try {
+                    comment = validateMacAddress(existingNodeMacAddress, idOnController, controllerStrIdValue);
+                } catch (QRCodeNotMatchedException e1) {
+                    /*loggingModel.setStatus(MessageConstants.ERROR);
+                    loggingModel.setErrorDetails(MessageConstants.REPLACE_MAC_NOT_MATCH);
+                    loggingModel.setProcessOtherForm(true);
+                    return;*/
+                }
             }
+
 
             try {
                 checkMacAddressExists(newNodeMacAddress, idOnController);

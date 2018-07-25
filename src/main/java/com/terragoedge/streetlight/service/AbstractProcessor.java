@@ -138,10 +138,14 @@ public abstract class AbstractProcessor {
 
         String dimmingGroupName = contextListHashMap.get(idOnContoller);
         String edgeNotebookName = edgeNote.getEdgeNotebook().getNotebookName();
-        if (dimmingGroupName != null && dimmingGroupName.trim().toLowerCase().contains("acorns")) {
+        /*if (dimmingGroupName != null && dimmingGroupName.trim().toLowerCase().contains("acorns")) {
             edgeNotebookName = "Acorn Calendar";
         } else {
             edgeNotebookName = "Group Calendar 1";
+        }*/
+
+        if (dimmingGroupName != null && dimmingGroupName.trim().toLowerCase().contains("acorns")) {
+            edgeNotebookName = edgeNotebookName +" Acorns";
         }
         addStreetLightData("DimmingGroupName", edgeNotebookName, paramsList);
         // addStreetLightData("DimmingGroupName", "Group Calendar 1", paramsList);
