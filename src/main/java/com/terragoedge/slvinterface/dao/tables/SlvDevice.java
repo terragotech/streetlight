@@ -3,16 +3,16 @@ package com.terragoedge.slvinterface.dao.tables;
 import com.j256.ormlite.field.DatabaseField;
 import com.j256.ormlite.table.DatabaseTable;
 
-@DatabaseTable(tableName = "SlvDevice")
+@DatabaseTable(tableName = "slvdevice")
 public class SlvDevice {
     public static final String SLV_DEVICE_ID = "DeviceId";
-    @DatabaseField(columnName = "Id", generatedId = true)
+    @DatabaseField(columnName = "id", id = true)
     private int id;
-    @DatabaseField(columnName = "DeviceName")
+    @DatabaseField(columnName = "devicename")
     private String deviceName;
-    @DatabaseField(columnName = "DeviceId")
+    @DatabaseField(columnName = "deviceid")
     private String deviceId;
-    @DatabaseField(columnName = "ProcessedDateTime")
+    @DatabaseField(columnName = "processeddatetime")
     private long processedDateTime;
 
     public int getId() {

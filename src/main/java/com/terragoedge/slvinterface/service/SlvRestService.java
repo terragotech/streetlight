@@ -38,10 +38,11 @@ public class SlvRestService {
         logger.info("------------ Request ------------------");
         logger.info(url);
         logger.info("------------ Request End ------------------");
+       // url = "https://slv.poc02.ssn.ssnsgs.net:8443/reports/api/servlet/SLVAssetManagementAPI?methodName=createCategoryDevice&nodeTypeStrId=TB398484989!lightNode01&geoZoneId=738&lng=51.515193&lat=-0.10689554&controllerStrId=TalqBridge@TB398484989&categoryStrId=streetlight&idOnController=38127-demo";
         HttpHeaders headers = getHeaders();
         RestTemplate restTemplate = new RestTemplate();
         HttpEntity request = new HttpEntity<>(headers);
-        ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.POST, request, String.class);
+        ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.GET, request, String.class);
         logger.info("------------ Response ------------------");
         logger.info("Response Code:" + response.getStatusCode().toString());
         String responseBody = response.getBody();
@@ -169,7 +170,7 @@ public class SlvRestService {
         byte[] base64CredsBytes = Base64.encodeBase64(plainCredsBytes);
         String base64Creds = new String(base64CredsBytes);
         HttpHeaders headers = new HttpHeaders();
-        headers.add("Authorization", "Basic dnN1YnJhbWFuaWFuOlNMVlVzZXJAMQ==");
+        headers.add("Authorization", "Basic "+base64Creds);
         return headers;
     }
 

@@ -3,33 +3,33 @@ package com.terragoedge.slvinterface.dao.tables;
 import com.j256.ormlite.field.DatabaseField;
 import com.j256.ormlite.table.DatabaseTable;
 
-@DatabaseTable(tableName = "SlvSyncDetails")
+@DatabaseTable(tableName = "slvsyncdetails")
 public class SlvSyncDetails {
     public static final String TALQ_ADDRESS = "TalcAddress";
     public static final String NOTE_GUID = "NoteGuid";
-    @DatabaseField(columnName = "Id", generatedId = true)
+    @DatabaseField(columnName = "id", id = true)
     private int id;
-    @DatabaseField(columnName = "NoteName")
+    @DatabaseField(columnName = "notename")
     private String noteName;
-    @DatabaseField(columnName = "NoteCreatedBy")
+    @DatabaseField(columnName = "notecreatedby")
     private String noteCreatedBy;
-    @DatabaseField(columnName = "NoteGuid")
+    @DatabaseField(columnName = "noteguid")
     private String noteGuid;
-    @DatabaseField(columnName = "NoteCreatedDateTime")
+    @DatabaseField(columnName = "notecreateddatetime")
     private long noteCreatedDateTime;
-    @DatabaseField(columnName = "ProcessedDateTime")
+    @DatabaseField(columnName = "processeddatetime")
     private long processedDateTime;
-    @DatabaseField(columnName = "Status")
+    @DatabaseField(columnName = "status")
     private String status;
-    @DatabaseField(columnName = "ErrorDetails")
+    @DatabaseField(columnName = "errordetails")
     private String errorDetails;
-    @DatabaseField(columnName = "TalcAddress")
+    @DatabaseField(columnName = "talcaddress")
     private String talcAddress;
-    @DatabaseField(columnName = "TalcAddressDateTime")
+    @DatabaseField(columnName = "talcaddressdatetime")
     private long talcAddressDateTime;
-    @DatabaseField(columnName = "MacAddress")
+    @DatabaseField(columnName = "macaddress")
     private String macAddress;
-    @DatabaseField(columnName = "DeviceCreationStatus")
+    @DatabaseField(columnName = "devicecreationstatus")
     private String deviceCreationStatus;
 
     public int getId() {

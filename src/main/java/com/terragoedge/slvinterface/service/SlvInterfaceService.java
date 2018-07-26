@@ -75,7 +75,7 @@ public class SlvInterfaceService extends AbstractSlvService {
 
         url = url + PropertiesReader.getProperties().getProperty("streetlight.edge.url.notes.get");
         String systemDate = PropertiesReader.getProperties().getProperty("streetlight.edge.customdate");
-        String controllerStrIdValue = properties.getProperty("streetlight.categorystr.id");
+        String controllerStrIdValue = properties.getProperty("streetlight.controller.str.id");
         String geozoneId = properties.getProperty("streetlight.slv.geozoneid");
         if (systemDate == null || systemDate.equals("false")) {
             String yesterday = getYesterdayDate();
@@ -162,7 +162,7 @@ public class SlvInterfaceService extends AbstractSlvService {
                             processNewForms(edgeNote, slvSyncDetail, geozoneId);
                         }
                         processReplaceDevice(edgeFormDataList, configurationJson, edgeNote, paramsList, slvSyncDetail, geozoneId, controllerStrIdValue);
-                        //   processUpdateDevice(edgeFormDataList, configurationJson, edgeNote, paramsList, slvSyncDetail, controllerStrIdValue);
+                         //  processUpdateDevice(edgeFormDataList, configurationJson, edgeNote, paramsList, slvSyncDetail, controllerStrIdValue);
                         break;
                     case UPDATE_DEVICE:
                         processUpdateDevice(edgeFormDataList, configurationJson, edgeNote, paramsList, slvSyncDetail, controllerStrIdValue);
@@ -214,6 +214,7 @@ public class SlvInterfaceService extends AbstractSlvService {
         SlvDevice slvDevice = new SlvDevice();
         slvDevice.setDeviceId(title);
         slvDevice.setProcessedDateTime(new Date().getTime());
+        connectionDAO.saveSlvDevices(slvDevice);
     }
 
     public void processReplaceDevice(List<EdgeFormData> edgeFormDataList, ConfigurationJson configurationJson, EdgeNote edgeNote, List<Object> paramsList, SlvSyncDetails slvSyncDetails, String geozoneId, String controllerStrIdValue) {
@@ -238,6 +239,18 @@ public class SlvInterfaceService extends AbstractSlvService {
 
     public void processUpdateDevice(List<EdgeFormData> edgeFormDataList, ConfigurationJson configurationJson, EdgeNote edgeNote, List<Object> paramsList, SlvSyncDetails slvSyncDetails, String controllerStrIdValue) {
         List<Id> idList = configurationJson.getIds();
+
+        String newNodeMacAddress = null;
+        Id newMacID = getIDByType(idList, EdgeComponentType.MAC.toString());
+        if (newMacID != null) {
+            try {
+                newNodeMacAddress = processNewMacAddress(edgeFormDataList, newMacID, edgeNote, paramsList, slvSyncDetails);
+            } catch (Exception e) {
+                logger.info("NewNodeMacaddress Error", e);
+                return;
+            }
+        }
+
         // Process Existing Node MAC Address value
         Id fixureID = getIDByType(idList, EdgeComponentType.FIXTURE.toString());
         if (fixureID != null) {
@@ -255,7 +268,7 @@ public class SlvInterfaceService extends AbstractSlvService {
                 return;
             } else {
                 slvSyncDetails.setStatus(MessageConstants.SUCCESS);
-                replaceOLC(controllerStrIdValue, edgeNote.getTitle(), "");
+                replaceOLC(controllerStrIdValue, edgeNote.getTitle(), newNodeMacAddress);
             }
         } catch (Exception e) {
             return;
@@ -267,7 +280,10 @@ public class SlvInterfaceService extends AbstractSlvService {
         String fixtureScan = null;
         try {
             fixtureScan = valueById(edgeFormDataList, fixureID.getId());
-            if (fixtureScan != null && !fixtureScan.isEmpty() && fixureID.isRequired()) {
+            if(fixureID.isRequired() && fixtureScan == null){
+                return;
+            }
+            if (fixtureScan != null && !fixtureScan.isEmpty()) {
                 addStreetLightData("luminaire.installdate", dateFormat(edgeNote.getCreatedDateTime()), paramsList); // --
                 addStreetLightData("install.date", dateFormat(edgeNote.getCreatedDateTime()), paramsList);                                                                                                // TODO
                 buildFixtureStreetLightData(fixtureScan, paramsList, edgeNote);
@@ -293,11 +309,11 @@ public class SlvInterfaceService extends AbstractSlvService {
                 return;
             } else {
                 // replace OlC
-                replaceOLC(controllerStrIdValue, edgeNote.getTitle(), newNodeMacAddress);// insert mac address
+              //  replaceOLC(controllerStrIdValue, edgeNote.getTitle(), newNodeMacAddress);// insert mac address
                 logger.info("ReplaceOlcCalled :" + edgeNote.getTitle() + " - " + newNodeMacAddress);
                 slvSyncDetails.setStatus(MessageConstants.SUCCESS);
             }
-        } catch (ReplaceOLCFailedException e) {
+        } catch (Exception e) {
             slvSyncDetails.setErrorDetails(e.getMessage());
             slvSyncDetails.setStatus(MessageConstants.ERROR);
             throw new ReplaceOLCFailedException("ReplaceOlc FailedException");

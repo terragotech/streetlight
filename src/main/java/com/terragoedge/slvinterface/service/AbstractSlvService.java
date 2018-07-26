@@ -107,8 +107,8 @@ public class AbstractSlvService {
         streetLightDataParams.put("controllerStrId", controllerStrId);
         streetLightDataParams.put("idOnController", edgenote.getTitle());
         streetLightDataParams.put("geoZoneId", geoZoneId);
-        streetLightDataParams.put("lat", String.valueOf(geom.getCoordinate().x));
-        streetLightDataParams.put("lng", String.valueOf(geom.getCoordinate().y));
+        streetLightDataParams.put("lng", String.valueOf(geom.getCoordinate().x));
+        streetLightDataParams.put("lat", String.valueOf(geom.getCoordinate().y));
         streetLightDataParams.put("nodeTypeStrId", nodeTypeStrId);
         return slvRestService.getRequest(streetLightDataParams, url, true);
     }
@@ -309,6 +309,8 @@ public class AbstractSlvService {
         // controller.installdate - 2017/10/10
 
         addStreetLightData("installStatus", "Installed", paramsList);
+        addStreetLightData("location.utillocationid",edgeNote.getTitle()+".Lamp", paramsList);
+        addStreetLightData("location.locationtype", "LOCATION_TYPE_PREMISE", paramsList);
 
         addStreetLightData("DimmingGroupName", "Group Calendar 1", paramsList);
     }
@@ -347,7 +349,7 @@ public class AbstractSlvService {
             String newNetworkId = macAddress;
 
             // Get Url detail from properties
-            String mainUrl = properties.getProperty("streetlight.kingcity.url.main");
+            String mainUrl = properties.getProperty("streetlight.slv.url.main");
             String dataUrl = properties.getProperty("streetlight.url.replaceolc");
             String replaceOlc = properties.getProperty("streetlight.url.replaceolc.method");
             String url = mainUrl + dataUrl;
