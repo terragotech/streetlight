@@ -168,8 +168,8 @@ public class SlvInterfaceService extends AbstractSlvService {
                         if (!isDeviceExist) {
                             processNewForms(edgeNote, slvSyncDetail, geozoneId);
                         }
-                        processReplaceDevice(edgeFormDataList, configurationJson, edgeNote, paramsList, slvSyncDetail, geozoneId, controllerStrIdValue);
-                        //  processUpdateDevice(edgeFormDataList, configurationJson, edgeNote, paramsList, slvSyncDetail, controllerStrIdValue);
+                       // processReplaceDevice(edgeFormDataList, configurationJson, edgeNote, paramsList, slvSyncDetail, geozoneId, controllerStrIdValue);
+                          processUpdateDevice(edgeFormDataList, configurationJson, edgeNote, paramsList, slvSyncDetail, controllerStrIdValue);
                         break;
                     case UPDATE_DEVICE:
                         processUpdateDevice(edgeFormDataList, configurationJson, edgeNote, paramsList, slvSyncDetail, controllerStrIdValue);
