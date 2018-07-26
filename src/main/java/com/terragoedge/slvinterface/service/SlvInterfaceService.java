@@ -57,7 +57,6 @@ public class SlvInterfaceService extends AbstractSlvService {
     public void start() {
         // Get Configuration JSON
         configurationJsonList = getConfigJson();
-
         String accessToken = getEdgeToken();
         logger.info("AccessToken is :" + accessToken);
         if (accessToken == null) {
@@ -77,31 +76,39 @@ public class SlvInterfaceService extends AbstractSlvService {
         String systemDate = PropertiesReader.getProperties().getProperty("streetlight.edge.customdate");
         String controllerStrIdValue = properties.getProperty("streetlight.controller.str.id");
         String geozoneId = properties.getProperty("streetlight.slv.geozoneid");
-        if (systemDate == null || systemDate.equals("false")) {
+      /*  if (systemDate == null || systemDate.equals("false")) {
             String yesterday = getYesterdayDate();
             url = url + "modifiedAfter=" + yesterday;
         }
+     */
         logger.info("GetNotesUrl :" + url);
-        url = "http://192.168.2.183:8080//rest/notes/e9653804-53d9-4ba2-8248-c55e93e2e6e0";
         System.out.println("Url" + url);
-        // Get data from server.
-        ResponseEntity<String> responseEntity = slvRestService.getRequest(url, false, accessToken);
-        logger.info("notes response :" + url);
-        if (responseEntity.getStatusCode().is2xxSuccessful()) {
-            String notesData = responseEntity.getBody();
-            logger.info("notes response from server :" + notesData);
-            System.out.println(notesData);
-            // Convert notes Json to List of notes object
-            Type listType = new TypeToken<ArrayList<EdgeNote>>() {
-            }.getType();
-            List<EdgeNote> edgeNoteList = new ArrayList<>();
-            EdgeNote edgeNote = gson.fromJson(notesData, EdgeNote.class);
-            edgeNoteList.add(edgeNote);
-            //  List<EdgeNote> edgeNoteList = gson.fromJson(notesData, listType);
-            for (EdgeNote edgenote : edgeNoteList) {
-                processEdgeNote(edgenote, noteGuids, formTemplateGuid, geozoneId, controllerStrIdValue);
+        List<String> noteGuidsList = connectionDAO.getEdgeNoteGuid(formTemplateGuid);
+        for (String edgenoteGuid : noteGuidsList) {
+            if (!noteGuids.contains(edgenoteGuid)) {
+                String restUrl = url + edgenoteGuid;
+                ResponseEntity<String> responseEntity = slvRestService.getRequest(restUrl, false, accessToken);
+                logger.info("notes response :" + url);
+                if (responseEntity.getStatusCode().is2xxSuccessful()) {
+                    String notesData = responseEntity.getBody();
+                    logger.info("notes response from server :" + notesData);
+                    System.out.println(notesData);
+                    // Convert notes Json to List of notes object
+                    Type listType = new TypeToken<ArrayList<EdgeNote>>() {
+                    }.getType();
+                    List<EdgeNote> edgeNoteList = new ArrayList<>();
+                    EdgeNote edgeNote = gson.fromJson(notesData, EdgeNote.class);
+                    edgeNoteList.add(edgeNote);
+                    //  List<EdgeNote> edgeNoteList = gson.fromJson(notesData, listType);
+                    for (EdgeNote edgenote : edgeNoteList) {
+                        processEdgeNote(edgenote, noteGuids, formTemplateGuid, geozoneId, controllerStrIdValue);
+                    }
+                }
             }
         }
+        // Get data from server.
+        logger.info("Process End :");
+
     }
 
 
@@ -162,7 +169,7 @@ public class SlvInterfaceService extends AbstractSlvService {
                             processNewForms(edgeNote, slvSyncDetail, geozoneId);
                         }
                         processReplaceDevice(edgeFormDataList, configurationJson, edgeNote, paramsList, slvSyncDetail, geozoneId, controllerStrIdValue);
-                         //  processUpdateDevice(edgeFormDataList, configurationJson, edgeNote, paramsList, slvSyncDetail, controllerStrIdValue);
+                        //  processUpdateDevice(edgeFormDataList, configurationJson, edgeNote, paramsList, slvSyncDetail, controllerStrIdValue);
                         break;
                     case UPDATE_DEVICE:
                         processUpdateDevice(edgeFormDataList, configurationJson, edgeNote, paramsList, slvSyncDetail, controllerStrIdValue);
@@ -280,7 +287,7 @@ public class SlvInterfaceService extends AbstractSlvService {
         String fixtureScan = null;
         try {
             fixtureScan = valueById(edgeFormDataList, fixureID.getId());
-            if(fixureID.isRequired() && fixtureScan == null){
+            if (fixureID.isRequired() && fixtureScan == null) {
                 return;
             }
             if (fixtureScan != null && !fixtureScan.isEmpty()) {
@@ -309,7 +316,7 @@ public class SlvInterfaceService extends AbstractSlvService {
                 return;
             } else {
                 // replace OlC
-              //  replaceOLC(controllerStrIdValue, edgeNote.getTitle(), newNodeMacAddress);// insert mac address
+                //  replaceOLC(controllerStrIdValue, edgeNote.getTitle(), newNodeMacAddress);// insert mac address
                 logger.info("ReplaceOlcCalled :" + edgeNote.getTitle() + " - " + newNodeMacAddress);
                 slvSyncDetails.setStatus(MessageConstants.SUCCESS);
             }
