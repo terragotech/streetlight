@@ -4,6 +4,7 @@ import com.j256.ormlite.dao.Dao;
 import com.j256.ormlite.dao.DaoManager;
 import com.j256.ormlite.jdbc.JdbcConnectionSource;
 import com.j256.ormlite.support.ConnectionSource;
+import com.j256.ormlite.table.TableUtils;
 import com.terragoedge.slvinterface.dao.tables.SlvDevice;
 import com.terragoedge.slvinterface.dao.tables.SlvSyncDetails;
 
@@ -16,7 +17,7 @@ public enum ConnectionDAO {
 
     INSTANCE;
 
-    private final static String DATABASE_URL = "jdbc:h2:mem:account";
+    private final static String DATABASE_URL = "jdbc:postgresql://127.0.0.1:5432/terragoedge?user=postgres&password=password";
 
     ConnectionSource connectionSource = null;
     private Dao<SlvSyncDetails, String> slvSyncDetailsDao;
@@ -26,6 +27,8 @@ public enum ConnectionDAO {
 
         try {
             connectionSource = new JdbcConnectionSource(DATABASE_URL);
+           // TableUtils.createTableIfNotExists(connectionSource,SlvSyncDetails.class);
+           // TableUtils.createTableIfNotExists(connectionSource,SlvDevice.class);
             slvSyncDetailsDao = DaoManager.createDao(connectionSource, SlvSyncDetails.class);
             slvDeviceDao = DaoManager.createDao(connectionSource, SlvDevice.class);
         } catch (Exception e) {

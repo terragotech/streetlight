@@ -13,9 +13,13 @@ import com.terragoedge.slvinterface.model.EdgeNote;
 import com.terragoedge.slvinterface.model.Value;
 import com.terragoedge.slvinterface.utils.PropertiesReader;
 import com.terragoedge.slvinterface.utils.Utils;
+import com.vividsolutions.jts.geom.Geometry;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 import org.springframework.http.ResponseEntity;
+import org.wololo.geojson.Feature;
+import org.wololo.geojson.GeoJSONFactory;
+import org.wololo.jts2geojson.GeoJSONReader;
 
 import java.util.*;
 
@@ -82,17 +86,29 @@ public class AbstractSlvService {
 
     public ResponseEntity<String> createDevice(EdgeNote edgenote,
                                                String geoZoneId) {
+
+        Feature feature = (Feature) GeoJSONFactory.create(edgenote.getGeometry());
+
+        // parse Geometry from Feature
+        GeoJSONReader reader = new GeoJSONReader();
+        Geometry geom = reader.read(feature.getGeometry());
+
+
         String mainUrl = properties.getProperty("streetlight.slv.url.main");
         String serveletApiUrl = properties.getProperty("streetlight.slv.url.device.create");
         String url = mainUrl + serveletApiUrl;
-        String methodName = properties.getProperty("streetlight.url.device.create.methodName");
+        String methodName = properties.getProperty("streetlight.slv.device.create.methodName");
         String categoryStrId = properties.getProperty("streetlight.categorystr.id");
-        String nodeTypeStrId = properties.getProperty("streetlight.equipment.type");
+        String controllerStrId = properties.getProperty("streetlight.controller.str.id");
+        String nodeTypeStrId = properties.getProperty("streetlight.slv.equipment.type");
         Map<String, String> streetLightDataParams = new HashMap<String, String>();
         streetLightDataParams.put("methodName", methodName);
         streetLightDataParams.put("categoryStrId", categoryStrId);
+        streetLightDataParams.put("controllerStrId", controllerStrId);
         streetLightDataParams.put("idOnController", edgenote.getTitle());
         streetLightDataParams.put("geoZoneId", geoZoneId);
+        streetLightDataParams.put("lat", String.valueOf(geom.getCoordinate().x));
+        streetLightDataParams.put("lng", String.valueOf(geom.getCoordinate().y));
         streetLightDataParams.put("nodeTypeStrId", nodeTypeStrId);
         return slvRestService.getRequest(streetLightDataParams, url, true);
     }

@@ -9,6 +9,7 @@ import com.terragoedge.slvinterface.dao.tables.SlvSyncDetails;
 import org.apache.log4j.Logger;
 
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.List;
 
 public class SLVInterfaceDAO {
@@ -30,7 +31,7 @@ public class SLVInterfaceDAO {
 
     public List<String> getNoteGuids(){
         try {
-            List<String> noteGuids = slvSyncDetailsDao.queryRaw("select address from receive", new RawRowMapper<String>() {
+            List<String> noteGuids = slvSyncDetailsDao.queryRaw("select noteguid  from SlvSyncDetails", new RawRowMapper<String>() {
                 @Override
                 public String mapRow(String[] columnNames, String[] resultColumns) throws SQLException {
                     return resultColumns[0];
@@ -40,6 +41,6 @@ public class SLVInterfaceDAO {
         }catch (Exception e){
             logger.error("Error in getNoteGuids",e);
         }
-       return null;
+       return new ArrayList<>();
     }
 }

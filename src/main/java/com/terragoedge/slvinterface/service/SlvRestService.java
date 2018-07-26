@@ -41,7 +41,7 @@ public class SlvRestService {
         HttpHeaders headers = getHeaders();
         RestTemplate restTemplate = new RestTemplate();
         HttpEntity request = new HttpEntity<>(headers);
-        ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.GET, request, String.class);
+        ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.POST, request, String.class);
         logger.info("------------ Response ------------------");
         logger.info("Response Code:" + response.getStatusCode().toString());
         String responseBody = response.getBody();
@@ -162,14 +162,14 @@ public class SlvRestService {
         return response;
     }
     private HttpHeaders getHeaders() {
-        String userName = properties.getProperty("streetlight.username");
-        String password = properties.getProperty("streetlight.password");
+        String userName = properties.getProperty("streetlight.slv.username");
+        String password = properties.getProperty("streetlight.slv.password");
         String plainCreds = userName + ":" + password;
         byte[] plainCredsBytes = plainCreds.getBytes();
         byte[] base64CredsBytes = Base64.encodeBase64(plainCredsBytes);
         String base64Creds = new String(base64CredsBytes);
         HttpHeaders headers = new HttpHeaders();
-        headers.add("Authorization", "Basic " + base64Creds);
+        headers.add("Authorization", "Basic dnN1YnJhbWFuaWFuOlNMVlVzZXJAMQ==");
         return headers;
     }
 

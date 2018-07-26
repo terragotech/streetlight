@@ -4,75 +4,18 @@
 
     "ids":[
       {
-        "id":19,
+        "id":84,
         "type":"MAC"
       },
       {
-        "id":20,
+        "id":85,
         "type":"FIXTURE"
       }
     ],
 
     "action":[{
-      "id":17,
-      "value":"New"
+      "id":75,
+      "value":"Install"
     }]
-  },
-  {
-    "type":"REPLACE_DEVICE",
-
-    "ids":[
-      {
-        "id":13,
-        "type":"EXISTING_MAC"
-      },
-      {
-        "id":14,
-        "type":"MAC"
-      },
-      {
-        "id":15,
-        "type":"FIXTURE"
-      }
-    ],
-    "action":[
-      {
-        "id":1,
-        "value":"repair"
-      },
-      {
-        "id":16,
-        "value":"repairs"
-      }
-    ]
-
-  },
-
-  {
-    "type":"UPDATE_DEVICE",
-
-    "ids":[
-      {
-        "id":18,
-        "type":"EXISTING_MAC",
-         "isRequired":true
-      },
-      {
-        "id":20,
-        "type":"MAC",
-        "isRequired":true
-      }
-    ],
-    "action":[
-      {
-        "id":1,
-        "value":"repair"
-      },
-      {
-        "id":16,
-        "value":"repair node only"
-      }
-    ]
-
   }
 ]

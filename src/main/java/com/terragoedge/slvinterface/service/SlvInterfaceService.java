@@ -5,7 +5,6 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.reflect.TypeToken;
-import com.sun.xml.internal.bind.v2.TODO;
 import com.terragoedge.slvinterface.dao.ConnectionDAO;
 import com.terragoedge.slvinterface.dao.tables.SlvDevice;
 import com.terragoedge.slvinterface.dao.SLVInterfaceDAO;
@@ -67,22 +66,23 @@ public class SlvInterfaceService extends AbstractSlvService {
         }
 
         List<String> noteGuids = slvInterfaceDAO.getNoteGuids();
-        if(noteGuids == null){
+        if (noteGuids == null) {
             logger.error("Error while getting already process note list.");
             return;
         }
-        String formTemplateGuid = properties.getProperty("streetlight.formtemplate.guid");
+        String formTemplateGuid = properties.getProperty("streetlight.edge.formtemplateguid");
         String url = PropertiesReader.getProperties().getProperty("streetlight.edge.url.main");
 
         url = url + PropertiesReader.getProperties().getProperty("streetlight.edge.url.notes.get");
         String systemDate = PropertiesReader.getProperties().getProperty("streetlight.edge.customdate");
-
+        String controllerStrIdValue = properties.getProperty("streetlight.categorystr.id");
+        String geozoneId = properties.getProperty("streetlight.slv.geozoneid");
         if (systemDate == null || systemDate.equals("false")) {
             String yesterday = getYesterdayDate();
             url = url + "modifiedAfter=" + yesterday;
         }
         logger.info("GetNotesUrl :" + url);
-        url = "https://amerescousa.terragoedge.com/edgeServer//rest/notes/68fc6ade-f043-4e3f-8e5c-ecab20bc2b63";
+        url = "http://192.168.2.183:8080//rest/notes/e9653804-53d9-4ba2-8248-c55e93e2e6e0";
         System.out.println("Url" + url);
         // Get data from server.
         ResponseEntity<String> responseEntity = slvRestService.getRequest(url, false, accessToken);
@@ -99,18 +99,18 @@ public class SlvInterfaceService extends AbstractSlvService {
             edgeNoteList.add(edgeNote);
             //  List<EdgeNote> edgeNoteList = gson.fromJson(notesData, listType);
             for (EdgeNote edgenote : edgeNoteList) {
-
+                processEdgeNote(edgenote, noteGuids, formTemplateGuid, geozoneId, controllerStrIdValue);
             }
         }
     }
 
 
-    private void processEdgeNote(EdgeNote edgeNote,List<String> noteGuids,String formTemplateGuid){
+    private void processEdgeNote(EdgeNote edgeNote, List<String> noteGuids, String formTemplateGuid, String geozoneId, String controllerStrid) {
         try {
             // Check whether this note is already processed or not.
             if (!noteGuids.contains(edgeNote.getNoteGuid())) {
                 SlvSyncDetails slvSyncDetailsError = new SlvSyncDetails();
-                try{
+                try {
                     slvSyncDetailsError.setNoteGuid(edgeNote.getNoteGuid());
                     slvSyncDetailsError.setNoteName(edgeNote.getTitle());
                     List<Object> paramsList = new ArrayList<Object>();
@@ -119,21 +119,19 @@ public class SlvInterfaceService extends AbstractSlvService {
                     boolean isFormTemplatePresent = false;
                     for (FormData formData : formDatasList) {
                         formDataMaps.put(formData.getFormTemplateGuid(), formData);
-                        if(formData.getFormTemplateGuid().equals(formTemplateGuid)){
+                        if (formData.getFormTemplateGuid().equals(formTemplateGuid)) {
                             isFormTemplatePresent = true;
                         }
                     }
                     // Check Note has correct form template or not. If not present no need to process.
-                    if(!isFormTemplatePresent){
-                        slvSyncDetailsError.setErrorDetails("Form Template ["+formTemplateGuid+"] is not present in this note.");
-                    }else{
-                        String geozoneId=null;
-                        String controllerStrIdValue = null;
-                        processSingleForm(formDataMaps.get(formTemplateGuid), edgeNote, slvSyncDetailsError, paramsList, configurationJsonList,geozoneId, controllerStrIdValue);
+                    if (!isFormTemplatePresent) {
+                        slvSyncDetailsError.setErrorDetails("Form Template [" + formTemplateGuid + "] is not present in this note.");
+                    } else {
+                        processSingleForm(formDataMaps.get(formTemplateGuid), edgeNote, slvSyncDetailsError, paramsList, configurationJsonList, geozoneId, controllerStrid);
                     }
-                }catch (Exception e){
+                } catch (Exception e) {
                     e.printStackTrace();
-                }finally {
+                } finally {
                     // TODO
                 }
 
@@ -145,24 +143,26 @@ public class SlvInterfaceService extends AbstractSlvService {
 
     /**
      * Based on configuration corresponding process going to take place.
+     *
      * @param formData
      * @param edgeNote
      * @param slvSyncDetail
      * @param paramsList
      * @param configurationJsonList
      */
-    public void processSingleForm(FormData formData, EdgeNote edgeNote, SlvSyncDetails slvSyncDetail, List<Object> paramsList, List<ConfigurationJson> configurationJsonList,String geozoneId, String controllerStrIdValue) {
+    public void processSingleForm(FormData formData, EdgeNote edgeNote, SlvSyncDetails slvSyncDetail, List<Object> paramsList, List<ConfigurationJson> configurationJsonList, String geozoneId, String controllerStrIdValue) {
         List<EdgeFormData> edgeFormDataList = formData.getFormDef();
         for (ConfigurationJson configurationJson : configurationJsonList) {
             List<Action> actionList = configurationJson.getAction();
             if (checkActionType(edgeFormDataList, actionList)) {
-                switch (SLVProcess.valueOf(configurationJson.getType())) {
+                switch (configurationJson.getType()) {
                     case NEW_DEVICE:
                         boolean isDeviceExist = isAvailableDevice(edgeNote.getTitle());
-                        if (isDeviceExist) {
+                        if (!isDeviceExist) {
                             processNewForms(edgeNote, slvSyncDetail, geozoneId);
                         }
-                        processUpdateDevice(edgeFormDataList, configurationJson, edgeNote, paramsList, slvSyncDetail, controllerStrIdValue);
+                        processReplaceDevice(edgeFormDataList, configurationJson, edgeNote, paramsList, slvSyncDetail, geozoneId, controllerStrIdValue);
+                        //   processUpdateDevice(edgeFormDataList, configurationJson, edgeNote, paramsList, slvSyncDetail, controllerStrIdValue);
                         break;
                     case UPDATE_DEVICE:
                         processUpdateDevice(edgeFormDataList, configurationJson, edgeNote, paramsList, slvSyncDetail, controllerStrIdValue);
@@ -179,10 +179,7 @@ public class SlvInterfaceService extends AbstractSlvService {
 
     public boolean isAvailableDevice(String idOnController) {
         SlvDevice slvDevice = connectionDAO.getSlvDevices(idOnController);
-        if (slvDevice == null) {
-            return true;
-        }
-        return false;
+        return slvDevice != null;
     }
 
     public void processNewForms(EdgeNote edgeNote, SlvSyncDetails slvSyncDetails, String geoZoneId) {
@@ -198,19 +195,16 @@ public class SlvInterfaceService extends AbstractSlvService {
                     slvSyncDetails.setDeviceCreationStatus(Status.Success.toString());
                     createSLVDevice(edgeNote.getTitle());
                 } else {
-                    try {
-                        logger.info("Device Created Failure, NoteId:" + edgeNote.getNoteGuid() + "-"
-                                + edgeNote.getTitle());
-                        slvSyncDetails.setDeviceCreationStatus(Status.Failure.toString());
-                        slvSyncDetails.setErrorDetails(status);
-                        throw new DeviceCreationFailedException(edgeNote.getNoteGuid() + "-" + edgeNote.getTitle());
-                    } catch (DeviceCreationFailedException e) {
-                        logger.info("Device creation DeviceCreationFailedException", e);
-                        e.printStackTrace();
-                    }
+                    logger.info("Device Created Failure, NoteId:" + edgeNote.getNoteGuid() + "-"
+                            + edgeNote.getTitle());
+                    slvSyncDetails.setDeviceCreationStatus(Status.Failure.toString());
+                    slvSyncDetails.setErrorDetails(status);
+                    throw new DeviceCreationFailedException(edgeNote.getNoteGuid() + "-" + edgeNote.getTitle());
                 }
 
-            } catch (Exception e) {
+            } catch (DeviceCreationFailedException e) {
+                slvSyncDetails.setErrorDetails("Device creation Exception" + e);
+                slvSyncDetails.setStatus(Status.Failure.toString());
                 e.printStackTrace();
             }
         }
@@ -236,11 +230,10 @@ public class SlvInterfaceService extends AbstractSlvService {
         }
         try {
             setDeviceAndReplaceOlc(paramsList, edgeNote, controllerStrIdValue, newNodeMacAddress, slvSyncDetails);
-        } catch (Exception e) {
+        } catch (ReplaceOLCFailedException e) {
+            slvSyncDetails.setErrorDetails("setdevice replaceOlc " + e);
             return;
         }
-
-
     }
 
     public void processUpdateDevice(List<EdgeFormData> edgeFormDataList, ConfigurationJson configurationJson, EdgeNote edgeNote, List<Object> paramsList, SlvSyncDetails slvSyncDetails, String controllerStrIdValue) {
@@ -262,6 +255,7 @@ public class SlvInterfaceService extends AbstractSlvService {
                 return;
             } else {
                 slvSyncDetails.setStatus(MessageConstants.SUCCESS);
+                replaceOLC(controllerStrIdValue, edgeNote.getTitle(), "");
             }
         } catch (Exception e) {
             return;
@@ -286,12 +280,12 @@ public class SlvInterfaceService extends AbstractSlvService {
 
     }
 
-    public void setDeviceAndReplaceOlc(List<Object> paramsList, EdgeNote edgeNote, String controllerStrIdValue, String newNodeMacAddress, SlvSyncDetails slvSyncDetails) {
+    public void setDeviceAndReplaceOlc(List<Object> paramsList, EdgeNote edgeNote, String controllerStrIdValue, String newNodeMacAddress, SlvSyncDetails slvSyncDetails) throws ReplaceOLCFailedException {
         try {
             paramsList.add("idOnController=" + edgeNote.getTitle());
             paramsList.add("controllerStrId=" + controllerStrIdValue);
             addOtherParams(edgeNote, paramsList);
-            replaceOLC(controllerStrIdValue, edgeNote.getTitle(), "");
+            // replaceOLC(controllerStrIdValue, edgeNote.getTitle(), "");
             int errorCode = setDeviceValues(paramsList);
             if (errorCode != 0) {
                 slvSyncDetails.setErrorDetails(MessageConstants.ERROR_UPDATE_DEVICE_VAL);
@@ -303,10 +297,10 @@ public class SlvInterfaceService extends AbstractSlvService {
                 logger.info("ReplaceOlcCalled :" + edgeNote.getTitle() + " - " + newNodeMacAddress);
                 slvSyncDetails.setStatus(MessageConstants.SUCCESS);
             }
-        } catch (Exception e) {
+        } catch (ReplaceOLCFailedException e) {
             slvSyncDetails.setErrorDetails(e.getMessage());
             slvSyncDetails.setStatus(MessageConstants.ERROR);
-            e.printStackTrace();
+            throw new ReplaceOLCFailedException("ReplaceOlc FailedException");
         }
 
     }
@@ -368,13 +362,13 @@ public class SlvInterfaceService extends AbstractSlvService {
             try {
                 actionValue = valueById(edgeFormData, action.getId());
                 if (actionValue.equals(action.getValue())) {
-                    return false;
+                    return true;
                 }
             } catch (Exception e) {
                 e.printStackTrace();
             }
         }
-        return true;
+        return false;
     }
 
     public void checkFormNoteProcess(Map<String, FormData> formDataMaps, EdgeNote edgeNote, SlvSyncDetails kingCitySyncModel, List<Object> paramsList, String formTemplateGuid, String controllerStrIdValue) {

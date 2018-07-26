@@ -1,15 +1,17 @@
 package com.terragoedge.slvinterface.json.slvInterface;
+import com.terragoedge.slvinterface.enumeration.SLVProcess;
+
 import java.util.List;
 public class ConfigurationJson {
-    private String type;
+    private SLVProcess type;
     private List<Id> ids = null;
     private List<Action> action = null;
 
-    public String getType() {
+    public SLVProcess getType() {
         return type;
     }
 
-    public void setType(String type) {
+    public void setType(SLVProcess type) {
         this.type = type;
     }
 
