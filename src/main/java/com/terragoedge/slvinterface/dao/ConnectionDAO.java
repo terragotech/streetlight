@@ -27,8 +27,8 @@ public enum ConnectionDAO {
 
         try {
             connectionSource = new JdbcConnectionSource(DATABASE_URL);
-            TableUtils.createTableIfNotExists(connectionSource,SlvSyncDetails.class);
-            TableUtils.createTableIfNotExists(connectionSource,SlvDevice.class);
+           // TableUtils.createTableIfNotExists(connectionSource,SlvSyncDetails.class);
+           // TableUtils.createTableIfNotExists(connectionSource,SlvDevice.class);
             slvSyncDetailsDao = DaoManager.createDao(connectionSource, SlvSyncDetails.class);
             slvDeviceDao = DaoManager.createDao(connectionSource, SlvDevice.class);
         } catch (Exception e) {

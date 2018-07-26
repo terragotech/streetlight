@@ -5,8 +5,8 @@ import com.j256.ormlite.table.DatabaseTable;
 
 @DatabaseTable(tableName = "slvdevice")
 public class SlvDevice {
-    public static final String SLV_DEVICE_ID = "DeviceId";
-    @DatabaseField(columnName = "id", id = true)
+    public static final String SLV_DEVICE_ID = "deviceid";
+    @DatabaseField(generatedId = true, allowGeneratedIdInsert = true)
     private int id;
     @DatabaseField(columnName = "devicename")
     private String deviceName;
