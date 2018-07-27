@@ -37,4 +37,19 @@ public class StreetlightDaoConnection {
 		return connection;
 
 	}
+
+	public void closeConnection(){
+        if(connection != null){
+            try{
+                connection.close();
+            }catch (Exception e){
+                e.printStackTrace();
+            }
+            connection = null;
+        }
+    }
+
+
+
+
 }
