@@ -15,18 +15,17 @@ public class SlvInterfaceApp extends AbstractSlvService {
     public static List<ConfigurationJson> configurationJsons = new ArrayList<>();
     public static void main(String[] args) {
        // getFormConfiguration();
-       SlvInterfaceService slvInterfaceService = new SlvInterfaceService();
-       slvInterfaceService.start();
-     /*   while (true) {
+
+        while (true) {
             try{
-                AbstractSlvService abstractSlvService = new AbstractSlvService();
-                abstractSlvService.getTalqAddress();
+                SlvInterfaceService slvInterfaceService = new SlvInterfaceService();
+                slvInterfaceService.start();
                 Thread.sleep(1000);
             }catch (Exception e){
                 e.printStackTrace();
             }
         }
-*/    }
+   }
     private static void getFormConfiguration(){
         Gson gson = new Gson();
         Properties properties = PropertiesReader.getProperties();

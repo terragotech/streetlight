@@ -26,12 +26,12 @@ public enum ConnectionDAO {
     private Dao<SlvSyncDetails, String> slvSyncDetailsDao;
     public Dao<SlvDevice, String> slvDeviceDao = null;
 
-     ConnectionDAO() {
+    ConnectionDAO() {
 
         try {
             connectionSource = new JdbcConnectionSource(DATABASE_URL);
-           // TableUtils.createTableIfNotExists(connectionSource,SlvSyncDetails.class);
-           // TableUtils.createTableIfNotExists(connectionSource,SlvDevice.class);
+           // TableUtils.createTableIfNotExists(connectionSource, SlvSyncDetails.class);
+            // TableUtils.createTableIfNotExists(connectionSource, SlvDevice.class);
             slvSyncDetailsDao = DaoManager.createDao(connectionSource, SlvSyncDetails.class);
             slvDeviceDao = DaoManager.createDao(connectionSource, SlvDevice.class);
         } catch (Exception e) {
@@ -51,10 +51,11 @@ public enum ConnectionDAO {
             e.printStackTrace();
         }
     }
-    public SlvDevice getSlvDevices(String deviceId){
-        try{
-            return slvDeviceDao.queryBuilder().where().eq(SlvDevice.SLV_DEVICE_ID,deviceId).queryForFirst();
-        }catch (Exception e){
+
+    public SlvDevice getSlvDevices(String deviceId) {
+        try {
+            return slvDeviceDao.queryBuilder().where().eq(SlvDevice.SLV_DEVICE_ID, deviceId).queryForFirst();
+        } catch (Exception e) {
             e.printStackTrace();
         }
         return null;
@@ -77,7 +78,7 @@ public enum ConnectionDAO {
         }
     }
 
-    public List<String> getEdgeNoteGuid(String formTemplateGuid){
+    public List<String> getEdgeNoteGuid(String formTemplateGuid) {
         try {
             List<String> noteGuids = slvSyncDetailsDao.queryRaw("select noteguid from edgenote, edgeform where edgenote.isdeleted = false and edgenote.iscurrent = true and  edgenote.noteid =  edgeform.edgenoteentity_noteid and edgeform.formtemplateguid = '" + formTemplateGuid + "';", new RawRowMapper<String>() {
                 @Override
@@ -86,12 +87,13 @@ public enum ConnectionDAO {
                 }
             }).getResults();
             return noteGuids;
-        }catch (Exception e){
-          //  logger.error("Error in getNoteGuids",e);
+        } catch (Exception e) {
+            //  logger.error("Error in getNoteGuids",e);
         }
         return new ArrayList<>();
 
     }
+
     /**
      * Get List of NoteIds which is assigned to given formtemplate
      *
