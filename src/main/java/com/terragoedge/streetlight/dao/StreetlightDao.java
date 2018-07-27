@@ -26,40 +26,40 @@ public class StreetlightDao extends UtilDao {
 	public StreetlightDao() {
 		super();
 	}
-	
-	
-	
-	private String generateSQL(){
 
-		String customDate = PropertiesReader.getProperties().getProperty("amerescousa.custom.date");
-		if(customDate != null && customDate.equals("true")){
-			StringBuilder stringBuilder = new StringBuilder();
-			stringBuilder.append("select noteid,createddatetime, edgenoteview.createdby,locationdescription,title,groupname,ST_X(geometry::geometry) as lat, ST_Y(geometry::geometry) as lng  from edgenoteview where  edgenoteview.isdeleted = false and edgenoteview.iscurrent = true ");
-			String startOfDay = PropertiesReader.getProperties().getProperty("amerescousa.report.from");
-			if(startOfDay != null && !startOfDay.isEmpty()){
-				stringBuilder.append("and edgenoteview.createddatetime >= ");
-				stringBuilder.append(startOfDay);
-			}
-			
-			String endOfDay = PropertiesReader.getProperties().getProperty("amerescousa.report.to");
-			if(endOfDay != null && !endOfDay.isEmpty()){
-				stringBuilder.append(" and edgenoteview.createddatetime <= ");
-				stringBuilder.append(endOfDay);
-			}
-			stringBuilder.append(";");
-			return stringBuilder.toString();
-		}else{
+
+
+    private String generateSQL(){
+
+        String customDate = PropertiesReader.getProperties().getProperty("amerescousa.custom.date");
+        if(customDate != null && customDate.equals("true")){
+            StringBuilder stringBuilder = new StringBuilder();
+            stringBuilder.append("select noteid,createddatetime, edgenoteview.createdby,locationdescription,title,groupname,ST_X(geometry::geometry) as lat, ST_Y(geometry::geometry) as lng  from edgenoteview where  edgenoteview.isdeleted = false and edgenoteview.iscurrent = true ");
+            String startOfDay = PropertiesReader.getProperties().getProperty("amerescousa.report.from");
+            if(startOfDay != null && !startOfDay.isEmpty()){
+                stringBuilder.append("and edgenoteview.createddatetime >= ");
+                stringBuilder.append(startOfDay);
+            }
+
+            String endOfDay = PropertiesReader.getProperties().getProperty("amerescousa.report.to");
+            if(endOfDay != null && !endOfDay.isEmpty()){
+                stringBuilder.append(" and edgenoteview.createddatetime <= ");
+                stringBuilder.append(endOfDay);
+            }
+            stringBuilder.append(";");
+            return stringBuilder.toString();
+        }else{
             Calendar calendar = Calendar.getInstance(TimeZone.getTimeZone("CST"));
             calendar.set(Calendar.HOUR_OF_DAY, 17);
             calendar.set(Calendar.MINUTE, 00);
             calendar.set(Calendar.SECOND, 00);
             calendar.set(Calendar.DAY_OF_MONTH,calendar.get(Calendar.DAY_OF_MONTH) - 1);
-			long startOfDay = calendar.getTime().getTime();
+            long startOfDay = calendar.getTime().getTime();
 
-
-            return "select noteid,createddatetime, createdby,locationdescription,title,groupname,ST_X(geometry::geometry) as lat, ST_Y(geometry::geometry) as lng  from edgenoteview where  edgenoteview.isdeleted = false and edgenoteview.iscurrent = true  and edgenoteview.createdby != 'admin' and edgenoteview.createddatetime >= "+startOfDay+";";
-		}
-	}
+            return "select noteid  from edgenote  a, (select distinct(title),max(createddatetime) as createddatetime from edgenote where createdby != 'admin' and createddatetime >= "+startOfDay+" group by title) b where a.title = b.title and a.createddatetime = b.createddatetime;";
+            //return "select distinct(title), noteid, max(createddatetime) from edgenote where createdby != 'admin'  and edgenoteview.createddatetime >= "+startOfDay+" group by title;";
+        }
+    }
 
 	private String generateSQLQuery(String formTemplateGuid){
       return  "select notebookname,noteid, name,description,edgenoteview.createdby,edgenoteview.groupname,locationdescription, ST_Y(geometry::geometry) Longitude, title,ST_X(geometry::geometry) Latitude, replace(replace(substring(a.formdef from 'Issue Type#(.+?)count'),'\"',''),',','') fieldreport, replace(replace(substring(a.formdef from 'Add Comment#(.+?)count'),'\"',''),',','') addcomment,edgenoteview.createddatetime from edgenoteview , edgenotebook, edgeform a where edgenoteview.notebookid = edgenotebook.notebookid and a.formtemplateguid = '"+formTemplateGuid+"' and a.edgenoteentity_noteid = edgenoteview.noteid and edgenoteview.isdeleted = 'f' and edgenoteview.iscurrent = 't';";
@@ -88,24 +88,21 @@ public class StreetlightDao extends UtilDao {
             closeResultSet(queryResponse);
         }
     }
-	
 
-	/**
-	 * Get List of NoteIds which is assigned to given formtemplate
-	 * 
-	 * @return
-	 */
-	public List<DailyReportCSV> getNoteIds() {
-		Statement queryStatement = null;
-		ResultSet queryResponse = null;
-		List<DailyReportCSV> dailyReportCSVs = new ArrayList<>();
-		try {
-			String sql = generateSQL();
-            System.out.println(sql);
-			queryStatement = connection.createStatement();
-			queryResponse = queryStatement.executeQuery(sql);
-			List<NoteData> noteDataList = new ArrayList<>();
-			int count = 0;
+
+    public void getNoteData(List<NoteData> noteDataList,List<Long> noteidList){
+        Statement queryStatement = null;
+        ResultSet queryResponse = null;
+        try{
+
+            String noteIds = StringUtils.join(noteidList,",");
+            queryStatement = connection.createStatement();
+
+            String sql = "select noteid,createddatetime, createdby,locationdescription,title,groupname,ST_X(geometry::geometry) as lat, ST_Y(geometry::geometry) as lng  from edgenoteview where  noteid in ("+noteIds+");";
+
+            queryResponse = queryStatement.executeQuery(sql);
+
+            int count = 0;
             while (queryResponse.next()) {
                 NoteData noteData = new NoteData();
                 count = count + 1;
@@ -132,9 +129,52 @@ public class StreetlightDao extends UtilDao {
                 noteData.setLng(String.valueOf(queryResponse.getDouble("lng")));
 
             }
-            System.out.println("Total count "+noteDataList.size());
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * Get List of NoteIds which is assigned to given formtemplate
+     *
+     * @return
+     */
+    public List<DailyReportCSV> getNoteIds() {
+        Statement queryStatement = null;
+        ResultSet queryResponse = null;
+        List<DailyReportCSV> dailyReportCSVs = new ArrayList<>();
+        try {
+            String sql = generateSQL();
+            System.out.println(sql);
+            queryStatement = connection.createStatement();
+            queryResponse = queryStatement.executeQuery(sql);
+            List<NoteData> noteDataList = new ArrayList<>();
+            List<Long> noteIdList = new ArrayList<>();
+            int count = 0;
+            while (queryResponse.next()) {
+                count = count + 1;
+                System.out.println(count);
+                noteIdList.add(queryResponse.getLong("noteid"));
+
+            }
+            System.out.println("Total count "+noteIdList.size());
+            int noteIdsize = noteIdList.size();
+            List<Long> noteIdLong = new ArrayList<>();
+            for(int i = 0 ; i < noteIdsize; i++){
+                noteIdLong.add(noteIdList.get(i));
+                if((i + 1) % 100 == 0){
+                    getNoteData(noteDataList,noteIdLong);
+                    noteIdLong.clear();
+                }
+            }
+
+            if(noteIdLong.size() > 0){
+                getNoteData(noteDataList,noteIdLong);
+                noteIdLong.clear();
+            }
+
             int size = noteDataList.size();
-			List<Long> noteIdLong = new ArrayList<>();
+
             for(int i = 0; i < size; i++){
                 NoteData noteData =  noteDataList.get(i);
                 noteIdLong.add(noteData.getNoteId());
@@ -143,21 +183,21 @@ public class StreetlightDao extends UtilDao {
                     noteIdLong.clear();
                 }
             }
-        if(noteIdLong.size() > 0){
-            getFormData(noteIdLong,noteDataList);
-        }
-                    System.out.println("Total count "+noteDataList.size());
+            if(noteIdLong.size() > 0){
+                getFormData(noteIdLong,noteDataList);
+            }
+            System.out.println("Total count "+noteDataList.size());
             processNoteData(noteDataList,dailyReportCSVs);
 
-		} catch (Exception e) {
-		    e.printStackTrace();
-			logger.error("Error in getNoteIds", e);
-		} finally {
-			closeResultSet(queryResponse);
-			closeStatement(queryStatement);
-		}
-		return dailyReportCSVs;
-	}
+        } catch (Exception e) {
+            e.printStackTrace();
+            logger.error("Error in getNoteIds", e);
+        } finally {
+            closeResultSet(queryResponse);
+            closeStatement(queryStatement);
+        }
+        return dailyReportCSVs;
+    }
 
 
 
@@ -616,11 +656,14 @@ public class StreetlightDao extends UtilDao {
                     inspectionNoteDataList.add(noteData);
                     String locationDescription = queryResponse.getString("locationdescription");
                     String[] locations = locationDescription.split("\\|");
-                    if(groupName.equals("Complete") || groupName.equals("Not Yet Complete") || groupName.equals("Completed")){
-                        if(locations.length == 2) {
-                            groupName = locations[1];
-                        }
-                    }
+                   if(groupName != null){
+                       if(groupName.equals("Complete") || groupName.equals("Not Yet Complete") || groupName.equals("Completed")){
+                           if(locations.length == 2) {
+                               groupName = locations[1];
+                           }
+                       }
+                   }
+
                     String description = "";
                     if(locations.length == 2){
                         description = locations[0];

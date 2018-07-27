@@ -22,7 +22,7 @@ public class StreetlightApp {
 				return Integer.parseInt(hoursOfDay);
 			}
 		}
-		//return 04;
+		//return 13;
          return 17;
 	}
 
@@ -49,6 +49,7 @@ public class StreetlightApp {
 							} catch (IOException e) {
 								e.printStackTrace();
 							}
+							StreetlightDaoConnection.getInstance().closeConnection();
 						}else{
 							System.out.println("File is present.");
 						}
