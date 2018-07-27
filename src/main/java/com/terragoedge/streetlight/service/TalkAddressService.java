@@ -12,7 +12,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Properties;
 
-public class TalkAddressService {
+public class TalkAddressService implements Runnable {
     private Gson gson = null;
     private JsonParser jsonParser = null;
     private Properties properties = null;
@@ -27,13 +27,14 @@ public class TalkAddressService {
         streetlightDao = new StreetlightDao();
     }
 
-    public void getTalqAddress() {
+    @Override
+    public void run() {
         System.out.println("talq started");
         String slvBaseUrl = properties.getProperty("streetlight.slv.url.main");
         String talqAddressApi = properties.getProperty("streetlight.slv.url.gettalqaddress");
         System.out.println(slvBaseUrl + talqAddressApi);
         List<LoggingModel> unSyncedTalqAddress = streetlightDao.getUnSyncedTalqaddress();
-        System.out.println("unsynced TalkAddressSize :" + unSyncedTalqAddress.size());
+        System.out.println("un synced TalkAddressSize :" + unSyncedTalqAddress.size());
         if (unSyncedTalqAddress.size() > 0) {
             ResponseEntity<String> responseEntity = restService.getRequest(slvBaseUrl + talqAddressApi, true, null);
             if (responseEntity.getStatusCode().is2xxSuccessful()) {
@@ -71,6 +72,10 @@ public class TalkAddressService {
                 }
             }
         }
+
+    }
+
+    public void getTalqAddress() {
     }
 
 }

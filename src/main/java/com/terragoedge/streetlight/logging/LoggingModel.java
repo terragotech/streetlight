@@ -22,6 +22,7 @@ public class LoggingModel {
 	private long talqCreatedTime;
 	private String talqAddress;
 
+	private long lastSyncTime;
 
 
 	public String getControllerSrtId() {
@@ -129,6 +130,14 @@ public class LoggingModel {
 		this.talqAddress = talqAddress;
 	}
 
+	public long getLastSyncTime() {
+		return lastSyncTime;
+	}
+
+	public void setLastSyncTime(long lastSyncTime) {
+		this.lastSyncTime = lastSyncTime;
+	}
+
 	@Override
 	public boolean equals(Object o) {
 		if (this == o) return true;
@@ -161,6 +170,7 @@ public class LoggingModel {
 				", controllerSrtId='" + controllerSrtId + '\'' +
 				", talqCreatedTime=" + talqCreatedTime +
 				", talqAddress='" + talqAddress + '\'' +
+				", lastSyncTime=" + lastSyncTime +
 				'}';
 	}
 }

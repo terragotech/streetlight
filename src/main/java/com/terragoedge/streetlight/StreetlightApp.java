@@ -7,7 +7,7 @@ import com.terragoedge.streetlight.service.TalkAddressService;
 
 
 public class StreetlightApp {
-	
+
 
 	public static void main(String[] args) {
 		// SlvService slvService = new SlvService();
@@ -17,26 +17,25 @@ public class StreetlightApp {
 		streetlightChicagoService.run();
 */
 
-		while (true){
+	/*	while (true){
 		    try{
-              /*  StreetlightChicagoService streetlightChicagoService = new StreetlightChicagoService();
+               StreetlightChicagoService streetlightChicagoService = new StreetlightChicagoService();
                 streetlightChicagoService.run();
-                Thread.sleep(10000);*/
-
-                try{
-                    TalkAddressService talkAddressService = new TalkAddressService();
-                    talkAddressService.getTalqAddress();
-                    Thread.sleep(5000);
-                }catch (Exception e){
-                    e.printStackTrace();
-                }
-
+                Thread.sleep(10000);
             }catch (Exception e){
 		        e.printStackTrace();
             }
+        }*/
+        while(true){
+            try{
+                TalkAddressService talkAddressService = new TalkAddressService();
+                talkAddressService.getTalqAddress();
+                Thread.sleep(5000);
+            }catch (Exception e){
+                e.printStackTrace();
+            }
         }
-
-
 	}
+	public void loadConfigurationJson(){}
 
 }

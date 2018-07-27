@@ -73,7 +73,7 @@ public class StreetlightDao extends UtilDao {
 
 
     public long getLastSyncTime() {
-        String sql = "select lastsynctime from lastsyncstatus;";
+        String sql = "select lastsynctime from notesyncdetails;";
         return exceuteSql(sql);
     }
 
@@ -147,7 +147,7 @@ public class StreetlightDao extends UtilDao {
             }
             preparedStatement.setString(13, singleFormErrorDetails);
             preparedStatement.setString(14, singleFormStatus);
-            preparedStatement.setLong(15, System.currentTimeMillis());
+            preparedStatement.setLong(15, loggingModel.getLastSyncTime());
             preparedStatement.execute();
         } catch (Exception e) {
             logger.error("Error in insertParentNoteId", e);
@@ -266,7 +266,7 @@ public class StreetlightDao extends UtilDao {
         try {
             queryStatement = connection.createStatement();
             queryResponse = queryStatement.executeQuery("Select notename,processednoteid,status,errordetails from notesyncdetails where talqaddress is null and status = 'Success';");
-            while (queryResponse.next()){
+            while (queryResponse.next()) {
                 LoggingModel loggingModel = new LoggingModel();
                 loggingModel.setNoteName(queryResponse.getString("notename"));
                 loggingModel.setStatus(queryResponse.getString("status"));
