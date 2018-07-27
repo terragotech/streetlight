@@ -5,11 +5,13 @@
     "ids":[
       {
         "id":19,
-        "type":"MAC"
+        "type":"MAC",
+        "isRequired":false
       },
       {
         "id":20,
-        "type":"FIXTURE"
+        "type":"FIXTURE",
+        "isRequired":true
       }
     ],
 
@@ -24,15 +26,18 @@
     "ids":[
       {
         "id":13,
-        "type":"EXISTING_MAC"
+        "type":"EXISTING_MAC",
+        "isRequired":false
       },
       {
         "id":14,
-        "type":"MAC"
+        "type":"MAC",
+        "isRequired":true
       },
       {
         "id":15,
-        "type":"FIXTURE"
+        "type":"FIXTURE",
+        "isRequired":true
       }
     ],
     "action":[

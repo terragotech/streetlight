@@ -3,10 +3,8 @@ package com.terragoedge.slvinterface.service;
 import com.google.gson.*;
 import com.terragoedge.slvinterface.dao.ConnectionDAO;
 import com.terragoedge.slvinterface.dao.tables.SlvSyncDetails;
-import com.terragoedge.slvinterface.exception.InValidBarCodeException;
-import com.terragoedge.slvinterface.exception.QRCodeAlreadyUsedException;
-import com.terragoedge.slvinterface.exception.QRCodeNotMatchedException;
-import com.terragoedge.slvinterface.exception.ReplaceOLCFailedException;
+import com.terragoedge.slvinterface.enumeration.Status;
+import com.terragoedge.slvinterface.exception.*;
 import com.terragoedge.slvinterface.json.slvInterface.Id;
 import com.terragoedge.slvinterface.model.DeviceMacAddress;
 import com.terragoedge.slvinterface.model.EdgeNote;
@@ -160,8 +158,8 @@ public class AbstractSlvService {
             addStreetLightData("ballast.dimmingtype", fixtureInfo[12], paramsList);
 
         } else {
-            /*throw new InValidBarCodeException(
-                    "Fixture MAC address is not valid (" + edgeNote.getTitle() + "). Value is:" + data);*/
+            throw new InValidBarCodeException(
+                    "Fixture MAC address is not valid (" + edgeNote.getTitle() + "). Value is:" + data);
         }
     }
 
@@ -204,7 +202,7 @@ public class AbstractSlvService {
     }
 
     public boolean checkMacAddressExists(String macAddress, String idOnController)
-            throws QRCodeAlreadyUsedException, Exception {
+            throws QRCodeAlreadyUsedException {
         logger.info("Getting Mac Address from SLV.");
         String mainUrl = properties.getProperty("streetlight.slv.url.main");
         String updateDeviceValues = properties.getProperty("streetlight.slv.url.search.device");
@@ -237,14 +235,14 @@ public class AbstractSlvService {
                     stringBuilder.append("\n");
                 }
             }
-            throw new QRCodeAlreadyUsedException(stringBuilder.toString(), macAddress);
+            throw new QRCodeAlreadyUsedException("QR code ["+macAddress+"] is already Used in following devices ["+stringBuilder.toString()+"]",macAddress);
         } else {
-            throw new Exception();
+            throw new QRCodeAlreadyUsedException("Error while getting data from SLV.",macAddress);
         }
 
     }
 
-    public int setDeviceValues(List<Object> paramsList) {
+    public void setDeviceValues(List<Object> paramsList,SlvSyncDetails slvSyncDetails)throws DeviceUpdationFailedException {
         String mainUrl = properties.getProperty("streetlight.slv.url.main");
         String updateDeviceValues = properties.getProperty("streetlight.slv.url.updatedevice");
         String url = mainUrl + updateDeviceValues;
@@ -256,7 +254,11 @@ public class AbstractSlvService {
         String responseString = response.getBody();
         JsonObject replaceOlcResponse = (JsonObject) jsonParser.parse(responseString);
         int errorCode = replaceOlcResponse.get("errorCode").getAsInt();
-        return errorCode;
+        if(errorCode != 0){
+            slvSyncDetails.setErrorDetails(gson.toJson(replaceOlcResponse));
+            slvSyncDetails.setStatus(Status.Failure.toString());
+            throw new DeviceUpdationFailedException(gson.toJson(replaceOlcResponse));
+        }
     }
 
     public void clearAndUpdateDeviceData(String idOnController, String controllerStrId) {
@@ -345,9 +347,6 @@ public class AbstractSlvService {
     public void replaceOLC(String controllerStrIdValue, String idOnController, String macAddress)
             throws ReplaceOLCFailedException {
         try {
-            // String newNetworkId = slvSyncDataEntity.getMacAddress();
-            String newNetworkId = macAddress;
-
             // Get Url detail from properties
             String mainUrl = properties.getProperty("streetlight.slv.url.main");
             String dataUrl = properties.getProperty("streetlight.url.replaceolc");
@@ -358,7 +357,7 @@ public class AbstractSlvService {
             paramsList.add("methodName=" + replaceOlc);
             paramsList.add("controllerStrId=" + controllerStrId);
             paramsList.add("idOnController=" + idOnController);
-            paramsList.add("newNetworkId=" + newNetworkId);
+            paramsList.add("newNetworkId=" + macAddress);
             paramsList.add("ser=json");
             String params = StringUtils.join(paramsList, "&");
             url = url + "?" + params;
