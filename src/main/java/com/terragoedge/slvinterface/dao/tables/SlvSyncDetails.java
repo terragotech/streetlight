@@ -7,6 +7,8 @@ import com.j256.ormlite.table.DatabaseTable;
 public class SlvSyncDetails {
     public static final String TALQ_ADDRESS = "talcaddress";
     public static final String NOTE_GUID = "noteguid";
+    public static final String STATUS="status";
+    public static final String NOTENAME="noteName";
     @DatabaseField(generatedId = true, allowGeneratedIdInsert = true)
     private int id;
     @DatabaseField(columnName = "notename")
@@ -21,6 +23,8 @@ public class SlvSyncDetails {
     private long processedDateTime;
     @DatabaseField(columnName = "status")
     private String status;
+    @DatabaseField(columnName = "selectedaction")
+    private String selectedAction;
     @DatabaseField(columnName = "errordetails")
     private String errorDetails;
     @DatabaseField(columnName = "talcaddress")
@@ -128,6 +132,14 @@ public class SlvSyncDetails {
         this.deviceCreationStatus = deviceCreationStatus;
     }
 
+    public String getSelectedAction() {
+        return selectedAction;
+    }
+
+    public void setSelectedAction(String selectedAction) {
+        this.selectedAction = selectedAction;
+    }
+
     @Override
     public String toString() {
         return "SlvSyncDetails{" +
@@ -138,6 +150,7 @@ public class SlvSyncDetails {
                 ", noteCreatedDateTime=" + noteCreatedDateTime +
                 ", processedDateTime=" + processedDateTime +
                 ", status='" + status + '\'' +
+                ", selectedAction='" + selectedAction + '\'' +
                 ", errorDetails='" + errorDetails + '\'' +
                 ", talcAddress='" + talcAddress + '\'' +
                 ", talcAddressDateTime=" + talcAddressDateTime +

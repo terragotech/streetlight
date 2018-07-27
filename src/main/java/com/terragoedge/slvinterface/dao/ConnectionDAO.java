@@ -8,6 +8,7 @@ import com.j256.ormlite.support.ConnectionSource;
 import com.j256.ormlite.table.TableUtils;
 import com.terragoedge.slvinterface.dao.tables.SlvDevice;
 import com.terragoedge.slvinterface.dao.tables.SlvSyncDetails;
+import com.terragoedge.slvinterface.enumeration.Status;
 import com.terragoedge.slvinterface.model.EdgeNote;
 
 import java.sql.ResultSet;
@@ -30,7 +31,7 @@ public enum ConnectionDAO {
 
         try {
             connectionSource = new JdbcConnectionSource(DATABASE_URL);
-           // TableUtils.createTableIfNotExists(connectionSource, SlvSyncDetails.class);
+            // TableUtils.createTableIfNotExists(connectionSource, SlvSyncDetails.class);
             // TableUtils.createTableIfNotExists(connectionSource, SlvDevice.class);
             slvSyncDetailsDao = DaoManager.createDao(connectionSource, SlvSyncDetails.class);
             slvDeviceDao = DaoManager.createDao(connectionSource, SlvDevice.class);
@@ -119,6 +120,34 @@ public enum ConnectionDAO {
             //  closeStatement(queryStatement);
         }
         return noteIds;
+    }
+
+    public List<SlvSyncDetails> getUnSyncedTalqaddress() {
+        try {
+            return slvSyncDetailsDao.queryBuilder().where().isNull(SlvSyncDetails.TALQ_ADDRESS).and().eq(SlvSyncDetails.STATUS, Status
+                    .Success.toString()).query();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return new ArrayList<>();
+
+    }
+
+    public void updateSlvSyncdetails(SlvSyncDetails slvSyncDetails) {
+        try {
+            slvSyncDetailsDao.update(slvSyncDetails);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    public SlvSyncDetails getFixtureSyncDetails(String fixtureId) {
+        try {
+            return slvSyncDetailsDao.queryBuilder().where().eq(SlvSyncDetails.NOTENAME, fixtureId).and().isNull(SlvSyncDetails.TALQ_ADDRESS).queryForFirst();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
     }
 
     public ConnectionSource getConnection() {
