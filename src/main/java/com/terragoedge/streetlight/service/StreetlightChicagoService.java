@@ -184,6 +184,7 @@ public class StreetlightChicagoService {
     }
    
 	public void run() throws IOException{
+
 		String fileName = getDateTime();
 
         DataSetManager.reset();
@@ -272,6 +273,7 @@ public class StreetlightChicagoService {
 		}
 		edgeMailService.sendMail(dupMacAddressFile, dailyReportFile,quickNoteFileName,inspectionFileName);
 		String inputFile = "./report/" + dailyReportFile;
+		
 		Properties properties =  PropertiesReader.getProperties();
 		String destFile = properties.getProperty("dailyreport.inputfile");
 		String hostString = properties.getProperty("dailyreport.geomapservice");

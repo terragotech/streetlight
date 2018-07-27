@@ -31,7 +31,62 @@ public class EdgeMailService {
 	public EdgeMailService() {
 		properties = PropertiesReader.getProperties();
 	}
-	public void sendMailPDF(String pdfFile)
+	public void sendMailError(String errorMessage)
+	{
+		logger.info("Mail Server sending Error Message");
+		Properties props = System.getProperties();
+		final String fromEmail = properties.getProperty("email.id");
+		final String emailPassword = properties.getProperty("email.password");
+		String recipients = properties.getProperty("email.pdferrorrecipients");
+		String host = properties.getProperty("email.host");
+		String port = properties.getProperty("email.port");
+		String[] to = recipients.split(",", -1);
+		props.put("mail.smtp.starttls.enable", "true");
+		props.put("mail.smtp.host", host);
+		props.put("mail.smtp.user", fromEmail);
+		props.put("mail.smtp.password", emailPassword);
+		props.put("mail.smtp.port", port);
+		props.put("mail.smtp.auth", "true");
+		Session session = Session.getInstance(props, new javax.mail.Authenticator() {
+			protected PasswordAuthentication getPasswordAuthentication() {
+				return new PasswordAuthentication(fromEmail, emailPassword);
+			}
+		});
+		MimeMessage message = new MimeMessage(session);
+		try {
+			message.setFrom(new InternetAddress(fromEmail));
+			InternetAddress[] toAddress = new InternetAddress[to.length];
+			for (int i = 0; i < to.length; i++) {
+				toAddress[i] = new InternetAddress(to[i]);
+			}
+			for (int i = 0; i < toAddress.length; i++) {
+				message.addRecipient(Message.RecipientType.TO, toAddress[i]);
+			}
+			message.setSubject("Error - Daily Report GeoPDF - Automated");
+
+			BodyPart messageBodyPart = new MimeBodyPart();
+			messageBodyPart.setText("Error occured when generating daily Report : " + errorMessage  + "\n \n");
+
+			Multipart multipart = new MimeMultipart();
+			multipart.addBodyPart(messageBodyPart);
+
+			
+			message.setContent(multipart);
+
+			Transport transport = session.getTransport("smtp");
+			transport.connect(host, fromEmail, emailPassword);
+			transport.sendMessage(message, message.getAllRecipients());
+			transport.close();
+			logger.info("Mail Send.");
+		} catch (AddressException ae) {
+			ae.printStackTrace();
+		} catch (Exception me) {
+			me.printStackTrace();
+			logger.error("Error while sending mail",me);
+		}
+			
+	}
+	public void sendMailPDF(String strDropBoxLink)
 	{
 		logger.info("Mail Server sending PDF Triggered");
 		Properties props = System.getProperties();
@@ -65,20 +120,12 @@ public class EdgeMailService {
 			message.setSubject("Daily Report GeoPDF - Automated");
 
 			BodyPart messageBodyPart = new MimeBodyPart();
-			messageBodyPart.setText("Please find attached the GeoPDF with the today's data. \n \n");
+			messageBodyPart.setText("Please find the DropBox Link " + strDropBoxLink  + "\n \n");
 
 			Multipart multipart = new MimeMultipart();
 			multipart.addBodyPart(messageBodyPart);
 
-			messageBodyPart = new MimeBodyPart();
-			DataSource source = null;
-			if(pdfFile != null){
-                source = new FileDataSource(pdfFile);
-                //DataSource source = new FileDataSource( dailyReportFile);
-                messageBodyPart.setDataHandler(new DataHandler(source));
-                messageBodyPart.setFileName(pdfFile);
-                multipart.addBodyPart(messageBodyPart);
-			}
+			
 			message.setContent(multipart);
 
 			Transport transport = session.getTransport("smtp");

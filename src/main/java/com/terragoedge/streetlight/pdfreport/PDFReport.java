@@ -1,5 +1,11 @@
 package com.terragoedge.streetlight.pdfreport;
 
+import java.io.File;
+import java.io.IOException;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.Locale;
 import java.util.Properties;
 
 import org.apache.log4j.Logger;
@@ -10,8 +16,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.RestTemplate;
 
-
+import com.dropbox.core.DbxException;
 import com.google.gson.Gson;
+
 import com.terragoedge.streetlight.PropertiesReader;
 import com.terragoedge.streetlight.service.EdgeMailService;
 
@@ -66,7 +73,7 @@ public class PDFReport implements Runnable{
             return reportActionStatus;
             
 		}
-		private static void startReportGeneration(String hostURL) throws PDFReportException
+		private static void startReportGeneration(String hostURL) throws PDFReportException, DbxException, IOException
 		{
 			ReportStartRequestStatus reportStartStatus = null;
 	 		RestTemplate restTemplate = new RestTemplate();
@@ -95,7 +102,22 @@ public class PDFReport implements Runnable{
             				if(progress == 1.0)
             				{
             					bProgressComplete = true;
-            					sendMail();
+            					//Now upload file to dropbox
+            					Properties properties = PropertiesReader.getProperties();
+            					String pdfFileLocation = properties.getProperty("email.pdffilelocation");
+            					String pdfFile = properties.getProperty("email.pdffile");
+            					
+            					Calendar calendar = Calendar.getInstance(Locale.getDefault());
+            					Date date = new Date(calendar.getTimeInMillis());
+            					SimpleDateFormat dateFormat = new SimpleDateFormat("dd-MMM-yyyy");
+            					String fileName = dateFormat.format(date);
+            					
+            					File f1 = new File(pdfFile);
+            					String updatedPDFFileName = "dailyReport-"+ fileName + ".pdf";
+            					File f2 = new File(pdfFileLocation + updatedPDFFileName);
+            					f1.renameTo(f2);
+            					String dropBoxURL = uploadFileToDropBox(pdfFileLocation, updatedPDFFileName);
+            					sendMail(dropBoxURL);
             					purgeReportStatus(hostString);
             				}
             				try {
@@ -109,6 +131,7 @@ public class PDFReport implements Runnable{
             			{
             				//Error occurred
             				bProgressComplete = true;
+            				sendErrorMail(strErrMessage);
             			}
             		}
             		else
@@ -123,14 +146,32 @@ public class PDFReport implements Runnable{
             	throw new PDFReportException("Bad reponse from server, Error Code : " + responseStatusCode.toString());
             }
 		}
-		private static void sendMail()
+		private static void sendMail(String strDropBoxLink)
 		{
 			Properties properties = PropertiesReader.getProperties();
-			String pdfFile = properties.getProperty("email.pdffile");
 			EdgeMailService edgeMailService = new EdgeMailService();
-			edgeMailService.sendMailPDF(pdfFile);
+			edgeMailService.sendMailPDF(strDropBoxLink);
 		}
-	 	public static void generateDailyReport(String hostURL) throws PDFReportException
+		private static void sendErrorMail(String errorMessage)
+		{
+			Properties properties = PropertiesReader.getProperties();
+			EdgeMailService edgeMailService = new EdgeMailService();
+			edgeMailService.sendMailError(errorMessage);
+		}
+		private static String uploadFileToDropBox(String fileLocation, String fileName) throws DbxException, IOException
+		{
+			String dropBoxLink = null;
+			String dropBoxAccessToken = PropertiesReader.getProperties().getProperty("dailyreport.dropboxAccessToken");
+			String dropBoxLocation = PropertiesReader.getProperties().getProperty("dailyreport.dropboxLocation");
+			DropBoxConnector dropBoxConnector = new DropBoxConnector();
+			dropBoxConnector.setdropBoxAccessToken(dropBoxAccessToken);
+			dropBoxConnector.establishConnection();
+			dropBoxConnector.uploadFile(dropBoxLocation,fileLocation,fileName);
+			dropBoxLink = dropBoxConnector.getSharedLinks(dropBoxLocation, fileName);
+			System.out.println(dropBoxLink);
+			return dropBoxLink;
+		}
+	 	public static void generateDailyReport(String hostURL) throws PDFReportException, DbxException, IOException
 	    {
 	 		ReportStartRequestStatus reportStartStatus = getDailyReportStatus(hostURL);
 	 		if(reportStartStatus != null){
@@ -154,6 +195,22 @@ public class PDFReport implements Runnable{
 				String errorTrace = PDFExceptionUtils.getStackTrace(e);
 				logger.error(e.getMessage());
 				logger.error(errorTrace);
+				sendErrorMail(errorTrace);
+			} catch (DbxException e) {
+				String errorTrace = PDFExceptionUtils.getStackTrace(e);
+				logger.error(e.getMessage());
+				logger.error(errorTrace);
+				sendErrorMail(errorTrace);
+			} catch (IOException e) {
+				String errorTrace = PDFExceptionUtils.getStackTrace(e);
+				logger.error(e.getMessage());
+				logger.error(errorTrace);
+				sendErrorMail(errorTrace);
+			}catch (Exception e) {
+				String errorTrace = PDFExceptionUtils.getStackTrace(e);
+				logger.error(e.getMessage());
+				logger.error(errorTrace);
+				sendErrorMail(errorTrace);
 			}
 		}
 	 	
