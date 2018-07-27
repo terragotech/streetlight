@@ -86,7 +86,7 @@ public class EdgeMailService {
 		}
 			
 	}
-	public void sendMailPDF(String strDropBoxLink)
+	public void sendMailPDF(String strDropBoxLink, String strDate)
 	{
 		logger.info("Mail Server sending PDF Triggered");
 		Properties props = System.getProperties();
@@ -120,7 +120,11 @@ public class EdgeMailService {
 			message.setSubject("Daily Report GeoPDF - Automated");
 
 			BodyPart messageBodyPart = new MimeBodyPart();
-			messageBodyPart.setText("Please find the DropBox Link " + strDropBoxLink  + "\n \n");
+			StringBuffer sb = new StringBuffer();
+			sb.append("GeoPDF reports for installs on "+ strDate);
+			sb.append("\n\n");
+			sb.append(strDropBoxLink);
+			messageBodyPart.setText(sb.toString());
 
 			Multipart multipart = new MimeMultipart();
 			multipart.addBodyPart(messageBodyPart);

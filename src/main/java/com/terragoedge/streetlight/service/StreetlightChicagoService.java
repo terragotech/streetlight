@@ -1,5 +1,6 @@
 package com.terragoedge.streetlight.service;
 
+import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -186,7 +187,7 @@ public class StreetlightChicagoService {
 	public void run() throws IOException{
 
 		String fileName = getDateTime();
-
+		
         DataSetManager.reset();
         loadMacAddress(DataSetManager.getMacAddressHolder());
 
@@ -271,8 +272,14 @@ public class StreetlightChicagoService {
 			quickNoteFileName = "daily_quick_note_report_"+fileName+".csv";
 			logData(quickNoteBuilder.toString(), quickNoteFileName);
 		}
+		
+		File file = new  File("./report/pid");
+		file.createNewFile();
+		System.out.println("File Created.");
+			
 		edgeMailService.sendMail(dupMacAddressFile, dailyReportFile,quickNoteFileName,inspectionFileName);
 		String inputFile = "./report/" + dailyReportFile;
+		
 		
 		Properties properties =  PropertiesReader.getProperties();
 		String destFile = properties.getProperty("dailyreport.inputfile");
@@ -280,9 +287,11 @@ public class StreetlightChicagoService {
 		Path source = Paths.get(inputFile);
 	    Path destination = Paths.get(destFile);
 	    Files.copy(source, destination, StandardCopyOption.REPLACE_EXISTING);
-	    
+	    String strDate = getDateTime2();
 	    PDFReport pdfReport = new PDFReport();
 		pdfReport.setHostString(hostString);
+		pdfReport.setDateString(strDate);
+		
 		new Thread(pdfReport).start();
 		
 	}
@@ -315,7 +324,12 @@ public class StreetlightChicagoService {
 		SimpleDateFormat dateFormat = new SimpleDateFormat("ddMMMyyyy");
 		return dateFormat.format(date);
 	}
-	
+	private String getDateTime2(){
+		Calendar calendar = Calendar.getInstance(Locale.getDefault());
+		Date date = new Date(calendar.getTimeInMillis());
+		SimpleDateFormat dateFormat = new SimpleDateFormat("MM-dd-yyyy");
+		return dateFormat.format(date);
+	}
 	
 	private String formatDateTime(long currentDateTime){
 		Date date = new Date(currentDateTime);

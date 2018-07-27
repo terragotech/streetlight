@@ -24,7 +24,14 @@ import com.terragoedge.streetlight.service.EdgeMailService;
 
 public class PDFReport implements Runnable{
 		private static String hostString;
+		private static String dateString;
 		
+		public String getDateString() {
+			return this.dateString;
+		}
+		public void setDateString(String dateString) {
+			this.dateString = dateString;
+		}
 		public String getHostString() {
 			return hostString;
 		}
@@ -109,7 +116,7 @@ public class PDFReport implements Runnable{
             					
             					Calendar calendar = Calendar.getInstance(Locale.getDefault());
             					Date date = new Date(calendar.getTimeInMillis());
-            					SimpleDateFormat dateFormat = new SimpleDateFormat("dd-MMM-yyyy");
+            					SimpleDateFormat dateFormat = new SimpleDateFormat("MM-dd-yyyy");
             					String fileName = dateFormat.format(date);
             					
             					File f1 = new File(pdfFile);
@@ -117,7 +124,7 @@ public class PDFReport implements Runnable{
             					File f2 = new File(pdfFileLocation + updatedPDFFileName);
             					f1.renameTo(f2);
             					String dropBoxURL = uploadFileToDropBox(pdfFileLocation, updatedPDFFileName);
-            					sendMail(dropBoxURL);
+            					sendMail(dropBoxURL,dateString);
             					purgeReportStatus(hostString);
             				}
             				try {
@@ -146,11 +153,11 @@ public class PDFReport implements Runnable{
             	throw new PDFReportException("Bad reponse from server, Error Code : " + responseStatusCode.toString());
             }
 		}
-		private static void sendMail(String strDropBoxLink)
+		private static void sendMail(String strDropBoxLink,String strDate)
 		{
 			Properties properties = PropertiesReader.getProperties();
 			EdgeMailService edgeMailService = new EdgeMailService();
-			edgeMailService.sendMailPDF(strDropBoxLink);
+			edgeMailService.sendMailPDF(strDropBoxLink,strDate);
 		}
 		private static void sendErrorMail(String errorMessage)
 		{
