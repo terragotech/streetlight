@@ -679,13 +679,19 @@ public class StreetlightDao extends UtilDao {
                     inspectionsReport.setLon(queryResponse.getString("Latitude"));
                     inspectionsReport.setLat(queryResponse.getString("Longitude"));
                     inspectionsReport.setCreatedBy(queryResponse.getString("createdby"));
+                    inspectionsReport.setDateModified(queryResponse.getLong("createddatetime"));
                     //int pos = getIndex(addressSetList,title);
+
+                    if(inspectionsReport.getCreatedBy() != null && inspectionsReport.getCreatedBy().equals("admin")){
+                        getCreatedBy(title,inspectionsReport);
+                    }
+
 
                     inspectionsReport.setAddress(description);
                     inspectionsReport.setAtlasPage(queryResponse.getString("notebookname"));
                     inspectionsReport.setName(title);
                     inspectionsReport.setAddComment(queryResponse.getString("addcomment"));
-                    inspectionsReport.setDateModified(queryResponse.getLong("createddatetime"));
+
                     inspectionsReport.setIssueType(queryResponse.getString("fieldreport"));
                     inspectionsReports.add(inspectionsReport);
                 }catch (Exception e){
@@ -700,6 +706,28 @@ public class StreetlightDao extends UtilDao {
         }
         return inspectionsReports;
     }
+
+
+    public void getCreatedBy(String title,InspectionsReport inspectionsReport){
+        String query = "select createdby, createddatetime from edgenote where createdby != 'admin' and title = '"+title+"' order by createddatetime desc limit 1;";
+        Statement queryStatement = null;
+        ResultSet queryResponse = null;
+        try{
+            queryStatement = connection.createStatement();
+            queryResponse = queryStatement.executeQuery(query);
+            while (queryResponse.next()) {
+                inspectionsReport.setCreatedBy(queryResponse.getString("createdby"));
+                inspectionsReport.setDateModified(queryResponse.getLong("createddatetime"));
+            }
+        }catch (Exception e){
+            e.printStackTrace();
+        }finally {
+            closeResultSet(queryResponse);
+            closeStatement(queryStatement);
+        }
+    }
+
+
 
     public int getIndex(List<AddressSet> set, String value) {
         AddressSet addressSet = new AddressSet();
