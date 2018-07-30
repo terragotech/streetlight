@@ -124,8 +124,8 @@ public class AbstractSlvService {
             throws InValidBarCodeException {
         String[] fixtureInfo = data.split(",");
         logger.info("Fixture QR Scan Val lenght"+fixtureInfo.length);
-        if (fixtureInfo.length >= 13) {
-            addStreetLightData("luminaire.brand", fixtureInfo[0], paramsList);
+        if (fixtureInfo.length >= 12) {
+            addStreetLightData("serial_no", fixtureInfo[0], paramsList);
             /**
              * As per Mail conversion, In the older data, the luminaire model was the
              * shorter version of the fixture, so for the General Electric fixtures it was
@@ -133,29 +133,29 @@ public class AbstractSlvService {
              */
             String partNumber = fixtureInfo[1].trim();
             String model = fixtureInfo[2].trim();
-            if (fixtureInfo[1].trim().length() <= fixtureInfo[2].trim().length()) {
+            /*if (fixtureInfo[1].trim().length() <= fixtureInfo[2].trim().length()) {
                 model = fixtureInfo[1].trim();
                 partNumber = fixtureInfo[2].trim();
-            }
-            addStreetLightData("device.luminaire.partnumber", partNumber, paramsList);
-            addStreetLightData("luminaire.model", model, paramsList);
-            addStreetLightData("device.luminaire.manufacturedate", fixtureInfo[3], paramsList);
+            }*/
+            addStreetLightData("categoryStrId", partNumber, paramsList);
+            addStreetLightData("device_luminaire_drivermanufacturer", model, paramsList);
+            addStreetLightData("UMSUGChargeCode", fixtureInfo[3], paramsList);
             String powerVal = fixtureInfo[4];
             if (powerVal != null && !powerVal.isEmpty()) {
                 powerVal = powerVal.replaceAll("W", "");
                 powerVal = powerVal.replaceAll("w", "");
             }
 
-            addStreetLightData("power", powerVal, paramsList);
-            addStreetLightData("fixing.type", fixtureInfo[5], paramsList);
+            addStreetLightData("lampType", powerVal, paramsList);
+            addStreetLightData("luminaire_brand", fixtureInfo[5], paramsList);
             // dailyReportCSV.setFixtureType(fixtureInfo[5]);
-            addStreetLightData("device.luminaire.colortemp", fixtureInfo[6], paramsList);
-            addStreetLightData("device.luminaire.lumenoutput", fixtureInfo[7], paramsList);
-            addStreetLightData("luminaire.DistributionType", fixtureInfo[8], paramsList);
-            addStreetLightData("luminaire.colorcode", fixtureInfo[9], paramsList);
-            addStreetLightData("device.luminaire.drivermanufacturer", fixtureInfo[10], paramsList);
-            addStreetLightData("device.luminaire.driverpartnumber", fixtureInfo[11], paramsList);
-            addStreetLightData("ballast.dimmingtype", fixtureInfo[12], paramsList);
+            addStreetLightData("device_luminaire_colortemp", fixtureInfo[6], paramsList);
+            addStreetLightData("luminaire_model", fixtureInfo[7], paramsList);
+            addStreetLightData("device_luminaire_manufacturedate", fixtureInfo[8], paramsList);
+            addStreetLightData("device_luminaire_partnumber", fixtureInfo[9], paramsList);
+            addStreetLightData("luminaire_type", fixtureInfo[10], paramsList);
+            addStreetLightData("power_watts", fixtureInfo[11], paramsList);
+//            addStreetLightData("ballast.dimmingtype", fixtureInfo[12], paramsList);
 
         } else {
             throw new InValidBarCodeException(
