@@ -19,12 +19,14 @@ public class SlvInterfaceApp extends AbstractSlvService {
 
     public static void main(String[] args) {
         // getFormConfiguration();
-        try {
+        SlvInterfaceService slvInterfaceService = new SlvInterfaceService();
+        slvInterfaceService.start();
+        /*try {
             ApplicationContext context = new ClassPathXmlApplicationContext("schedulepropertiesconfig.xml");
             System.out.println("tested");
         } catch (Exception e) {
             e.printStackTrace();
-        }
+        }*/
     }
 
     private static void getFormConfiguration() {

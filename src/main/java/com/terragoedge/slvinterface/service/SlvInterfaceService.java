@@ -74,6 +74,8 @@ public class SlvInterfaceService extends AbstractSlvService {
 
         logger.info("GetNotesUrl :" + url);
         List<String> noteGuidsList = connectionDAO.getEdgeNoteGuid(formTemplateGuid);
+        noteGuidsList.clear();
+        noteGuidsList.add("108cfaca-4b12-4efa-852e-022995afff1a");
         for (String edgenoteGuid : noteGuidsList) {
             if (!noteGuids.contains(edgenoteGuid)) {
                 String restUrl = url + edgenoteGuid;

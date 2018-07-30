@@ -122,6 +122,7 @@ public class AbstractSlvService {
     }
     public void buildFixtureStreetLightData(String data, List<Object> paramsList, EdgeNote edgeNote)
             throws InValidBarCodeException {
+        System.out.println("buildFixtureStreetLightData = "+data);
         String[] fixtureInfo = data.split(",");
         logger.info("Fixture QR Scan Val lenght"+fixtureInfo.length);
         if (fixtureInfo.length >= 12) {
@@ -156,6 +157,7 @@ public class AbstractSlvService {
             addStreetLightData("luminaire_type", fixtureInfo[10], paramsList);
             addStreetLightData("power_watts", fixtureInfo[11], paramsList);
 //            addStreetLightData("ballast.dimmingtype", fixtureInfo[12], paramsList);
+            System.out.println("steetlight processed data"+ paramsList);
 
         } else {
             throw new InValidBarCodeException(
