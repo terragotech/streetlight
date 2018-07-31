@@ -126,7 +126,7 @@ public class AbstractSlvService {
         String[] fixtureInfo = data.split(",");
         logger.info("Fixture QR Scan Val lenght"+fixtureInfo.length);
         if (fixtureInfo.length >= 12) {
-            addStreetLightData("serial_no", fixtureInfo[0], paramsList);
+            addStreetLightData("device.node.serialnumber", fixtureInfo[0], paramsList);
             /**
              * As per Mail conversion, In the older data, the luminaire model was the
              * shorter version of the fixture, so for the General Electric fixtures it was
@@ -139,8 +139,8 @@ public class AbstractSlvService {
                 partNumber = fixtureInfo[2].trim();
             }*/
             addStreetLightData("categoryStrId", partNumber, paramsList);
-            addStreetLightData("device_luminaire_drivermanufacturer", model, paramsList);
-            addStreetLightData("UMSUGChargeCode", fixtureInfo[3], paramsList);
+            addStreetLightData("device.luminaire.drivermanufacturer", model, paramsList);
+            addStreetLightData("ElexonChargeCode", fixtureInfo[3], paramsList);
             String powerVal = fixtureInfo[4];
             if (powerVal != null && !powerVal.isEmpty()) {
                 powerVal = powerVal.replaceAll("W", "");
@@ -148,14 +148,14 @@ public class AbstractSlvService {
             }
 
             addStreetLightData("lampType", powerVal, paramsList);
-            addStreetLightData("luminaire_brand", fixtureInfo[5], paramsList);
+            addStreetLightData("luminaire.brand", fixtureInfo[5], paramsList);
             // dailyReportCSV.setFixtureType(fixtureInfo[5]);
-            addStreetLightData("device_luminaire_colortemp", fixtureInfo[6], paramsList);
-            addStreetLightData("luminaire_model", fixtureInfo[7], paramsList);
-            addStreetLightData("device_luminaire_manufacturedate", fixtureInfo[8], paramsList);
-            addStreetLightData("device_luminaire_partnumber", fixtureInfo[9], paramsList);
-            addStreetLightData("luminaire_type", fixtureInfo[10], paramsList);
-            addStreetLightData("power_watts", fixtureInfo[11], paramsList);
+            addStreetLightData("device.luminaire.colortemp", fixtureInfo[6], paramsList);
+            addStreetLightData("luminaire.model", fixtureInfo[7], paramsList);
+            addStreetLightData("device.luminaire.manufacturedate", fixtureInfo[8], paramsList);
+            addStreetLightData("device.luminaire.partnumber", fixtureInfo[9], paramsList);
+            addStreetLightData("luminaire.type", fixtureInfo[10], paramsList);
+            addStreetLightData("power", fixtureInfo[11], paramsList);
 //            addStreetLightData("ballast.dimmingtype", fixtureInfo[12], paramsList);
             System.out.println("steetlight processed data"+ paramsList);
 

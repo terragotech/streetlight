@@ -74,8 +74,8 @@ public class SlvInterfaceService extends AbstractSlvService {
 
         logger.info("GetNotesUrl :" + url);
         List<String> noteGuidsList = connectionDAO.getEdgeNoteGuid(formTemplateGuid);
-        noteGuidsList.clear();
-        noteGuidsList.add("108cfaca-4b12-4efa-852e-022995afff1a");
+       // noteGuidsList.clear();
+      //  noteGuidsList.add("52187364-150d-490f-9c10-031d4fcf5a62");*/
         for (String edgenoteGuid : noteGuidsList) {
             if (!noteGuids.contains(edgenoteGuid)) {
                 String restUrl = url + edgenoteGuid;
@@ -160,7 +160,7 @@ public class SlvInterfaceService extends AbstractSlvService {
                 if (checkActionType(edgeFormDataList, actionList)) {
                     switch (configurationJson.getType()) {
                         case NEW_DEVICE:
-                            String macAddress = validateMACAddress(configurationJson, formData.getFormDef(), edgeNote);
+                            String macAddress = validateMACAddress(configurationJson, formData.getFormDef(), edgeNote,paramsList);
                             slvSyncDetail.setMacAddress(macAddress);
                             slvSyncDetail.setSelectedAction(SLVProcess.NEW_DEVICE.toString());
                             boolean isDeviceExist = isAvailableDevice(edgeNote.getTitle());
@@ -168,7 +168,7 @@ public class SlvInterfaceService extends AbstractSlvService {
                                 createDevice(edgeNote, slvSyncDetail, geozoneId);
                             }
                             processSetDevice(edgeFormDataList, configurationJson, edgeNote, paramsList, slvSyncDetail, controllerStrIdValue);
-                            replaceOLC(controllerStrIdValue, edgeNote.getTitle(), slvSyncDetail.getMacAddress());
+                          //  replaceOLC(controllerStrIdValue, edgeNote.getTitle(), slvSyncDetail.getMacAddress());
                             break;
                         case UPDATE_DEVICE:
                             slvSyncDetail.setSelectedAction(SLVProcess.UPDATE_DEVICE.toString());
@@ -232,7 +232,7 @@ public class SlvInterfaceService extends AbstractSlvService {
 
     public void processReplaceDevice(FormData formData, ConfigurationJson configurationJson, EdgeNote edgeNote, List<Object> paramsList, SlvSyncDetails slvSyncDetails, String controllerStrIdValue) throws NoValueException, QRCodeAlreadyUsedException, ReplaceOLCFailedException, DeviceUpdationFailedException {
         List<EdgeFormData> edgeFormDatas = formData.getFormDef();
-        String macAddress = validateMACAddress(configurationJson, edgeFormDatas, edgeNote);
+        String macAddress = validateMACAddress(configurationJson, edgeFormDatas, edgeNote,paramsList);
         slvSyncDetails.setMacAddress(macAddress);
 
         validateExistingMACAddress(configurationJson, edgeFormDatas, edgeNote, paramsList, slvSyncDetails);
@@ -354,13 +354,14 @@ public class SlvInterfaceService extends AbstractSlvService {
     }
 
 
-    private String validateMACAddress(ConfigurationJson configurationJson, List<EdgeFormData> edgeFormDataList, EdgeNote edgeNote) throws NoValueException, QRCodeAlreadyUsedException {
+    private String validateMACAddress(ConfigurationJson configurationJson, List<EdgeFormData> edgeFormDataList, EdgeNote edgeNote,List<Object> paramsList) throws NoValueException, QRCodeAlreadyUsedException {
         List<Id> idList = configurationJson.getIds();
         Id macID = getIDByType(idList, EdgeComponentType.MAC.toString());
         if (macID != null) {
             try {
                 String newNodeMacAddress = valueById(edgeFormDataList, macID.getId());
                 checkMacAddressExists(newNodeMacAddress, edgeNote.getTitle());
+                addStreetLightData("MacAddress", newNodeMacAddress, paramsList);
                 return newNodeMacAddress;
             } catch (NoValueException e) {
                 if (macID.isRequired()) {

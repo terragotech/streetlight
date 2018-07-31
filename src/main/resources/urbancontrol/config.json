@@ -1,0 +1,21 @@
+[
+  {
+    "type":"NEW_DEVICE",
+
+    "ids":[
+      {
+        "id":85,
+        "type":"MAC"
+      },
+      {
+        "id":84,
+        "type":"FIXTURE"
+      }
+    ],
+
+    "action":[{
+      "id":75,
+      "value":"Install"
+    }]
+  }
+]
