@@ -120,11 +120,12 @@ public class AbstractSlvService {
         }
         return null;
     }
+
     public void buildFixtureStreetLightData(String data, List<Object> paramsList, EdgeNote edgeNote)
             throws InValidBarCodeException {
-        System.out.println("buildFixtureStreetLightData = "+data);
+        System.out.println("buildFixtureStreetLightData = " + data);
         String[] fixtureInfo = data.split(",");
-        logger.info("Fixture QR Scan Val lenght"+fixtureInfo.length);
+        logger.info("Fixture QR Scan Val lenght" + fixtureInfo.length);
         if (fixtureInfo.length >= 12) {
             addStreetLightData("device.node.serialnumber", fixtureInfo[0], paramsList);
             /**
@@ -157,7 +158,7 @@ public class AbstractSlvService {
             addStreetLightData("luminaire.type", fixtureInfo[10], paramsList);
             addStreetLightData("power", fixtureInfo[11], paramsList);
 //            addStreetLightData("ballast.dimmingtype", fixtureInfo[12], paramsList);
-            System.out.println("steetlight processed data"+ paramsList);
+            System.out.println("steetlight processed data" + paramsList);
 
         } else {
             throw new InValidBarCodeException(
@@ -192,8 +193,12 @@ public class AbstractSlvService {
                 JsonArray deviceValues = deviceValuesAsArray.get(i).getAsJsonArray();
                 if (deviceValues.get(0).getAsString().equals(idOnController)) {
                     if (deviceValues.get(2).getAsString().equals(existingNodeMacAddress)) {
-                        String comment = deviceValues.get(1).getAsString();
-                        return comment;
+                        if (deviceValues.get(1).isJsonNull()) {
+                            return "";
+                        } else {
+                            String comment = deviceValues.get(1).getAsString();
+                            return comment;
+                        }
                     }
                 }
             }
@@ -237,14 +242,14 @@ public class AbstractSlvService {
                     stringBuilder.append("\n");
                 }
             }
-            throw new QRCodeAlreadyUsedException("QR code ["+macAddress+"] is already Used in following devices ["+stringBuilder.toString()+"]",macAddress);
+            throw new QRCodeAlreadyUsedException("QR code [" + macAddress + "] is already Used in following devices [" + stringBuilder.toString() + "]", macAddress);
         } else {
-            throw new QRCodeAlreadyUsedException("Error while getting data from SLV.",macAddress);
+            throw new QRCodeAlreadyUsedException("Error while getting data from SLV.", macAddress);
         }
 
     }
 
-    public void setDeviceValues(List<Object> paramsList,SlvSyncDetails slvSyncDetails)throws DeviceUpdationFailedException {
+    public void setDeviceValues(List<Object> paramsList, SlvSyncDetails slvSyncDetails) throws DeviceUpdationFailedException {
         String mainUrl = properties.getProperty("streetlight.slv.url.main");
         String updateDeviceValues = properties.getProperty("streetlight.slv.url.updatedevice");
         String url = mainUrl + updateDeviceValues;
@@ -256,10 +261,49 @@ public class AbstractSlvService {
         String responseString = response.getBody();
         JsonObject replaceOlcResponse = (JsonObject) jsonParser.parse(responseString);
         int errorCode = replaceOlcResponse.get("errorCode").getAsInt();
-        if(errorCode != 0){
+        if (errorCode != 0) {
             slvSyncDetails.setErrorDetails(gson.toJson(replaceOlcResponse));
             slvSyncDetails.setStatus(Status.Failure.toString());
             throw new DeviceUpdationFailedException(gson.toJson(replaceOlcResponse));
+        }
+    }
+
+    public void buildAmerescoUsaFixtureData(String data, List<Object> paramsList, EdgeNote edgeNote)
+            throws InValidBarCodeException {
+        String[] fixtureInfo = data.split(",");
+        logger.info("Fixture QR Scan Val lenght" + fixtureInfo.length);
+        if (fixtureInfo.length >= 13) {
+            addStreetLightData("luminaire.brand", fixtureInfo[0], paramsList);
+            /**
+             * As per Mail conversion, In the older data, the luminaire model was the
+             * shorter version of the fixture, so for the General Electric fixtures it was
+             * ERLH. The Luminaire Part Number would be the longer more detailed number.
+             */
+            String partNumber = fixtureInfo[1].trim();
+            String model = fixtureInfo[2].trim();
+            if (fixtureInfo[1].trim().length() <= fixtureInfo[2].trim().length()) {
+                model = fixtureInfo[1].trim();
+                partNumber = fixtureInfo[2].trim();
+            }
+            addStreetLightData("device.luminaire.partnumber", partNumber, paramsList);
+            addStreetLightData("luminaire.model", model, paramsList);
+            addStreetLightData("device.luminaire.manufacturedate", fixtureInfo[3], paramsList);
+            String powerVal = fixtureInfo[4];
+            if (powerVal != null && !powerVal.isEmpty()) {
+                powerVal = powerVal.replaceAll("W", "");
+                powerVal = powerVal.replaceAll("w", "");
+            }
+
+            addStreetLightData("power", powerVal, paramsList);
+            addStreetLightData("fixing.type", fixtureInfo[5], paramsList);
+            // dailyReportCSV.setFixtureType(fixtureInfo[5]);
+            addStreetLightData("device.luminaire.colortemp", fixtureInfo[6], paramsList);
+            addStreetLightData("device.luminaire.lumenoutput", fixtureInfo[7], paramsList);
+            addStreetLightData("luminaire.DistributionType", fixtureInfo[8], paramsList);
+            addStreetLightData("luminaire.colorcode", fixtureInfo[9], paramsList);
+            addStreetLightData("device.luminaire.drivermanufacturer", fixtureInfo[10], paramsList);
+            addStreetLightData("device.luminaire.driverpartnumber", fixtureInfo[11], paramsList);
+            addStreetLightData("ballast.dimmingtype", fixtureInfo[12], paramsList);
         }
     }
 
@@ -313,7 +357,7 @@ public class AbstractSlvService {
         // controller.installdate - 2017/10/10
 
         addStreetLightData("installStatus", "Installed", paramsList);
-        addStreetLightData("location.utillocationid",edgeNote.getTitle()+".Lamp", paramsList);
+        addStreetLightData("location.utillocationid", edgeNote.getTitle() + ".Lamp", paramsList);
         addStreetLightData("location.locationtype", "LOCATION_TYPE_PREMISE", paramsList);
 
         addStreetLightData("DimmingGroupName", "Group Calendar 1", paramsList);

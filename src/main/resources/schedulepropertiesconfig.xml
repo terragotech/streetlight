@@ -12,5 +12,5 @@
     <task:annotation-driven />
     <util:properties id="applicationProps" location="application.properties" />
 	<context:property-placeholder properties-ref="applicationProps"  />
-    <bean id="cronJobService" class="com.terragoedge.streetlight.CronJobService"></bean>
+    <bean id="cronJobService" class="com.terragoedge.slvinterface.CronJobService"></bean>
 </beans>

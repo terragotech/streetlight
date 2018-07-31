@@ -9,7 +9,7 @@ public class SlvSyncDetails {
     public static final String NOTE_GUID = "noteguid";
     public static final String STATUS="status";
     public static final String NOTENAME="noteName";
-    @DatabaseField(generatedId = true, allowGeneratedIdInsert = true)
+    @DatabaseField(generatedId = true)
     private int id;
     @DatabaseField(columnName = "notename")
     private String noteName;

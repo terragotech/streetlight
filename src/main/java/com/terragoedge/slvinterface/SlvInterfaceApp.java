@@ -24,6 +24,7 @@ public class SlvInterfaceApp extends AbstractSlvService {
                 SlvInterfaceService slvInterfaceService = new SlvInterfaceService();
                 slvInterfaceService.start();
                 Thread.sleep(10000);
+                break;
             } catch (Exception e) {
                 e.printStackTrace();
             }

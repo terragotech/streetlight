@@ -4,6 +4,7 @@ import com.j256.ormlite.dao.Dao;
 import com.j256.ormlite.dao.DaoManager;
 import com.j256.ormlite.dao.RawRowMapper;
 import com.j256.ormlite.jdbc.JdbcConnectionSource;
+import com.j256.ormlite.stmt.UpdateBuilder;
 import com.j256.ormlite.support.ConnectionSource;
 import com.j256.ormlite.table.TableUtils;
 import com.terragoedge.slvinterface.dao.tables.SlvDevice;
@@ -31,8 +32,8 @@ public enum ConnectionDAO {
 
         try {
             connectionSource = new JdbcConnectionSource(DATABASE_URL);
-           // TableUtils.createTableIfNotExists(connectionSource, SlvSyncDetails.class);
-           // TableUtils.createTableIfNotExists(connectionSource, SlvDevice.class);
+            // TableUtils.createTable(connectionSource, SlvSyncDetails.class);
+            //  TableUtils.createTable(connectionSource, SlvDevice.class);
             slvSyncDetailsDao = DaoManager.createDao(connectionSource, SlvSyncDetails.class);
             slvDeviceDao = DaoManager.createDao(connectionSource, SlvDevice.class);
         } catch (Exception e) {
@@ -136,6 +137,17 @@ public enum ConnectionDAO {
     public void updateSlvSyncdetails(SlvSyncDetails slvSyncDetails) {
         try {
             slvSyncDetailsDao.update(slvSyncDetails);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void updateSlvDevice(String idOnController, String macAddress) {
+        try {
+            UpdateBuilder<SlvDevice, String> updateBuilder = slvDeviceDao.updateBuilder();
+            updateBuilder.where().eq(SlvDevice.SLV_DEVICE_ID, idOnController);
+            updateBuilder.updateColumnValue(SlvDevice.MACADDRESS, macAddress);
+            updateBuilder.update();
         } catch (Exception e) {
             e.printStackTrace();
         }

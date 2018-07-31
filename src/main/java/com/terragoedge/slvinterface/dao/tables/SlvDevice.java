@@ -6,7 +6,9 @@ import com.j256.ormlite.table.DatabaseTable;
 @DatabaseTable(tableName = "slvdevice")
 public class SlvDevice {
     public static final String SLV_DEVICE_ID = "deviceid";
-    @DatabaseField(generatedId = true, allowGeneratedIdInsert = true)
+    public static final String DEVICE_NAME = "devicename";
+    public static final String MACADDRESS = "macaddress";
+    @DatabaseField(generatedId = true)
     private int id;
     @DatabaseField(columnName = "devicename")
     private String deviceName;
@@ -14,7 +16,8 @@ public class SlvDevice {
     private String deviceId;
     @DatabaseField(columnName = "processeddatetime")
     private long processedDateTime;
-
+    @DatabaseField(columnName = "macaddress")
+    private String macAddress;
     public int getId() {
         return id;
     }
@@ -47,13 +50,22 @@ public class SlvDevice {
         this.processedDateTime = processedDateTime;
     }
 
+    public String getMacAddress() {
+        return macAddress;
+    }
+
+    public void setMacAddress(String macAddress) {
+        this.macAddress = macAddress;
+    }
+
     @Override
     public String toString() {
         return "SlvDevice{" +
                 "id=" + id +
                 ", deviceName='" + deviceName + '\'' +
-                ", deviceId=" + deviceId +
+                ", deviceId='" + deviceId + '\'' +
                 ", processedDateTime=" + processedDateTime +
+                ", macAddress='" + macAddress + '\'' +
                 '}';
     }
 }
