@@ -275,10 +275,10 @@ public class SlvInterfaceService extends AbstractSlvService {
                 slvSyncDetails.setMacAddress(fixtureScan);
                 fixtureScan = temp;
             }
-             buildFixtureStreetLightData(fixtureScan, paramsList, edgeNote);
-          /*  addStreetLightData("luminaire.installdate", dateFormat(edgeNote.getCreatedDateTime()), paramsList);
+             // buildFixtureStreetLightData(fixtureScan, paramsList, edgeNote);
+            addStreetLightData("luminaire.installdate", dateFormat(edgeNote.getCreatedDateTime()), paramsList);
             addStreetLightData("install.date", dateFormat(edgeNote.getCreatedDateTime()), paramsList);                                                                                                // TODO
-            buildAmerescoUsaFixtureData(fixtureScan, paramsList, edgeNote);*/
+            buildAmerescoUsaFixtureData(fixtureScan, paramsList, edgeNote);
         } catch (NoValueException e) {
             if (fixureID.isRequired()) {
                 throw new NoValueException(e.getMessage());

@@ -32,27 +32,17 @@
     ],
     "action": [
       {
-        "id": 17,
+        "id": 1,
         "value": "Replace node"
       }
     ]
   },
   {
-    "type": "UPDATE_DEVICE",
-    "ids": [
+    "type": "REMOVE",
+     "action": [
       {
-        "id": 39,
-        "type": "FIXTURE"
-      }
-    ],
-    "action": [
-      {
-        "id": 24,
-        "value": "Replace Fixture only"
-      },
-      {
-        "id": 17,
-        "value": "Repairs & Outages"
+        "id": 1,
+        "value": "Remove node"
       }
     ]
   }
