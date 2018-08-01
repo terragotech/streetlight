@@ -52,6 +52,14 @@ public class SlvInterfaceService extends AbstractSlvService {
     public void start() {
         // Get Configuration JSON
         configurationJsonList = getConfigJson();
+        try{
+            loadDevices();
+        }catch (Exception e){
+            logger.error("Unable to get device from SLV.");
+            return;
+        }
+
+
         String accessToken = getEdgeToken();
         logger.info("AccessToken is :" + accessToken);
         if (accessToken == null) {
@@ -77,27 +85,32 @@ public class SlvInterfaceService extends AbstractSlvService {
         // noteGuidsList.clear();
         //  noteGuidsList.add("52187364-150d-490f-9c10-031d4fcf5a62");*/
         for (String edgenoteGuid : noteGuidsList) {
-            if (!noteGuids.contains(edgenoteGuid)) {
-                String restUrl = url + edgenoteGuid;
-                ResponseEntity<String> responseEntity = slvRestService.getRequest(restUrl, false, accessToken);
-                logger.info("notes response :" + url);
-                if (responseEntity.getStatusCode().is2xxSuccessful()) {
-                    String notesData = responseEntity.getBody();
-                    logger.info("notes response from server :" + notesData);
-                    System.out.println(notesData);
-                    // Convert notes Json to List of notes object
-                    Type listType = new TypeToken<ArrayList<EdgeNote>>() {
-                    }.getType();
-                    List<EdgeNote> edgeNoteList = new ArrayList<>();
-                    EdgeNote edgeNote = gson.fromJson(notesData, EdgeNote.class);
-                    edgeNoteList.add(edgeNote);
-                    //  List<EdgeNote> edgeNoteList = gson.fromJson(notesData, listType);
-                    for (EdgeNote edgenote : edgeNoteList) {
-                        logger.info("ProcessNoteTitle is :" + edgenote.getTitle());
-                        processEdgeNote(edgenote, noteGuids, formTemplateGuid, geozoneId, controllerStrIdValue);
+            try{
+                if (!noteGuids.contains(edgenoteGuid)) {
+                    String restUrl = url + edgenoteGuid;
+                    ResponseEntity<String> responseEntity = slvRestService.getRequest(restUrl, false, accessToken);
+                    logger.info("notes response :" + url);
+                    if (responseEntity.getStatusCode().is2xxSuccessful()) {
+                        String notesData = responseEntity.getBody();
+                        logger.info("notes response from server :" + notesData);
+                        System.out.println(notesData);
+                        // Convert notes Json to List of notes object
+                        Type listType = new TypeToken<ArrayList<EdgeNote>>() {
+                        }.getType();
+                        List<EdgeNote> edgeNoteList = new ArrayList<>();
+                        EdgeNote edgeNote = gson.fromJson(notesData, EdgeNote.class);
+                        edgeNoteList.add(edgeNote);
+                        //  List<EdgeNote> edgeNoteList = gson.fromJson(notesData, listType);
+                        for (EdgeNote edgenote : edgeNoteList) {
+                            logger.info("ProcessNoteTitle is :" + edgenote.getTitle());
+                            processEdgeNote(edgenote, noteGuids, formTemplateGuid, geozoneId, controllerStrIdValue);
+                        }
                     }
                 }
+            }catch (Exception e){
+                logger.error("Error",e);
             }
+
         }
         // Get data from server.
         logger.info("Process End :");

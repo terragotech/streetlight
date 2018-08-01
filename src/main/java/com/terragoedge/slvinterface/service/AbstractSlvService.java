@@ -2,6 +2,7 @@ package com.terragoedge.slvinterface.service;
 
 import com.google.gson.*;
 import com.terragoedge.slvinterface.dao.ConnectionDAO;
+import com.terragoedge.slvinterface.dao.tables.SlvDevice;
 import com.terragoedge.slvinterface.dao.tables.SlvSyncDetails;
 import com.terragoedge.slvinterface.enumeration.Status;
 import com.terragoedge.slvinterface.exception.*;
@@ -426,4 +427,44 @@ public class AbstractSlvService {
         }
 
     }
+
+
+    public void loadDevices()throws DeviceLoadException{
+        String mainUrl = properties.getProperty("streetlight.slv.url.main");
+        String devicesUrl = properties.getProperty("streetlight.slv.url.getgeozone.devices");
+        String url = mainUrl + devicesUrl;
+        List<Object> paramsList = new ArrayList<Object>();
+        paramsList.add("valueNames=idOnController");
+        paramsList.add("valueNames=MacAddress");
+        paramsList.add("ser=json");
+        String params = StringUtils.join(paramsList, "&");
+        url = url + "&" + params;
+        ResponseEntity<String> response = slvRestService.getPostRequest(url, null);
+        if (response.getStatusCode().is2xxSuccessful()) {
+            String geoZoneDeviceDetails = response.getBody();
+            JsonObject jsonObject = (JsonObject) jsonParser.parse(geoZoneDeviceDetails);
+            JsonArray deviceValuesAsArray = jsonObject.get("values").getAsJsonArray();
+            int totalSize = deviceValuesAsArray.size();
+            for (int i = 0; i < totalSize; i++) {
+                JsonArray deviceValues = deviceValuesAsArray.get(i).getAsJsonArray();
+                SlvDevice slvDevice = new SlvDevice();
+                slvDevice.setDeviceId(deviceValues.get(0).getAsString());
+                slvDevice.setDeviceName(slvDevice.getDeviceName());
+                slvDevice.setMacAddress(deviceValues.get(1).getAsString());
+                SlvDevice dbSlvDevice = connectionDAO.getSlvDevices(slvDevice.getDeviceId());
+                if(dbSlvDevice != null){
+                    dbSlvDevice.setMacAddress(slvDevice.getMacAddress());
+                    connectionDAO.updateSlvDevice(slvDevice.getDeviceId(),slvDevice.getMacAddress());
+                }else{
+                    connectionDAO.saveSlvDevices(slvDevice);
+                }
+            }
+
+        }else{
+            throw  new DeviceLoadException("Unable to load device from SLV Interface");
+        }
+    }
+
+
+
 }
