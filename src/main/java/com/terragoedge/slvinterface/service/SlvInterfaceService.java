@@ -55,7 +55,7 @@ public class SlvInterfaceService extends AbstractSlvService {
         try{
             loadDevices();
         }catch (Exception e){
-            logger.error("Unable to get device from SLV.");
+            logger.error("Unable to get device from SLV.",e);
             return;
         }
 
@@ -82,8 +82,8 @@ public class SlvInterfaceService extends AbstractSlvService {
 
         logger.info("GetNotesUrl :" + url);
         List<String> noteGuidsList = connectionDAO.getEdgeNoteGuid(formTemplateGuid);
-        // noteGuidsList.clear();
-        //  noteGuidsList.add("52187364-150d-490f-9c10-031d4fcf5a62");*/
+         noteGuidsList.clear();
+          noteGuidsList.add("111a4c3a-0508-4bb3-af28-f13fe600543e");
         for (String edgenoteGuid : noteGuidsList) {
             try{
                 if (!noteGuids.contains(edgenoteGuid)) {
@@ -173,6 +173,7 @@ public class SlvInterfaceService extends AbstractSlvService {
                 if (checkActionType(edgeFormDataList, actionList)) {
                     switch (configurationJson.getType()) {
                         case NEW_DEVICE:
+                            logger.info(edgeNote.getTitle()+" is going to Create.");
                             String macAddress = validateMACAddress(configurationJson, formData.getFormDef(), edgeNote, paramsList);
                             slvSyncDetail.setMacAddress(macAddress);
                             slvSyncDetail.setSelectedAction(SLVProcess.NEW_DEVICE.toString());
@@ -184,10 +185,12 @@ public class SlvInterfaceService extends AbstractSlvService {
                             replaceOLC(controllerStrIdValue, edgeNote.getTitle(), slvSyncDetail.getMacAddress());
                             break;
                         case UPDATE_DEVICE:
+                            logger.info(edgeNote.getTitle()+" is going to Replace.");
                             slvSyncDetail.setSelectedAction(SLVProcess.UPDATE_DEVICE.toString());
                             processSetDevice(edgeFormDataList, configurationJson, edgeNote, paramsList, slvSyncDetail, controllerStrIdValue);
                             break;
                         case REPLACE_DEVICE:
+                            logger.info(edgeNote.getTitle()+" is going to Remove.");
                             slvSyncDetail.setSelectedAction(SLVProcess.REPLACE_DEVICE.toString());
                             processReplaceDevice(formData, configurationJson, edgeNote, paramsList, slvSyncDetail, controllerStrIdValue, geozoneId);
                             break;

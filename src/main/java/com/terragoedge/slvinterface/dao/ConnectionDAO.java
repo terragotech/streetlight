@@ -32,7 +32,7 @@ public enum ConnectionDAO {
 
         try {
             connectionSource = new JdbcConnectionSource(DATABASE_URL);
-           //  TableUtils.createTable(connectionSource, SlvSyncDetails.class);
+             //TableUtils.createTable(connectionSource, SlvSyncDetails.class);
             // TableUtils.createTable(connectionSource, SlvDevice.class);
             slvSyncDetailsDao = DaoManager.createDao(connectionSource, SlvSyncDetails.class);
             slvDeviceDao = DaoManager.createDao(connectionSource, SlvDevice.class);

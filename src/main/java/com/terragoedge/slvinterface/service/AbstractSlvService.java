@@ -450,7 +450,10 @@ public class AbstractSlvService {
                 SlvDevice slvDevice = new SlvDevice();
                 slvDevice.setDeviceId(deviceValues.get(0).getAsString());
                 slvDevice.setDeviceName(slvDevice.getDeviceName());
-                slvDevice.setMacAddress(deviceValues.get(1).getAsString());
+                if(!deviceValues.get(1).isJsonNull()){
+                    slvDevice.setMacAddress(deviceValues.get(1).getAsString());
+                }
+
                 SlvDevice dbSlvDevice = connectionDAO.getSlvDevices(slvDevice.getDeviceId());
                 if(dbSlvDevice != null){
                     dbSlvDevice.setMacAddress(slvDevice.getMacAddress());
