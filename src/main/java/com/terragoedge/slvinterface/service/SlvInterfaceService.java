@@ -168,7 +168,7 @@ public class SlvInterfaceService extends AbstractSlvService {
                                 createDevice(edgeNote, slvSyncDetail, geozoneId);
                             }
                             processSetDevice(edgeFormDataList, configurationJson, edgeNote, paramsList, slvSyncDetail, controllerStrIdValue);
-                          //  replaceOLC(controllerStrIdValue, edgeNote.getTitle(), slvSyncDetail.getMacAddress());
+                            replaceOLC(controllerStrIdValue, edgeNote.getTitle(), slvSyncDetail.getMacAddress());
                             break;
                         case UPDATE_DEVICE:
                             slvSyncDetail.setSelectedAction(SLVProcess.UPDATE_DEVICE.toString());
@@ -177,6 +177,10 @@ public class SlvInterfaceService extends AbstractSlvService {
                         case REPLACE_DEVICE:
                             slvSyncDetail.setSelectedAction(SLVProcess.REPLACE_DEVICE.toString());
                             processReplaceDevice(formData, configurationJson, edgeNote, paramsList, slvSyncDetail, controllerStrIdValue,geozoneId);
+                            break;
+
+                        case REMOVE:
+                            replaceOLC(controllerStrIdValue, edgeNote.getTitle(), "");
                             break;
 
                     }
