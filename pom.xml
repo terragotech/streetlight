@@ -115,11 +115,11 @@
                             <goal>single</goal>
                         </goals>
                         <configuration>
-                            <finalName>slv_interface</finalName>
+                            <finalName>urban_slv_interface-v7</finalName>
                             <archive>
                                 <manifest>
                                     <mainClass>
-                                        com.terragoedge.streetlight.StreetlightApp
+                                        com.terragoedge.slvinterface.SlvInterfaceApp
                                     </mainClass>
                                 </manifest>
                             </archive>
