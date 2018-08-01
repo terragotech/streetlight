@@ -108,7 +108,9 @@ public class AbstractSlvService {
         streetLightDataParams.put("geoZoneId", geoZoneId);
         streetLightDataParams.put("lng", String.valueOf(geom.getCoordinate().x));
         streetLightDataParams.put("lat", String.valueOf(geom.getCoordinate().y));
-        streetLightDataParams.put("nodeTypeStrId", nodeTypeStrId);
+       // streetLightDataParams.put("nodeTypeStrId", nodeTypeStrId);
+        streetLightDataParams.put("modelFunctionId", nodeTypeStrId);
+        //modelFunctionId
         return slvRestService.getRequest(streetLightDataParams, url, true);
     }
 
@@ -149,7 +151,7 @@ public class AbstractSlvService {
                 powerVal = powerVal.replaceAll("w", "");
             }
 
-            addStreetLightData("lampType", powerVal, paramsList);
+            addStreetLightData("lampType", "Manufacturer/LampTechno/Power/BallastType", paramsList);
             addStreetLightData("luminaire.brand", fixtureInfo[5], paramsList);
             // dailyReportCSV.setFixtureType(fixtureInfo[5]);
             addStreetLightData("device.luminaire.colortemp", fixtureInfo[6], paramsList);
@@ -358,10 +360,13 @@ public class AbstractSlvService {
         // controller.installdate - 2017/10/10
 
         addStreetLightData("installStatus", "Installed", paramsList);
-        addStreetLightData("location.utillocationid", edgeNote.getTitle() + ".Lamp", paramsList);
+        addStreetLightData("location.utillocationid", edgeNote.getTitle(), paramsList);
         addStreetLightData("location.locationtype", "LOCATION_TYPE_PREMISE", paramsList);
-
-        addStreetLightData("DimmingGroupName", "Group Calendar 1", paramsList);
+        String nodeTypeStrId = properties.getProperty("streetlight.slv.equipment.type");
+        System.out.println(nodeTypeStrId);
+        addStreetLightData("modelFunctionId", nodeTypeStrId, paramsList);
+//
+        addStreetLightData("DimmingGroupName", "Dimming Evaluation", paramsList);
     }
 
     public void getTalqAddress() {

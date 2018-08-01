@@ -1,7 +1,5 @@
 package com.terragoedge.slvinterface.service;
 
-import com.mashape.unirest.http.HttpResponse;
-import com.mashape.unirest.http.Unirest;
 import com.terragoedge.slvinterface.utils.PropertiesReader;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.lang3.StringUtils;
@@ -143,9 +141,7 @@ public class SlvRestService {
         byte[] plainCredsBytes = plainCreds.getBytes();
         byte[] base64CredsBytes = Base64.encodeBase64(plainCredsBytes);
         String base64Creds = new String(base64CredsBytes);
-        headers.add("cache-control","no-cache");
-        headers.add("postman-token","5cc95ebc-95cb-5f4a-c5e6-0afc0cab82b6");
-        headers.add("Authorization", "Basic dnN1YnJhbWFuaWFuOlNMVlVzZXJAMQ==");
+        headers.add("Authorization", "Basic "+base64Creds);
         return headers;
     }
 

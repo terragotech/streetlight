@@ -18,12 +18,13 @@ public class SlvInterfaceApp extends AbstractSlvService {
     public static List<ConfigurationJson> configurationJsons = new ArrayList<>();
 
     public static void main(String[] args) {
-        // getFormConfiguration();
+
+
         while (true) {
             try {
                 SlvInterfaceService slvInterfaceService = new SlvInterfaceService();
                 slvInterfaceService.start();
-                Thread.sleep(1000000);
+                Thread.sleep(60000);
             } catch (Exception e) {
                 e.printStackTrace();
             }

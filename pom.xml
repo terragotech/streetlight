@@ -115,7 +115,7 @@
                             <goal>single</goal>
                         </goals>
                         <configuration>
-                            <finalName>urban_slv_interface-v7</finalName>
+                            <finalName>bgne_slv_interface-v1</finalName>
                             <archive>
                                 <manifest>
                                     <mainClass>

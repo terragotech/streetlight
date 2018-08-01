@@ -49,6 +49,8 @@ public class SlvInterfaceService extends AbstractSlvService {
         slvInterfaceDAO = new SLVInterfaceDAO();
     }
 
+
+
     public void start() {
         // Get Configuration JSON
         configurationJsonList = getConfigJson();
@@ -82,14 +84,13 @@ public class SlvInterfaceService extends AbstractSlvService {
 
         logger.info("GetNotesUrl :" + url);
         List<String> noteGuidsList = connectionDAO.getEdgeNoteGuid(formTemplateGuid);
-         noteGuidsList.clear();
-          noteGuidsList.add("111a4c3a-0508-4bb3-af28-f13fe600543e");
         for (String edgenoteGuid : noteGuidsList) {
             try{
                 if (!noteGuids.contains(edgenoteGuid)) {
                     String restUrl = url + edgenoteGuid;
                     ResponseEntity<String> responseEntity = slvRestService.getRequest(restUrl, false, accessToken);
-                    logger.info("notes response :" + url);
+                    logger.info("notes response :" + restUrl);
+                    Thread.sleep(10000);
                     if (responseEntity.getStatusCode().is2xxSuccessful()) {
                         String notesData = responseEntity.getBody();
                         logger.info("notes response from server :" + notesData);
@@ -387,8 +388,9 @@ public class SlvInterfaceService extends AbstractSlvService {
         if (macID != null) {
             try {
                 String newNodeMacAddress = valueById(edgeFormDataList, macID.getId());
+                logger.info("newNodeMacAddress:"+newNodeMacAddress);
                 SlvDevice slvDevice = connectionDAO.getSlvDevices(edgeNote.getTitle());
-                if (slvDevice != null && slvDevice.getMacAddress().equals(newNodeMacAddress)) {
+                if (slvDevice != null && slvDevice.getMacAddress() != null && slvDevice.getMacAddress().equals(newNodeMacAddress)) {
                     throw new MacAddressProcessedException("Already mac address processed" + edgeNote.getTitle(), newNodeMacAddress);
                 }
                 checkMacAddressExists(newNodeMacAddress, edgeNote.getTitle());
