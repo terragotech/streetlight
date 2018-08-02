@@ -1,11 +1,14 @@
 package com.terragoedge.slvinterface.model;
 
+import com.terragoedge.slvinterface.entity.EdgeNoteEntity;
+import com.terragoedge.slvinterface.entity.EdgeNoteView;
+
 public class CsvReportModel {
-    String noteID;
+    int noteID;
     String idOnController;
     String latitude;
     String longitude;
-    String createddatetime;
+    long createddatetime;
     String createdBy;
     String revisionOfNoteId;
     String noteType;
@@ -70,11 +73,38 @@ public class CsvReportModel {
     String locationProvider;
     String syncTime;
 
-    public String getNoteID() {
+    public CsvReportModel(EdgeNoteView edgeNoteView) {
+        this.noteID = edgeNoteView.getNoteId();
+        this.createddatetime = edgeNoteView.getCreatedDateTime();
+        this.createdBy = edgeNoteView.getCreatedBy();
+        this.noteType = edgeNoteView.getNotesType().toString();
+        this.baseParentNoteId = edgeNoteView.getParentNoteId();
+        this.revisionOfNoteId = edgeNoteView.getRevisionfromNoteID();
+        this.isCurrent = edgeNoteView.isCurrent();
+        this.isDelete = edgeNoteView.isDeleted();
+        this.noteGuid = edgeNoteView.getNoteGuid();
+
+        //this.createdDate2 = edgeNoteEntity.get
+        this.syncTime = String.valueOf(edgeNoteView.getSyncTime());
+        this.isTask = edgeNoteView.isTaskNote();
+        this.groupName = edgeNoteView.getGroupName();
+        this.groupGuid = edgeNoteView.getGroupGuid();
+        this.colorName = edgeNoteView.getColorName();
+        //this.noteBookName = edgeNoteView.getN
+        this.locationDescription = edgeNoteView.getLocationDescription();
+        this.altitude = edgeNoteView.getAltitude();
+        this.satellitesCount = String.valueOf(edgeNoteView.getSatellitesCount());
+        this.gpsTime = edgeNoteView.getGpsTime();
+        this.locationProvider = edgeNoteView.getLocationProvider();
+
+
+    }
+
+    public int getNoteID() {
         return noteID;
     }
 
-    public void setNoteID(String noteID) {
+    public void setNoteID(int noteID) {
         this.noteID = noteID;
     }
 
@@ -102,11 +132,11 @@ public class CsvReportModel {
         this.longitude = longitude;
     }
 
-    public String getCreateddatetime() {
+    public long getCreateddatetime() {
         return createddatetime;
     }
 
-    public void setCreateddatetime(String createddatetime) {
+    public void setCreateddatetime(long createddatetime) {
         this.createddatetime = createddatetime;
     }
 

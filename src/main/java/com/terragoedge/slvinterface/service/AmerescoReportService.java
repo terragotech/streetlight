@@ -2,6 +2,8 @@ package com.terragoedge.slvinterface.service;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
+import com.terragoedge.slvinterface.entity.EdgeNoteEntity;
+import com.terragoedge.slvinterface.entity.EdgeNoteView;
 import com.terragoedge.slvinterface.model.CsvReportModel;
 import com.terragoedge.slvinterface.model.EdgeFormData;
 import com.terragoedge.slvinterface.model.EdgeNote;
@@ -18,16 +20,16 @@ public class AmerescoReportService extends AbstractService {
     }
 
     public void start() {
-        List<EdgeNote> edgeNoteList = new ArrayList<>();
+        List<EdgeNoteView> edgeNoteViewList = new ArrayList<>();
         List<CsvReportModel> csvReportModelList = new ArrayList<>();
-        for (EdgeNote edgeNote : edgeNoteList) {
-            CsvReportModel csvReportModel = new CsvReportModel();
+        for (EdgeNoteView edgeNoteView : edgeNoteViewList) {
+            CsvReportModel csvReportModel = new CsvReportModel(edgeNoteView);
             csvReportModelList.add(csvReportModel);
-            processEdgeNote(edgeNote, csvReportModel);
+            processEdgeNote(edgeNoteView, csvReportModel);
         }
     }
 
-    public void processEdgeNote(EdgeNote edgeNote, CsvReportModel csvReportModel) {
+    public void processEdgeNote(EdgeNoteView edgeNoteView, CsvReportModel csvReportModel) {
 
     }
 
@@ -43,8 +45,5 @@ public class AmerescoReportService extends AbstractService {
         }
         csvReportModel.setIssue1(issueType);
         csvReportModel.setAddComment1(comments);
-    }
-    public void setCsvModel(EdgeNote edgeNote,CsvReportModel csvReportModel){
-
     }
 }
