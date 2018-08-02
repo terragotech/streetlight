@@ -50,6 +50,21 @@ public class SlvInterfaceService extends AbstractSlvService {
     }
 
 
+    public void test(){
+        String formTemplateGuid = properties.getProperty("streetlight.edge.formtemplateguid");
+        List<String> noteGuidsList = connectionDAO.getEdgeNoteGuid(formTemplateGuid);
+        List<String> noteGuids = slvInterfaceDAO.getNoteGuids();
+        for (String edgenoteGuid : noteGuidsList) {
+            if (!noteGuids.contains(edgenoteGuid)) {
+                SlvSyncDetails slvSyncDetails = new SlvSyncDetails();
+                slvSyncDetails.setStatus(Status.Failure.toString());
+                slvSyncDetails.setNoteGuid(edgenoteGuid);
+                connectionDAO.saveSlvSyncDetails(slvSyncDetails);
+            }
+        }
+    }
+
+
 
     public void start() {
         // Get Configuration JSON

@@ -360,13 +360,13 @@ public class AbstractSlvService {
         // controller.installdate - 2017/10/10
 
         addStreetLightData("installStatus", "Installed", paramsList);
-        addStreetLightData("location.utillocationid", edgeNote.getTitle(), paramsList);
-        addStreetLightData("location.locationtype", "LOCATION_TYPE_PREMISE", paramsList);
+       // addStreetLightData("location.utillocationid", edgeNote.getTitle(), paramsList);
+       // addStreetLightData("location.locationtype", "LOCATION_TYPE_PREMISE", paramsList);
         String nodeTypeStrId = properties.getProperty("streetlight.slv.equipment.type");
         System.out.println(nodeTypeStrId);
-        addStreetLightData("modelFunctionId", nodeTypeStrId, paramsList);
-//
-        addStreetLightData("DimmingGroupName", "Dimming Evaluation", paramsList);
+        //addStreetLightData("modelFunctionId", nodeTypeStrId, paramsList);
+
+      //  addStreetLightData("DimmingGroupName", "Dimming Evaluation", paramsList);
     }
 
     public void getTalqAddress() {
