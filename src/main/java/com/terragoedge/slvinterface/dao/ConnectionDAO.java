@@ -36,6 +36,7 @@ public enum ConnectionDAO {
             // TableUtils.createTable(connectionSource, SlvDevice.class);
             slvSyncDetailsDao = DaoManager.createDao(connectionSource, SlvSyncDetails.class);
             slvDeviceDao = DaoManager.createDao(connectionSource, SlvDevice.class);
+
         } catch (Exception e) {
             e.printStackTrace();
         }
