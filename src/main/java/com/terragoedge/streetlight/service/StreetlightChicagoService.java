@@ -54,7 +54,7 @@ public class StreetlightChicagoService extends AbstractProcessor {
         String dataUrl = properties.getProperty("streetlight.url.get.fxiturecode");
         String url = mainUrl + dataUrl;
 
-        ResponseEntity<String> response = restService.getPostRequest(url, null);
+        ResponseEntity<String> response = restService.getContextPostRequest(url, null);
         String responseString = response.getBody();
         if (responseString != null) {
             ContextList contextList = gson.fromJson(responseString, ContextList.class);
@@ -195,6 +195,9 @@ public class StreetlightChicagoService extends AbstractProcessor {
         if (systemDate == null || systemDate.equals("false")) {
             String yesterday = getYesterdayDate();
             //  url = url + "modifiedAfter=" + yesterday;
+            if(lastSynctime == -1){
+                lastSynctime = System.currentTimeMillis() - (3600000 * 2);
+            }
             url = url + "lastSyncTime=" + lastSynctime;
 
         }
@@ -222,6 +225,7 @@ public class StreetlightChicagoService extends AbstractProcessor {
 
                         installMaintenanceLogModel.setProcessedNoteId(edgeNote.getNoteGuid());
                         installMaintenanceLogModel.setNoteName(edgeNote.getTitle());
+                        installMaintenanceLogModel.setLastSyncTime(edgeNote.getSyncTime());
                         installMaintenanceLogModel.setCreatedDatetime(String.valueOf(edgeNote.getCreatedDateTime()));
                         loadDefaultVal(edgeNote, installMaintenanceLogModel);
                         installationMaintenanceProcessor.processNewAction(edgeNote, installMaintenanceLogModel, false, null);

@@ -143,10 +143,13 @@ public abstract class AbstractProcessor {
         } else {
             edgeNotebookName = "Group Calendar 1";
         }*/
+        edgeNotebookName = edgeNotebookName.replace("Residential","").trim();
 
         if (dimmingGroupName != null && dimmingGroupName.trim().toLowerCase().contains("acorns")) {
             edgeNotebookName = edgeNotebookName +" Acorns";
         }
+
+
         addStreetLightData("DimmingGroupName", edgeNotebookName, paramsList);
         // addStreetLightData("DimmingGroupName", "Group Calendar 1", paramsList);
     }

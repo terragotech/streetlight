@@ -73,7 +73,7 @@ public class StreetlightDao extends UtilDao {
 
 
     public long getLastSyncTime() {
-        String sql = "select lastsynctime from notesyncdetails;";
+        String sql = "select max(synctime) from notesyncdetails;";
         return exceuteSql(sql);
     }
 
