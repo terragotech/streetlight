@@ -7,6 +7,7 @@ import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Random;
 
 import com.google.gson.JsonObject;
 import com.terragoedge.edgeserver.EdgeNotebook;
@@ -470,5 +471,48 @@ public class StreetlightDao extends UtilDao {
             closeStatement(queryStatement);
         }
         return null;
+    }
+
+
+    public List<String> getDuplicateRecords(String randomVal){
+        List<String> noteDetails = new ArrayList<>();
+
+        Statement queryStatement = null;
+        ResultSet queryResponse = null;
+        try {
+            queryStatement = connection.createStatement();
+
+            queryResponse = queryStatement.executeQuery("select noteguid from needtoprocess where ran = '"+randomVal+"';");
+
+            while (queryResponse.next()) {
+                String noteGuid =  queryResponse.getString("noteguid");
+                noteDetails.add(noteGuid);
+            }
+
+        } catch (Exception e) {
+            logger.error("Error in getDuplicateRecords", e);
+        } finally {
+            closeResultSet(queryResponse);
+            closeStatement(queryStatement);
+        }
+        return noteDetails;
+    }
+
+
+
+    public void updateRanValue(String randomVal) {
+        PreparedStatement preparedStatement = null;
+        Connection connection = null;
+        try {
+            connection = StreetlightDaoConnection.getInstance().getConnection();
+            preparedStatement = connection.prepareStatement(
+                    "UPDATE needtoprocess SET ran = ? where  noteguid in  (select noteguid from needtoprocess where ran is null order by title limit 100);");
+            preparedStatement.setString(1,randomVal);
+            preparedStatement.executeUpdate();
+        } catch (Exception e) {
+            logger.error("Error in update", e);
+        } finally {
+            closeStatement(preparedStatement);
+        }
     }
 }

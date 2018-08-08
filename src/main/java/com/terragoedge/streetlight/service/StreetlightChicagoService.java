@@ -66,7 +66,7 @@ public class StreetlightChicagoService extends AbstractProcessor {
                     case "idOnController":
                         idOnControllerPos = pos;
                         break;
-                    case "luminaire.fixturecode":
+                    case "location.proposedcontext":
                         fixtureCodePos = pos;
                         break;
                 }

@@ -144,10 +144,19 @@ public abstract class AbstractProcessor {
             edgeNotebookName = "Group Calendar 1";
         }*/
         edgeNotebookName = edgeNotebookName.replace("Residential","").trim();
-
-        if (dimmingGroupName != null && dimmingGroupName.trim().toLowerCase().contains("acorns")) {
-            edgeNotebookName = edgeNotebookName +" Acorns";
+        logger.info("ProposedContextName :"+dimmingGroupName);
+        logger.info("DimmingGroupName :"+edgeNotebookName);
+        if(dimmingGroupName != null){
+            if(dimmingGroupName.startsWith("4") || dimmingGroupName.startsWith("13")){
+                edgeNotebookName = edgeNotebookName +" Acorns";
+            }
         }
+
+        logger.info("DimmingGroupName After:"+edgeNotebookName);
+
+       /* if (dimmingGroupName != null && dimmingGroupName.trim().toLowerCase().contains("acorns")) {
+            edgeNotebookName = edgeNotebookName +" Acorns";
+        }*/
 
 
         addStreetLightData("DimmingGroupName", edgeNotebookName, paramsList);
