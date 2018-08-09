@@ -515,4 +515,8 @@ public class StreetlightDao extends UtilDao {
             closeStatement(preparedStatement);
         }
     }
+    public List<LoggingModel> getTalqaddressDetails(){
+        List<LoggingModel> unSyncedTalqAddress = new ArrayList<>();
+        return unSyncedTalqAddress;
+    }
 }
