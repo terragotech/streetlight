@@ -24,6 +24,7 @@ public class DailyReportCSV {
 
 	private String macAddressNoteTitle;
 	private String macAddressDub;
+	private String installStatus;
 
 	public String getMacAddressDub() {
 		return macAddressDub;
@@ -165,6 +166,14 @@ public class DailyReportCSV {
 		this.isQuickNote = isQuickNote;
 	}
 
+	public String getInstallStatus() {
+		return installStatus;
+	}
+
+	public void setInstallStatus(String installStatus) {
+		this.installStatus = installStatus;
+	}
+
 	@Override
 	public String toString() {
 		return "DailyReportCSV{" +
@@ -185,6 +194,7 @@ public class DailyReportCSV {
 				", isQuickNote=" + isQuickNote +
 				", macAddressNoteTitle='" + macAddressNoteTitle + '\'' +
 				", macAddressDub='" + macAddressDub + '\'' +
+				", installStatus='" + installStatus + '\'' +
 				'}';
 	}
 

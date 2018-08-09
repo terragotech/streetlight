@@ -20,53 +20,52 @@ import com.terragoedge.streetlight.service.DailyReportCSV;
 
 public class StreetlightDao extends UtilDao {
 
-	static final Logger logger = Logger.getLogger(StreetlightDao.class);
+    static final Logger logger = Logger.getLogger(StreetlightDao.class);
 
 
-	public StreetlightDao() {
-		super();
-	}
+    public StreetlightDao() {
+        super();
+    }
 
 
-
-    private String generateSQL(){
+    private String generateSQL() {
 
         String customDate = PropertiesReader.getProperties().getProperty("amerescousa.custom.date");
-        if(customDate != null && customDate.equals("true")){
+        if (customDate != null && customDate.equals("true")) {
             StringBuilder stringBuilder = new StringBuilder();
             stringBuilder.append("select noteid,createddatetime, edgenoteview.createdby,locationdescription,title,groupname,ST_X(geometry::geometry) as lat, ST_Y(geometry::geometry) as lng  from edgenoteview where  edgenoteview.isdeleted = false and edgenoteview.iscurrent = true ");
             String startOfDay = PropertiesReader.getProperties().getProperty("amerescousa.report.from");
-            if(startOfDay != null && !startOfDay.isEmpty()){
+            if (startOfDay != null && !startOfDay.isEmpty()) {
                 stringBuilder.append("and edgenoteview.createddatetime >= ");
                 stringBuilder.append(startOfDay);
             }
 
             String endOfDay = PropertiesReader.getProperties().getProperty("amerescousa.report.to");
-            if(endOfDay != null && !endOfDay.isEmpty()){
+            if (endOfDay != null && !endOfDay.isEmpty()) {
                 stringBuilder.append(" and edgenoteview.createddatetime <= ");
                 stringBuilder.append(endOfDay);
             }
             stringBuilder.append(";");
             return stringBuilder.toString();
-        }else{
+        } else {
             Calendar calendar = Calendar.getInstance(TimeZone.getTimeZone("CST"));
             calendar.set(Calendar.HOUR_OF_DAY, 17);
             calendar.set(Calendar.MINUTE, 00);
             calendar.set(Calendar.SECOND, 00);
-            calendar.set(Calendar.DAY_OF_MONTH,calendar.get(Calendar.DAY_OF_MONTH) - 1);
+            calendar.set(Calendar.DAY_OF_MONTH, calendar.get(Calendar.DAY_OF_MONTH) - 1);
             long startOfDay = calendar.getTime().getTime();
 
-            return "select noteid  from edgenote  a, (select distinct(title),max(createddatetime) as createddatetime from edgenote where createdby != 'admin' and createddatetime >= "+startOfDay+" group by title) b where a.title = b.title and a.createddatetime = b.createddatetime;";
+            return "select noteid  from edgenote  a, (select distinct(title),max(createddatetime) as createddatetime from edgenote where createdby != 'admin' and createddatetime >= " + startOfDay + " group by title) b where a.title = b.title and a.createddatetime = b.createddatetime;";
             //return "select distinct(title), noteid, max(createddatetime) from edgenote where createdby != 'admin'  and edgenoteview.createddatetime >= "+startOfDay+" group by title;";
         }
     }
 
-	private String generateSQLQuery(String formTemplateGuid){
-      return  "select notebookname,noteid, name,description,edgenoteview.createdby,edgenoteview.groupname,locationdescription, ST_Y(geometry::geometry) Longitude, title,ST_X(geometry::geometry) Latitude, replace(replace(substring(a.formdef from 'Issue Type#(.+?)count'),'\"',''),',','') fieldreport, replace(replace(substring(a.formdef from 'Add Comment#(.+?)count'),'\"',''),',','') addcomment,edgenoteview.createddatetime from edgenoteview , edgenotebook, edgeform a where edgenoteview.notebookid = edgenotebook.notebookid and a.formtemplateguid = '"+formTemplateGuid+"' and a.edgenoteentity_noteid = edgenoteview.noteid and edgenoteview.isdeleted = 'f' and edgenoteview.iscurrent = 't';";
+    private String generateSQLQuery(String formTemplateGuid) {
+        return "select notebookname,noteid, name,description,edgenoteview.createdby,edgenoteview.groupname,locationdescription, ST_Y(geometry::geometry) Longitude, title,ST_X(geometry::geometry) Latitude, replace(replace(substring(a.formdef from 'Issue Type#(.+?)count'),'\"',''),',','') fieldreport, replace(replace(substring(a.formdef from 'Add Comment#(.+?)count'),'\"',''),',','') addcomment,edgenoteview.createddatetime from edgenoteview , edgenotebook, edgeform a where edgenoteview.notebookid = edgenotebook.notebookid and a.formtemplateguid = '" + formTemplateGuid + "' and a.edgenoteentity_noteid = edgenoteview.noteid and edgenoteview.isdeleted = 'f' and edgenoteview.iscurrent = 't';";
     }
 
-    private void generateSQLQueryForTemplate(String formTemplateGuid){
-        String query = "select replace(replace(substring(a.formdef from 'Address#(.+?)count'),'\"',''),',','') address,title, replace(replace(substring(a.formdef from 'Fixture Code#(.+?)count'),'\"',''),',','') fixturecode, replace(replace(substring(a.formdef from 'Proposed context#(.+?)count'),'\"',''),',','') proposedcontext  from edgenote, edgeform a where    a.formtemplateguid = '"+formTemplateGuid+"' and  a.edgenoteentity_noteid = edgenote.noteid and  edgenote.parentnoteid is null";
+    private void generateSQLQueryForTemplate(String formTemplateGuid) {
+        String query = "select replace(replace(substring(a.formdef from 'Address#(.+?)count'),'\"',''),',','') address,title, replace(replace(substring(a.formdef from 'Fixture Code#(.+?)count'),'\"',''),',','') fixturecode, replace(replace(substring(a.formdef from 'Proposed context#(.+?)count'),'\"',''),',','') proposedcontext  from edgenote, edgeform a where    a.formtemplateguid = '" + formTemplateGuid + "' and  a.edgenoteentity_noteid = edgenote.noteid and  edgenote.parentnoteid is null";
         Statement queryStatement = null;
         ResultSet queryResponse = null;
         try {
@@ -81,24 +80,24 @@ public class StreetlightDao extends UtilDao {
                 addressSet.setProposedContext(queryResponse.getString("proposedcontext"));
                 DataSetManager.getAddressSets().add(addressSet);
             }
-        }catch (Exception e){
+        } catch (Exception e) {
             e.printStackTrace();
-        }finally {
+        } finally {
             closeStatement(queryStatement);
             closeResultSet(queryResponse);
         }
     }
 
 
-    public void getNoteData(List<NoteData> noteDataList,List<Long> noteidList){
+    public void getNoteData(List<NoteData> noteDataList, List<Long> noteidList) {
         Statement queryStatement = null;
         ResultSet queryResponse = null;
-        try{
+        try {
 
-            String noteIds = StringUtils.join(noteidList,",");
+            String noteIds = StringUtils.join(noteidList, ",");
             queryStatement = connection.createStatement();
 
-            String sql = "select noteid,createddatetime, createdby,locationdescription,title,groupname,ST_X(geometry::geometry) as lat, ST_Y(geometry::geometry) as lng  from edgenoteview where  noteid in ("+noteIds+");";
+            String sql = "select noteid,createddatetime, createdby,locationdescription,title,groupname,ST_X(geometry::geometry) as lat, ST_Y(geometry::geometry) as lng  from edgenoteview where  noteid in (" + noteIds + ");";
 
             queryResponse = queryStatement.executeQuery(sql);
 
@@ -116,7 +115,7 @@ public class StreetlightDao extends UtilDao {
                 String locationDescription = queryResponse.getString("locationdescription");
                 String[] locations = locationDescription.split("\\|");
 
-                if(locations.length == 2){
+                if (locations.length == 2) {
                     locationDescription = locations[0];
                 }
 
@@ -129,7 +128,7 @@ public class StreetlightDao extends UtilDao {
                 noteData.setLng(String.valueOf(queryResponse.getDouble("lng")));
 
             }
-        }catch (Exception e){
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }
@@ -157,37 +156,37 @@ public class StreetlightDao extends UtilDao {
                 noteIdList.add(queryResponse.getLong("noteid"));
 
             }
-            System.out.println("Total count "+noteIdList.size());
+            System.out.println("Total count " + noteIdList.size());
             int noteIdsize = noteIdList.size();
             List<Long> noteIdLong = new ArrayList<>();
-            for(int i = 0 ; i < noteIdsize; i++){
+            for (int i = 0; i < noteIdsize; i++) {
                 noteIdLong.add(noteIdList.get(i));
-                if((i + 1) % 100 == 0){
-                    getNoteData(noteDataList,noteIdLong);
+                if ((i + 1) % 100 == 0) {
+                    getNoteData(noteDataList, noteIdLong);
                     noteIdLong.clear();
                 }
             }
 
-            if(noteIdLong.size() > 0){
-                getNoteData(noteDataList,noteIdLong);
+            if (noteIdLong.size() > 0) {
+                getNoteData(noteDataList, noteIdLong);
                 noteIdLong.clear();
             }
 
             int size = noteDataList.size();
 
-            for(int i = 0; i < size; i++){
-                NoteData noteData =  noteDataList.get(i);
+            for (int i = 0; i < size; i++) {
+                NoteData noteData = noteDataList.get(i);
                 noteIdLong.add(noteData.getNoteId());
-                if((i + 1) % 100 == 0){
-                    getFormData(noteIdLong,noteDataList);
+                if ((i + 1) % 100 == 0) {
+                    getFormData(noteIdLong, noteDataList);
                     noteIdLong.clear();
                 }
             }
-            if(noteIdLong.size() > 0){
-                getFormData(noteIdLong,noteDataList);
+            if (noteIdLong.size() > 0) {
+                getFormData(noteIdLong, noteDataList);
             }
-            System.out.println("Total count "+noteDataList.size());
-            processNoteData(noteDataList,dailyReportCSVs);
+            System.out.println("Total count " + noteDataList.size());
+            processNoteData(noteDataList, dailyReportCSVs);
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -200,28 +199,27 @@ public class StreetlightDao extends UtilDao {
     }
 
 
-
-    public void getNoteIds(List<DailyReportCSV> dailyReportCSVs,List<NoteData> noteDataList) {
+    public void getNoteIds(List<DailyReportCSV> dailyReportCSVs, List<NoteData> noteDataList) {
         Statement queryStatement = null;
         ResultSet queryResponse = null;
         try {
 
-            System.out.println("Total count "+noteDataList.size());
+            System.out.println("Total count " + noteDataList.size());
             int size = noteDataList.size();
             List<Long> noteIdLong = new ArrayList<>();
-            for(int i = 0; i < size; i++){
-                NoteData noteData =  noteDataList.get(i);
+            for (int i = 0; i < size; i++) {
+                NoteData noteData = noteDataList.get(i);
                 noteIdLong.add(noteData.getNoteId());
-                if((i + 1) % 100 == 0){
-                    getFormData(noteIdLong,noteDataList);
+                if ((i + 1) % 100 == 0) {
+                    getFormData(noteIdLong, noteDataList);
                     noteIdLong.clear();
                 }
             }
-            if(noteIdLong.size() > 0){
-                getFormData(noteIdLong,noteDataList);
+            if (noteIdLong.size() > 0) {
+                getFormData(noteIdLong, noteDataList);
             }
-            System.out.println("Total count "+noteDataList.size());
-            processInsNoteData(noteDataList,dailyReportCSVs);
+            System.out.println("Total count " + noteDataList.size());
+            processInsNoteData(noteDataList, dailyReportCSVs);
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -233,49 +231,49 @@ public class StreetlightDao extends UtilDao {
     }
 
 
-	private void processInsNoteData(List<NoteData> noteDataList,List<DailyReportCSV> dailyReportCSVs){
-       int count = 0;
-        for(NoteData noteData : noteDataList){
+    private void processInsNoteData(List<NoteData> noteDataList, List<DailyReportCSV> dailyReportCSVs) {
+        int count = 0;
+        for (NoteData noteData : noteDataList) {
             count = count + 1;
-            logger.info("Current count"+count);
+            logger.info("Current count" + count);
 
             DailyReportCSV dailyReportCSV = new DailyReportCSV();
             dailyReportCSV.setNoteTitle(noteData.getTitle());
             int pos = dailyReportCSVs.indexOf(dailyReportCSV);
 
-            if(pos != -1){
+            if (pos != -1) {
                 dailyReportCSV = dailyReportCSVs.get(pos);
             }
 
-            Map<String,List<String>> formDatas = new HashMap<>();
-            for(FormData formData : noteData.getFormDataList()){
+            Map<String, List<String>> formDatas = new HashMap<>();
+            for (FormData formData : noteData.getFormDataList()) {
                 String formTemplateGuid = formData.getFormTemplateGuid();
                 String formdef = formData.getFormDef();
-                List<String> formsList =  formDatas.get(formTemplateGuid);
-                if(formsList == null){
+                List<String> formsList = formDatas.get(formTemplateGuid);
+                if (formsList == null) {
                     formsList = new ArrayList<>();
-                    formDatas.put(formTemplateGuid,formsList);
+                    formDatas.put(formTemplateGuid, formsList);
                 }
                 formsList.add(formdef);
             }
-            processFormData(formDatas,dailyReportCSV);
+            processFormData(formDatas, dailyReportCSV);
 
 
         }
     }
 
 
-    private void processNoteData(List<NoteData> noteDataList,List<DailyReportCSV> dailyReportCSVs){
+    private void processNoteData(List<NoteData> noteDataList, List<DailyReportCSV> dailyReportCSVs) {
         int count = 0;
-        for(NoteData noteData : noteDataList){
+        for (NoteData noteData : noteDataList) {
             count = count + 1;
-            logger.info("Current count"+count);
+            logger.info("Current count" + count);
             DailyReportCSV dailyReportCSV = new DailyReportCSV();
             dailyReportCSVs.add(dailyReportCSV);
             dailyReportCSV.setContext(noteData.getDescription());
             dailyReportCSV.setFixtureType(noteData.getGroupName());
             dailyReportCSV.setNoteTitle(noteData.getTitle());
-            if(dailyReportCSV.getNoteTitle().contains("Fixture")){
+            if (dailyReportCSV.getNoteTitle().contains("Fixture")) {
                 dailyReportCSV.setQuickNote(true);
             }
             dailyReportCSV.setCreatedBy(noteData.getCreatedBy());
@@ -283,33 +281,33 @@ public class StreetlightDao extends UtilDao {
             dailyReportCSV.setLat(noteData.getLat());
             dailyReportCSV.setLng(noteData.getLng());
 
-            Map<String,List<String>> formDatas = new HashMap<>();
-            for(FormData formData : noteData.getFormDataList()){
+            Map<String, List<String>> formDatas = new HashMap<>();
+            for (FormData formData : noteData.getFormDataList()) {
                 String formTemplateGuid = formData.getFormTemplateGuid();
                 String formdef = formData.getFormDef();
-                List<String> formsList =  formDatas.get(formTemplateGuid);
-                if(formsList == null){
+                List<String> formsList = formDatas.get(formTemplateGuid);
+                if (formsList == null) {
                     formsList = new ArrayList<>();
-                    formDatas.put(formTemplateGuid,formsList);
+                    formDatas.put(formTemplateGuid, formsList);
                 }
                 formsList.add(formdef);
             }
-            processFormData(formDatas,dailyReportCSV);
+            processFormData(formDatas, dailyReportCSV);
 
 
         }
     }
 
 
-    private boolean processFormData(List<String> formsData, DailyReportCSV dailyReportCSV,boolean isInstallMaintenance) {
+    private boolean processFormData(List<String> formsData, DailyReportCSV dailyReportCSV, boolean isInstallMaintenance) {
         if (formsData != null) {
             for (String formDef : formsData) {
-                if(isInstallMaintenance){
-                    boolean result =  processInstallMaintenanceForm(formDef,dailyReportCSV);
+                if (isInstallMaintenance) {
+                    boolean result = processInstallMaintenanceForm(formDef, dailyReportCSV);
                     if (result) {
                         return result;
                     }
-                }else{
+                } else {
                     boolean result = dataLoad(formDef, dailyReportCSV);
                     if (result) {
                         return result;
@@ -322,42 +320,39 @@ public class StreetlightDao extends UtilDao {
     }
 
 
-    private void processFormData(Map<String,List<String>> formDatas,DailyReportCSV dailyReportCSV){
+    private void processFormData(Map<String, List<String>> formDatas, DailyReportCSV dailyReportCSV) {
 
-        List<String> installMaintenanceFinal =   formDatas.get("c8acc150-6228-4a27-bc7e-0fabea0e2b93");
-        boolean  isDataLoaded =  processFormData(installMaintenanceFinal,dailyReportCSV,true);
-        if(isDataLoaded){
+        List<String> installMaintenanceFinal = formDatas.get("c8acc150-6228-4a27-bc7e-0fabea0e2b93");
+        boolean isDataLoaded = processFormData(installMaintenanceFinal, dailyReportCSV, true);
+        if (isDataLoaded) {
             return;
         }
 
-        List<String> installMaintenanceUpdated =   formDatas.get("fa47c708-fb82-4877-938c-992e870ae2a4");
-        isDataLoaded =  processFormData(installMaintenanceUpdated,dailyReportCSV,true);
-        if(isDataLoaded){
+        List<String> installMaintenanceUpdated = formDatas.get("fa47c708-fb82-4877-938c-992e870ae2a4");
+        isDataLoaded = processFormData(installMaintenanceUpdated, dailyReportCSV, true);
+        if (isDataLoaded) {
             return;
         }
 
-        List<String> installMaintenanceList =   formDatas.get("8b722347-c3a7-41f4-a8a9-c35dece6f98b");
-        isDataLoaded = processFormData(installMaintenanceList,dailyReportCSV,true);
-        if(isDataLoaded){
-            return;
-        }
-
-
-        List<String> replaceList =   formDatas.get("606fb4ca-40a4-466b-ac00-7c0434f82bfa");
-        isDataLoaded =  processFormData(replaceList,dailyReportCSV,false);
-        if(isDataLoaded){
+        List<String> installMaintenanceList = formDatas.get("8b722347-c3a7-41f4-a8a9-c35dece6f98b");
+        isDataLoaded = processFormData(installMaintenanceList, dailyReportCSV, true);
+        if (isDataLoaded) {
             return;
         }
 
 
-
-
-        List<String> newInstallQRScan =   formDatas.get("0ea4f5d4-0a17-4a17-ba8f-600de1e2515f");
-        isDataLoaded =  processFormData(newInstallQRScan,dailyReportCSV,false);
-        if(isDataLoaded){
+        List<String> replaceList = formDatas.get("606fb4ca-40a4-466b-ac00-7c0434f82bfa");
+        isDataLoaded = processFormData(replaceList, dailyReportCSV, false);
+        if (isDataLoaded) {
             return;
         }
 
+
+        List<String> newInstallQRScan = formDatas.get("0ea4f5d4-0a17-4a17-ba8f-600de1e2515f");
+        isDataLoaded = processFormData(newInstallQRScan, dailyReportCSV, false);
+        if (isDataLoaded) {
+            return;
+        }
 
 
     }
@@ -371,8 +366,13 @@ public class StreetlightDao extends UtilDao {
         // Action id
         String actionValue = getValue(17, edgeFormDatas);
 
+        String installStatus = getValue(22, edgeFormDatas);
+        if (installStatus != null) {
+            dailyReportCSV.setInstallStatus(installStatus);
+        }
+
         String proposedContext = getValue(16, edgeFormDatas);
-        if(proposedContext != null ){
+        if (proposedContext != null) {
             dailyReportCSV.setContext(proposedContext);
         }
 
@@ -446,47 +446,47 @@ public class StreetlightDao extends UtilDao {
 
     }
 
-    private String getValue(int id,List<EdgeFormData> edgeFormDatas){
+    private String getValue(int id, List<EdgeFormData> edgeFormDatas) {
         EdgeFormData tempEdgeFormData = new EdgeFormData();
         tempEdgeFormData.setId(id);
         int pos = edgeFormDatas.indexOf(tempEdgeFormData);
-        if(pos != -1){
-            tempEdgeFormData =  edgeFormDatas.get(pos);
-           return tempEdgeFormData.getValue();
+        if (pos != -1) {
+            tempEdgeFormData = edgeFormDatas.get(pos);
+            return tempEdgeFormData.getValue();
         }
         return null;
     }
 
-	private boolean dataLoad(String formDef,DailyReportCSV dailyReportCSV){
+    private boolean dataLoad(String formDef, DailyReportCSV dailyReportCSV) {
         Type listType = new TypeToken<ArrayList<EdgeFormData>>() {
         }.getType();
         Gson gson = new Gson();
         List<EdgeFormData> edgeFormDatas = gson.fromJson(formDef, listType);
         boolean isDataLoad = false;
-        for(EdgeFormData edgeFormData : edgeFormDatas){
-            if(edgeFormData.getLabel() == null){
+        for (EdgeFormData edgeFormData : edgeFormDatas) {
+            if (edgeFormData.getLabel() == null) {
                 continue;
             }
-            if(edgeFormData.getLabel().equals("Fixture QR Scan")){
+            if (edgeFormData.getLabel().equals("Fixture QR Scan")) {
                 dailyReportCSV.setFixtureQrScan(edgeFormData.getValue());
-            }else if(edgeFormData.getLabel().equals("Node MAC address")){
+            } else if (edgeFormData.getLabel().equals("Node MAC address")) {
                 dailyReportCSV.setQrCode(edgeFormData.getValue());
-                if(edgeFormData.getValue() != null && !edgeFormData.getValue().trim().isEmpty()){
+                if (edgeFormData.getValue() != null && !edgeFormData.getValue().trim().isEmpty()) {
                     isDataLoad = true;
                     checkDupMacAddress(edgeFormData.getValue(), dailyReportCSV, dailyReportCSV.getNoteTitle());
                 }
-            }else if(edgeFormData.getLabel().equals("Existing Node MAC Address")){
+            } else if (edgeFormData.getLabel().equals("Existing Node MAC Address")) {
                 String val = edgeFormData.getValue();
-                if(val != null){
+                if (val != null) {
                     dailyReportCSV.setExistingNodeMACAddress(edgeFormData.getValue());
                     dailyReportCSV.setIsReplaceNode("Yes");
                 }
 
-            }else if(edgeFormData.getLabel().equals("New Node MAC Address")){
+            } else if (edgeFormData.getLabel().equals("New Node MAC Address")) {
                 String val = edgeFormData.getValue();
-                if(val != null){
+                if (val != null) {
                     dailyReportCSV.setNewNodeMACAddress(edgeFormData.getValue());
-                    if(dailyReportCSV.getNewNodeMACAddress() != null && !dailyReportCSV.getNewNodeMACAddress().isEmpty()){
+                    if (dailyReportCSV.getNewNodeMACAddress() != null && !dailyReportCSV.getNewNodeMACAddress().isEmpty()) {
                         isDataLoad = true;
                     }
 
@@ -499,28 +499,28 @@ public class StreetlightDao extends UtilDao {
     }
 
 
-    public void getFormData(List<Long> noteIds, List<NoteData> noteData){
+    public void getFormData(List<Long> noteIds, List<NoteData> noteData) {
         Statement queryStatement = null;
         ResultSet queryResponse = null;
         try {
-            String noteId = StringUtils.join(noteIds,",");
+            String noteId = StringUtils.join(noteIds, ",");
             queryStatement = connection.createStatement();
-            queryResponse = queryStatement.executeQuery("select name,formdef,formtemplateguid,edgenoteentity_noteid from edgeform where edgenoteentity_noteid in ("+noteId+");");
+            queryResponse = queryStatement.executeQuery("select name,formdef,formtemplateguid,edgenoteentity_noteid from edgeform where edgenoteentity_noteid in (" + noteId + ");");
             while (queryResponse.next()) {
-               long edgeNoteId = queryResponse.getLong("edgenoteentity_noteid");
+                long edgeNoteId = queryResponse.getLong("edgenoteentity_noteid");
                 NoteData noteData1 = new NoteData();
                 noteData1.setNoteId(edgeNoteId);
 
-               int pos =  noteData.indexOf(noteData1);
-               if(pos != -1){
-                   NoteData noteData2 =  noteData.get(pos);
-                   FormData formData = new FormData();
-                   noteData2.getFormDataList().add(formData);
+                int pos = noteData.indexOf(noteData1);
+                if (pos != -1) {
+                    NoteData noteData2 = noteData.get(pos);
+                    FormData formData = new FormData();
+                    noteData2.getFormDataList().add(formData);
 
-                   formData.setName(queryResponse.getString("name"));
-                   formData.setFormDef(queryResponse.getString("formdef"));
-                   formData.setFormTemplateGuid(queryResponse.getString("formtemplateguid"));
-               }
+                    formData.setName(queryResponse.getString("name"));
+                    formData.setFormDef(queryResponse.getString("formdef"));
+                    formData.setFormTemplateGuid(queryResponse.getString("formtemplateguid"));
+                }
 
             }
 
@@ -532,16 +532,15 @@ public class StreetlightDao extends UtilDao {
             closeStatement(queryStatement);
         }
     }
-	
-	
 
-	public void checkDupMacAddress(String macAddress,DailyReportCSV dailyReportCSV,String title){
-        Map<String,Set<String>> macAddressHolder = DataSetManager.getMacAddressHolder();
-        if(macAddress != null && !macAddress.trim().isEmpty()){
-            Set<String> noteTitle =   macAddressHolder.get(macAddress);
-            if(noteTitle != null){
+
+    public void checkDupMacAddress(String macAddress, DailyReportCSV dailyReportCSV, String title) {
+        Map<String, Set<String>> macAddressHolder = DataSetManager.getMacAddressHolder();
+        if (macAddress != null && !macAddress.trim().isEmpty()) {
+            Set<String> noteTitle = macAddressHolder.get(macAddress);
+            if (noteTitle != null) {
                 noteTitle.remove(title);
-                if(noteTitle.size() > 0){
+                if (noteTitle.size() > 0) {
                     dailyReportCSV.setMacAddressDub(macAddress);
                     String res = StringUtils.join(noteTitle, ",");
                     dailyReportCSV.setMacAddressNoteTitle(res);
@@ -569,15 +568,14 @@ public class StreetlightDao extends UtilDao {
 			closeResultSet(queryResponse);
 			closeStatement(queryStatement);
 		}*/
-	}
+    }
 
 
-
-	public MacAddressDetails processInstallMaintenance(String formTemplateGuid,String noteGuid){
-	    String query = "select replace(replace(substring(a.formdef from 'Address#(.+?)count'),'\"',''),',','') address, replace(replace(substring(a.formdef from 'Node MAC address#(.+?)count'),'\"',''),',','') nodemacaddress,  replace(replace(substring(a.formdef from 'New Node MAC Address#(.+?)count'),'\"',''),',','') newnodemacaddress,  replace(replace(substring(substring(a.formdef from(position('New Node MAC Address#' in a.formdef)+20)) from 'New Node MAC Address#(.+?)count'),'\"',''),',','') replacenewnodemacaddress  from edgenote, edgeform a where    a.formtemplateguid = '"+formTemplateGuid+"' and  a.edgenoteentity_noteid = edgenote.noteid and edgenote.isdeleted = 'f' and edgenote.iscurrent = 't' and edgenote.noteguid '"+noteGuid+"';";
+    public MacAddressDetails processInstallMaintenance(String formTemplateGuid, String noteGuid) {
+        String query = "select replace(replace(substring(a.formdef from 'Address#(.+?)count'),'\"',''),',','') address, replace(replace(substring(a.formdef from 'Node MAC address#(.+?)count'),'\"',''),',','') nodemacaddress,  replace(replace(substring(a.formdef from 'New Node MAC Address#(.+?)count'),'\"',''),',','') newnodemacaddress,  replace(replace(substring(substring(a.formdef from(position('New Node MAC Address#' in a.formdef)+20)) from 'New Node MAC Address#(.+?)count'),'\"',''),',','') replacenewnodemacaddress  from edgenote, edgeform a where    a.formtemplateguid = '" + formTemplateGuid + "' and  a.edgenoteentity_noteid = edgenote.noteid and edgenote.isdeleted = 'f' and edgenote.iscurrent = 't' and edgenote.noteguid '" + noteGuid + "';";
         Statement queryStatement = null;
         ResultSet queryResponse = null;
-        try{
+        try {
             queryStatement = connection.createStatement();
             queryResponse = queryStatement.executeQuery(query);
             while (queryResponse.next()) {
@@ -592,21 +590,21 @@ public class StreetlightDao extends UtilDao {
                 macAddressDetails.setReplaceNewNodeMacAddress(replacenewnodemacaddress);
                 return macAddressDetails;
             }
-        }catch (Exception e){
+        } catch (Exception e) {
             e.printStackTrace();
-        }finally {
+        } finally {
             closeResultSet(queryResponse);
             closeStatement(queryStatement);
         }
-        return  null;
+        return null;
     }
 
 
-    public MacAddressDetails processNewInstallQRScan(String formTemplateGuid,String noteGuid){
-        String query = "select replace(replace(substring(a.formdef from 'Address#(.+?)count'),'\"',''),',','') address, replace(replace(substring(a.formdef from 'Node MAC address#(.+?)count'),'\"',''),',','') nodemacaddress,  replace(replace(substring(a.formdef from 'New Node MAC Address#(.+?)count'),'\"',''),',','') newnodemacaddress,  replace(replace(substring(substring(a.formdef from(position('New Node MAC Address#' in a.formdef)+20)) from 'New Node MAC Address#(.+?)count'),'\"',''),',','') replacenewnodemacaddress  from edgenote, edgeform a where    a.formtemplateguid = '"+formTemplateGuid+"' and  a.edgenoteentity_noteid = edgenote.noteid and edgenote.isdeleted = 'f' and edgenote.iscurrent = 't' and edgenote.noteguid '"+noteGuid+"';";
+    public MacAddressDetails processNewInstallQRScan(String formTemplateGuid, String noteGuid) {
+        String query = "select replace(replace(substring(a.formdef from 'Address#(.+?)count'),'\"',''),',','') address, replace(replace(substring(a.formdef from 'Node MAC address#(.+?)count'),'\"',''),',','') nodemacaddress,  replace(replace(substring(a.formdef from 'New Node MAC Address#(.+?)count'),'\"',''),',','') newnodemacaddress,  replace(replace(substring(substring(a.formdef from(position('New Node MAC Address#' in a.formdef)+20)) from 'New Node MAC Address#(.+?)count'),'\"',''),',','') replacenewnodemacaddress  from edgenote, edgeform a where    a.formtemplateguid = '" + formTemplateGuid + "' and  a.edgenoteentity_noteid = edgenote.noteid and edgenote.isdeleted = 'f' and edgenote.iscurrent = 't' and edgenote.noteguid '" + noteGuid + "';";
         Statement queryStatement = null;
         ResultSet queryResponse = null;
-        try{
+        try {
             queryStatement = connection.createStatement();
             queryResponse = queryStatement.executeQuery(query);
             while (queryResponse.next()) {
@@ -621,21 +619,21 @@ public class StreetlightDao extends UtilDao {
                 macAddressDetails.setReplaceNewNodeMacAddress(replacenewnodemacaddress);
                 return macAddressDetails;
             }
-        }catch (Exception e){
+        } catch (Exception e) {
             e.printStackTrace();
-        }finally {
+        } finally {
             closeResultSet(queryResponse);
             closeStatement(queryStatement);
         }
-        return  null;
+        return null;
     }
 
-	public List<InspectionsReport> processInspectionsReport(String formTemplateGuid,List<NoteData> inspectionNoteDataList,List<DailyReportCSV> inspectionCSVList){
+    public List<InspectionsReport> processInspectionsReport(String formTemplateGuid, List<NoteData> inspectionNoteDataList, List<DailyReportCSV> inspectionCSVList) {
         DataSetManager.getAddressSets().clear();
         generateSQLQueryForTemplate(PropertiesReader.getProperties().getProperty("amrescouso.install_manintenance.formtemplate.guid"));
         generateSQLQueryForTemplate(PropertiesReader.getProperties().getProperty("amrescouso.existing_fixture.formtemplate.guid"));
-	    String query = generateSQLQuery(formTemplateGuid);
-        List<InspectionsReport> inspectionsReports  = new ArrayList<>();
+        String query = generateSQLQuery(formTemplateGuid);
+        List<InspectionsReport> inspectionsReports = new ArrayList<>();
         Statement queryStatement = null;
         ResultSet queryResponse = null;
         try {
@@ -643,29 +641,29 @@ public class StreetlightDao extends UtilDao {
             queryStatement = connection.createStatement();
             queryResponse = queryStatement.executeQuery(query);
             while (queryResponse.next()) {
-                try{
+                try {
                     InspectionsReport inspectionsReport = new InspectionsReport();
                     String groupName = queryResponse.getString("groupname");
-                    long noteid =  queryResponse.getLong("noteid");
+                    long noteid = queryResponse.getLong("noteid");
                     String title = queryResponse.getString("title");
 
-                    NoteData  noteData = new NoteData();
+                    NoteData noteData = new NoteData();
                     noteData.setNoteId(noteid);
                     noteData.setTitle(title);
 
                     inspectionNoteDataList.add(noteData);
                     String locationDescription = queryResponse.getString("locationdescription");
                     String[] locations = locationDescription.split("\\|");
-                   if(groupName != null){
-                       if(groupName.equals("Complete") || groupName.equals("Not Yet Complete") || groupName.equals("Completed")){
-                           if(locations.length == 2) {
-                               groupName = locations[1];
-                           }
-                       }
-                   }
+                    if (groupName != null) {
+                        if (groupName.equals("Complete") || groupName.equals("Not Yet Complete") || groupName.equals("Completed")) {
+                            if (locations.length == 2) {
+                                groupName = locations[1];
+                            }
+                        }
+                    }
 
                     String description = "";
-                    if(locations.length == 2){
+                    if (locations.length == 2) {
                         description = locations[0];
                     }
 
@@ -682,8 +680,8 @@ public class StreetlightDao extends UtilDao {
                     inspectionsReport.setDateModified(queryResponse.getLong("createddatetime"));
                     //int pos = getIndex(addressSetList,title);
 
-                    if(inspectionsReport.getCreatedBy() != null && inspectionsReport.getCreatedBy().equals("admin")){
-                        getCreatedBy(title,inspectionsReport);
+                    if (inspectionsReport.getCreatedBy() != null && inspectionsReport.getCreatedBy().equals("admin")) {
+                        getCreatedBy(title, inspectionsReport);
                     }
 
 
@@ -694,13 +692,13 @@ public class StreetlightDao extends UtilDao {
 
                     inspectionsReport.setIssueType(queryResponse.getString("fieldreport"));
                     inspectionsReports.add(inspectionsReport);
-                }catch (Exception e){
+                } catch (Exception e) {
                     e.printStackTrace();
                 }
             }
-        }catch (Exception e){
+        } catch (Exception e) {
             e.printStackTrace();
-        }finally {
+        } finally {
             closeResultSet(queryResponse);
             closeStatement(queryStatement);
         }
@@ -708,25 +706,24 @@ public class StreetlightDao extends UtilDao {
     }
 
 
-    public void getCreatedBy(String title,InspectionsReport inspectionsReport){
-        String query = "select createdby, createddatetime from edgenote where createdby != 'admin' and title = '"+title+"' order by createddatetime desc limit 1;";
+    public void getCreatedBy(String title, InspectionsReport inspectionsReport) {
+        String query = "select createdby, createddatetime from edgenote where createdby != 'admin' and title = '" + title + "' order by createddatetime desc limit 1;";
         Statement queryStatement = null;
         ResultSet queryResponse = null;
-        try{
+        try {
             queryStatement = connection.createStatement();
             queryResponse = queryStatement.executeQuery(query);
             while (queryResponse.next()) {
                 inspectionsReport.setCreatedBy(queryResponse.getString("createdby"));
                 inspectionsReport.setDateModified(queryResponse.getLong("createddatetime"));
             }
-        }catch (Exception e){
+        } catch (Exception e) {
             e.printStackTrace();
-        }finally {
+        } finally {
             closeResultSet(queryResponse);
             closeStatement(queryStatement);
         }
     }
-
 
 
     public int getIndex(List<AddressSet> set, String value) {
@@ -737,10 +734,10 @@ public class StreetlightDao extends UtilDao {
     }
 
 
-    public void getInstallMaintenanceMacAddress(String sql,Map<String,Set<String>> macAddressHolder){
+    public void getInstallMaintenanceMacAddress(String sql, Map<String, Set<String>> macAddressHolder) {
         Statement queryStatement = null;
         ResultSet queryResponse = null;
-        try{
+        try {
             queryStatement = connection.createStatement();
             queryResponse = queryStatement.executeQuery(sql);
             while (queryResponse.next()) {
@@ -748,82 +745,82 @@ public class StreetlightDao extends UtilDao {
                 String title = queryResponse.getString("title");
                 String newNodeMacAddress = queryResponse.getString("newnodemacaddress");
                 String newNodeMacAddressReplace = queryResponse.getString("newnodemacaddressreplace");
-                boolean res = loadMacAddress(newNodeMacAddressReplace,macAddressHolder,title);
-                if(!res){
-                    res = loadMacAddress(newNodeMacAddress,macAddressHolder,title);
+                boolean res = loadMacAddress(newNodeMacAddressReplace, macAddressHolder, title);
+                if (!res) {
+                    res = loadMacAddress(newNodeMacAddress, macAddressHolder, title);
                 }
-                if(!res){
-                    res = loadMacAddress(nodeMacAddress,macAddressHolder,title);
+                if (!res) {
+                    res = loadMacAddress(nodeMacAddress, macAddressHolder, title);
                 }
             }
-        }catch (Exception e){
+        } catch (Exception e) {
             e.printStackTrace();
-        }finally {
+        } finally {
             closeResultSet(queryResponse);
             closeStatement(queryStatement);
         }
     }
 
-    private boolean loadMacAddress(String val,Map<String,Set<String>> macAddressHolder,String title){
-	    if(val != null && !val.trim().isEmpty()){
-            Set<String>  noteNames = macAddressHolder.get(val);
-            if(noteNames == null){
+    private boolean loadMacAddress(String val, Map<String, Set<String>> macAddressHolder, String title) {
+        if (val != null && !val.trim().isEmpty()) {
+            Set<String> noteNames = macAddressHolder.get(val);
+            if (noteNames == null) {
                 noteNames = new HashSet<>();
-                macAddressHolder.put(val,noteNames);
+                macAddressHolder.put(val, noteNames);
             }
             noteNames.add(title);
             return true;
         }
-        return  false;
+        return false;
     }
 
 
-    public void getNewInstallMacAddress(String sql,Map<String,Set<String>> macAddressHolder){
+    public void getNewInstallMacAddress(String sql, Map<String, Set<String>> macAddressHolder) {
         Statement queryStatement = null;
         ResultSet queryResponse = null;
-        try{
+        try {
             queryStatement = connection.createStatement();
             queryResponse = queryStatement.executeQuery(sql);
             while (queryResponse.next()) {
                 String nodeMacAddress = queryResponse.getString("nodemacaddress");
                 String title = queryResponse.getString("title");
-                loadMacAddress(nodeMacAddress,macAddressHolder,title);
+                loadMacAddress(nodeMacAddress, macAddressHolder, title);
 
             }
-        }catch (Exception e){
+        } catch (Exception e) {
             e.printStackTrace();
-        }finally {
+        } finally {
             closeResultSet(queryResponse);
             closeStatement(queryStatement);
         }
     }
 
 
-    public void getReplaceMacAddress(String sql,Map<String,Set<String>> macAddressHolder){
+    public void getReplaceMacAddress(String sql, Map<String, Set<String>> macAddressHolder) {
         Statement queryStatement = null;
         ResultSet queryResponse = null;
-        try{
+        try {
             queryStatement = connection.createStatement();
             queryResponse = queryStatement.executeQuery(sql);
             while (queryResponse.next()) {
                 String nodeMacAddress = queryResponse.getString("newnodemacaddressreplace");
                 String title = queryResponse.getString("title");
-                loadMacAddress(nodeMacAddress,macAddressHolder,title);
+                loadMacAddress(nodeMacAddress, macAddressHolder, title);
 
             }
-        }catch (Exception e){
+        } catch (Exception e) {
             e.printStackTrace();
-        }finally {
+        } finally {
             closeResultSet(queryResponse);
             closeStatement(queryStatement);
         }
     }
 
 
-    public void getResData(Map<String,List<Long>> data,Map<String,String> edgeData){
+    public void getResData(Map<String, List<Long>> data, Map<String, String> edgeData) {
         Statement queryStatement = null;
         ResultSet queryResponse = null;
-        try{
+        try {
             String sql = "select title,createddatetime,revisionfromnoteid from edgenote where revisionfromnoteid in (select revisionfromnoteid from edgenote group by   revisionfromnoteid  having count(*) > 1);";
             queryStatement = connection.createStatement();
             queryResponse = queryStatement.executeQuery(sql);
@@ -834,19 +831,19 @@ public class StreetlightDao extends UtilDao {
                 String title = queryResponse.getString("title");
                 long createddatetime = queryResponse.getLong("createddatetime");
 
-                List<Long>  ls =  data.get(revisionfromnoteid);
-                if(ls == null){
+                List<Long> ls = data.get(revisionfromnoteid);
+                if (ls == null) {
                     ls = new ArrayList<>();
-                    data.put(revisionfromnoteid,ls);
+                    data.put(revisionfromnoteid, ls);
                 }
                 ls.add(createddatetime);
-                edgeData.put(revisionfromnoteid,title);
+                edgeData.put(revisionfromnoteid, title);
 
 
             }
-        }catch (Exception e){
+        } catch (Exception e) {
             e.printStackTrace();
-        }finally {
+        } finally {
             closeResultSet(queryResponse);
             closeStatement(queryStatement);
         }
