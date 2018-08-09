@@ -77,6 +77,20 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
         }
     }
 
+    private void sync2SlvInstallStatus(String idOnController, String controllerStrIdValue, InstallMaintenanceLogModel loggingModel){
+        List<Object> paramsList = new ArrayList<>();
+
+        paramsList.add("idOnController=" + idOnController);
+        paramsList.add("controllerStrId=" + controllerStrIdValue);
+        addStreetLightData("installStatus", "to be installed", paramsList);
+        int errorCode = setDeviceValues(paramsList);
+        logger.info("Error code"+errorCode);
+        if (errorCode != 0) {
+            loggingModel.setErrorDetails("Error while updating device value for install status.");
+            loggingModel.setStatus(MessageConstants.ERROR);
+        }
+    }
+
     private void sync2Slv(String macAddress, String fixerQrScanValue, EdgeNote edgeNote, InstallMaintenanceLogModel loggingModel, String idOnController, String controllerStrIdValue, String comment,String utilLocId, boolean isNew) {
         try {
 
@@ -156,6 +170,18 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
 
     private void processNewGroup(List<EdgeFormData> edgeFormDatas, EdgeNote edgeNote, InstallMaintenanceLogModel loggingModel, boolean isResync, LoggingModel existingFixtureInfo,String utilLocId) {
         try {
+
+            // Get Install status
+            String installStatusValue = null;
+            try {
+                installStatusValue = valueById(edgeFormDatas, 22);
+                logger.info("installStatus Val"+installStatusValue);
+            } catch (NoValueException e) {
+                logger.error("Error in while getting installStatusValue",e);
+            }
+            if(installStatusValue != null && installStatusValue.equals("Could not complete")){
+                sync2SlvInstallStatus(loggingModel.getIdOnController(), loggingModel.getControllerSrtId(), loggingModel);
+            }
 
             // Get MAC Address
             String nodeMacValue = null;
