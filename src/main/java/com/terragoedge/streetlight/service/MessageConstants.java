@@ -18,5 +18,6 @@ public class MessageConstants {
 	public static String FIXTURE_CODE_NOT_AVAILABLE ="Fixture Code is not available";
 	public static String NODE_MAC_ADDRESS_NOT_AVAILABLE ="Node MAC Address is not available.";
 	public static String ACTION_NO_VAL ="Action option is not selected.";
+	public static String COULD_NOT_COMPLETE_SUCCESS_MSG ="Note process completed due to Could not complete.";
 
 }

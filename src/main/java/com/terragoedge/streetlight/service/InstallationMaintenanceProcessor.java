@@ -79,10 +79,10 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
 
     private void sync2SlvInstallStatus(String idOnController, String controllerStrIdValue, InstallMaintenanceLogModel loggingModel){
         List<Object> paramsList = new ArrayList<>();
-
+        String installStatus = properties.getProperty("could_note_complete_install_status");
         paramsList.add("idOnController=" + idOnController);
         paramsList.add("controllerStrId=" + controllerStrIdValue);
-        addStreetLightData("installStatus", "to be installed", paramsList);
+        addStreetLightData("installStatus", installStatus, paramsList);
         int errorCode = setDeviceValues(paramsList);
         logger.info("Error code"+errorCode);
         if (errorCode != 0) {
@@ -181,6 +181,10 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
             }
             if(installStatusValue != null && installStatusValue.equals("Could not complete")){
                 sync2SlvInstallStatus(loggingModel.getIdOnController(), loggingModel.getControllerSrtId(), loggingModel);
+                loggingModel.setErrorDetails(MessageConstants.COULD_NOT_COMPLETE_SUCCESS_MSG);
+                loggingModel.setStatus(MessageConstants.SUCCESS);
+                loggingModel.setProcessOtherForm(true);
+                return;
             }
 
             // Get MAC Address
