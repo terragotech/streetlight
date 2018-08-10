@@ -1,20 +1,23 @@
 package com.terragoedge.slvinterface.model;
 
-import com.terragoedge.slvinterface.entity.EdgeNoteEntity;
 import com.terragoedge.slvinterface.entity.EdgeNoteView;
+import com.vividsolutions.jts.geom.Geometry;
+import org.wololo.geojson.Feature;
+import org.wololo.geojson.GeoJSONFactory;
+import org.wololo.jts2geojson.GeoJSONReader;
 
 public class CsvReportModel {
     int noteID;
     String idOnController;
     String latitude;
     String longitude;
-    long createddatetime;
+    String createddatetime;
     String createdBy;
     String revisionOfNoteId;
     String noteType;
     String baseParentNoteId;
-    boolean isCurrent;
-    boolean isTask;
+    String isCurrent;
+    String isTask;
     String groupName;
     String groupGuid;
     String colorName;
@@ -52,19 +55,9 @@ public class CsvReportModel {
     String oldFixtureQRScan;
     String newFixtureQRScan;
     String reasonForReplacement;
-    String issue1;
-    String dayburner;
-    String addComment1;
-    String scanExistingMACIfWrong1;
-    String reasonForRemoval;
-    String issue2;
-    String addComment2;
-    String scanExistingMACIfWrong2;
-    String issue3;
-    String last_Updated;
     String name;
     String category;
-    boolean isDelete;
+    String isDelete;
     String noteBookName;
     String locationDescription;
     String altitude;
@@ -72,21 +65,23 @@ public class CsvReportModel {
     String gpsTime;
     String locationProvider;
     String syncTime;
+    String selectedRepair;
 
     public CsvReportModel(EdgeNoteView edgeNoteView) {
         this.noteID = edgeNoteView.getNoteId();
-        this.createddatetime = edgeNoteView.getCreatedDateTime();
+        this.idOnController = edgeNoteView.getTitle();
+        this.createddatetime = String.valueOf(edgeNoteView.getCreatedDateTime());
         this.createdBy = edgeNoteView.getCreatedBy();
         this.noteType = edgeNoteView.getNotesType().toString();
         this.baseParentNoteId = edgeNoteView.getParentNoteId();
         this.revisionOfNoteId = edgeNoteView.getRevisionfromNoteID();
-        this.isCurrent = edgeNoteView.isCurrent();
-        this.isDelete = edgeNoteView.isDeleted();
+        this.isCurrent = String.valueOf(edgeNoteView.isCurrent());
+        this.isDelete = String.valueOf(edgeNoteView.isDeleted());
         this.noteGuid = edgeNoteView.getNoteGuid();
 
         //this.createdDate2 = edgeNoteEntity.get
         this.syncTime = String.valueOf(edgeNoteView.getSyncTime());
-        this.isTask = edgeNoteView.isTaskNote();
+        this.isTask = String.valueOf(edgeNoteView.isTaskNote());
         this.groupName = edgeNoteView.getGroupName();
         this.groupGuid = edgeNoteView.getGroupGuid();
         this.colorName = edgeNoteView.getColorName();
@@ -96,8 +91,18 @@ public class CsvReportModel {
         this.satellitesCount = String.valueOf(edgeNoteView.getSatellitesCount());
         this.gpsTime = edgeNoteView.getGpsTime();
         this.locationProvider = edgeNoteView.getLocationProvider();
-
-
+        try {
+            if (edgeNoteView.getGeoJson() != null) {
+                Feature feature = (Feature) GeoJSONFactory.create(edgeNoteView.getGeoJson());
+                // parse Geometry from Feature
+                GeoJSONReader reader = new GeoJSONReader();
+                Geometry geom = reader.read(feature.getGeometry());
+                this.latitude = String.valueOf(geom.getCoordinate().x);
+                this.longitude = String.valueOf(geom.getCoordinate().x);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     public int getNoteID() {
@@ -109,7 +114,7 @@ public class CsvReportModel {
     }
 
     public String getIdOnController() {
-        return idOnController;
+        return idOnController != null ? idOnController : "";
     }
 
     public void setIdOnController(String idOnController) {
@@ -125,23 +130,23 @@ public class CsvReportModel {
     }
 
     public String getLongitude() {
-        return longitude;
+        return longitude != null ? longitude : "";
     }
 
     public void setLongitude(String longitude) {
         this.longitude = longitude;
     }
 
-    public long getCreateddatetime() {
-        return createddatetime;
+    public String getCreateddatetime() {
+        return createddatetime != null ? createddatetime : "";
     }
 
-    public void setCreateddatetime(long createddatetime) {
+    public void setCreateddatetime(String createddatetime) {
         this.createddatetime = createddatetime;
     }
 
     public String getCreatedBy() {
-        return createdBy;
+        return createdBy != null ? createdBy : "";
     }
 
     public void setCreatedBy(String createdBy) {
@@ -172,24 +177,24 @@ public class CsvReportModel {
         this.baseParentNoteId = baseParentNoteId;
     }
 
-    public boolean isCurrent() {
+    public String isCurrent() {
         return isCurrent;
     }
 
-    public void setCurrent(boolean current) {
+    public void setCurrent(String current) {
         isCurrent = current;
     }
 
-    public boolean isTask() {
+    public String isTask() {
         return isTask;
     }
 
-    public void setTask(boolean task) {
+    public void setTask(String task) {
         isTask = task;
     }
 
     public String getGroupName() {
-        return groupName;
+        return groupName != null ? groupName : "";
     }
 
     public void setGroupName(String groupName) {
@@ -197,7 +202,7 @@ public class CsvReportModel {
     }
 
     public String getGroupGuid() {
-        return groupGuid;
+        return groupGuid != null ? groupGuid : "";
     }
 
     public void setGroupGuid(String groupGuid) {
@@ -205,7 +210,7 @@ public class CsvReportModel {
     }
 
     public String getColorName() {
-        return colorName;
+        return colorName != null ? colorName : "";
     }
 
     public void setColorName(String colorName) {
@@ -213,7 +218,7 @@ public class CsvReportModel {
     }
 
     public String getFormGuid() {
-        return formGuid;
+        return formGuid != null ? formGuid : "";
     }
 
     public void setFormGuid(String formGuid) {
@@ -221,7 +226,7 @@ public class CsvReportModel {
     }
 
     public String getCreatedDate2() {
-        return createdDate2;
+        return createdDate2 != null ? createdDate2 : "";
     }
 
     public void setCreatedDate2(String createdDate2) {
@@ -229,7 +234,7 @@ public class CsvReportModel {
     }
 
     public String getFormTemplateGuid() {
-        return formTemplateGuid;
+        return formTemplateGuid != null ? formTemplateGuid : "";
     }
 
     public void setFormTemplateGuid(String formTemplateGuid) {
@@ -237,7 +242,7 @@ public class CsvReportModel {
     }
 
     public String getNoteGuid() {
-        return noteGuid;
+        return noteGuid != null ? noteGuid : "";
     }
 
     public void setNoteGuid(String noteGuid) {
@@ -245,7 +250,7 @@ public class CsvReportModel {
     }
 
     public String getExistingFixtureInformation() {
-        return ExistingFixtureInformation;
+        return ExistingFixtureInformation != null ? ExistingFixtureInformation : "";
     }
 
     public void setExistingFixtureInformation(String existingFixtureInformation) {
@@ -253,7 +258,7 @@ public class CsvReportModel {
     }
 
     public String getSL() {
-        return SL;
+        return SL != null ? SL : "";
     }
 
     public void setSL(String SL) {
@@ -261,7 +266,7 @@ public class CsvReportModel {
     }
 
     public String getControllerStrId() {
-        return controllerStrId;
+        return controllerStrId != null ? controllerStrId : "";
     }
 
     public void setControllerStrId(String controllerStrId) {
@@ -269,7 +274,7 @@ public class CsvReportModel {
     }
 
     public String getGeoZoneId() {
-        return geoZoneId;
+        return geoZoneId != null ? geoZoneId : "";
     }
 
     public void setGeoZoneId(String geoZoneId) {
@@ -277,7 +282,7 @@ public class CsvReportModel {
     }
 
     public String getGhildGeoZoneId() {
-        return ghildGeoZoneId;
+        return ghildGeoZoneId != null ? ghildGeoZoneId : "";
     }
 
     public void setGhildGeoZoneId(String ghildGeoZoneId) {
@@ -285,7 +290,7 @@ public class CsvReportModel {
     }
 
     public String getAddress() {
-        return address;
+        return address != null ? address : "";
     }
 
     public void setAddress(String address) {
@@ -293,7 +298,7 @@ public class CsvReportModel {
     }
 
     public String getAtlasPhysicalPage() {
-        return atlasPhysicalPage;
+        return atlasPhysicalPage != null ? atlasPhysicalPage : "";
     }
 
     public void setAtlasPhysicalPage(String atlasPhysicalPage) {
@@ -301,7 +306,7 @@ public class CsvReportModel {
     }
 
     public String getFixtureColor() {
-        return fixtureColor;
+        return fixtureColor != null ? fixtureColor : "";
     }
 
     public void setFixtureColor(String fixtureColor) {
@@ -309,7 +314,7 @@ public class CsvReportModel {
     }
 
     public String getcDOTLampType() {
-        return cDOTLampType;
+        return cDOTLampType != null ? cDOTLampType : "";
     }
 
     public void setcDOTLampType(String cDOTLampType) {
@@ -317,7 +322,7 @@ public class CsvReportModel {
     }
 
     public String getColorCode() {
-        return colorCode;
+        return colorCode != null ? colorCode : "";
     }
 
     public void setColorCode(String colorCode) {
@@ -325,7 +330,7 @@ public class CsvReportModel {
     }
 
     public String getFixtureCode() {
-        return fixtureCode;
+        return fixtureCode != null ? fixtureCode : "";
     }
 
     public void setFixtureCode(String fixtureCode) {
@@ -333,7 +338,7 @@ public class CsvReportModel {
     }
 
     public String getMastArmAngle() {
-        return mastArmAngle;
+        return mastArmAngle != null ? mastArmAngle : "";
     }
 
     public void setMastArmAngle(String mastArmAngle) {
@@ -341,7 +346,7 @@ public class CsvReportModel {
     }
 
     public String getMastArmLength() {
-        return mastArmLength;
+        return mastArmLength != null ? mastArmLength : "";
     }
 
     public void setMastArmLength(String mastArmLength) {
@@ -349,7 +354,7 @@ public class CsvReportModel {
     }
 
     public String getMastArmsCount() {
-        return mastArmsCount;
+        return mastArmsCount != null ? mastArmsCount : "";
     }
 
     public void setMastArmsCount(String mastArmsCount) {
@@ -357,7 +362,7 @@ public class CsvReportModel {
     }
 
     public String getProposedContext() {
-        return proposedContext;
+        return proposedContext != null ? proposedContext : "";
     }
 
     public void setProposedContext(String proposedContext) {
@@ -365,7 +370,7 @@ public class CsvReportModel {
     }
 
     public String getAction() {
-        return action;
+        return action != null ? action : "";
     }
 
     public void setAction(String action) {
@@ -373,7 +378,7 @@ public class CsvReportModel {
     }
 
     public String getNodeMACAddress() {
-        return nodeMACAddress;
+        return nodeMACAddress != null ? nodeMACAddress : "";
     }
 
     public void setNodeMACAddress(String nodeMACAddress) {
@@ -381,7 +386,7 @@ public class CsvReportModel {
     }
 
     public String getFixtureQRScan1() {
-        return fixtureQRScan1;
+        return fixtureQRScan1 != null ? fixtureQRScan1 : "";
     }
 
     public void setFixtureQRScan1(String fixtureQRScan1) {
@@ -389,7 +394,7 @@ public class CsvReportModel {
     }
 
     public String getInstallStatus() {
-        return installStatus;
+        return installStatus != null ? installStatus : "";
     }
 
     public void setInstallStatus(String installStatus) {
@@ -397,7 +402,7 @@ public class CsvReportModel {
     }
 
     public String getSkippedFixtureReason() {
-        return skippedFixtureReason;
+        return skippedFixtureReason != null ? skippedFixtureReason : "";
     }
 
     public void setSkippedFixtureReason(String skippedFixtureReason) {
@@ -405,7 +410,7 @@ public class CsvReportModel {
     }
 
     public String getSkippedReason() {
-        return skippedReason;
+        return skippedReason != null ? skippedReason : "";
     }
 
     public void setSkippedReason(String skippedReason) {
@@ -413,7 +418,7 @@ public class CsvReportModel {
     }
 
     public String getRepairsAndOutages() {
-        return repairsAndOutages;
+        return repairsAndOutages != null ? repairsAndOutages : "";
     }
 
     public void setRepairsAndOutages(String repairsAndOutages) {
@@ -421,7 +426,7 @@ public class CsvReportModel {
     }
 
     public String getExistingNodeMACAddress1() {
-        return ExistingNodeMACAddress1;
+        return ExistingNodeMACAddress1 != null ? ExistingNodeMACAddress1 : "";
     }
 
     public void setExistingNodeMACAddress1(String existingNodeMACAddress1) {
@@ -429,7 +434,7 @@ public class CsvReportModel {
     }
 
     public String getNewNodeMACAddress1() {
-        return newNodeMACAddress1;
+        return newNodeMACAddress1 != null ? newNodeMACAddress1 : "";
     }
 
     public void setNewNodeMACAddress1(String newNodeMACAddress1) {
@@ -437,7 +442,7 @@ public class CsvReportModel {
     }
 
     public String getFixtureQRScan2() {
-        return fixtureQRScan2;
+        return fixtureQRScan2 != null ? fixtureQRScan2 : "";
     }
 
     public void setFixtureQRScan2(String fixtureQRScan2) {
@@ -445,7 +450,7 @@ public class CsvReportModel {
     }
 
     public String getExistingNodeMACAddress2() {
-        return ExistingNodeMACAddress2;
+        return ExistingNodeMACAddress2 != null ? ExistingNodeMACAddress2 : "";
     }
 
     public void setExistingNodeMACAddress2(String existingNodeMACAddress2) {
@@ -453,7 +458,7 @@ public class CsvReportModel {
     }
 
     public String getNewNodeMACAddress2() {
-        return NewNodeMACAddress2;
+        return NewNodeMACAddress2 != null ? NewNodeMACAddress2 : "";
     }
 
     public void setNewNodeMACAddress2(String newNodeMACAddress2) {
@@ -461,7 +466,7 @@ public class CsvReportModel {
     }
 
     public String getOldFixtureQRScan() {
-        return oldFixtureQRScan;
+        return oldFixtureQRScan != null ? oldFixtureQRScan : "";
     }
 
     public void setOldFixtureQRScan(String oldFixtureQRScan) {
@@ -469,7 +474,7 @@ public class CsvReportModel {
     }
 
     public String getNewFixtureQRScan() {
-        return newFixtureQRScan;
+        return newFixtureQRScan != null ? newFixtureQRScan : "";
     }
 
     public void setNewFixtureQRScan(String newFixtureQRScan) {
@@ -477,95 +482,15 @@ public class CsvReportModel {
     }
 
     public String getReasonForReplacement() {
-        return reasonForReplacement;
+        return reasonForReplacement != null ? reasonForReplacement : "";
     }
 
     public void setReasonForReplacement(String reasonForReplacement) {
         this.reasonForReplacement = reasonForReplacement;
     }
 
-    public String getIssue1() {
-        return issue1;
-    }
-
-    public void setIssue1(String issue1) {
-        this.issue1 = issue1;
-    }
-
-    public String getDayburner() {
-        return dayburner;
-    }
-
-    public void setDayburner(String dayburner) {
-        this.dayburner = dayburner;
-    }
-
-    public String getAddComment1() {
-        return addComment1;
-    }
-
-    public void setAddComment1(String addComment1) {
-        this.addComment1 = addComment1;
-    }
-
-    public String getScanExistingMACIfWrong1() {
-        return scanExistingMACIfWrong1;
-    }
-
-    public void setScanExistingMACIfWrong1(String scanExistingMACIfWrong1) {
-        this.scanExistingMACIfWrong1 = scanExistingMACIfWrong1;
-    }
-
-    public String getReasonForRemoval() {
-        return reasonForRemoval;
-    }
-
-    public void setReasonForRemoval(String reasonForRemoval) {
-        this.reasonForRemoval = reasonForRemoval;
-    }
-
-    public String getIssue2() {
-        return issue2;
-    }
-
-    public void setIssue2(String issue2) {
-        this.issue2 = issue2;
-    }
-
-    public String getAddComment2() {
-        return addComment2;
-    }
-
-    public void setAddComment2(String addComment2) {
-        this.addComment2 = addComment2;
-    }
-
-    public String getScanExistingMACIfWrong2() {
-        return scanExistingMACIfWrong2;
-    }
-
-    public void setScanExistingMACIfWrong2(String scanExistingMACIfWrong2) {
-        this.scanExistingMACIfWrong2 = scanExistingMACIfWrong2;
-    }
-
-    public String getIssue3() {
-        return issue3;
-    }
-
-    public void setIssue3(String issue3) {
-        this.issue3 = issue3;
-    }
-
-    public String getLast_Updated() {
-        return last_Updated;
-    }
-
-    public void setLast_Updated(String last_Updated) {
-        this.last_Updated = last_Updated;
-    }
-
     public String getName() {
-        return name;
+        return name != null ? name : "";
     }
 
     public void setName(String name) {
@@ -573,23 +498,23 @@ public class CsvReportModel {
     }
 
     public String getCategory() {
-        return category;
+        return category != null ? category : "";
     }
 
     public void setCategory(String category) {
         this.category = category;
     }
 
-    public boolean isDelete() {
+    public String isDelete() {
         return isDelete;
     }
 
-    public void setDelete(boolean delete) {
+    public void setDelete(String delete) {
         isDelete = delete;
     }
 
     public String getNoteBookName() {
-        return noteBookName;
+        return noteBookName != null ? noteBookName : "";
     }
 
     public void setNoteBookName(String noteBookName) {
@@ -597,7 +522,7 @@ public class CsvReportModel {
     }
 
     public String getLocationDescription() {
-        return locationDescription;
+        return locationDescription != null ? locationDescription : "";
     }
 
     public void setLocationDescription(String locationDescription) {
@@ -605,7 +530,7 @@ public class CsvReportModel {
     }
 
     public String getAltitude() {
-        return altitude;
+        return altitude != null ? altitude : "";
     }
 
     public void setAltitude(String altitude) {
@@ -613,7 +538,7 @@ public class CsvReportModel {
     }
 
     public String getSatellitesCount() {
-        return satellitesCount;
+        return satellitesCount != null ? satellitesCount : "";
     }
 
     public void setSatellitesCount(String satellitesCount) {
@@ -621,7 +546,7 @@ public class CsvReportModel {
     }
 
     public String getGpsTime() {
-        return gpsTime;
+        return gpsTime != null ? gpsTime : "";
     }
 
     public void setGpsTime(String gpsTime) {
@@ -629,7 +554,7 @@ public class CsvReportModel {
     }
 
     public String getLocationProvider() {
-        return locationProvider;
+        return locationProvider != null ? locationProvider : "";
     }
 
     public void setLocationProvider(String locationProvider) {
@@ -642,6 +567,14 @@ public class CsvReportModel {
 
     public void setSyncTime(String syncTime) {
         this.syncTime = syncTime;
+    }
+
+    public String getSelectedRepair() {
+        return selectedRepair;
+    }
+
+    public void setSelectedRepair(String selectedRepair) {
+        this.selectedRepair = selectedRepair;
     }
 
     @Override
@@ -695,16 +628,6 @@ public class CsvReportModel {
                 ", oldFixtureQRScan='" + oldFixtureQRScan + '\'' +
                 ", newFixtureQRScan='" + newFixtureQRScan + '\'' +
                 ", reasonForReplacement='" + reasonForReplacement + '\'' +
-                ", issue1='" + issue1 + '\'' +
-                ", dayburner='" + dayburner + '\'' +
-                ", addComment1='" + addComment1 + '\'' +
-                ", scanExistingMACIfWrong1='" + scanExistingMACIfWrong1 + '\'' +
-                ", reasonForRemoval='" + reasonForRemoval + '\'' +
-                ", issue2='" + issue2 + '\'' +
-                ", addComment2='" + addComment2 + '\'' +
-                ", scanExistingMACIfWrong2='" + scanExistingMACIfWrong2 + '\'' +
-                ", issue3='" + issue3 + '\'' +
-                ", last_Updated='" + last_Updated + '\'' +
                 ", name='" + name + '\'' +
                 ", category='" + category + '\'' +
                 ", isDelete=" + isDelete +

@@ -9,6 +9,9 @@ import com.j256.ormlite.support.ConnectionSource;
 import com.j256.ormlite.table.TableUtils;
 import com.terragoedge.slvinterface.dao.tables.SlvDevice;
 import com.terragoedge.slvinterface.dao.tables.SlvSyncDetails;
+import com.terragoedge.slvinterface.entity.EdgeFormEntity;
+import com.terragoedge.slvinterface.entity.EdgeNoteView;
+import com.terragoedge.slvinterface.entity.EdgeNotebookEntity;
 import com.terragoedge.slvinterface.enumeration.Status;
 import com.terragoedge.slvinterface.model.EdgeNote;
 
@@ -26,14 +29,20 @@ public enum ConnectionDAO {
 
     ConnectionSource connectionSource = null;
     private Dao<SlvSyncDetails, String> slvSyncDetailsDao;
+    Dao<EdgeFormEntity, String> edgeformDao;
+    private Dao<EdgeNoteView, String> edgeNoteViewDao;
+    private Dao<EdgeNotebookEntity, String> notebookDao;
     public Dao<SlvDevice, String> slvDeviceDao = null;
 
     ConnectionDAO() {
 
         try {
             connectionSource = new JdbcConnectionSource(DATABASE_URL);
-             //TableUtils.createTable(connectionSource, SlvSyncDetails.class);
+            //TableUtils.createTable(connectionSource, SlvSyncDetails.class);
             // TableUtils.createTable(connectionSource, SlvDevice.class);
+            edgeformDao = DaoManager.createDao(connectionSource, EdgeFormEntity.class);
+            notebookDao = DaoManager.createDao(connectionSource, EdgeNotebookEntity.class);
+            edgeNoteViewDao = DaoManager.createDao(connectionSource, EdgeNoteView.class);
             slvSyncDetailsDao = DaoManager.createDao(connectionSource, SlvSyncDetails.class);
             slvDeviceDao = DaoManager.createDao(connectionSource, SlvDevice.class);
 
@@ -45,6 +54,15 @@ public enum ConnectionDAO {
 
     public void setupDatabase() {
 
+    }
+
+    public EdgeNoteView getEdgeNoteView(String noteGuid) {
+        try {
+            return edgeNoteViewDao.queryBuilder().where().eq(EdgeNoteView.NOTE_GUID, noteGuid).queryForFirst();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
     }
 
     public void saveSlvDevices(SlvDevice slvDevice) {
@@ -83,7 +101,7 @@ public enum ConnectionDAO {
 
     public List<String> getEdgeNoteGuid(String formTemplateGuid) {
         try {
-            List<String> noteGuids = slvSyncDetailsDao.queryRaw("select noteguid from edgenote, edgeform where edgenote.isdeleted = false and edgenote.iscurrent = true and  edgenote.noteid =  edgeform.edgenoteentity_noteid and edgeform.formtemplateguid = '" + formTemplateGuid + "';", new RawRowMapper<String>() {
+            List<String> noteGuids = edgeNoteViewDao.queryRaw("select noteguid from edgenote,edgeform a where a.formtemplateguid='c8acc150-6228-4a27-bc7e-0fabea0e2b93' and a.formdef like '%Unable to Repair(CDOT Issue)%' and a.edgenoteentity_noteid = edgenote.noteid and edgenote.isdeleted = 'f' and edgenote.iscurrent = 't';", new RawRowMapper<String>() {
                 @Override
                 public String mapRow(String[] columnNames, String[] resultColumns) throws SQLException {
                     return resultColumns[0];
@@ -91,7 +109,7 @@ public enum ConnectionDAO {
             }).getResults();
             return noteGuids;
         } catch (Exception e) {
-            //  logger.error("Error in getNoteGuids",e);
+            e.printStackTrace();
         }
         return new ArrayList<>();
 
@@ -135,6 +153,17 @@ public enum ConnectionDAO {
 
     }
 
+    public List<EdgeFormEntity> getEdgeFormEntities(int noteId, String formTemplateGuid) {
+        try {
+            return edgeformDao.queryBuilder().where().eq(EdgeFormEntity.NOTEID, noteId).and().eq(EdgeFormEntity.FORM_TEMPLATE_GUID, formTemplateGuid).query();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return new ArrayList<>();
+
+    }
+
+
     public void updateSlvSyncdetails(SlvSyncDetails slvSyncDetails) {
         try {
             slvSyncDetailsDao.update(slvSyncDetails);
@@ -158,6 +187,14 @@ public enum ConnectionDAO {
         try {
             return slvSyncDetailsDao.queryBuilder().where().eq(SlvSyncDetails.NOTENAME, fixtureId).and().isNull(SlvSyncDetails.TALQ_ADDRESS).queryForFirst();
         } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+    public EdgeNotebookEntity getEdgeNotebookEntity(String notebookId){
+        try{
+           return notebookDao.queryBuilder().where().eq(EdgeNotebookEntity.NOTEBOOK_ID,notebookId).queryForFirst();
+        }catch (Exception e){
             e.printStackTrace();
         }
         return null;

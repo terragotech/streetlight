@@ -14,7 +14,7 @@ public class EdgeNoteView {
 	public static final String COLOR_NAME = "colorName";
 	
 	public static final String NOTE_ID = "noteId";
-	public static final String NOTE_GUID = "noteGuid";
+	public static final String NOTE_GUID = "noteguid";
 	public static final String CREATED_BY = "createdBy";
 	public static final String CREATED_DATE_TIME = "createdDateTime";
 	public static final String DESCRIPTION = "description";
@@ -22,9 +22,9 @@ public class EdgeNoteView {
 	public static final String NOTES_TYPE = "notesType";
 	public static final String RESOURCE_REF = "resourceRef";
 	public static final String REVISION_FROM_NOTE_ID = "revisionfromNoteID";
-	public static final String IS_CURRENT = "isCurrent";
+	public static final String IS_CURRENT = "iscurrent";
 	public static final String IS_TASKNOTE = "isTaskNote";
-	public static final String IS_DELETED = "isDeleted";
+	public static final String IS_DELETED = "isdeleted";
 	public static final String LOCATION_DESCRIPTION = "locationDescription";
 	public static final String PARENT_NOTE_ID = "parentNoteId";
 	public static final String EDGE_NOTEBOOK_ENTITY = "edgeNotebookEntity";
@@ -53,36 +53,36 @@ public class EdgeNoteView {
 	public static final String TAGS = "tags";
 
 	public static final String GEO_JSON = "geoJson";
-
+	@DatabaseField(columnName = "noteid")
 	private int noteId;
 	@DatabaseField(columnName = "noteguid")
 	private String noteGuid;
-	@DatabaseField(columnName = "CreatedBy")
+	@DatabaseField(columnName = "createdby")
 	private String createdBy;
-	@DatabaseField(columnName = "CreatedDateTime")
+	@DatabaseField(columnName = "createddatetime")
 	private long createdDateTime;
-	@DatabaseField(columnName = "Description")
+	@DatabaseField(columnName = "description")
 	private String description;
-	@DatabaseField(columnName= "Title")
+	@DatabaseField(columnName= "title")
 	private String title;
 
-	@DatabaseField(columnName= "Type")
+	@DatabaseField(columnName= "type")
 	private NotesType notesType;
-	@DatabaseField(columnName= "resourceRef")
+	@DatabaseField(columnName= "resourceref")
 	private String resourceRef;
-	@DatabaseField(columnName = "revisionfromNoteID")
+	@DatabaseField(columnName = "revisionfromnoteid")
 	private String revisionfromNoteID;
-	@DatabaseField(columnName= "isCurrent")
+	@DatabaseField(columnName= "iscurrent")
 	private boolean isCurrent;
-	@DatabaseField(columnName = "isTaskNote")
+	@DatabaseField(columnName = "istasknote")
 	private boolean isTaskNote;
-	@DatabaseField(columnName = "Geometry",columnDefinition = "geography")
-	private Geometry geometry;
-	@DatabaseField(columnName= "LocationDescription")
+	/*@DatabaseField(columnName = "Geometry",columnDefinition = "geography")
+	private Geometry geometry;*/
+	@DatabaseField(columnName= "locationdescription")
 	private String locationDescription;
-	@DatabaseField(columnName = "parentNoteId")
+	@DatabaseField(columnName = "parentnoteid")
 	private String parentNoteId;
-	@DatabaseField(columnName= "isDeleted")
+	@DatabaseField(columnName= "isdeleted")
 	private boolean isDeleted;
 	@DatabaseField(columnName = "oauth")
 	private String oAuth;
@@ -123,21 +123,28 @@ public class EdgeNoteView {
 	@DatabaseField(columnName= "hdop")
 	private String HDOP;
 
-	@DatabaseField(columnName= "SyncTime")
+	@DatabaseField(columnName= "synctime")
 	private Long syncTime;
 
 	@DatabaseField(columnName= "groupname")
 	private String groupName;
-	@DatabaseField(columnName = "colorName")
+	@DatabaseField(columnName = "colorname")
 	private String colorName;
 	@DatabaseField(columnName= "groupid")
 	private String groupGuid;
 
-	@DatabaseField(columnName= "tag")
 	private String tags;
 
+	@DatabaseField(columnName= "notebookid")
+	private String notebookid;
 	@DatabaseField(columnName= "geojson")
 	private String geoJson;
+/*
+
+	@DatabaseField(columnName = "noteid", foreignAutoRefresh = true, foreign = true)
+	private List<EdgeFormEntity> forms;
+*/
+
 	public String getNoteGuid() {
 		return noteGuid;
 	}
@@ -257,6 +264,7 @@ public class EdgeNoteView {
 	public void setTaskNote(boolean taskNote) {
 		isTaskNote = taskNote;
 	}
+/*
 
 	public Geometry getGeometry() {
 		return geometry;
@@ -265,6 +273,7 @@ public class EdgeNoteView {
 	public void setGeometry(Geometry geometry) {
 		this.geometry = geometry;
 	}
+*/
 
 	public String getLocationDescription() {
 		return locationDescription;
@@ -440,6 +449,14 @@ public class EdgeNoteView {
 
 	public void setTags(String tags) {
 		this.tags = tags;
+	}
+
+	public String getNotebookid() {
+		return notebookid;
+	}
+
+	public void setNotebookid(String notebookid) {
+		this.notebookid = notebookid;
 	}
 
 	@Override

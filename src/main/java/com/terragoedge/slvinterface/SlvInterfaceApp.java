@@ -4,6 +4,7 @@ import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import com.terragoedge.slvinterface.json.slvInterface.ConfigurationJson;
 import com.terragoedge.slvinterface.service.AbstractSlvService;
+import com.terragoedge.slvinterface.service.AmerescoReportService;
 import com.terragoedge.slvinterface.service.SlvInterfaceService;
 import com.terragoedge.slvinterface.utils.PropertiesReader;
 import org.springframework.context.ApplicationContext;
@@ -18,8 +19,10 @@ public class SlvInterfaceApp extends AbstractSlvService {
     public static List<ConfigurationJson> configurationJsons = new ArrayList<>();
 
     public static void main(String[] args) {
+        AmerescoReportService amerescoReportService = new AmerescoReportService();
+        amerescoReportService.start();
 
-
+/*
         while (true) {
             try {
                 SlvInterfaceService slvInterfaceService = new SlvInterfaceService();
@@ -29,6 +32,7 @@ public class SlvInterfaceApp extends AbstractSlvService {
                 e.printStackTrace();
             }
         }
+*/
        /* try {
             ApplicationContext context = new ClassPathXmlApplicationContext("schedulepropertiesconfig.xml");
             System.out.println("tested");
