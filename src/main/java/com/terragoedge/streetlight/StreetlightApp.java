@@ -19,15 +19,17 @@ public class StreetlightApp {
 
 		while (true){
 		    try{
-               StreetlightChicagoService streetlightChicagoService = new StreetlightChicagoService();
-                streetlightChicagoService.run();
+		        TalkAddressService talkAddressService = new TalkAddressService();
+		        talkAddressService.getTalqAddress();
+              // StreetlightChicagoService streetlightChicagoService = new StreetlightChicagoService();
+              //  streetlightChicagoService.run();
                 Thread.sleep(10000);
+                break;
             }catch (Exception e){
 		        e.printStackTrace();
             }
         }
 
 	}
-	public void loadConfigurationJson(){}
 
 }

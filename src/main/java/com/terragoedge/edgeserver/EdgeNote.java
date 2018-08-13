@@ -2,14 +2,13 @@ package com.terragoedge.edgeserver;
 
 import java.lang.reflect.Type;
 import java.util.ArrayList;
-import java.util.Dictionary;
 import java.util.List;
 
 import javax.annotation.Resources;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
-
+import com.terragoedge.streetlight.json.model.Dictionary;
 
 
 public class EdgeNote {
@@ -42,7 +41,7 @@ public class EdgeNote {
 	private String sourceType = null;
 
 	private String altitudeAccuracy = null;
-
+	private List<Dictionary> dictionary = new ArrayList<Dictionary>();
 	private Long syncTime=null;
 
 private EdgeNotebook edgeNotebook = null;
@@ -93,7 +92,26 @@ private EdgeNotebook edgeNotebook = null;
 		return formData;
 	}
 
-	
+
+	public void setFormData(List<FormData> formData) {
+		this.formData = formData;
+	}
+
+	public Boolean getTaskNote() {
+		return isTaskNote;
+	}
+
+	public void setTaskNote(Boolean taskNote) {
+		isTaskNote = taskNote;
+	}
+
+	public List<Dictionary> getDictionary() {
+		return dictionary;
+	}
+
+	public void setDictionary(List<Dictionary> dictionary) {
+		this.dictionary = dictionary;
+	}
 
 	public Integer getSatellitesCount() {
 		return satellitesCount;

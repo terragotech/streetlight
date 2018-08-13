@@ -515,8 +515,26 @@ public class StreetlightDao extends UtilDao {
             closeStatement(preparedStatement);
         }
     }
-    public List<LoggingModel> getTalqaddressDetails(){
+   /* public List<LoggingModel> getTalqaddressDetails(){
         List<LoggingModel> unSyncedTalqAddress = new ArrayList<>();
         return unSyncedTalqAddress;
+    }*/
+    public List<LoggingModel> getTalqaddressDetails(long yesterdayAsMilli) {
+        Statement queryStatement = null;
+        ResultSet queryResponse = null;
+        List<LoggingModel> loggingModelList = new ArrayList<>();
+        try {
+            queryStatement = connection.createStatement();
+            queryResponse = queryStatement.executeQuery("Select distinct(notename) from notesyncdetails where talqaddress is null and synctime < "+yesterdayAsMilli+";");
+            while (queryResponse.next()) {
+                LoggingModel loggingModel = new LoggingModel();
+                loggingModel.setNoteName(queryResponse.getString("notename"));
+                loggingModelList.add(loggingModel);
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return loggingModelList;
     }
 }

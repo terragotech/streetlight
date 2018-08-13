@@ -19,6 +19,7 @@ public class AbstractService {
     private Gson gson;
     private Logger logger = Logger.getLogger(AbstractService.class);
     private JsonParser jsonParser;
+
     public AbstractService() {
         gson = new Gson();
         jsonParser = new JsonParser();
@@ -29,10 +30,10 @@ public class AbstractService {
         HttpHeaders headers = getHeaders(null);
 
         HttpEntity request = null;
-        if(body != null){
+        if (body != null) {
             headers.add("Content-Type", "application/json");
             request = new HttpEntity<String>(body, headers);
-        }else{
+        } else {
             request = new HttpEntity<>(headers);
         }
 
@@ -47,10 +48,10 @@ public class AbstractService {
         String userName = null;
         String password = null;
         HttpHeaders headers = new HttpHeaders();
-        if(accessToken != null){
-            headers.add("Authorization",  "Bearer "+accessToken);
+        if (accessToken != null) {
+            headers.add("Authorization", "Bearer " + accessToken);
             return headers;
-        }else{
+        } else {
             userName = "admin";
             password = "admin";
         }
@@ -65,17 +66,46 @@ public class AbstractService {
     }
 
     protected ResponseEntity<String> getNoteDetails(String baseUrl, String noteGuid) {
-        String urlNew =  baseUrl + "/rest/notes/" + noteGuid;
-        return  serverCall(urlNew,HttpMethod.GET,null);
+        String urlNew = baseUrl + "/rest/notes?search=" + noteGuid;
+        return serverCall(urlNew, HttpMethod.GET, null);
     }
-    public ResponseEntity<String> updateNoteDetails(String noteDetails, String noteGuid, String notebookGuid,String baseUrl) {
+
+    protected String geTalqNoteDetails(String baseUrl, String noteName) {
+        try {
+            String urlNew = baseUrl + "/rest/notes/" + noteName;
+
+            //  String urlNew = baseUrl + "/rest/notes?search=" + noteName;
+            logger.info("Url to get Note Details:" + urlNew);
+            ResponseEntity<String> responseEntity = serverCall(urlNew, HttpMethod.GET, null);
+            if (responseEntity.getStatusCode().is2xxSuccessful()) {
+                String response = responseEntity.getBody();
+                logger.info("----------Response-------");
+                logger.info(response);
+                return response;
+            }
+        } catch (Exception e) {
+            logger.error("Error in getNoteDetails", e);
+        }
+        return null;
+    }
+
+    public ResponseEntity<String> updateNoteDetails(String noteDetails, String noteGuid, String notebookGuid, String baseUrl) {
         String urlNew = baseUrl + "/rest/notebooks/" + notebookGuid + "/notes/" + noteGuid;
-        return serverCall(urlNew,HttpMethod.PUT,noteDetails);
+        return serverCall(urlNew, HttpMethod.PUT, noteDetails);
     }
-    protected List<EdgeFormData> getEdgeFormData(String data){
-        List<EdgeFormData> edgeFormDatas = gson.fromJson(data, new TypeToken<List<EdgeFormData>>() {
-        }.getType());
-        return edgeFormDatas;
+
+    protected List<EdgeFormData> getEdgeFormData(String data) {
+        try {
+            List<EdgeFormData> edgeFormDatas = gson.fromJson(data, new TypeToken<List<EdgeFormData>>() {
+            }.getType());
+            return edgeFormDatas;
+        } catch (Exception e) {
+            data = data.substring(1, data.length() - 1);
+            List<EdgeFormData> edgeFormDatas = gson.fromJson(data, new TypeToken<List<EdgeFormData>>() {
+            }.getType());
+            return edgeFormDatas;
+        }
+
     }
 
     protected void updateServer(String edgeNoteJson, String notebookGuid, String noteguid, String url) {
@@ -83,18 +113,19 @@ public class AbstractService {
         if (noteUpdateresponse.getStatusCode().is2xxSuccessful()) {
             String notesResponse = noteUpdateresponse.getBody();
             System.out.println(notesResponse);
-            logger.info(noteguid+" note updated to server");
+            logger.info(noteguid + " note updated to server");
         } else {
-            logger.error(noteguid+" Error while sending server.");
+            logger.error(noteguid + " Error while sending server.");
 //            throw new WorkFlowException("Error while sending server.");
         }
 
     }
-    protected String createNotebook(String baseUrl, FullEdgeNotebook edgeNotebook){
-    String notebookJson = gson.toJson(edgeNotebook);
-    String notebookUrl = baseUrl+"/rest/notebooks";
-    ResponseEntity<String> responseEntity = serverCall(notebookUrl,HttpMethod.POST,notebookJson);
-        if(responseEntity != null && responseEntity.getStatusCodeValue() == HttpStatus.CREATED.value()) {
+
+    protected String createNotebook(String baseUrl, FullEdgeNotebook edgeNotebook) {
+        String notebookJson = gson.toJson(edgeNotebook);
+        String notebookUrl = baseUrl + "/rest/notebooks";
+        ResponseEntity<String> responseEntity = serverCall(notebookUrl, HttpMethod.POST, notebookJson);
+        if (responseEntity != null && responseEntity.getStatusCodeValue() == HttpStatus.CREATED.value()) {
             String notebookGuidJson = responseEntity.getBody();
             JsonObject jsonObject = (JsonObject) jsonParser.parse(notebookGuidJson);
             return jsonObject.get("notebookGuid").getAsString();
