@@ -2,7 +2,77 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="f904f44b-f6bd-48bf-b34b-13f1d328cd66" name="Default" comment="">
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/terragoedge/streetlight/service/StreetlightChicagoService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/terragoedge/streetlight/service/StreetlightChicagoService.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/compiler.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/encodings.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/libraries/Maven__com_google_code_gson_gson_2_8_0.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/libraries/Maven__commons_codec_commons_codec_1_10.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/libraries/Maven__commons_io_commons_io_2_4.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/libraries/Maven__commons_logging_commons_logging_1_2.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/libraries/Maven__javax_activation_activation_1_1.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/libraries/Maven__javax_mail_mail_1_4_7.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/libraries/Maven__log4j_log4j_1_2_17.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/libraries/Maven__org_apache_commons_commons_lang3_3_5.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/libraries/Maven__org_postgresql_postgresql_42_1_1_jre6.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/libraries/Maven__org_springframework_spring_aop_4_3_6_RELEASE.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/libraries/Maven__org_springframework_spring_beans_4_3_6_RELEASE.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/libraries/Maven__org_springframework_spring_context_4_3_6_RELEASE.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/libraries/Maven__org_springframework_spring_core_4_3_6_RELEASE.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/libraries/Maven__org_springframework_spring_expression_4_3_6_RELEASE.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/libraries/Maven__org_springframework_spring_web_4_3_6_RELEASE.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/modules.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/terragoedge/streetlight/exception/NotesNotFoundException.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/terragoedge/streetlight/json/model/Dictionary.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/terragoedge/edgeserver/EdgeNote.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/terragoedge/edgeserver/EdgeNote.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/terragoedge/streetlight/PropertiesReader.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/terragoedge/streetlight/PropertiesReader.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/terragoedge/streetlight/StreetlightApp.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/terragoedge/streetlight/StreetlightApp.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/terragoedge/streetlight/StreetlightDaoConnection.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/terragoedge/streetlight/StreetlightDaoConnection.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/terragoedge/streetlight/dao/StreetlightDao.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/terragoedge/streetlight/dao/StreetlightDao.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/terragoedge/streetlight/service/AbstractService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/terragoedge/streetlight/service/AbstractService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/terragoedge/streetlight/service/TalkAddressService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/terragoedge/streetlight/service/TalkAddressService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/main.properties" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/main.properties" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/Block_27.json" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/META-INF/MANIFEST.MF" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/META-INF/maven/com.terragoedge/streetlight/pom.properties" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/META-INF/maven/com.terragoedge/streetlight/pom.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/Richmond.json" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/terragoedge/edgeserver/ArithmeticOperator.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/com/terragoedge/edgeserver/ArithmeticOperator.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/terragoedge/edgeserver/CalculationDefinition.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/com/terragoedge/edgeserver/CalculationDefinition.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/terragoedge/edgeserver/CalculationNode.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/com/terragoedge/edgeserver/CalculationNode.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/terragoedge/edgeserver/ComponentType.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/com/terragoedge/edgeserver/ComponentType.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/terragoedge/edgeserver/ConditionCollection.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/com/terragoedge/edgeserver/ConditionCollection.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/terragoedge/edgeserver/Conditions.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/com/terragoedge/edgeserver/Conditions.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/terragoedge/edgeserver/EdgeFormData.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/com/terragoedge/edgeserver/EdgeFormData.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/terragoedge/edgeserver/EdgeFormFields.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/com/terragoedge/edgeserver/EdgeFormFields.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/terragoedge/edgeserver/LogicalOperator.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/com/terragoedge/edgeserver/LogicalOperator.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/terragoedge/edgeserver/NotesType.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/com/terragoedge/edgeserver/NotesType.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/terragoedge/edgeserver/Occurences.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/com/terragoedge/edgeserver/Occurences.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/terragoedge/edgeserver/SimpleCalculation.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/com/terragoedge/edgeserver/SimpleCalculation.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/terragoedge/streetlight/App.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/terragoedge/streetlight/FormValue.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/terragoedge/streetlight/PropertiesReader.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/com/terragoedge/streetlight/PropertiesReader.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/terragoedge/streetlight/StreetLightDao$1.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/terragoedge/streetlight/StreetLightDao$2.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/terragoedge/streetlight/StreetLightDao.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/terragoedge/streetlight/StreetLightData.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/terragoedge/streetlight/StreetLightService$1.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/terragoedge/streetlight/StreetLightService$2.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/terragoedge/streetlight/StreetLightService.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/terragoedge/xml/devices/ObjectFactory.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/terragoedge/xml/devices/Properties.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/terragoedge/xml/devices/SLVDevice.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/terragoedge/xml/devices/SLVDeviceArray.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/terragoedge/xml/devices/SLVKeyValuePair.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/terragoedge/xml/devices/Value.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/com/terragoedge/xml/parser/XMLMarshaller.class" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/log4j.properties" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/log4j.properties" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/main.properties" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/main.properties" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/mapping.json" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/maven-status/maven-compiler-plugin/compile/default-compile/createdFiles.lst" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/maven-status/maven-compiler-plugin/compile/default-compile/inputFiles.lst" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/test-classes/com/terragoedge/streetlight/AppTest.class" beforeDir="false" />
     </list>
     <ignored path="$PROJECT_DIR$/target/" />
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
@@ -13,49 +83,61 @@
     <option name="LAST_RESOLUTION" value="IGNORE" />
   </component>
   <component name="FileEditorManager">
-    <leaf>
-      <file leaf-file-name="StreetlightApp.java" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/src/main/java/com/terragoedge/streetlight/StreetlightApp.java">
+    <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
+      <file leaf-file-name="TalkAddressService.java" pinned="false" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/src/main/java/com/terragoedge/streetlight/service/TalkAddressService.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="210">
-              <caret line="14" column="43" lean-forward="true" selection-start-line="14" selection-start-column="43" selection-end-line="14" selection-end-column="43" />
+            <state relative-caret-position="91">
+              <caret line="92" selection-start-line="92" selection-end-line="92" />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="EdgeNote.java" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/src/main/java/com/terragoedge/edgeserver/EdgeNote.java">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="150">
+              <caret line="307" selection-start-line="307" selection-end-line="307" />
               <folding>
                 <element signature="imports" expanded="true" />
+                <element signature="e#2288#2289#0" expanded="true" />
+                <element signature="e#2319#2320#0" expanded="true" />
+                <element signature="e#2352#2353#0" expanded="true" />
+                <element signature="e#2376#2377#0" expanded="true" />
+                <element signature="e#2422#2423#0" expanded="true" />
+                <element signature="e#2450#2451#0" expanded="true" />
+                <element signature="e#2494#2495#0" expanded="true" />
+                <element signature="e#2518#2519#0" expanded="true" />
+                <element signature="e#2577#2578#0" expanded="true" />
+                <element signature="e#2612#2613#0" expanded="true" />
               </folding>
             </state>
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="StreetlightChicagoService.java" pinned="false" current-in-tab="true">
-        <entry file="file://$PROJECT_DIR$/src/main/java/com/terragoedge/streetlight/service/StreetlightChicagoService.java">
+      <file leaf-file-name="AbstractService.java" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/src/main/java/com/terragoedge/streetlight/service/AbstractService.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="404">
-              <caret line="869" column="27" lean-forward="true" selection-start-line="869" selection-start-column="27" selection-end-line="869" selection-end-column="27" />
-              <folding>
-                <element signature="e#7481#7489#0" expanded="true" />
-                <element signature="e#14512#14520#0" expanded="true" />
-                <element signature="e#16563#16571#0" expanded="true" />
-                <element signature="e#25762#25770#0" expanded="true" />
-                <element signature="e#34484#34492#0" expanded="true" />
-              </folding>
+            <state relative-caret-position="65">
+              <caret line="95" lean-forward="true" selection-start-line="95" selection-end-line="95" />
             </state>
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="MessageConstants.java" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/src/main/java/com/terragoedge/streetlight/service/MessageConstants.java">
+      <file leaf-file-name="StreetlightDao.java" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/src/main/java/com/terragoedge/streetlight/dao/StreetlightDao.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="75">
-              <caret line="5" column="25" selection-start-line="5" selection-start-column="25" selection-end-line="5" selection-end-column="25" />
+            <state relative-caret-position="286">
+              <caret line="532" column="13" selection-start-line="532" selection-start-column="13" selection-end-line="532" selection-end-column="13" />
             </state>
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="pom.xml" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/pom.xml">
+      <file leaf-file-name="LoggingModel.java" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/src/main/java/com/terragoedge/streetlight/logging/LoggingModel.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="-217">
-              <caret line="47" selection-start-line="47" selection-end-line="47" />
+            <state relative-caret-position="150">
+              <caret line="44" column="26" selection-start-line="44" selection-start-column="16" selection-end-line="44" selection-end-column="34" />
             </state>
           </provider>
         </entry>
@@ -74,6 +156,9 @@
       <find>edgeMailService</find>
       <find>QRCodeAlreadyUsedException</find>
       <find>setDeviceValues</find>
+      <find>setEdgeNoteLayer</find>
+      <find>yester</find>
+      <find>geTalqNoteDetails</find>
     </findStrings>
   </component>
   <component name="Git.Settings">
@@ -86,6 +171,15 @@
         <option value="$PROJECT_DIR$/src/main/java/com/terragoedge/install/StreetLightInstallService.java" />
         <option value="$PROJECT_DIR$/pom.xml" />
         <option value="$PROJECT_DIR$/src/main/java/com/terragoedge/streetlight/service/StreetlightChicagoService.java" />
+        <option value="$PROJECT_DIR$/src/main/java/com/terragoedge/streetlight/StreetlightApp.java" />
+        <option value="$PROJECT_DIR$/src/main/java/com/terragoedge/streetlight/PropertiesReader.java" />
+        <option value="$PROJECT_DIR$/src/main/java/com/terragoedge/streetlight/StreetlightDaoConnection.java" />
+        <option value="$PROJECT_DIR$/src/main/java/com/terragoedge/streetlight/dao/StreetlightDao.java" />
+        <option value="$PROJECT_DIR$/src/main/java/com/terragoedge/streetlight/json/model/Dictionary.java" />
+        <option value="$PROJECT_DIR$/src/main/java/com/terragoedge/edgeserver/EdgeNote.java" />
+        <option value="$PROJECT_DIR$/src/main/resources/main.properties" />
+        <option value="$PROJECT_DIR$/src/main/java/com/terragoedge/streetlight/service/TalkAddressService.java" />
+        <option value="$PROJECT_DIR$/src/main/java/com/terragoedge/streetlight/service/AbstractService.java" />
       </list>
     </option>
   </component>
@@ -107,16 +201,6 @@
           <item name="streetlight" type="9519ce18:MavenProjectsStructure$ProjectNode" />
           <item name="Lifecycle" type="58874e2:MavenProjectsStructure$LifecycleNode" />
         </path>
-        <path>
-          <item name="" type="16c1761:MavenProjectsStructure$RootNode" />
-          <item name="streetlight" type="9519ce18:MavenProjectsStructure$ProjectNode" />
-          <item name="Plugins" type="7aea1407:MavenProjectsStructure$PluginsNode" />
-        </path>
-        <path>
-          <item name="" type="16c1761:MavenProjectsStructure$RootNode" />
-          <item name="streetlight" type="9519ce18:MavenProjectsStructure$ProjectNode" />
-          <item name="Dependencies" type="f4be9f2a:MavenProjectsStructure$DependenciesNode" />
-        </path>
       </expand>
       <select />
     </treeState>
@@ -124,10 +208,11 @@
   <component name="NodePackageJsonFileManager">
     <packageJsonPaths />
   </component>
-  <component name="ProjectFrameBounds">
+  <component name="ProjectFrameBounds" extendedState="6">
+    <option name="x" value="2" />
     <option name="y" value="23" />
-    <option name="width" value="1280" />
-    <option name="height" value="712" />
+    <option name="width" value="1268" />
+    <option name="height" value="726" />
   </component>
   <component name="ProjectLevelVcsManager" settingsEditedManually="true" />
   <component name="ProjectView">
@@ -141,11 +226,6 @@
             <path>
               <item name="streetlight" type="b2602c69:ProjectViewProjectNode" />
               <item name="streetlight" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="streetlight" type="b2602c69:ProjectViewProjectNode" />
-              <item name="streetlight" type="462c0819:PsiDirectoryNode" />
-              <item name="lib" type="462c0819:PsiDirectoryNode" />
             </path>
             <path>
               <item name="streetlight" type="b2602c69:ProjectViewProjectNode" />
@@ -200,19 +280,32 @@
               <item name="java" type="462c0819:PsiDirectoryNode" />
               <item name="terragoedge" type="462c0819:PsiDirectoryNode" />
               <item name="streetlight" type="462c0819:PsiDirectoryNode" />
+              <item name="model" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="streetlight" type="b2602c69:ProjectViewProjectNode" />
+              <item name="streetlight" type="462c0819:PsiDirectoryNode" />
+              <item name="src" type="462c0819:PsiDirectoryNode" />
+              <item name="main" type="462c0819:PsiDirectoryNode" />
+              <item name="java" type="462c0819:PsiDirectoryNode" />
+              <item name="terragoedge" type="462c0819:PsiDirectoryNode" />
+              <item name="streetlight" type="462c0819:PsiDirectoryNode" />
               <item name="service" type="462c0819:PsiDirectoryNode" />
             </path>
             <path>
               <item name="streetlight" type="b2602c69:ProjectViewProjectNode" />
               <item name="streetlight" type="462c0819:PsiDirectoryNode" />
-              <item name="target" type="462c0819:PsiDirectoryNode" />
+              <item name="src" type="462c0819:PsiDirectoryNode" />
+              <item name="main" type="462c0819:PsiDirectoryNode" />
+              <item name="resources" type="462c0819:PsiDirectoryNode" />
             </path>
           </expand>
           <select />
         </subPane>
       </pane>
-      <pane id="PackagesPane" />
       <pane id="Scope" />
+      <pane id="PackagesPane" />
+      <pane id="AndroidView" />
     </panes>
   </component>
   <component name="PropertiesComponent">
@@ -221,10 +314,15 @@
     <property name="last_opened_file_path" value="$PROJECT_DIR$/pom.xml" />
     <property name="nodejs_interpreter_path.stuck_in_default_project" value="undefined stuck path" />
     <property name="nodejs_npm_path_reset_for_default_project" value="true" />
-    <property name="project.structure.last.edited" value="Modules" />
+    <property name="project.structure.last.edited" value="Project" />
     <property name="project.structure.proportion" value="0.15" />
     <property name="project.structure.side.proportion" value="0.2" />
     <property name="settings.editor.selected.configurable" value="project.propCompiler" />
+  </component>
+  <component name="RecentsManager">
+    <key name="CopyClassDialog.RECENTS_KEY">
+      <recent name="com.terragoedge.streetlight.exception" />
+    </key>
   </component>
   <component name="RunDashboard">
     <option name="ruleStates">
@@ -239,6 +337,11 @@
     </option>
   </component>
   <component name="RunManager">
+    <configuration name="Unnamed" type="Application" factoryName="Application">
+      <option name="MAIN_CLASS_NAME" value="com.terragoedge.streetlight.StreetlightApp" />
+      <module name="streetlight" />
+      <option name="WORKING_DIRECTORY" value="file://$PROJECT_DIR$" />
+    </configuration>
     <configuration default="true" type="Application" factoryName="Application">
       <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
     </configuration>
@@ -257,6 +360,16 @@
         <value defaultName="singleModule" />
       </option>
       <patterns />
+    </configuration>
+    <configuration default="true" type="JetRunConfigurationType" factoryName="Kotlin">
+      <option name="VM_PARAMETERS" />
+      <option name="PROGRAM_PARAMETERS" />
+      <option name="ALTERNATIVE_JRE_PATH_ENABLED" value="false" />
+      <option name="ALTERNATIVE_JRE_PATH" />
+      <option name="PASS_PARENT_ENVS" value="true" />
+      <option name="MAIN_CLASS_NAME" />
+      <option name="WORKING_DIRECTORY" />
+      <module name="" />
     </configuration>
     <configuration default="true" type="TestNG" factoryName="TestNG">
       <option name="ALTERNATIVE_JRE_PATH_ENABLED" value="false" />
@@ -281,6 +394,9 @@
       <listeners />
     </configuration>
   </component>
+  <component name="SvnConfiguration">
+    <configuration />
+  </component>
   <component name="TaskManager">
     <task active="true" id="Default" summary="Default task">
       <changelist id="f904f44b-f6bd-48bf-b34b-13f1d328cd66" name="Default" comment="" />
@@ -289,65 +405,71 @@
       <option name="presentableId" value="Default" />
       <updated>1524648254388</updated>
       <workItem from="1524648255988" duration="7897000" />
+      <workItem from="1533905065521" duration="4380000" />
+      <workItem from="1534146465721" duration="18665000" />
     </task>
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="7897000" />
+    <option name="totallyTimeSpent" value="32008000" />
   </component>
   <component name="ToolWindowManager">
-    <frame x="0" y="23" width="1280" height="712" extended-state="0" />
+    <frame x="-8" y="-8" width="1382" height="744" extended-state="6" />
     <editor active="true" />
     <layout>
-      <window_info anchor="right" id="Palette" />
       <window_info anchor="bottom" id="TODO" order="6" />
-      <window_info anchor="bottom" id="Messages" weight="0.09404389" />
-      <window_info anchor="right" id="Palette&#9;" />
-      <window_info anchor="bottom" id="Event Log" side_tool="true" />
-      <window_info anchor="right" id="Maven Projects" weight="0.025848143" />
-      <window_info anchor="bottom" id="Database Changes" show_stripe_button="false" />
-      <window_info anchor="bottom" id="Run" order="2" weight="0.37886178" />
-      <window_info anchor="bottom" id="Version Control" />
-      <window_info anchor="bottom" id="Spring" />
-      <window_info anchor="bottom" id="Terminal" />
-      <window_info id="Designer" />
-      <window_info content_ui="combo" id="Project" order="0" weight="0.28432956" />
-      <window_info anchor="right" id="Database" />
-      <window_info anchor="bottom" id="Find" order="1" weight="0.045528457" />
+      <window_info anchor="bottom" id="Messages" order="12" weight="0.09337861" />
+      <window_info anchor="right" id="Palette&#9;" order="8" />
+      <window_info id="Image Layers" order="2" />
+      <window_info anchor="right" id="Capture Analysis" order="3" />
+      <window_info anchor="bottom" id="Event Log" order="12" side_tool="true" />
+      <window_info anchor="right" id="Maven Projects" order="8" visible="true" weight="0.13086233" />
+      <window_info anchor="bottom" id="Database Changes" order="12" show_stripe_button="false" />
+      <window_info anchor="bottom" id="Version Control" order="12" />
+      <window_info anchor="bottom" id="Run" order="2" weight="0.3786078" />
+      <window_info anchor="bottom" id="Spring" order="7" />
+      <window_info anchor="bottom" id="Terminal" order="12" />
+      <window_info id="Capture Tool" order="2" />
+      <window_info id="Designer" order="7" />
+      <window_info content_ui="combo" id="Project" order="0" visible="true" weight="0.28366113" />
+      <window_info anchor="right" id="Database" order="8" />
+      <window_info anchor="bottom" id="Find" order="1" weight="0.31918505" />
       <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
-      <window_info id="UI Designer" />
-      <window_info anchor="bottom" id="Debug" order="3" weight="0.4" />
-      <window_info id="Favorites" side_tool="true" />
-      <window_info anchor="right" id="Commander" internal_type="SLIDING" order="0" type="SLIDING" weight="0.4" />
       <window_info anchor="right" id="Ant Build" order="1" weight="0.25" />
-      <window_info anchor="bottom" id="Message" order="0" />
-      <window_info anchor="bottom" id="Inspection" order="5" weight="0.4" />
+      <window_info anchor="right" id="Theme Preview" order="3" />
+      <window_info id="Favorites" order="7" side_tool="true" />
+      <window_info active="true" anchor="bottom" id="Debug" order="3" visible="true" weight="0.39898133" />
+      <window_info anchor="right" id="Palette" order="8" />
       <window_info anchor="right" content_ui="combo" id="Hierarchy" order="2" weight="0.25" />
+      <window_info anchor="bottom" id="Inspection" order="5" weight="0.4" />
+      <window_info anchor="right" id="Commander" internal_type="SLIDING" order="0" type="SLIDING" weight="0.4" />
+      <window_info id="UI Designer" order="7" />
+      <window_info anchor="bottom" id="Message" order="0" />
       <window_info anchor="bottom" id="Cvs" order="4" weight="0.25" />
     </layout>
     <layout-to-restore>
       <window_info anchor="right" id="Palette" order="0" />
       <window_info anchor="right" content_ui="combo" id="Hierarchy" order="6" weight="0.25" />
+      <window_info anchor="bottom" id="Inspection" order="11" weight="0.4" />
       <window_info anchor="bottom" id="Run" order="8" weight="0.37886178" />
-      <window_info anchor="right" id="Ant Build" order="5" weight="0.25" />
-      <window_info anchor="bottom" id="Message" order="6" />
+      <window_info anchor="bottom" id="Cvs" order="10" weight="0.25" />
       <window_info active="true" content_ui="combo" id="Project" order="3" visible="true" weight="0.28432956" />
       <window_info id="Structure" order="4" side_tool="true" weight="0.25" />
       <window_info anchor="right" id="Commander" internal_type="SLIDING" order="4" type="SLIDING" weight="0.4" />
-      <window_info anchor="bottom" id="TODO" order="12" />
+      <window_info anchor="right" id="Ant Build" order="5" weight="0.25" />
       <window_info anchor="bottom" id="Spring" order="0" />
+      <window_info anchor="bottom" id="TODO" order="12" />
       <window_info id="Designer" order="0" />
-      <window_info anchor="bottom" id="Cvs" order="10" weight="0.25" />
       <window_info id="UI Designer" order="1" />
-      <window_info anchor="bottom" id="Database Changes" order="1" show_stripe_button="false" />
+      <window_info anchor="bottom" id="Find" order="7" weight="0.045528457" />
       <window_info anchor="right" id="Database" order="1" />
       <window_info anchor="right" id="Palette&#9;" order="2" />
       <window_info anchor="bottom" id="Terminal" order="2" />
       <window_info anchor="bottom" id="Event Log" order="3" side_tool="true" />
-      <window_info anchor="bottom" id="Inspection" order="11" weight="0.4" />
+      <window_info anchor="bottom" id="Database Changes" order="1" show_stripe_button="false" />
       <window_info anchor="bottom" id="Version Control" order="4" />
       <window_info anchor="bottom" id="Debug" order="9" weight="0.4" />
-      <window_info anchor="bottom" id="Find" order="7" weight="0.045528457" />
+      <window_info anchor="bottom" id="Message" order="6" />
       <window_info anchor="bottom" id="Messages" order="5" weight="0.09404389" />
       <window_info anchor="right" id="Maven Projects" order="3" weight="0.025848143" />
       <window_info id="Favorites" order="2" side_tool="true" />
@@ -359,36 +481,149 @@
   <component name="VcsContentAnnotationSettings">
     <option name="myLimit" value="2678400000" />
   </component>
+  <component name="XDebuggerManager">
+    <breakpoint-manager>
+      <breakpoints>
+        <line-breakpoint enabled="true" type="java-line">
+          <url>file://$PROJECT_DIR$/src/main/java/com/terragoedge/streetlight/StreetlightDaoConnection.java</url>
+          <line>32</line>
+          <properties />
+          <option name="timeStamp" value="2" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="java-line">
+          <url>file://$PROJECT_DIR$/src/main/java/com/terragoedge/streetlight/service/AbstractService.java</url>
+          <line>93</line>
+          <properties />
+          <option name="timeStamp" value="6" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="java-line">
+          <url>file://$PROJECT_DIR$/src/main/java/com/terragoedge/streetlight/service/TalkAddressService.java</url>
+          <line>120</line>
+          <properties />
+          <option name="timeStamp" value="14" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="java-line">
+          <url>file://$PROJECT_DIR$/src/main/java/com/terragoedge/streetlight/service/TalkAddressService.java</url>
+          <line>88</line>
+          <properties />
+          <option name="timeStamp" value="19" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="java-line">
+          <url>file://$PROJECT_DIR$/src/main/java/com/terragoedge/streetlight/service/TalkAddressService.java</url>
+          <line>92</line>
+          <properties />
+          <option name="timeStamp" value="23" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="java-line">
+          <url>file://$PROJECT_DIR$/src/main/java/com/terragoedge/streetlight/service/TalkAddressService.java</url>
+          <line>134</line>
+          <properties />
+          <option name="timeStamp" value="26" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="java-line">
+          <url>file://$PROJECT_DIR$/src/main/java/com/terragoedge/streetlight/service/TalkAddressService.java</url>
+          <line>108</line>
+          <properties />
+          <option name="timeStamp" value="27" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="java-line">
+          <url>file://$PROJECT_DIR$/src/main/java/com/terragoedge/streetlight/service/TalkAddressService.java</url>
+          <line>144</line>
+          <properties />
+          <option name="timeStamp" value="28" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="java-line">
+          <url>file://$PROJECT_DIR$/src/main/java/com/terragoedge/streetlight/service/TalkAddressService.java</url>
+          <line>114</line>
+          <properties />
+          <option name="timeStamp" value="29" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="java-line">
+          <url>file://$PROJECT_DIR$/src/main/java/com/terragoedge/streetlight/service/TalkAddressService.java</url>
+          <line>110</line>
+          <properties />
+          <option name="timeStamp" value="30" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="java-line">
+          <url>file://$PROJECT_DIR$/src/main/java/com/terragoedge/streetlight/service/TalkAddressService.java</url>
+          <line>93</line>
+          <properties />
+          <option name="timeStamp" value="31" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="java-line">
+          <url>file://$PROJECT_DIR$/src/main/java/com/terragoedge/streetlight/service/TalkAddressService.java</url>
+          <line>154</line>
+          <properties />
+          <option name="timeStamp" value="32" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="java-line">
+          <url>file://$PROJECT_DIR$/src/main/java/com/terragoedge/streetlight/service/TalkAddressService.java</url>
+          <line>100</line>
+          <properties />
+          <option name="timeStamp" value="33" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="java-line">
+          <url>file://$PROJECT_DIR$/src/main/java/com/terragoedge/streetlight/service/TalkAddressService.java</url>
+          <line>104</line>
+          <properties />
+          <option name="timeStamp" value="35" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="java-line">
+          <url>file://$PROJECT_DIR$/src/main/java/com/terragoedge/streetlight/service/TalkAddressService.java</url>
+          <line>162</line>
+          <properties />
+          <option name="timeStamp" value="37" />
+        </line-breakpoint>
+      </breakpoints>
+      <option name="time" value="38" />
+    </breakpoint-manager>
+  </component>
   <component name="editorHistoryManager">
+    <entry file="file://$PROJECT_DIR$/src/main/java/com/terragoedge/streetlight/service/StreetlightService.java" />
+    <entry file="file://$PROJECT_DIR$/src/main/java/com/terragoedge/streetlight/exception/ClearValueException.java" />
+    <entry file="file://$PROJECT_DIR$/src/main/java/com/terragoedge/streetlight/StreetlightApp.java" />
+    <entry file="file://$PROJECT_DIR$/src/main/java/com/terragoedge/streetlight/service/MessageConstants.java" />
+    <entry file="file://$PROJECT_DIR$/src/main/java/com/terragoedge/streetlight/service/StreetlightChicagoService.java" />
+    <entry file="file://$PROJECT_DIR$/src/main/java/com/terragoedge/slvinterface/exception/QRCodeAlreadyUsedException.java" />
+    <entry file="file://$PROJECT_DIR$/src/main/java/com/terragoedge/slvinterface/dao/SLVInterfaceDAO.java" />
+    <entry file="file://$PROJECT_DIR$/src/main/java/com/terragoedge/slvinterface/dao/tables/SlvDevice.java" />
+    <entry file="file://$PROJECT_DIR$/src/main/java/com/terragoedge/slvinterface/CronJobService.java" />
+    <entry file="file://$PROJECT_DIR$/src/main/java/com/terragoedge/slvinterface/model/EdgeNote.java" />
+    <entry file="file://$PROJECT_DIR$/src/main/java/com/terragoedge/slvinterface/utils/Constants.java" />
+    <entry file="file://$PROJECT_DIR$/src/main/java/com/terragoedge/slvinterface/service/AbstractService.java" />
+    <entry file="file://$PROJECT_DIR$/src/main/java/com/terragoedge/slvinterface/service/SlvInterfaceService.java" />
+    <entry file="file://$PROJECT_DIR$/src/main/java/com/terragoedge/slvinterface/entity/EdgeNoteEntity.java" />
+    <entry file="file://$PROJECT_DIR$/src/main/java/com/terragoedge/slvinterface/model/EdgeFormData.java" />
+    <entry file="file://$PROJECT_DIR$/src/main/java/com/terragoedge/slvinterface/SlvInterfaceApp.java" />
+    <entry file="file://$PROJECT_DIR$/pom.xml">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="128">
+          <caret line="62" column="20" selection-start-line="62" selection-start-column="20" selection-end-line="62" selection-end-column="20" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/main/java/com/terragoedge/slvinterface/entity/EdgeNotebookEntity.java" />
+    <entry file="file://$PROJECT_DIR$/src/main/java/com/terragoedge/slvinterface/entity/EdgeFormEntity.java" />
+    <entry file="file://$PROJECT_DIR$/src/main/java/com/terragoedge/slvinterface/model/FormData.java" />
+    <entry file="file://$PROJECT_DIR$/src/main/resources/onefiveeight.csv" />
+    <entry file="file://$PROJECT_DIR$/src/main/java/com/terragoedge/slvinterface/entity/EdgeNoteView.java" />
+    <entry file="file://$PROJECT_DIR$/src/main/java/com/terragoedge/slvinterface/utils/PropertiesReader.java" />
+    <entry file="file://$PROJECT_DIR$/src/main/java/com/terragoedge/slvinterface/model/CsvReportModel.java" />
+    <entry file="file://$PROJECT_DIR$/src/main/java/com/terragoedge/slvinterface/utils/Utils.java" />
+    <entry file="file://$PROJECT_DIR$/src/main/java/com/terragoedge/slvinterface/service/AmerescoReportService.java" />
+    <entry file="file://$PROJECT_DIR$/src/main/java/com/terragoedge/slvinterface/dao/ConnectionDAO.java" />
     <entry file="file://$PROJECT_DIR$/src/main/java/com/terragoedge/streetlight/exception/DeviceNotFoundException.java">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="60">
           <caret line="4" selection-start-line="4" selection-end-line="13" selection-end-column="5" />
-          <folding>
-            <element signature="e#257#258#0" expanded="true" />
-            <element signature="e#278#279#0" expanded="true" />
-          </folding>
         </state>
       </provider>
     </entry>
-    <entry file="jar:///Library/Java/JavaVirtualMachines/jdk1.7.0_79.jdk/Contents/Home/src.zip!/java/lang/Throwable.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="183">
-          <caret line="375" column="18" selection-start-line="375" selection-start-column="18" selection-end-line="375" selection-end-column="18" />
-          <folding>
-            <element signature="e#15711#15712#0" expanded="true" />
-            <element signature="e#15747#15748#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
+    <entry file="jar:///Library/Java/JavaVirtualMachines/jdk1.7.0_79.jdk/Contents/Home/src.zip!/java/lang/Throwable.java" />
     <entry file="file://$PROJECT_DIR$/src/main/java/com/terragoedge/streetlight/service/EdgeMailService.java">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="-1062">
           <caret line="17" column="20" selection-start-line="17" selection-start-column="13" selection-end-line="17" selection-end-column="28" />
-          <folding>
-            <element signature="imports" expanded="true" />
-          </folding>
         </state>
       </provider>
     </entry>
@@ -399,48 +634,10 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/main/java/com/terragoedge/streetlight/App.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="90">
-          <caret line="6" column="13" selection-start-line="6" selection-start-column="13" selection-end-line="6" selection-end-column="13" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/main/java/com/terragoedge/install/StreetLightInstallService.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-8889">
-          <caret line="88" column="8" lean-forward="true" selection-start-line="88" selection-start-column="8" selection-end-line="88" selection-end-column="8" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/main/java/com/terragoedge/streetlight/service/StreetlightService.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="295">
-          <caret line="193" column="34" selection-start-line="193" selection-start-column="20" selection-end-line="193" selection-end-column="34" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/main/java/com/terragoedge/streetlight/exception/ClearValueException.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="90">
-          <caret line="6" column="11" selection-start-line="6" selection-start-column="11" selection-end-line="6" selection-end-column="11" />
-          <folding>
-            <element signature="e#261#262#0" expanded="true" />
-            <element signature="e#282#283#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/main/java/com/terragoedge/streetlight/StreetlightApp.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="210">
-          <caret line="14" column="43" lean-forward="true" selection-start-line="14" selection-start-column="43" selection-end-line="14" selection-end-column="43" />
-          <folding>
-            <element signature="imports" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
+    <entry file="file://$PROJECT_DIR$/src/main/java/com/terragoedge/streetlight/App.java" />
+    <entry file="file://$PROJECT_DIR$/src/main/java/com/terragoedge/install/StreetLightInstallService.java" />
+    <entry file="file://$PROJECT_DIR$/src/main/java/com/terragoedge/streetlight/service/StreetlightService.java" />
+    <entry file="file://$PROJECT_DIR$/src/main/java/com/terragoedge/streetlight/exception/ClearValueException.java" />
     <entry file="file://$PROJECT_DIR$/src/main/java/com/terragoedge/streetlight/service/MessageConstants.java">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="75">
@@ -448,17 +645,130 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/src/main/java/com/terragoedge/streetlight/StreetlightApp.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state>
+          <caret line="22" column="46" selection-start-line="22" selection-start-column="46" selection-end-line="22" selection-end-column="46" />
+          <folding>
+            <element signature="imports" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/main/java/com/terragoedge/streetlight/StreetlightDaoConnection.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="68">
+          <caret line="9" column="13" selection-start-line="9" selection-start-column="13" selection-end-line="9" selection-end-column="13" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/main/java/com/terragoedge/streetlight/dao/UtilDao.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="153">
+          <caret line="15" column="35" selection-start-line="15" selection-start-column="35" selection-end-line="15" selection-end-column="35" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/main/java/com/terragoedge/streetlight/logging/LoggingModel.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="150">
+          <caret line="44" column="26" selection-start-line="44" selection-start-column="16" selection-end-line="44" selection-end-column="34" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/main/java/com/terragoedge/streetlight/PropertiesReader.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="255">
+          <caret line="33" column="9" selection-start-line="33" selection-start-column="9" selection-end-line="33" selection-end-column="9" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="jar://C:/Program Files/Java/jdk1.7.0_80/src.zip!/java/util/Dictionary.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="108">
+          <caret line="49" column="6" selection-start-line="49" selection-start-column="6" selection-end-line="49" selection-end-column="6" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/main/java/com/terragoedge/streetlight/json/model/Dictionary.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="101">
+          <caret line="23" column="18" selection-start-line="23" selection-start-column="18" selection-end-line="23" selection-end-column="18" />
+          <folding>
+            <element signature="e#167#168#0" expanded="true" />
+            <element signature="e#193#194#0" expanded="true" />
+            <element signature="e#231#232#0" expanded="true" />
+            <element signature="e#261#262#0" expanded="true" />
+            <element signature="e#293#294#0" expanded="true" />
+            <element signature="e#321#322#0" expanded="true" />
+            <element signature="e#363#364#0" expanded="true" />
+            <element signature="e#397#398#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/main/java/com/terragoedge/streetlight/service/SlvService.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="17">
+          <caret line="181" column="37" selection-start-line="181" selection-start-column="37" selection-end-line="181" selection-end-column="37" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/main/java/com/terragoedge/streetlight/exception/NotesNotFoundException.java">
+      <provider selected="true" editor-type-id="text-editor" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/main/java/com/terragoedge/edgeserver/EdgeNote.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="150">
+          <caret line="307" selection-start-line="307" selection-end-line="307" />
+          <folding>
+            <element signature="imports" expanded="true" />
+            <element signature="e#2288#2289#0" expanded="true" />
+            <element signature="e#2319#2320#0" expanded="true" />
+            <element signature="e#2352#2353#0" expanded="true" />
+            <element signature="e#2376#2377#0" expanded="true" />
+            <element signature="e#2422#2423#0" expanded="true" />
+            <element signature="e#2450#2451#0" expanded="true" />
+            <element signature="e#2494#2495#0" expanded="true" />
+            <element signature="e#2518#2519#0" expanded="true" />
+            <element signature="e#2577#2578#0" expanded="true" />
+            <element signature="e#2612#2613#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/src/main/java/com/terragoedge/streetlight/service/StreetlightChicagoService.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="404">
-          <caret line="869" column="27" lean-forward="true" selection-start-line="869" selection-start-column="27" selection-end-line="869" selection-end-column="27" />
-          <folding>
-            <element signature="e#7481#7489#0" expanded="true" />
-            <element signature="e#14512#14520#0" expanded="true" />
-            <element signature="e#16563#16571#0" expanded="true" />
-            <element signature="e#25762#25770#0" expanded="true" />
-            <element signature="e#34484#34492#0" expanded="true" />
-          </folding>
+        <state relative-caret-position="204">
+          <caret line="265" column="45" selection-start-line="265" selection-start-column="45" selection-end-line="265" selection-end-column="45" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/main/resources/main.properties">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="142">
+          <caret line="49" column="64" selection-start-line="49" selection-start-column="64" selection-end-line="49" selection-end-column="64" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/main/java/com/terragoedge/streetlight/dao/StreetlightDao.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="286">
+          <caret line="532" column="13" selection-start-line="532" selection-start-column="13" selection-end-line="532" selection-end-column="13" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/main/java/com/terragoedge/streetlight/service/AbstractService.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="65">
+          <caret line="95" lean-forward="true" selection-start-line="95" selection-end-line="95" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/main/java/com/terragoedge/streetlight/service/TalkAddressService.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="91">
+          <caret line="92" selection-start-line="92" selection-end-line="92" />
         </state>
       </provider>
     </entry>
