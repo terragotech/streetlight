@@ -137,6 +137,7 @@ public class ProcessTask extends FailureAbstractService implements Runnable {
             Utils.updateFormValueAndRepeatableCount(newEdgeFormDataList, Integer.parseInt(lifeTimeId), failureReportModel.getLifeTime(), newRepeatableCount);
             edgeFormDatas.addAll(newEdgeFormDataList);
         }
+        Collections.sort(edgeFormDatas,new GroupRepeatableComparator(true));// sorting form defs by decending order to change the group position
         //setLayer as Outage
         String outageLayerGuid = PropertiesReader.getProperties().getProperty("outage_layer.guid");
         String completeLayerGuid = PropertiesReader.getProperties().getProperty("complete_layer.guid");
@@ -315,7 +316,7 @@ public class ProcessTask extends FailureAbstractService implements Runnable {
     }
 
     public int getLastRepeatableCount(List<EdgeFormData> edgeFormDataList) {
-        EdgeFormData edgeFormData = Collections.max(edgeFormDataList, new GroupRepeatableComparator());
+        EdgeFormData edgeFormData = Collections.max(edgeFormDataList, new GroupRepeatableComparator(false));
         return edgeFormData.getGroupRepeatableCount();
     }
 

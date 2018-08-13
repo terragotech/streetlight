@@ -445,7 +445,7 @@ public class FailureReportService extends FailureAbstractService {
     }
 
     public int getLastRepeatableCount(List<EdgeFormData> edgeFormDataList) {
-        EdgeFormData edgeFormData = Collections.max(edgeFormDataList, new GroupRepeatableComparator());
+        EdgeFormData edgeFormData = Collections.max(edgeFormDataList, new GroupRepeatableComparator(false));
         return edgeFormData.getGroupRepeatableCount();
     }
 
