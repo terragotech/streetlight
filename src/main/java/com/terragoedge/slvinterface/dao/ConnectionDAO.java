@@ -4,6 +4,7 @@ import com.j256.ormlite.dao.Dao;
 import com.j256.ormlite.dao.DaoManager;
 import com.j256.ormlite.dao.RawRowMapper;
 import com.j256.ormlite.jdbc.JdbcConnectionSource;
+import com.j256.ormlite.stmt.DeleteBuilder;
 import com.j256.ormlite.stmt.UpdateBuilder;
 import com.j256.ormlite.support.ConnectionSource;
 import com.j256.ormlite.table.TableUtils;
@@ -32,7 +33,7 @@ public enum ConnectionDAO {
 
         try {
             connectionSource = new JdbcConnectionSource(DATABASE_URL);
-             //TableUtils.createTable(connectionSource, SlvSyncDetails.class);
+            //  TableUtils.createTable(connectionSource, SlvSyncDetails.class);
             // TableUtils.createTable(connectionSource, SlvDevice.class);
             slvSyncDetailsDao = DaoManager.createDao(connectionSource, SlvSyncDetails.class);
             slvDeviceDao = DaoManager.createDao(connectionSource, SlvDevice.class);
@@ -132,6 +133,26 @@ public enum ConnectionDAO {
         }
         return new ArrayList<>();
 
+    }
+
+    public List<SlvSyncDetails> getSyncEntityList() {
+        try {
+            return slvSyncDetailsDao.queryBuilder().query();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return new ArrayList<>();
+
+    }
+
+    public void deleteProcessedNotes(String noteGuid) {
+        try {
+            DeleteBuilder<SlvSyncDetails, String> deleteBuilder = slvSyncDetailsDao.deleteBuilder();
+            deleteBuilder.where().eq(SlvSyncDetails.NOTE_GUID, noteGuid);
+            slvSyncDetailsDao.delete(deleteBuilder.prepare());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     public void updateSlvSyncdetails(SlvSyncDetails slvSyncDetails) {

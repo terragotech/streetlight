@@ -3,18 +3,18 @@
     "type": "NEW_DEVICE",
     "ids": [
       {
-        "id": 22,
+        "id": 19,
         "type": "MAC"
       },
       {
-        "id": 51,
+        "id": 20,
         "type": "FIXTURE"
       }
     ],
     "action": [
       {
-        "id": 1,
-        "value": "Install node"
+        "id": 17,
+        "value": "New"
       }
     ]
   },
@@ -22,27 +22,68 @@
     "type": "REPLACE_DEVICE",
     "ids": [
       {
-        "id": 12,
+        "id": 36,
         "type": "EXISTING_MAC"
       },
       {
-        "id": 27,
+        "id": 26,
+        "type": "MAC"
+      },
+      {
+        "id": 38,
+        "type": "FIXTURE"
+      }
+    ],
+    "action": [
+      {
+        "id": 24,
+        "value": "Replace Node and Fixture"
+      },
+      {
+        "id": 17,
+        "value": "Repairs & Outages"
+      }
+    ]
+  },
+  {
+    "type": "REPLACE_DEVICE",
+    "ids": [
+      {
+        "id": 29,
+        "type": "EXISTING_MAC"
+      },
+      {
+        "id": 30,
         "type": "MAC"
       }
     ],
     "action": [
       {
-        "id": 1,
-        "value": "Replace node"
+        "id": 24,
+        "value": "Replace Node only"
+      },
+      {
+        "id": 17,
+        "value": "Repairs & Outages"
       }
     ]
   },
   {
-    "type": "REMOVE",
-     "action": [
+    "type": "UPDATE_DEVICE",
+    "ids": [
       {
-        "id": 1,
-        "value": "Remove node"
+        "id": 39,
+        "type": "FIXTURE"
+      }
+    ],
+    "action": [
+      {
+        "id": 24,
+        "value": "Replace Fixture only"
+      },
+      {
+        "id": 17,
+        "value": "Repairs & Outages"
       }
     ]
   }

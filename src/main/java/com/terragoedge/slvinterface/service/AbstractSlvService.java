@@ -8,6 +8,7 @@ import com.terragoedge.slvinterface.enumeration.Status;
 import com.terragoedge.slvinterface.exception.*;
 import com.terragoedge.slvinterface.json.slvInterface.Id;
 import com.terragoedge.slvinterface.model.DeviceMacAddress;
+import com.terragoedge.slvinterface.model.EdgeFormData;
 import com.terragoedge.slvinterface.model.EdgeNote;
 import com.terragoedge.slvinterface.model.Value;
 import com.terragoedge.slvinterface.utils.PropertiesReader;
@@ -15,6 +16,7 @@ import com.terragoedge.slvinterface.utils.Utils;
 import com.vividsolutions.jts.geom.Geometry;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.wololo.geojson.Feature;
 import org.wololo.geojson.GeoJSONFactory;
@@ -22,7 +24,7 @@ import org.wololo.jts2geojson.GeoJSONReader;
 
 import java.util.*;
 
-public class AbstractSlvService {
+public class AbstractSlvService extends EdgeService{
     private Properties properties = null;
     private JsonParser jsonParser = null;
     private SlvRestService slvRestService = null;
@@ -108,9 +110,9 @@ public class AbstractSlvService {
         streetLightDataParams.put("geoZoneId", geoZoneId);
         streetLightDataParams.put("lng", String.valueOf(geom.getCoordinate().x));
         streetLightDataParams.put("lat", String.valueOf(geom.getCoordinate().y));
-       // streetLightDataParams.put("nodeTypeStrId", nodeTypeStrId);
-        streetLightDataParams.put("modelFunctionId", nodeTypeStrId);
-        //modelFunctionId
+        streetLightDataParams.put("nodeTypeStrId", nodeTypeStrId);
+       // streetLightDataParams.put("modelFunctionId", nodeTypeStrId);
+        // modelFunctionId
         return slvRestService.getRequest(streetLightDataParams, url, true);
     }
 
@@ -360,8 +362,8 @@ public class AbstractSlvService {
         // controller.installdate - 2017/10/10
 
         addStreetLightData("installStatus", "Installed", paramsList);
-       // addStreetLightData("location.utillocationid", edgeNote.getTitle(), paramsList);
-       // addStreetLightData("location.locationtype", "LOCATION_TYPE_PREMISE", paramsList);
+        addStreetLightData("location.utillocationid", edgeNote.getTitle()+".lamp", paramsList);
+        addStreetLightData("location.locationtype", "LOCATION_TYPE_PREMISE", paramsList);
         String nodeTypeStrId = properties.getProperty("streetlight.slv.equipment.type");
         System.out.println(nodeTypeStrId);
         //addStreetLightData("modelFunctionId", nodeTypeStrId, paramsList);
@@ -474,5 +476,16 @@ public class AbstractSlvService {
     }
 
 
+    protected ResponseEntity<String> updateNoteDetails(String baseUrl,String noteDetails, String noteGuid, String notebookGuid) {
+        if(notebookGuid != null){
+            String urlNew = baseUrl + "/rest/notebooks/" + notebookGuid + "/notes/" + noteGuid;
+            return serverCall(urlNew,HttpMethod.PUT,noteDetails);
+        }else{
+            String urlNew = baseUrl + "/rest/notes/" + noteGuid;
+            return serverCall(urlNew,HttpMethod.PUT,noteDetails);
+        }
+
+
+    }
 
 }

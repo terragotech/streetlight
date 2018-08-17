@@ -2,6 +2,7 @@ package com.terragoedge.slvinterface;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
+import com.macaddress.slvtoedge.service.MacAddressService;
 import com.terragoedge.slvinterface.json.slvInterface.ConfigurationJson;
 import com.terragoedge.slvinterface.service.AbstractSlvService;
 import com.terragoedge.slvinterface.service.SlvInterfaceService;
@@ -19,8 +20,11 @@ public class SlvInterfaceApp extends AbstractSlvService {
 
     public static void main(String[] args) {
 
+        SlvInterfaceService slvInterfaceService = new SlvInterfaceService();
 
-        while (true) {
+        MacAddressService macAddressService = new MacAddressService();
+        macAddressService.run();
+      /*  while (true) {
             try {
                 SlvInterfaceService slvInterfaceService = new SlvInterfaceService();
                 slvInterfaceService.start();
@@ -28,7 +32,7 @@ public class SlvInterfaceApp extends AbstractSlvService {
             } catch (Exception e) {
                 e.printStackTrace();
             }
-        }
+        }*/
        /* try {
             ApplicationContext context = new ClassPathXmlApplicationContext("schedulepropertiesconfig.xml");
             System.out.println("tested");

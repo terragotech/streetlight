@@ -32,7 +32,7 @@ public class EdgeNote {
 	private String corrected = null;
 	private String resourceRef = null;
 	private String sourceType = null;
-
+	private EdgeNotebook edgeNotebook = null;
 	private String altitudeAccuracy = null;
 
 	public EdgeNote() {
@@ -264,10 +264,11 @@ public class EdgeNote {
 		this.altitudeAccuracy = altitudeAccuracy;
 	}
 
-	
-	
-	
-	
+	public EdgeNotebook getEdgeNotebook() {
+		return edgeNotebook;
+	}
 
-
+	public void setEdgeNotebook(EdgeNotebook edgeNotebook) {
+		this.edgeNotebook = edgeNotebook;
+	}
 }

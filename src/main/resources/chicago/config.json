@@ -1,0 +1,45 @@
+[
+  {
+    "type": "NEW_DEVICE",
+    "ids": [
+      {
+        "id": 121,
+        "type": "MAC"
+      }
+    ],
+    "action": [
+      {
+        "id": 1,
+        "value": "Install node"
+      }
+    ]
+  },
+  {
+    "type": "REPLACE_DEVICE",
+    "ids": [
+      {
+        "id": 12,
+        "type": "EXISTING_MAC"
+      },
+      {
+        "id": 27,
+        "type": "MAC"
+      }
+    ],
+    "action": [
+      {
+        "id": 1,
+        "value": "Replace node"
+      }
+    ]
+  },
+  {
+    "type": "REMOVE",
+     "action": [
+      {
+        "id": 1,
+        "value": "Remove node"
+      }
+    ]
+  }
+]
