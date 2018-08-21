@@ -14,19 +14,20 @@ public class InstallDateFix extends AbstractProcessor {
     public void run(){
         try{
             String data = null;
-            BufferedReader  fis = new BufferedReader(new FileReader("C:\\edge2slv\\installdatafix\\data.csv"));
+            System.out.println("Started");
+            BufferedReader  fis = new BufferedReader(new FileReader("C:\\edge2slv\\installdatafix\\dimmingdata.csv"));
              while((data =  fis.readLine()) != null){
                  try{
                      List<Object> paramsList = new ArrayList<>();
                      String[] res = data.split(",");
+                     System.out.println("IdonController : "+res[0]+" - "+res[1]);
                      paramsList.add("idOnController=" + res[0]);
                      paramsList.add("controllerStrId=TalqBridge@TB1009802308");
 
-
-                     addStreetLightData("install.date", dateFormat(Long.valueOf(res[1])), paramsList);
-                     addStreetLightData("installStatus", "Installed", paramsList);
-                     int errorCode = setDeviceValues(paramsList);
-                     logger.info("Response Code"+errorCode);
+                     addStreetLightData("DimmingGroupName", res[1], paramsList);
+                    int errorCode = setDeviceValues(paramsList);
+                    System.out.println("status "+res[0]+" - "+res[1]+" - "+errorCode);
+                    // logger.info("Response Code"+errorCode);
                  }catch (Exception e){
                      e.printStackTrace();
                  }

@@ -12,18 +12,20 @@ public class StreetlightApp {
 	public static void main(String[] args) {
 		// SlvService slvService = new SlvService();
 		// slvService.start();
+
 /*
 		InstallDateFix streetlightChicagoService = new InstallDateFix();
 		streetlightChicagoService.run();
 */
 
+
 		while (true){
 		    try{
-		        TalkAddressService talkAddressService = new TalkAddressService();
-		        talkAddressService.getTalqAddress();
-              // StreetlightChicagoService streetlightChicagoService = new StreetlightChicagoService();
-              //  streetlightChicagoService.run();
-                Thread.sleep(10000);
+		      //  TalkAddressService talkAddressService = new TalkAddressService();
+		      //  talkAddressService.getTalqAddress();
+               StreetlightChicagoService streetlightChicagoService = new StreetlightChicagoService();
+                streetlightChicagoService.run();
+                Thread.sleep(50000);
                 break;
             }catch (Exception e){
 		        e.printStackTrace();

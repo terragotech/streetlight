@@ -525,7 +525,7 @@ public class StreetlightDao extends UtilDao {
         List<LoggingModel> loggingModelList = new ArrayList<>();
         try {
             queryStatement = connection.createStatement();
-            queryResponse = queryStatement.executeQuery("Select distinct(notename) from notesyncdetails where talqaddress is null and synctime < "+yesterdayAsMilli+";");
+            queryResponse = queryStatement.executeQuery("Select distinct(notename) from notesyncdetails where talqaddress is null and istalqprocess is null and synctime < "+yesterdayAsMilli+";");
             while (queryResponse.next()) {
                 LoggingModel loggingModel = new LoggingModel();
                 loggingModel.setNoteName(queryResponse.getString("notename"));
@@ -537,4 +537,22 @@ public class StreetlightDao extends UtilDao {
         }
         return loggingModelList;
     }
+    public void updateTalqGuid(String notename,String talqNoteGuid) {
+        PreparedStatement preparedStatement = null;
+        Connection connection = null;
+        try {
+            connection = StreetlightDaoConnection.getInstance().getConnection();
+            preparedStatement = connection.prepareStatement(
+                    "UPDATE notesyncdetails SET istalqprocess = ?,talknoteguid=? where notename =?;");
+            preparedStatement.setBoolean(1,true);
+            preparedStatement.setString(2,talqNoteGuid);
+            preparedStatement.setString(3,notename);
+            preparedStatement.executeUpdate();
+        } catch (Exception e) {
+            logger.error("Error in update", e);
+        } finally {
+            closeStatement(preparedStatement);
+        }
+    }
+
 }

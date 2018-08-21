@@ -90,7 +90,7 @@
                             <goal>single</goal>
                         </goals>
                         <configuration>
-                            <finalName>ameresco_usa_streetlight_v38</finalName>
+                            <finalName>dimminggroup-v2</finalName>
 
                             <archive>
                                 <manifest>

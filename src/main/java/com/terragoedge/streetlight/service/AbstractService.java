@@ -72,7 +72,7 @@ public class AbstractService {
 
     protected String geTalqNoteDetails(String baseUrl, String noteName) {
         try {
-            String urlNew = baseUrl + "/rest/notes/" + noteName;
+            String urlNew = baseUrl + "/rest/notes/notesdata/" + noteName;
 
             //  String urlNew = baseUrl + "/rest/notes?search=" + noteName;
             logger.info("Url to get Note Details:" + urlNew);
