@@ -7,6 +7,18 @@ public class EdgeMacAddress {
     private String title;
     String macAddress;
     String noteGuid;
+    public EdgeMacAddress(){
+
+    }
+    public EdgeMacAddress(String title, String noteGuid) {
+        this.title = title;
+        this.noteGuid = noteGuid;
+    }
+    public EdgeMacAddress(String title, String noteGuid,String macAddress) {
+        this.title = title;
+        this.noteGuid = noteGuid;
+        this.macAddress=macAddress;
+    }
 
     public int getId() {
         return id;

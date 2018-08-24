@@ -20,6 +20,8 @@ import org.apache.log4j.Logger;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 
+import java.io.BufferedReader;
+import java.io.FileReader;
 import java.lang.reflect.Type;
 import java.util.*;
 
@@ -51,9 +53,10 @@ public class MacAddressService extends AbstractSlvService {
         if (accessToken == null) {
             logger.error("Edge Invalid UserName and Password.");
             return;
-
         }
+
         List<EdgeMacAddress> edgeMacAddressList = new ArrayList<>();
+        /*System.out.println("EdgeNoteMacAddress title"+edgeMacAddressList.size());
         EdgeMacAddress edgeMacAddress1 = new EdgeMacAddress();
         edgeMacAddress1.setMacAddress("a");
         edgeMacAddress1.setTitle("1");
@@ -61,20 +64,11 @@ public class MacAddressService extends AbstractSlvService {
         EdgeMacAddress edgeMacAddress2 = new EdgeMacAddress();
         edgeMacAddress2.setMacAddress("b");
         edgeMacAddress2.setTitle("2");
-        edgeMacAddressList.add(edgeMacAddress2);
+        edgeMacAddressList.add(edgeMacAddress2);*/
 
         //TODO getMAcADdress From Edge;
         //   List<EdgeMacAddress> slvMacAddressList = getSLVEmptyMacAddress();
-        List<EdgeMacAddress> slvMacAddressList = new ArrayList<>();
-        EdgeMacAddress edgeMacAddress3 = new EdgeMacAddress();
-        edgeMacAddress3.setMacAddress("a");
-        edgeMacAddress3.setTitle("1");
-        slvMacAddressList.add(edgeMacAddress3);
-        EdgeMacAddress edgeMacAddress4 = new EdgeMacAddress();
-        edgeMacAddress4.setMacAddress("00135005007F130F");
-        edgeMacAddress4.setTitle("1489077");
-        slvMacAddressList.add(edgeMacAddress4);
-        System.out.println(slvMacAddressList.size());
+        List<EdgeMacAddress> slvMacAddressList = getEdgeNoteFromServer();
 
         for (EdgeMacAddress edgeMacAddress : slvMacAddressList) {
             if (!edgeMacAddressList.contains(edgeMacAddress)) {
@@ -86,14 +80,17 @@ public class MacAddressService extends AbstractSlvService {
 
     public void processEdgeNote(EdgeMacAddress edgeMacAddress, String formTemplateGuid, String mainUrl, String completeGuid, String macAddressId) {
         try {
-            String notesJson = geNoteDetails(mainUrl, edgeMacAddress.getTitle());
+            String notesJson = geNoteDetails(mainUrl, edgeMacAddress.getNoteGuid());
             if (notesJson == null) {
                 logger.info("Note not in Edge.");
                 throw new NotesNotFoundException("Note [" + edgeMacAddress.getTitle() + "] not in Edge.");
             }
-            Type listType = new TypeToken<ArrayList<EdgeNote>>() {
+          /*  Type listType = new TypeToken<ArrayList<EdgeNote>>() {
             }.getType();
-            List<EdgeNote> edgeNoteList = gson.fromJson(notesJson, listType);
+            List<EdgeNote> edgeNoteList = gson.fromJson(notesJson, listType);*/
+            List<EdgeNote> edgeNoteList= new ArrayList<>();
+            EdgeNote edgeNoteTemp = gson.fromJson(notesJson,EdgeNote.class);
+            edgeNoteList.add(edgeNoteTemp);
             for (EdgeNote edgeNote : edgeNoteList) {
                 JsonObject edgeJsonObj = (JsonObject) jsonParser.parse(gson.toJson(edgeNote));
                 String notebookGuid = null;
@@ -112,9 +109,10 @@ public class MacAddressService extends AbstractSlvService {
                         formDefJson = formDefJson.replace("\\\\", "");
                         List<EdgeFormData> edgeFormDataList = getEdgeFormData(formDefJson);
                         updateFormValue(edgeFormDataList, Integer.parseInt(macAddressId), edgeMacAddress.getMacAddress());
+                        updateFormValue(edgeFormDataList, 22, "Complete");
                         serverEdgeForm.add("formDef", gson.toJsonTree(edgeFormDataList));
                         serverEdgeForm.addProperty("formGuid", UUID.randomUUID().toString());
-                    }else {
+                    } else {
                         String formDefJson = serverEdgeForm.get("formDef").getAsString();
                         formDefJson = formDefJson.replace("\\\\", "");
                         List<EdgeFormData> edgeFormDataList = getEdgeFormData(formDefJson);
@@ -128,7 +126,7 @@ public class MacAddressService extends AbstractSlvService {
                 edgeJsonObj.addProperty("createdBy", "admin");
                 edgeJsonObj.addProperty("noteGuid", UUID.randomUUID().toString());
                 ResponseEntity<String> responseEntity = updateNoteDetails(mainUrl, edgeJsonObj.toString(), noteGuid, notebookGuid);
-                System.out.println("success");
+                System.out.println("success" + responseEntity.getBody());
             }
 
 
@@ -177,8 +175,8 @@ public class MacAddressService extends AbstractSlvService {
 
     protected String geNoteDetails(String baseUrl, String noteName) {
         try {
-            String urlNew = baseUrl + "/rest/notes/notesdata/" + noteName;
-
+            //  String urlNew = baseUrl + "/rest/notes/notesdata/" + noteName;
+            String urlNew = baseUrl + "/rest/notes/" + noteName;
             //  String urlNew = baseUrl + "/rest/notes?search=" + noteName;
             logger.info("Url to get Note Details:" + urlNew);
             ResponseEntity<String> responseEntity = serverCall(urlNew, HttpMethod.GET, null);
@@ -218,4 +216,33 @@ public class MacAddressService extends AbstractSlvService {
         jsonArray.add(jsonObject);
         notesJson.add("dictionary", jsonArray);
     }
+
+
+    public List<EdgeMacAddress> getEdgeNoteFromServer() {
+        List<EdgeMacAddress> edgeMacAddressList = new ArrayList<>();
+        try {
+            String data = null;
+            System.out.println("Started");
+
+            BufferedReader fis = new BufferedReader(new FileReader("./resources/edgedata.csv"));
+            while ((data = fis.readLine()) != null) {
+                EdgeMacAddress edgeMacAddress = new EdgeMacAddress();
+                try {
+                    String[] res = data.split(",");
+                    edgeMacAddress.setTitle(res[0]);
+                    edgeMacAddress.setNoteGuid(res[1]);
+                    edgeMacAddress.setMacAddress(res[2]);
+                    edgeMacAddressList.add(edgeMacAddress);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return edgeMacAddressList;
+
+    }
+
 }
