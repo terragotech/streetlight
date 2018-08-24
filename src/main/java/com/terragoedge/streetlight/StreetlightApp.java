@@ -21,12 +21,11 @@ public class StreetlightApp {
 
 		while (true){
 		    try{
-		      //  TalkAddressService talkAddressService = new TalkAddressService();
-		      //  talkAddressService.getTalqAddress();
-               StreetlightChicagoService streetlightChicagoService = new StreetlightChicagoService();
-                streetlightChicagoService.run();
+		        TalkAddressService talkAddressService = new TalkAddressService();
+		        talkAddressService.getTalqAddress();
+              /*  StreetlightChicagoService streetlightChicagoService = new StreetlightChicagoService();
+                streetlightChicagoService.run();*/
                 Thread.sleep(50000);
-                break;
             }catch (Exception e){
 		        e.printStackTrace();
             }

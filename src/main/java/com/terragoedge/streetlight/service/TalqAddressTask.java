@@ -24,6 +24,7 @@ public class TalqAddressTask extends AbstractService implements Runnable {
     private RestService restService = null;
     private StreetlightDao streetlightDao = null;
     private Logger logger = Logger.getLogger(TalkAddressService.class);
+
     public TalqAddressTask(LoggingModel loggingModel) {
         this.loggingModel = loggingModel;
         gson = new Gson();
@@ -39,7 +40,7 @@ public class TalqAddressTask extends AbstractService implements Runnable {
         logger.info(loggingModel.getNoteName());
         String emptyTalqAddressGuid = PropertiesReader.getProperties().getProperty("empty.talkaddress.layerguid");
         String mainUrl = PropertiesReader.getProperties().getProperty("streetlight.edge.url.main");
-
+        String locationDescKeyword = PropertiesReader.getProperties().getProperty("edge.locationdesc.keyword");
         // loggingModel.setNoteName("a5fcf53f-d67b-41e3-8b78-d6a87c49debb");
         try {
             String notesJson = geTalqNoteDetails(mainUrl, loggingModel.getNoteName());
@@ -54,14 +55,18 @@ public class TalqAddressTask extends AbstractService implements Runnable {
                 EdgeNote edgeNote1 = gson.fromJson(notesJson, EdgeNote.class);
                 edgeNoteList.add(edgeNote1);*/
             for (EdgeNote edgeNote : edgeNoteList) {
-                String oldNoteGuid = edgeNote.getNoteGuid();
-                String notebookGuid = edgeNote.getEdgeNotebook().getNotebookGuid();
-                JsonObject jsonObject = processEdgeForms(gson.toJson(edgeNote));
-                boolean isProcess = isProcessNoteLayer(jsonObject, emptyTalqAddressGuid);
-                if (isProcess) {
-                    ResponseEntity<String> responseEntity = updateNoteDetails(jsonObject.toString(), oldNoteGuid, notebookGuid, mainUrl);
-                    streetlightDao.updateTalqGuid(edgeNote.getTitle(), responseEntity.getBody());
-                    logger.info("edgenote update to server: " + responseEntity.getBody());
+                String locationDesc = edgeNote.getLocationDescription();
+                System.out.println("locationDescription is : " + locationDesc);
+                if (locationDesc != null && !locationDesc.contains(locationDescKeyword)) {
+                    String oldNoteGuid = edgeNote.getNoteGuid();
+                    String notebookGuid = edgeNote.getEdgeNotebook().getNotebookGuid();
+                    JsonObject jsonObject = processEdgeForms(gson.toJson(edgeNote));
+                    boolean isProcess = isProcessNoteLayer(jsonObject, emptyTalqAddressGuid);
+                    if (isProcess) {
+                        ResponseEntity<String> responseEntity = updateNoteDetails(jsonObject.toString(), oldNoteGuid, notebookGuid, mainUrl);
+                        streetlightDao.updateTalqGuid(edgeNote.getTitle(), responseEntity.getBody());
+                        logger.info("edgenote update to server: " + responseEntity.getBody());
+                    }
                 }
             }
         } catch (Exception e) {
