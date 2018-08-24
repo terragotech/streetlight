@@ -72,7 +72,6 @@ public class CsvReportModel {
         this.idOnController = edgeNoteView.getTitle();
         this.createddatetime = String.valueOf(edgeNoteView.getCreatedDateTime());
         this.createdBy = edgeNoteView.getCreatedBy();
-        this.noteType = edgeNoteView.getNotesType().toString();
         this.baseParentNoteId = edgeNoteView.getParentNoteId();
         this.revisionOfNoteId = edgeNoteView.getRevisionfromNoteID();
         this.isCurrent = String.valueOf(edgeNoteView.isCurrent());
@@ -161,13 +160,6 @@ public class CsvReportModel {
         this.revisionOfNoteId = revisionOfNoteId;
     }
 
-    public String getNoteType() {
-        return noteType;
-    }
-
-    public void setNoteType(String noteType) {
-        this.noteType = noteType;
-    }
 
     public String getBaseParentNoteId() {
         return baseParentNoteId;
@@ -587,7 +579,6 @@ public class CsvReportModel {
                 ", createddatetime='" + createddatetime + '\'' +
                 ", createdBy='" + createdBy + '\'' +
                 ", revisionOfNoteId='" + revisionOfNoteId + '\'' +
-                ", noteType='" + noteType + '\'' +
                 ", baseParentNoteId='" + baseParentNoteId + '\'' +
                 ", isCurrent=" + isCurrent +
                 ", isTask=" + isTask +

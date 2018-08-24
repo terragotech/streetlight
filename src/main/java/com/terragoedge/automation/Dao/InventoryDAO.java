@@ -1,4 +1,4 @@
-package com.terragoedge.slvinterface.dao;
+package com.terragoedge.automation.Dao;
 
 import com.j256.ormlite.dao.Dao;
 import com.j256.ormlite.dao.DaoManager;
@@ -7,14 +7,12 @@ import com.j256.ormlite.jdbc.JdbcConnectionSource;
 import com.j256.ormlite.stmt.QueryBuilder;
 import com.j256.ormlite.stmt.UpdateBuilder;
 import com.j256.ormlite.support.ConnectionSource;
-import com.j256.ormlite.table.TableUtils;
 import com.terragoedge.slvinterface.dao.tables.SlvDevice;
 import com.terragoedge.slvinterface.dao.tables.SlvSyncDetails;
 import com.terragoedge.slvinterface.entity.EdgeFormEntity;
 import com.terragoedge.slvinterface.entity.EdgeNoteView;
 import com.terragoedge.slvinterface.entity.EdgeNotebookEntity;
 import com.terragoedge.slvinterface.enumeration.Status;
-import com.terragoedge.slvinterface.model.EdgeNote;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -22,11 +20,10 @@ import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 
-public enum ConnectionDAO {
+public enum InventoryDAO {
 
     INSTANCE;
-
-    private final static String DATABASE_URL = "jdbc:postgresql://127.0.0.1:5432/terragoedge?user=postgres&password=password";
+    private final static String DATABASE_URL = "jdbc:postgresql://172.18.255.24:5432/terragoedge?user=postgres&password=password";
 
     ConnectionSource connectionSource = null;
     private Dao<SlvSyncDetails, String> slvSyncDetailsDao;
@@ -35,10 +32,11 @@ public enum ConnectionDAO {
     private Dao<EdgeNotebookEntity, String> notebookDao;
     public Dao<SlvDevice, String> slvDeviceDao = null;
 
-    ConnectionDAO() {
+    InventoryDAO() {
 
         try {
             connectionSource = new JdbcConnectionSource(DATABASE_URL);
+            System.out.println("ConnectionSucess");
             //TableUtils.createTable(connectionSource, SlvSyncDetails.class);
             // TableUtils.createTable(connectionSource, SlvDevice.class);
             edgeformDao = DaoManager.createDao(connectionSource, EdgeFormEntity.class);
@@ -48,6 +46,7 @@ public enum ConnectionDAO {
             slvDeviceDao = DaoManager.createDao(connectionSource, SlvDevice.class);
 
         } catch (Exception e) {
+            System.out.println("Failed inventory");
             e.printStackTrace();
         }
 
@@ -61,6 +60,7 @@ public enum ConnectionDAO {
         try {
             return edgeNoteViewDao.queryBuilder().where().eq(EdgeNoteView.NOTE_GUID, noteGuid).queryForFirst();
         } catch (Exception e) {
+            System.out.println("Error"+e.toString());
             e.printStackTrace();
         }
         return null;
@@ -72,10 +72,15 @@ public enum ConnectionDAO {
             queryBuilder.where().in(EdgeNoteView.NOTE_ID, noteId);
             queryBuilder.orderBy(EdgeNoteView.SYNC_TIME, false);
             queryBuilder.limit(1L);
-           return queryBuilder.queryForFirst();
+            return queryBuilder.queryForFirst();
         } catch (Exception e) {
             e.printStackTrace();
         }
+       /* try {
+            return edgeNoteViewDao.queryBuilder().where().in(EdgeNoteView.NOTE_ID, noteId).queryForFirst();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }*/
         return null;
     }
 

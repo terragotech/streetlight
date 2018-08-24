@@ -1,6 +1,7 @@
 package com.terragoedge.slvinterface.utils;
 
 import com.opencsv.CSVWriter;
+import com.terragoedge.automation.model.MacValidationModel;
 import com.terragoedge.slvinterface.model.CsvReportModel;
 import org.supercsv.cellprocessor.FmtDate;
 import org.supercsv.cellprocessor.ParseDouble;
@@ -39,76 +40,76 @@ public class Utils {
                 "oldFixtureQRScan", "newFixtureQRScan", "reasonForReplacement", "name", "category", "isDelete", "noteBookName", "locationDescription",
                 "altitude", "satellitesCount", "gpsTime", "locationProvider", "syncTime", "selectedRepair"});
         for (CsvReportModel csvReportModel : csvReportModelList) {
-          //  if (csvReportModel != null && csvReportModel.getSelectedRepair() != null && csvReportModel.getSelectedRepair().equals("Unable to Repair(CDOT Issue)")) {
-                records.add(new String[]{
-                        String.valueOf(csvReportModel.getNoteID()),
-                        csvReportModel.getIdOnController(),
-                        csvReportModel.getLatitude(),
-                        csvReportModel.getLongitude(),
-                        csvReportModel.getCreateddatetime(),
-                        csvReportModel.getCreatedBy(),
-                        csvReportModel.getRevisionOfNoteId(),
-                        csvReportModel.getNoteType(),
-                        csvReportModel.getBaseParentNoteId(),
-                        csvReportModel.isCurrent(),
-                        csvReportModel.isTask(),
-                        csvReportModel.getGroupName(),
-                        csvReportModel.getGroupGuid(),
-                        csvReportModel.getColorName(),
-                        csvReportModel.getFormGuid(),
-                        csvReportModel.getFormTemplateGuid(),
-                        csvReportModel.getNoteGuid(),
-                        csvReportModel.getExistingFixtureInformation(),
-                        csvReportModel.getSL(),
-                        csvReportModel.getControllerStrId(),
-                        csvReportModel.getGeoZoneId(),
-                        csvReportModel.getGhildGeoZoneId(),
-                        csvReportModel.getAddress(),
-                        csvReportModel.getAtlasPhysicalPage(),
-                        csvReportModel.getFixtureColor(),
-                        csvReportModel.getcDOTLampType(),
-                        csvReportModel.getColorCode(),
-                        csvReportModel.getFixtureCode(),
-                        csvReportModel.getMastArmAngle(),
-                        csvReportModel.getMastArmLength(),
-                        csvReportModel.getMastArmsCount(),
-                        csvReportModel.getProposedContext(),
-                        csvReportModel.getAction(),
-                        csvReportModel.getNodeMACAddress(),
-                        csvReportModel.getFixtureQRScan1(),
-                        csvReportModel.getInstallStatus(),
-                        csvReportModel.getSkippedFixtureReason(),
-                        csvReportModel.getSkippedReason(),
-                        csvReportModel.getRepairsAndOutages(),
-                        csvReportModel.getExistingNodeMACAddress1(),
-                        csvReportModel.getNewNodeMACAddress1(),
-                        csvReportModel.getFixtureQRScan2(),
-                        csvReportModel.getExistingNodeMACAddress2(),
-                        csvReportModel.getNewNodeMACAddress2(),
-                        csvReportModel.getOldFixtureQRScan(),
-                        csvReportModel.getNewFixtureQRScan(),
-                        csvReportModel.getReasonForReplacement(),
-                        csvReportModel.getName(),
-                        csvReportModel.getCategory(),
-                        csvReportModel.isDelete(),
-                        csvReportModel.getNoteBookName(),
-                        csvReportModel.getLocationDescription(),
-                        csvReportModel.getAltitude(),
-                        csvReportModel.getSatellitesCount(),
-                        csvReportModel.getGpsTime(),
-                        csvReportModel.getLocationProvider(),
-                        csvReportModel.getSyncTime(),
-                        csvReportModel.getSelectedRepair()
-                });
-            }
-     //   }
+            //  if (csvReportModel != null && csvReportModel.getSelectedRepair() != null && csvReportModel.getSelectedRepair().equals("Unable to Repair(CDOT Issue)")) {
+            records.add(new String[]{
+                    String.valueOf(csvReportModel.getNoteID()),
+                    csvReportModel.getIdOnController(),
+                    csvReportModel.getLatitude(),
+                    csvReportModel.getLongitude(),
+                    csvReportModel.getCreateddatetime(),
+                    csvReportModel.getCreatedBy(),
+                    csvReportModel.getRevisionOfNoteId(),
+                    csvReportModel.getBaseParentNoteId(),
+                    csvReportModel.isCurrent(),
+                    csvReportModel.isTask(),
+                    csvReportModel.getGroupName(),
+                    csvReportModel.getGroupGuid(),
+                    csvReportModel.getColorName(),
+                    csvReportModel.getFormGuid(),
+                    csvReportModel.getFormTemplateGuid(),
+                    csvReportModel.getNoteGuid(),
+                    csvReportModel.getExistingFixtureInformation(),
+                    csvReportModel.getSL(),
+                    csvReportModel.getControllerStrId(),
+                    csvReportModel.getGeoZoneId(),
+                    csvReportModel.getGhildGeoZoneId(),
+                    csvReportModel.getAddress(),
+                    csvReportModel.getAtlasPhysicalPage(),
+                    csvReportModel.getFixtureColor(),
+                    csvReportModel.getcDOTLampType(),
+                    csvReportModel.getColorCode(),
+                    csvReportModel.getFixtureCode(),
+                    csvReportModel.getMastArmAngle(),
+                    csvReportModel.getMastArmLength(),
+                    csvReportModel.getMastArmsCount(),
+                    csvReportModel.getProposedContext(),
+                    csvReportModel.getAction(),
+                    csvReportModel.getNodeMACAddress(),
+                    csvReportModel.getFixtureQRScan1(),
+                    csvReportModel.getInstallStatus(),
+                    csvReportModel.getSkippedFixtureReason(),
+                    csvReportModel.getSkippedReason(),
+                    csvReportModel.getRepairsAndOutages(),
+                    csvReportModel.getExistingNodeMACAddress1(),
+                    csvReportModel.getNewNodeMACAddress1(),
+                    csvReportModel.getFixtureQRScan2(),
+                    csvReportModel.getExistingNodeMACAddress2(),
+                    csvReportModel.getNewNodeMACAddress2(),
+                    csvReportModel.getOldFixtureQRScan(),
+                    csvReportModel.getNewFixtureQRScan(),
+                    csvReportModel.getReasonForReplacement(),
+                    csvReportModel.getName(),
+                    csvReportModel.getCategory(),
+                    csvReportModel.isDelete(),
+                    csvReportModel.getNoteBookName(),
+                    csvReportModel.getLocationDescription(),
+                    csvReportModel.getAltitude(),
+                    csvReportModel.getSatellitesCount(),
+                    csvReportModel.getGpsTime(),
+                    csvReportModel.getLocationProvider(),
+                    csvReportModel.getSyncTime(),
+                    csvReportModel.getSelectedRepair()
+            });
+        }
+        //   }
         return records;
     }
 
     public static void write(String data) {
         FileOutputStream fileOutputStream = null;
         try {
-            fileOutputStream = new FileOutputStream("D:/Carton/" + "onesevenseven-report.csv");
+            String macValidationReportPath = PropertiesReader.getProperties().getProperty("edge.reports.reportoutpath");
+            fileOutputStream = new FileOutputStream(macValidationReportPath);
             // fileOutputStream = new FileOutputStream(filePath + fileName);
             fileOutputStream.write(data.getBytes());
             fileOutputStream.flush();
@@ -135,6 +136,40 @@ public class Utils {
         csvWriter.close();
         System.out.println(writer);
         write(writer.toString());
+    }
+
+    public static void writeMacValidationData(List<MacValidationModel> csvReportModelList,String fileName) {
+        try {
+            StringWriter writer = new StringWriter();
+            CSVWriter csvWriter = new CSVWriter(writer, ',');
+            List<String[]> data = toStringMacReportArray(csvReportModelList);
+            csvWriter.writeAll(data);
+            csvWriter.close();
+            System.out.println(writer);
+            write(writer.toString());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static List<String[]> toStringMacReportArray(List<MacValidationModel> csvReportModelList) {
+        List<String[]> records = new ArrayList<String[]>();
+        //add header record
+        records.add(new String[]{"macaddress", "fixtureid", "municipality", "modifieddate", "user", "assigneduser", "InstallStatus", "InventoryStatus"});
+        for (MacValidationModel csvReportModel : csvReportModelList) {
+            records.add(new String[]{
+                    csvReportModel.getMacaddress(),
+                    csvReportModel.getFixtureid(),
+                    csvReportModel.getMunicipality(),
+                    csvReportModel.getModifieddate(),
+                    csvReportModel.getUser(),
+                    csvReportModel.getAssigneduser(),
+                    csvReportModel.getInstallStatus(),
+                    csvReportModel.getInventoryStatus(),
+            });
+        }
+        //   }
+        return records;
     }
 
 }

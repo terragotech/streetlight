@@ -17,8 +17,8 @@ public class EdgeFormEntity {
 	public static final String FORM_GUID = "formGuid";
 	public static final String CREATED_DATE = "createdDate";
 	public static final String FORM_TEMPLATE_GUID = "formtemplateguid";
-	public static final String FORM_TEMPLATE_DEF = "formTemplateDef";
-	public static final String FROM_DEF = "formDef";
+	public static final String FORM_TEMPLATE_DEF = "formtemplatedef";
+	public static final String FROM_DEF = "formdef";
 	public static final String CREATED_BY = "createdBy";
 	public static final String EDGE_NOTE_ENTITY = "edgeNoteEntity";
 	public static final String NAME = "name";

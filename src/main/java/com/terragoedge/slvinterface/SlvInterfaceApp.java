@@ -2,6 +2,7 @@ package com.terragoedge.slvinterface;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
+import com.terragoedge.automation.service.ReportAutomationService;
 import com.terragoedge.slvinterface.json.slvInterface.ConfigurationJson;
 import com.terragoedge.slvinterface.service.AbstractSlvService;
 import com.terragoedge.slvinterface.service.AmerescoReportService;
@@ -19,9 +20,10 @@ public class SlvInterfaceApp extends AbstractSlvService {
     public static List<ConfigurationJson> configurationJsons = new ArrayList<>();
 
     public static void main(String[] args) {
-        AmerescoReportService amerescoReportService = new AmerescoReportService();
-        amerescoReportService.start();
-
+        // AmerescoReportService amerescoReportService = new AmerescoReportService();
+        // amerescoReportService.start();
+        ReportAutomationService reportAutomationService = new ReportAutomationService();
+        reportAutomationService.run();
 /*
         while (true) {
             try {

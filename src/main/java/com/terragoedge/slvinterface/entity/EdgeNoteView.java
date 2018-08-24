@@ -13,7 +13,7 @@ public class EdgeNoteView {
 	public static final String GROUP_ID = "groupGuid";
 	public static final String COLOR_NAME = "colorName";
 	
-	public static final String NOTE_ID = "noteId";
+	public static final String NOTE_ID = "noteid";
 	public static final String NOTE_GUID = "noteguid";
 	public static final String CREATED_BY = "createdBy";
 	public static final String CREATED_DATE_TIME = "createdDateTime";
@@ -48,7 +48,7 @@ public class EdgeNoteView {
 	public static final String PDO_P = "PDOP";
 	public static final String VDO_P = "VDOP";
 	public static final String HDO_P = "HDOP";
-	public static final String SYNC_TIME = "syncTime";
+	public static final String SYNC_TIME = "synctime";
 	
 	public static final String TAGS = "tags";
 
@@ -66,8 +66,6 @@ public class EdgeNoteView {
 	@DatabaseField(columnName= "title")
 	private String title;
 
-	@DatabaseField(columnName= "type")
-	private NotesType notesType;
 	@DatabaseField(columnName= "resourceref")
 	private String resourceRef;
 	@DatabaseField(columnName = "revisionfromnoteid")
@@ -223,14 +221,6 @@ public class EdgeNoteView {
 
 	public void setTitle(String title) {
 		this.title = title;
-	}
-
-	public NotesType getNotesType() {
-		return notesType;
-	}
-
-	public void setNotesType(NotesType notesType) {
-		this.notesType = notesType;
 	}
 
 	public String getResourceRef() {
