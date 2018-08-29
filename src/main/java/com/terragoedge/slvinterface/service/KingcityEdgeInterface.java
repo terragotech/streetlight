@@ -33,6 +33,7 @@ public class KingcityEdgeInterface {
 	JsonObject mappingJson = null;
 	static Map<String, Integer> luminareCore = new HashMap<>();
 	Map<String, String> dimmingValue = new HashMap<>();
+	Map<String, String> WattAndIdonController = new HashMap<>();
 
 	static {
 		luminareCore.put("L1", 39);
@@ -217,6 +218,28 @@ public class KingcityEdgeInterface {
 			}
 		}
 
+	}
+	
+	private void loadWattAndIdOnControllerValue() {
+		BufferedReader csvFile = null;
+		try {
+			csvFile = new BufferedReader(new FileReader(properties.getProperty("watt.idoncontroller.csv.location")));
+			String currentLine;
+			while ((currentLine = csvFile.readLine()) != null) {
+				String[] stringArray = currentLine.split(",");
+				WattAndIdonController.put(stringArray[0], stringArray[1]);
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		} finally {
+			if (csvFile != null) {
+				try {
+					csvFile.close();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			}
+		}
 	}
 
 }
