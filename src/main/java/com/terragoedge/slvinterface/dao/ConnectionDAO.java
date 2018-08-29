@@ -236,4 +236,13 @@ public enum ConnectionDAO {
     public ConnectionSource getConnection() {
         return connectionSource;
     }
+
+    public EdgeNoteView getEdgeNoteViewFromTitle(String title) {
+        try {
+            return edgeNoteViewDao.queryBuilder().where().eq(EdgeNoteView.TITLE, title).queryForFirst();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
 }
