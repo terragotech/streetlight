@@ -13,7 +13,7 @@ public class FormData {
 	private String formDef = null;
 	private String category = null;
 	private String formGuid = null;
-	//private String formTemplateDef = null;
+	private String formTemplateDef = null;
 	private String name = null;
 
 	public String getFormTemplateGuid() {
@@ -50,13 +50,13 @@ public class FormData {
 		this.formGuid = formGuid;
 	}
 
-	/*public String getFormTemplateDef() {
+	public String getFormTemplateDef() {
 		return formTemplateDef;
 	}
 
 	public void setFormTemplateDef(String formTemplateDef) {
 		this.formTemplateDef = formTemplateDef;
-	}*/
+	}
 
 	public String getName() {
 		return name;
@@ -69,4 +69,11 @@ public class FormData {
 	public void setFormDef(String formDef) {
 		this.formDef = formDef;
 	}
+
+	@Override
+	public String toString() {
+		return "FormData [formTemplateGuid=" + formTemplateGuid + ", formDef=" + formDef + ", category=" + category
+				+ ", formGuid=" + formGuid + ", formTemplateDef=" + formTemplateDef + ", name=" + name + "]";
+	}
+	
 }
