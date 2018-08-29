@@ -1,0 +1,33 @@
+{
+"Block":"location.mapnumber", --
+"Street_name":"address", --
+"Pole_Type":"pole.material",
+"Arm_Length":"fixing.type",
+"Lum_Ht":"comment",
+"Pole_Colour":"pole.colorcode",
+//"Luminaire_Per_Pole":"comment",
+//"SELC QR Code":"MacAddress",
+"Pole Tag Present":"comment",
+"Utility Pole":"comment",
+"Arm Type":"fixing.model",
+"Vegetation Obstruction":"comment",
+"New Luminare Code":"luminaire.model",
+/* "L1 Watt":"power",
+"L2 Watt":"power",
+"L3 Watt":"power",
+"L4 Watt":"power",
+"L5 Watt":"power",
+"L6 Watt":"power",
+"L7 Watt":"power",
+"L8 Watt":"power",
+"L9 Watt":"power",
+"L10 Watt":"power",
+"L11 Watt":"power",
+"L12 Watt":"power",
+"L13 Watt":"power", */
+"Watt":"power2",
+"Pole Length (m)":"pole.height",
+"Pole Condition":"pole.status",
+"Pole Manufacturer":"pole.type",
+"Fuse":"pole.groundtype"
+}
