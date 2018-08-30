@@ -24,6 +24,9 @@ public enum SqliteJDBCConnection {
     private String serverResourcePath;
     private String mobileResourcePath;
     private List<String> noResources = new ArrayList<>();
+    private List<String> totalMobileResources = new ArrayList<>();
+    private List<String> copiedResources = new ArrayList<>();
+    private List<String> presentResources = new ArrayList<>();
     ConnectionSource connectionSource = null;
     Dao<EdgeFormMobile, String> edgeformDao;
     Properties properties;
@@ -118,5 +121,57 @@ private void copyResources(List<String> missingResources,File folder){
                 }
             }
         }
+}
+
+public void copyAllResources(){
+        List<String> serverResourceNames = new ArrayList<>();
+    File serverResourceFolder = new File(serverResourcePath);
+    if(serverResourceFolder.exists()){
+        File[] files = serverResourceFolder.listFiles();
+        if(files != null){
+            for (File file : files){
+                if(!file.isDirectory()) {
+                    serverResourceNames.add(file.getName());
+                }
+            }
+        }
+    }
+
+    File mobileResourceFolder = new File(mobileResourcePath);
+    processMobileResources(serverResourceNames,mobileResourceFolder);
+
+    System.out.println("Total mobile Resources : "+ totalMobileResources);
+    System.out.println("Total mobile Resources count : "+ totalMobileResources.size());
+
+    System.out.println("Copied Resources : "+ copiedResources);
+    System.out.println("Copied Resources count : "+ copiedResources.size());
+
+    System.out.println("Already present Resources : "+ presentResources);
+    System.out.println("Already present Resources count : "+ presentResources.size());
+}
+
+private void processMobileResources(List<String> serverResources, File directory){
+    if(directory.exists()) {
+        File[] files = directory.listFiles();
+        if (files != null) {
+            for (File file : files) {
+                if(file.isDirectory()){
+                    processMobileResources(serverResources,file);
+                }else{
+                    totalMobileResources.add(file.getName());
+                    if(!serverResources.contains(file.getName())) {
+                        try {
+                            FileCopyUtils.copy(file, new File(serverResourcePath + "/" + file.getName()));
+                            copiedResources.add(file.getName());
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                    }else{
+                        presentResources.add(file.getName());
+                    }
+                }
+            }
+        }
+    }
 }
 }
