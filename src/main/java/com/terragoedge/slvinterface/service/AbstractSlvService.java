@@ -401,17 +401,7 @@ public abstract class AbstractSlvService extends EdgeService{
     }
 
 
-    protected ResponseEntity<String> updateNoteDetails(String baseUrl,String noteDetails, String noteGuid, String notebookGuid) {
-        if(notebookGuid != null){
-            String urlNew = baseUrl + "/rest/notebooks/" + notebookGuid + "/notes/" + noteGuid;
-            return serverCall(urlNew,HttpMethod.PUT,noteDetails);
-        }else{
-            String urlNew = baseUrl + "/rest/notes/" + noteGuid;
-            return serverCall(urlNew,HttpMethod.PUT,noteDetails);
-        }
 
-
-    }
 
 
     public String getGeoZoneValue(String title){

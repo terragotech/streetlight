@@ -178,49 +178,6 @@ public class MacAddressService extends AbstractSlvService {
         return edgeMacAddressList;
     }
 
-    protected String geNoteDetails(String baseUrl, String noteName) {
-        try {
-            //  String urlNew = baseUrl + "/rest/notes/notesdata/" + noteName;
-            String urlNew = baseUrl + "/rest/notes/" + noteName;
-            //  String urlNew = baseUrl + "/rest/notes?search=" + noteName;
-            logger.info("Url to get Note Details:" + urlNew);
-            ResponseEntity<String> responseEntity = serverCall(urlNew, HttpMethod.GET, null);
-            if (responseEntity.getStatusCode().is2xxSuccessful()) {
-                String response = responseEntity.getBody();
-                logger.info("----------Response-------");
-                logger.info(response);
-                return response;
-            }
-        } catch (Exception e) {
-            logger.error("Error in getNoteDetails", e);
-        }
-        return null;
-    }
-
-    public static void updateFormValue(List<EdgeFormData> edgeFormDatas, int id, String value) {
-        EdgeFormData tempEdgeFormData = new EdgeFormData();
-        tempEdgeFormData.setId(id);
-        int pos = edgeFormDatas.indexOf(tempEdgeFormData);
-        if (pos != -1) {
-            EdgeFormData edgeFormData = edgeFormDatas.get(pos);
-            edgeFormData.setValue(edgeFormData.getLabel() + "#" + value);
-        }
-    }
-
-    protected List<EdgeFormData> getEdgeFormData(String data) {
-        List<EdgeFormData> edgeFormDatas = gson.fromJson(data, new TypeToken<List<EdgeFormData>>() {
-        }.getType());
-        return edgeFormDatas;
-    }
-
-    public void setGroupValue(String value, JsonObject notesJson) {
-        JsonObject jsonObject = new JsonObject();
-        jsonObject.addProperty("key", "groupGuid");
-        jsonObject.addProperty("value", value);
-        JsonArray jsonArray = new JsonArray();
-        jsonArray.add(jsonObject);
-        notesJson.add("dictionary", jsonArray);
-    }
 
 
     public List<EdgeMacAddress> getEdgeNoteFromServer() {
