@@ -31,23 +31,15 @@ import java.util.*;
 
 import static com.terragoedge.slvinterface.utils.Utils.dateFormat;
 
-public class SlvInterfaceService extends AbstractSlvService {
+public abstract  class SlvInterfaceService extends AbstractSlvService {
     Properties properties = null;
-    Gson gson = null;
-    JsonParser jsonParser = null;
     final Logger logger = Logger.getLogger(SlvInterfaceService.class);
-    private SlvRestService slvRestService = null;
     private List<ConfigurationJson> configurationJsonList = null;
-    private ConnectionDAO connectionDAO = null;
-    private SLVInterfaceDAO slvInterfaceDAO = null;
 
     public SlvInterfaceService() {
+        super();
         this.properties = PropertiesReader.getProperties();
-        this.gson = new Gson();
-        this.jsonParser = new JsonParser();
-        slvRestService = new SlvRestService();
-        connectionDAO = ConnectionDAO.INSTANCE;
-        slvInterfaceDAO = new SLVInterfaceDAO();
+
     }
 
 
@@ -100,9 +92,7 @@ public class SlvInterfaceService extends AbstractSlvService {
         String url = PropertiesReader.getProperties().getProperty("streetlight.edge.url.main");
 
         url = url + PropertiesReader.getProperties().getProperty("streetlight.edge.url.notes.get");
-        String systemDate = PropertiesReader.getProperties().getProperty("streetlight.edge.customdate");
         String controllerStrIdValue = properties.getProperty("streetlight.controller.str.id");
-        String geozoneId = properties.getProperty("streetlight.slv.geozoneid");
 
         logger.info("GetNotesUrl :" + url);
         List<String> noteGuidsList = connectionDAO.getEdgeNoteGuid(formTemplateGuid);
@@ -112,20 +102,19 @@ public class SlvInterfaceService extends AbstractSlvService {
                     String restUrl = url + edgenoteGuid;
                     ResponseEntity<String> responseEntity = slvRestService.getRequest(restUrl, false, accessToken);
                     logger.info("notes response :" + restUrl);
-                    Thread.sleep(10000);
+                    //Thread.sleep(10000);
                     if (responseEntity.getStatusCode().is2xxSuccessful()) {
                         String notesData = responseEntity.getBody();
                         logger.info("notes response from server :" + notesData);
                         System.out.println(notesData);
-                        // Convert notes Json to List of notes object
-                        Type listType = new TypeToken<ArrayList<EdgeNote>>() {
-                        }.getType();
+
                         List<EdgeNote> edgeNoteList = new ArrayList<>();
                         EdgeNote edgeNote = gson.fromJson(notesData, EdgeNote.class);
                         edgeNoteList.add(edgeNote);
-                        //  List<EdgeNote> edgeNoteList = gson.fromJson(notesData, listType);
+
                         for (EdgeNote edgenote : edgeNoteList) {
                             logger.info("ProcessNoteTitle is :" + edgenote.getTitle());
+                            String geozoneId = getGeoZoneValue(edgenote.getTitle());
                             processEdgeNote(edgenote, noteGuids, formTemplateGuid, geozoneId, controllerStrIdValue);
                         }
                     }
@@ -204,7 +193,7 @@ public class SlvInterfaceService extends AbstractSlvService {
                                 createDevice(edgeNote, slvSyncDetail, geozoneId);
                             }
                             processSetDevice(edgeFormDataList, configurationJson, edgeNote, paramsList, slvSyncDetail, controllerStrIdValue);
-                            replaceOLC(controllerStrIdValue, edgeNote.getTitle(), slvSyncDetail.getMacAddress());
+                           // replaceOLC(controllerStrIdValue, edgeNote.getTitle(), slvSyncDetail.getMacAddress());
                             break;
                         case UPDATE_DEVICE:
                             logger.info(edgeNote.getTitle() + " is going to Replace.");
@@ -289,24 +278,7 @@ public class SlvInterfaceService extends AbstractSlvService {
 
     }
 
-    // replaceOLC(controllerStrIdValue, edgeNote.getTitle(), newNodeMacAddress);
-    public void processSetDevice(List<EdgeFormData> edgeFormDataList, ConfigurationJson configurationJson, EdgeNote edgeNote, List<Object> paramsList, SlvSyncDetails slvSyncDetails, String controllerStrIdValue) throws NoValueException, DeviceUpdationFailedException {
-        //setValues and Empty ReplaceOLC
-        List<Id> idList = configurationJson.getIds();
-        // Process Fixture value
-        Id fixureID = getIDByType(idList, EdgeComponentType.FIXTURE.toString());
-        if (fixureID != null) {
-            processFixtureScan(edgeFormDataList, fixureID, edgeNote, paramsList, slvSyncDetails);
-        }
-        paramsList.add("idOnController=" + edgeNote.getTitle());
-        paramsList.add("controllerStrId=" + controllerStrIdValue);
-        String nodeTypeStrId = properties.getProperty("streetlight.slv.equipment.type");
-        paramsList.add("nodeTypeStrId=" + nodeTypeStrId);
-        addStreetLightData("nodeTypeStrId", nodeTypeStrId, paramsList);
-        addOtherParams(edgeNote, paramsList);
-        setDeviceValues(paramsList, slvSyncDetails);
 
-    }
 
     public void processFixtureScan(List<EdgeFormData> edgeFormDataList, Id fixureID, EdgeNote edgeNote, List<Object> paramsList, SlvSyncDetails slvSyncDetails) throws NoValueException {
         try {
@@ -319,7 +291,7 @@ public class SlvInterfaceService extends AbstractSlvService {
             // buildFixtureStreetLightData(fixtureScan, paramsList, edgeNote);
             addStreetLightData("luminaire.installdate", dateFormat(edgeNote.getCreatedDateTime()), paramsList);
             addStreetLightData("install.date", dateFormat(edgeNote.getCreatedDateTime()), paramsList);                                                                                                // TODO
-            buildAmerescoUsaFixtureData(fixtureScan, paramsList, edgeNote);
+            buildFixtureStreetLightData(fixtureScan, paramsList, edgeNote);
         } catch (NoValueException e) {
             if (fixureID.isRequired()) {
                 throw new NoValueException(e.getMessage());
@@ -518,5 +490,8 @@ public class SlvInterfaceService extends AbstractSlvService {
             }
         }
     }
+
+
+
 
 }

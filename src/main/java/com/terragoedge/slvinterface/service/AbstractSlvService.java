@@ -2,10 +2,12 @@ package com.terragoedge.slvinterface.service;
 
 import com.google.gson.*;
 import com.terragoedge.slvinterface.dao.ConnectionDAO;
+import com.terragoedge.slvinterface.dao.SLVInterfaceDAO;
 import com.terragoedge.slvinterface.dao.tables.SlvDevice;
 import com.terragoedge.slvinterface.dao.tables.SlvSyncDetails;
 import com.terragoedge.slvinterface.enumeration.Status;
 import com.terragoedge.slvinterface.exception.*;
+import com.terragoedge.slvinterface.json.slvInterface.ConfigurationJson;
 import com.terragoedge.slvinterface.json.slvInterface.Id;
 import com.terragoedge.slvinterface.model.DeviceMacAddress;
 import com.terragoedge.slvinterface.model.EdgeFormData;
@@ -24,19 +26,21 @@ import org.wololo.jts2geojson.GeoJSONReader;
 
 import java.util.*;
 
-public class AbstractSlvService extends EdgeService{
+public abstract class AbstractSlvService extends EdgeService{
     private Properties properties = null;
     private JsonParser jsonParser = null;
-    private SlvRestService slvRestService = null;
-    private Gson gson = null;
+     SlvRestService slvRestService = null;
+     SLVInterfaceDAO slvInterfaceDAO = null;
+     Gson gson = null;
     private static Logger logger = Logger.getLogger(AbstractSlvService.class);
-    private ConnectionDAO connectionDAO;
+     ConnectionDAO connectionDAO;
 
     public AbstractSlvService() {
         gson = new Gson();
         jsonParser = new JsonParser();
         properties = PropertiesReader.getProperties();
         slvRestService = new SlvRestService();
+        slvInterfaceDAO = new SLVInterfaceDAO();
         connectionDAO = ConnectionDAO.INSTANCE;
     }
 
@@ -126,50 +130,7 @@ public class AbstractSlvService extends EdgeService{
         return null;
     }
 
-    public void buildFixtureStreetLightData(String data, List<Object> paramsList, EdgeNote edgeNote)
-            throws InValidBarCodeException {
-        System.out.println("buildFixtureStreetLightData = " + data);
-        String[] fixtureInfo = data.split(",");
-        logger.info("Fixture QR Scan Val lenght" + fixtureInfo.length);
-        if (fixtureInfo.length >= 12) {
-            addStreetLightData("device.node.serialnumber", fixtureInfo[0], paramsList);
-            /**
-             * As per Mail conversion, In the older data, the luminaire model was the
-             * shorter version of the fixture, so for the General Electric fixtures it was
-             * ERLH. The Luminaire Part Number would be the longer more detailed number.
-             */
-            String partNumber = fixtureInfo[1].trim();
-            String model = fixtureInfo[2].trim();
-            /*if (fixtureInfo[1].trim().length() <= fixtureInfo[2].trim().length()) {
-                model = fixtureInfo[1].trim();
-                partNumber = fixtureInfo[2].trim();
-            }*/
-            addStreetLightData("categoryStrId", partNumber, paramsList);
-            addStreetLightData("device.luminaire.drivermanufacturer", model, paramsList);
-            addStreetLightData("ElexonChargeCode", fixtureInfo[3], paramsList);
-            String powerVal = fixtureInfo[4];
-            if (powerVal != null && !powerVal.isEmpty()) {
-                powerVal = powerVal.replaceAll("W", "");
-                powerVal = powerVal.replaceAll("w", "");
-            }
 
-            addStreetLightData("lampType", "Manufacturer/LampTechno/Power/BallastType", paramsList);
-            addStreetLightData("luminaire.brand", fixtureInfo[5], paramsList);
-            // dailyReportCSV.setFixtureType(fixtureInfo[5]);
-            addStreetLightData("device.luminaire.colortemp", fixtureInfo[6], paramsList);
-            addStreetLightData("luminaire.model", fixtureInfo[7], paramsList);
-            addStreetLightData("device.luminaire.manufacturedate", fixtureInfo[8], paramsList);
-            addStreetLightData("device.luminaire.partnumber", fixtureInfo[9], paramsList);
-            addStreetLightData("luminaire.type", fixtureInfo[10], paramsList);
-            addStreetLightData("power", fixtureInfo[11], paramsList);
-//            addStreetLightData("ballast.dimmingtype", fixtureInfo[12], paramsList);
-            System.out.println("steetlight processed data" + paramsList);
-
-        } else {
-            throw new InValidBarCodeException(
-                    "Fixture MAC address is not valid (" + edgeNote.getTitle() + "). Value is:" + data);
-        }
-    }
 
     public String validateMACAddress(String existingNodeMacAddress, String idOnController, String geoZoneId)
             throws QRCodeNotMatchedException {
@@ -273,44 +234,9 @@ public class AbstractSlvService extends EdgeService{
         }
     }
 
-    public void buildAmerescoUsaFixtureData(String data, List<Object> paramsList, EdgeNote edgeNote)
-            throws InValidBarCodeException {
-        String[] fixtureInfo = data.split(",");
-        logger.info("Fixture QR Scan Val lenght" + fixtureInfo.length);
-        if (fixtureInfo.length >= 13) {
-            addStreetLightData("luminaire.brand", fixtureInfo[0], paramsList);
-            /**
-             * As per Mail conversion, In the older data, the luminaire model was the
-             * shorter version of the fixture, so for the General Electric fixtures it was
-             * ERLH. The Luminaire Part Number would be the longer more detailed number.
-             */
-            String partNumber = fixtureInfo[1].trim();
-            String model = fixtureInfo[2].trim();
-            if (fixtureInfo[1].trim().length() <= fixtureInfo[2].trim().length()) {
-                model = fixtureInfo[1].trim();
-                partNumber = fixtureInfo[2].trim();
-            }
-            addStreetLightData("device.luminaire.partnumber", partNumber, paramsList);
-            addStreetLightData("luminaire.model", model, paramsList);
-            addStreetLightData("device.luminaire.manufacturedate", fixtureInfo[3], paramsList);
-            String powerVal = fixtureInfo[4];
-            if (powerVal != null && !powerVal.isEmpty()) {
-                powerVal = powerVal.replaceAll("W", "");
-                powerVal = powerVal.replaceAll("w", "");
-            }
+    public abstract void buildFixtureStreetLightData(String data, List<Object> paramsList, EdgeNote edgeNote)
+            throws InValidBarCodeException;
 
-            addStreetLightData("power", powerVal, paramsList);
-            addStreetLightData("fixing.type", fixtureInfo[5], paramsList);
-            // dailyReportCSV.setFixtureType(fixtureInfo[5]);
-            addStreetLightData("device.luminaire.colortemp", fixtureInfo[6], paramsList);
-            addStreetLightData("device.luminaire.lumenoutput", fixtureInfo[7], paramsList);
-            addStreetLightData("luminaire.DistributionType", fixtureInfo[8], paramsList);
-            addStreetLightData("luminaire.colorcode", fixtureInfo[9], paramsList);
-            addStreetLightData("device.luminaire.drivermanufacturer", fixtureInfo[10], paramsList);
-            addStreetLightData("device.luminaire.driverpartnumber", fixtureInfo[11], paramsList);
-            addStreetLightData("ballast.dimmingtype", fixtureInfo[12], paramsList);
-        }
-    }
 
     public void clearAndUpdateDeviceData(String idOnController, String controllerStrId) {
         String mainUrl = properties.getProperty("streetlight.slv.url.main");
@@ -362,11 +288,10 @@ public class AbstractSlvService extends EdgeService{
         // controller.installdate - 2017/10/10
 
         addStreetLightData("installStatus", "Installed", paramsList);
-        addStreetLightData("location.utillocationid", edgeNote.getTitle()+".lamp", paramsList);
+        addStreetLightData("location.utillocationid", edgeNote.getTitle()+".Lamp", paramsList);
         addStreetLightData("location.locationtype", "LOCATION_TYPE_PREMISE", paramsList);
         String nodeTypeStrId = properties.getProperty("streetlight.slv.equipment.type");
         System.out.println(nodeTypeStrId);
-        //addStreetLightData("modelFunctionId", nodeTypeStrId, paramsList);
 
       //  addStreetLightData("DimmingGroupName", "Dimming Evaluation", paramsList);
     }
@@ -488,4 +413,12 @@ public class AbstractSlvService extends EdgeService{
 
     }
 
+
+    public String getGeoZoneValue(String title){
+        String geozoneId = properties.getProperty("streetlight.slv.geozoneid");
+        return geozoneId;
+    }
+
+
+    public abstract void processSetDevice(List<EdgeFormData> edgeFormDataList, ConfigurationJson configurationJson, EdgeNote edgeNote, List<Object> paramsList, SlvSyncDetails slvSyncDetails, String controllerStrIdValue) throws NoValueException, DeviceUpdationFailedException;
 }

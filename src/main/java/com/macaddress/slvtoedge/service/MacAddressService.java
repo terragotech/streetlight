@@ -8,7 +8,12 @@ import com.google.gson.reflect.TypeToken;
 import com.macaddress.slvtoedge.model.EdgeMacAddress;
 import com.terragoedge.slvinterface.dao.ConnectionDAO;
 import com.terragoedge.slvinterface.dao.SLVInterfaceDAO;
+import com.terragoedge.slvinterface.dao.tables.SlvSyncDetails;
+import com.terragoedge.slvinterface.exception.DeviceUpdationFailedException;
+import com.terragoedge.slvinterface.exception.InValidBarCodeException;
+import com.terragoedge.slvinterface.exception.NoValueException;
 import com.terragoedge.slvinterface.exception.NotesNotFoundException;
+import com.terragoedge.slvinterface.json.slvInterface.ConfigurationJson;
 import com.terragoedge.slvinterface.model.EdgeFormData;
 import com.terragoedge.slvinterface.model.EdgeNote;
 import com.terragoedge.slvinterface.service.AbstractSlvService;
@@ -245,4 +250,13 @@ public class MacAddressService extends AbstractSlvService {
 
     }
 
+    @Override
+    public void buildFixtureStreetLightData(String data, List<Object> paramsList, EdgeNote edgeNote) throws InValidBarCodeException {
+
+    }
+
+    @Override
+    public void processSetDevice(List<EdgeFormData> edgeFormDataList, ConfigurationJson configurationJson, EdgeNote edgeNote, List<Object> paramsList, SlvSyncDetails slvSyncDetails, String controllerStrIdValue) throws NoValueException, DeviceUpdationFailedException {
+
+    }
 }

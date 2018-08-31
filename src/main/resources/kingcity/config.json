@@ -1,0 +1,17 @@
+[
+  {
+    "type": "NEW_DEVICE",
+    "ids": [
+      {
+        "id": 22,
+        "type": "MAC"
+      }
+    ],
+    "action": [
+      {
+        "id": 1,
+        "value": "New Streetlight"
+      }
+    ]
+  }
+]
