@@ -23,7 +23,7 @@ import java.util.List;
 public enum InventoryDAO {
 
     INSTANCE;
-    private final static String DATABASE_URL = "jdbc:postgresql://172.18.255.24:5432/terragoedge?user=postgres&password=password";
+    private final static String DATABASE_URL = "jdbc:postgresql://127.0.0.1:5432/terragoinventory?user=postgres&password=password";
 
     ConnectionSource connectionSource = null;
     private Dao<SlvSyncDetails, String> slvSyncDetailsDao;
@@ -224,6 +224,26 @@ public enum InventoryDAO {
         try {
             return slvSyncDetailsDao.queryBuilder().where().eq(SlvSyncDetails.NOTENAME, fixtureId).and().isNull(SlvSyncDetails.TALQ_ADDRESS).queryForFirst();
         } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    public EdgeNotebookEntity getInstalledNotebook(){
+        try{
+          return   notebookDao.queryBuilder().where().eq(EdgeNotebookEntity.NOTEBOOK_NAME,"Installed").and().eq(EdgeNotebookEntity.IS_DELETED,false).queryForFirst();
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    public EdgeNoteView getEdgeNoteViewByTitle(String title){
+        try{
+            EdgeNotebookEntity installedNb = getInstalledNotebook();
+          String sss =  edgeNoteViewDao.queryBuilder().orderBy(EdgeNoteView.CREATED_DATE_TIME,false).where().eq(EdgeNoteView.TITLE,title).and().ne(EdgeNoteView.EDGE_NOTEBOOK_ENTITY,installedNb).getStatement();
+          return   edgeNoteViewDao.queryBuilder().orderBy(EdgeNoteView.CREATED_DATE_TIME,false).where().eq(EdgeNoteView.TITLE,title).and().ne(EdgeNoteView.EDGE_NOTEBOOK_ENTITY,installedNb.getNotebookId()).queryForFirst();
+        }catch (Exception e){
             e.printStackTrace();
         }
         return null;

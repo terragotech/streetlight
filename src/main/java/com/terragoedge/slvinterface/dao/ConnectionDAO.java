@@ -26,7 +26,7 @@ public enum ConnectionDAO {
 
     INSTANCE;
 
-    private final static String DATABASE_URL = "jdbc:postgresql://127.0.0.1:5432/terragoedge?user=postgres&password=password";
+    private final static String DATABASE_URL = "jdbc:postgresql://127.0.0.1:5432/terragoinstall?user=postgres&password=password";
 
     ConnectionSource connectionSource = null;
     private Dao<SlvSyncDetails, String> slvSyncDetailsDao;
@@ -69,9 +69,8 @@ public enum ConnectionDAO {
     public EdgeNoteView getEdgeNoteViewById(List<Integer> noteId) {
         try {
             QueryBuilder<EdgeNoteView, String> queryBuilder = edgeNoteViewDao.queryBuilder();
-            queryBuilder.where().in(EdgeNoteView.NOTE_ID, noteId);
-            queryBuilder.orderBy(EdgeNoteView.SYNC_TIME, false);
-            queryBuilder.limit(1L);
+            queryBuilder.where().eq(EdgeNoteView.GROUP_NAME, "Complete").and().in(EdgeNoteView.NOTE_ID, noteId);
+            queryBuilder.orderBy(EdgeNoteView.CREATED_DATE_TIME, true);
            return queryBuilder.queryForFirst();
         } catch (Exception e) {
             e.printStackTrace();

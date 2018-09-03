@@ -9,14 +9,14 @@ import java.util.List;
 @DatabaseTable(tableName = "edgenoteview")
 public class EdgeNoteView {
 	
-	public static final String GROUP_NAME = "groupName";
+	public static final String GROUP_NAME = "groupname";
 	public static final String GROUP_ID = "groupGuid";
 	public static final String COLOR_NAME = "colorName";
 	
 	public static final String NOTE_ID = "noteid";
 	public static final String NOTE_GUID = "noteguid";
 	public static final String CREATED_BY = "createdBy";
-	public static final String CREATED_DATE_TIME = "createdDateTime";
+	public static final String CREATED_DATE_TIME = "createddatetime";
 	public static final String DESCRIPTION = "description";
 	public static final String TITLE = "title";
 	public static final String NOTES_TYPE = "notesType";
@@ -27,7 +27,7 @@ public class EdgeNoteView {
 	public static final String IS_DELETED = "isdeleted";
 	public static final String LOCATION_DESCRIPTION = "locationDescription";
 	public static final String PARENT_NOTE_ID = "parentNoteId";
-	public static final String EDGE_NOTEBOOK_ENTITY = "edgeNotebookEntity";
+	public static final String EDGE_NOTEBOOK_ENTITY = "notebookid";
 	public static final String GEOMETRY = "geometry";
 	public static final String OAUTH = "oAuth";
 	

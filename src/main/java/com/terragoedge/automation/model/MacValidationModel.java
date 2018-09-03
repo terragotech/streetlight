@@ -65,7 +65,12 @@ public class MacValidationModel {
     }
 
     public void setInstallStatus(String installStatus) {
-        this.installStatus = installStatus;
+        if(this.installStatus != null){
+            this.installStatus = this.installStatus + "|"+installStatus;
+        }else{
+            this.installStatus = installStatus;
+        }
+
     }
 
     public String getInventoryStatus() {
@@ -73,7 +78,11 @@ public class MacValidationModel {
     }
 
     public void setInventoryStatus(String inventoryStatus) {
-        this.inventoryStatus = inventoryStatus;
+        if(this.inventoryStatus != null){
+            this.inventoryStatus = this.inventoryStatus + "|"+inventoryStatus;
+        }else{
+            this.inventoryStatus = inventoryStatus;
+        }
     }
 
     @Override

@@ -38,7 +38,6 @@ public class ReportAutomationService extends AbstractReportService {
         if (enabledWeeklyReport != null && Boolean.parseBoolean(enabledWeeklyReport)) {
             String weeklyReportsPath = PropertiesReader.getProperties().getProperty("edge.reports.reportpath");
             List<MacValidationModel> macValidationModelList = getCsvToBean(weeklyReportsPath,ReportType.MAC_VALIDATION);
-            macValidationModelList.clear();
             for (MacValidationModel macValidationModel : macValidationModelList) {
                 List<Integer> noteIds = connectionDAO.getEdgeNoteId(macValidationModel.getMacaddress());
                 System.out.println("Title  : " + macValidationModel.getFixtureid());
@@ -49,9 +48,13 @@ public class ReportAutomationService extends AbstractReportService {
                         updateReportStatus(ServerType.Install, macValidationModel, edgeNoteView, null);
                         //TODO
                         System.out.println("InventoryCalled");
-                        EdgeNotebookEntity edgeNotebookEntity = inventoryDAO.getEdgeNotebookEntity(edgeNoteView.getNotebookid());
-                        System.out.println("NotebookName : " + edgeNotebookEntity.getNotebookName());
-                        updateReportStatus(ServerType.Inventory, macValidationModel, edgeNoteView, edgeNotebookEntity.getNotebookName());
+                        EdgeNoteView edgeNoteViewList = inventoryDAO.getEdgeNoteViewByTitle(macValidationModel.getMacaddress());
+
+                       String notebookId = edgeNoteViewList.getNotebookid();
+                        EdgeNotebookEntity edgeNotebookEntity = inventoryDAO.getEdgeNotebookEntity(notebookId);
+
+                      //  System.out.println("NotebookName : " + edgeNotebookEntity.getNotebookName());
+                        updateReportStatus(ServerType.Inventory, macValidationModel, edgeNoteView, edgeNotebookEntity);
                     }
                 }
             }
@@ -81,7 +84,7 @@ public class ReportAutomationService extends AbstractReportService {
         return dateFormat.format(date);
     }
 
-    public void updateReportStatus(ServerType type, MacValidationModel macValidationModel, EdgeNoteView edgeNoteView, String notebookName) {
+    public void updateReportStatus(ServerType type, MacValidationModel macValidationModel, EdgeNoteView edgeNoteView, EdgeNotebookEntity edgeNotebookEntity) {
         switch (type) {
             case Install:
                 if (macValidationModel.getFixtureid().equals(edgeNoteView.getTitle()) && edgeNoteView.getCreatedBy().equals(macValidationModel.getUser())) {
@@ -91,7 +94,7 @@ public class ReportAutomationService extends AbstractReportService {
                 }
                 break;
             case Inventory:
-                if (notebookName != null && macValidationModel.getAssigneduser().equals(notebookName)) {
+                if (edgeNotebookEntity != null && macValidationModel.getAssigneduser().equals(edgeNotebookEntity.getNotebookName())) {
                     macValidationModel.setInventoryStatus(Status.Success.toString());
                 } else {
                     macValidationModel.setInventoryStatus(Status.Failure.toString());
