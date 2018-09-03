@@ -7,15 +7,15 @@ import com.j256.ormlite.table.DatabaseTable;
 public class EdgeNotebookEntity {
 
     public static final String NOTEBOOK_ID = "notebookid";
-    public static final String NOTEBOOK_DESC = "notebookDesc";
-    public static final String NOTEBOOK_NAME = "notebookName";
-    public static final String NOTEBOOK_GUID = "notebookGuid";
-    public static final String LASTUPDATED_TIME = "lastUpdatedTime";
-    public static final String CREATED_BY = "createdBy";
+    public static final String NOTEBOOK_DESC = "notebookdesc";
+    public static final String NOTEBOOK_NAME = "notebookname";
+    public static final String NOTEBOOK_GUID = "notebookguid";
+    public static final String LASTUPDATED_TIME = "lastupdatedtime";
+    public static final String CREATED_BY = "createdby";
     public static final String DEFAULT_FORM_ID = "quickNoteFormTemplateID";
     public static final String NOTE_NAME_TYPE = "noteNameType";
     public static final String CUSTOM_NAME = "customName";
-    public static final String IS_DELETED = "isDeleted";
+    public static final String IS_DELETED = "isdeleted";
 
 
     @DatabaseField(columnName = "notebookid")
