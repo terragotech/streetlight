@@ -11,6 +11,7 @@ import com.j256.ormlite.table.TableUtils;
 import com.terragoedge.slvinterface.dao.tables.SlvDevice;
 import com.terragoedge.slvinterface.dao.tables.SlvSyncDetails;
 import com.terragoedge.slvinterface.entity.EdgeFormEntity;
+import com.terragoedge.slvinterface.entity.EdgeNoteEntity;
 import com.terragoedge.slvinterface.entity.EdgeNoteView;
 import com.terragoedge.slvinterface.entity.EdgeNotebookEntity;
 import com.terragoedge.slvinterface.enumeration.Status;
@@ -26,7 +27,7 @@ public enum ConnectionDAO {
 
     INSTANCE;
 
-    private final static String DATABASE_URL = "jdbc:postgresql://127.0.0.1:5432/terragoedge?user=postgres&password=password";
+    private final static String DATABASE_URL = "jdbc:postgresql://localhost/terragoedge?user=postgres&password=password";
 
     ConnectionSource connectionSource = null;
     private Dao<SlvSyncDetails, String> slvSyncDetailsDao;
@@ -34,6 +35,7 @@ public enum ConnectionDAO {
     private Dao<EdgeNoteView, String> edgeNoteViewDao;
     private Dao<EdgeNotebookEntity, String> notebookDao;
     public Dao<SlvDevice, String> slvDeviceDao = null;
+    private Dao<EdgeNoteEntity, String> edgeNoteDao = null;
 
     ConnectionDAO() {
 
@@ -46,6 +48,7 @@ public enum ConnectionDAO {
             edgeNoteViewDao = DaoManager.createDao(connectionSource, EdgeNoteView.class);
             slvSyncDetailsDao = DaoManager.createDao(connectionSource, SlvSyncDetails.class);
             slvDeviceDao = DaoManager.createDao(connectionSource, SlvDevice.class);
+            edgeNoteDao = DaoManager.createDao(connectionSource, EdgeNoteEntity.class);
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -237,12 +240,16 @@ public enum ConnectionDAO {
         return connectionSource;
     }
 
-    public EdgeNoteView getEdgeNoteViewFromTitle(String title) {
+    public List<EdgeFormEntity> getFormDef(String noteGuid){
         try {
-            return edgeNoteViewDao.queryBuilder().where().eq(EdgeNoteView.TITLE, title).queryForFirst();
-        } catch (Exception e) {
+            QueryBuilder<EdgeFormEntity,String> formBuilder = edgeformDao.queryBuilder();
+            QueryBuilder<EdgeNoteEntity,String> noteBuilder = edgeNoteDao.queryBuilder();
+            EdgeNoteEntity edgeNoteEntity = noteBuilder.where().eq("noteguid", noteGuid).queryForFirst();
+            return formBuilder.where().eq("edgenoteentity_noteid", edgeNoteEntity.getNoteid()).query();
+        }catch (Exception e){
             e.printStackTrace();
         }
-        return null;
+        return new ArrayList<>();
     }
+
 }

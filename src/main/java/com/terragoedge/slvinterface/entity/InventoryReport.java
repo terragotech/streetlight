@@ -9,11 +9,17 @@ public class InventoryReport {
     private int id;
     @DatabaseField(columnName = "sourcenoteguid")
     private String sourcenoteguid;
+    @DatabaseField(columnName = "macaddress")
     private String macaddress;
+    @DatabaseField(columnName = "processingnoteguid")
     private String processingnoteguid;
+    @DatabaseField(columnName = "currentlocation")
     private String currentlocation;
+    @DatabaseField(columnName = "expectedlocation")
     private String expectedlocation;
+    @DatabaseField(columnName = "destinationlocation")
     private String destinationlocation;
+    @DatabaseField(columnName = "action")
     private String action;
 
     public int getId() {
