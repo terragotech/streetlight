@@ -45,7 +45,7 @@ public enum ConnectionDAO {
         try {
             properties = PropertiesReader.getProperties();
             String installPublicIp = properties.getProperty("streetlight.install.public.ip");
-            connectionSource = new JdbcConnectionSource("jdbc:postgresql://"+installPublicIp+"/terragoinstall?user=postgres&password=password");
+            connectionSource = new JdbcConnectionSource("jdbc:postgresql://"+installPublicIp+"/terragoedge?user=postgres&password=password");
             //TableUtils.createTable(connectionSource, SlvSyncDetails.class);
             // TableUtils.createTable(connectionSource, SlvDevice.class);
             edgeformDao = DaoManager.createDao(connectionSource, EdgeFormEntity.class);
