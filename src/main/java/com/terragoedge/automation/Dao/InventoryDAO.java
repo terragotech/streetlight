@@ -24,7 +24,7 @@ import java.util.List;
 public enum InventoryDAO {
 
     INSTANCE;
-    private final static String DATABASE_URL = "jdbc:postgresql://127.0.0.1:5432/terragoinventory?user=postgres&password=password";
+    private final static String DATABASE_URL = "jdbc:postgresql://127.0.0.1:5432/terragoedge?user=postgres&password=password";
 
     ConnectionSource connectionSource = null;
     private Dao<SlvSyncDetails, String> slvSyncDetailsDao;

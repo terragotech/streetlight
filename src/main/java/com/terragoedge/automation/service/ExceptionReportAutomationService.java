@@ -15,6 +15,8 @@ import com.terragoedge.slvinterface.entity.InventoryReport;
 import com.terragoedge.slvinterface.model.*;
 import com.terragoedge.slvinterface.service.AbstractService;
 import com.terragoedge.slvinterface.service.EdgeService;
+import com.terragoedge.slvinterface.utils.PropertiesReader;
+import org.apache.log4j.Logger;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -28,19 +30,24 @@ public class ExceptionReportAutomationService extends EdgeService {
     private ConnectionDAO connectionDAO;
     private EdgeReportDAO edgeReportDAO;
     private Gson gson;
+    private Properties properties;
+    private Logger logger = Logger.getLogger(ExceptionReportAutomationService.class);
     private Map<String, String> users = new HashMap<>();
     public ExceptionReportAutomationService() {
         inventoryDAO = InventoryDAO.INSTANCE;
         connectionDAO = ConnectionDAO.INSTANCE;
         edgeReportDAO = EdgeReportDAO.INSTANCE;
+        properties = PropertiesReader.getProperties();
         gson = new Gson();
         users = getAllUsers();
     }
 
     public void start(){
+        logger.info("**** ExceptionReportAutomationService start ****");
         JsonArray jsonArray = readInputFile();
         int index = 0;
         List<String> results = new ArrayList<>();
+        logger.info("input data: "+jsonArray);
         for(JsonElement jsonElement : jsonArray){
             JsonObject jsonObject = (JsonObject) jsonElement;
             if(jsonObject != null){
@@ -57,6 +64,8 @@ public class ExceptionReportAutomationService extends EdgeService {
                     for (InventoryReport inventoryReport : inventoryReports) {
                         String processingGuid = inventoryReport.getProcessingnoteguid();
                         String sourceGuid = inventoryReport.getSourcenoteguid();
+                        logger.info("processingGuid: "+processingGuid);
+                        logger.info("sourceGuid: "+sourceGuid);
                         currentLocations.add(getCurrentLocation(processingGuid));
                         ExceptionLocation exceptionLocation = getSelectedLocation(workflow,sourceGuid, jsonObject.get("username").getAsString());
                         selectedLocations.addAll(exceptionLocation.getSelectedLoc());
@@ -64,6 +73,12 @@ public class ExceptionReportAutomationService extends EdgeService {
 
                     }
                     boolean isSuccess = true;
+
+                    logger.info("macaddress: "+macAddress);
+                    logger.info("destinationLocations: "+destinationLocations);
+                    logger.info("currentLocations: "+currentLocations);
+                    logger.info("selectedLocations: "+selectedLocations);
+
                     if (!destinationLocations.contains(jsonObject.get("destination").getAsString())) {
                         isSuccess = false;
                     }
@@ -74,7 +89,6 @@ public class ExceptionReportAutomationService extends EdgeService {
                         isSuccess = false;
                     }
                     results.add(line+","+isSuccess);
-                    System.out.println(inventoryReports);
                 }
             }
             index++;
@@ -82,15 +96,7 @@ public class ExceptionReportAutomationService extends EdgeService {
         if(results.size() > 0){
             writeStatus(results);
         }
-    }
-
-    private String getInstallNotebookName(EdgeNoteView edgeNoteView){
-        String notebookId = edgeNoteView.getNotebookid();
-        EdgeNotebookEntity edgeNotebookEntity = connectionDAO.getEdgeNotebookEntity(notebookId);
-        if(edgeNotebookEntity != null){
-            return edgeNotebookEntity.getNotebookName();
-        }
-        return "";
+        logger.info("**** ExceptionReportAutomationService finished ****");
     }
 
     private String getInventoryNotebookName(EdgeNoteView edgeNoteView){
@@ -103,7 +109,8 @@ public class ExceptionReportAutomationService extends EdgeService {
     }
 
     private JsonArray readInputFile(){
-        File file = new File("/Users/ram/Desktop/report/exception.csv");
+        String reportFile = properties.getProperty("custody.report.input.file");
+        File file = new File(reportFile);
         JsonArray jsonArray = new JsonArray();
         if(file.exists()){
             try {
@@ -130,7 +137,8 @@ public class ExceptionReportAutomationService extends EdgeService {
     }
 
     private void writeStatus(List<String> lines){
-        File file = new File("/Users/ram/Desktop/report/exception_result.csv");
+        String statusFile = properties.getProperty("custody.report.output.file");
+        File file = new File(statusFile);
         try {
             FileOutputStream fos = new FileOutputStream(file);
             BufferedWriter bufferedWriter = new BufferedWriter(new OutputStreamWriter(fos));
@@ -143,14 +151,6 @@ public class ExceptionReportAutomationService extends EdgeService {
             e.printStackTrace();
         }
 
-    }
-
-    private String getDestinationLocation(String macAddress){
-        EdgeNoteView edgeNoteView = inventoryDAO.getEdgeNoteViewFromTitle(macAddress);
-        if (edgeNoteView != null) {
-            return getInventoryNotebookName(edgeNoteView);
-        }
-        return "";
     }
 
     private String getCurrentLocation(String processingGuid){
@@ -213,7 +213,7 @@ public class ExceptionReportAutomationService extends EdgeService {
 
     protected Map<String,String> getAllUsers() {
         Map<String,String> usersMap = new HashMap<>();
-        String urlNew =  "https://streetlights.comedinstall.com/" + "/rest/users";
+        String urlNew =  properties.getProperty("streetlight.install.main.url") + "/rest/users";
         List<User> users = new ArrayList<>();
         ResponseEntity<String> responseEntity =  serverCall(urlNew,HttpMethod.GET,null);
         if(responseEntity.getStatusCode().is2xxSuccessful()){

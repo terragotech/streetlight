@@ -12,7 +12,7 @@ import java.util.List;
 public enum EdgeReportDAO {
 
     INSTANCE;
-    private final static String DATABASE_URL = "jdbc:postgresql://localhost/edgereport?user=postgres&password=password";
+    private final static String DATABASE_URL = "jdbc:postgresql://127.0.0.1:5432/edgereport?user=postgres&password=password";
 
     ConnectionSource connectionSource = null;
     private Dao<InventoryReport, String> inventoryReportDao;

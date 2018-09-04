@@ -16,18 +16,20 @@ import com.terragoedge.slvinterface.entity.EdgeNoteView;
 import com.terragoedge.slvinterface.entity.EdgeNotebookEntity;
 import com.terragoedge.slvinterface.enumeration.Status;
 import com.terragoedge.slvinterface.model.EdgeNote;
+import com.terragoedge.slvinterface.utils.PropertiesReader;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Properties;
 
 public enum ConnectionDAO {
 
     INSTANCE;
 
-    private final static String DATABASE_URL = "jdbc:postgresql://127.0.0.1:5432/terragoinstall?user=postgres&password=password";
+    private final static String DATABASE_URL = "jdbc:postgresql://127.0.0.1:5432/terragoedge?user=postgres&password=password";
 
     ConnectionSource connectionSource = null;
     private Dao<SlvSyncDetails, String> slvSyncDetailsDao;
@@ -36,11 +38,14 @@ public enum ConnectionDAO {
     private Dao<EdgeNotebookEntity, String> notebookDao;
     public Dao<SlvDevice, String> slvDeviceDao = null;
     private Dao<EdgeNoteEntity, String> edgeNoteDao = null;
+    private Properties properties;
 
     ConnectionDAO() {
 
         try {
-            connectionSource = new JdbcConnectionSource(DATABASE_URL);
+            properties = PropertiesReader.getProperties();
+            String installPublicIp = properties.getProperty("streetlight.install.public.ip");
+            connectionSource = new JdbcConnectionSource("jdbc:postgresql://"+installPublicIp+"/terragoinstall?user=postgres&password=password");
             //TableUtils.createTable(connectionSource, SlvSyncDetails.class);
             // TableUtils.createTable(connectionSource, SlvDevice.class);
             edgeformDao = DaoManager.createDao(connectionSource, EdgeFormEntity.class);
