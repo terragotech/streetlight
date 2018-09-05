@@ -302,7 +302,7 @@ public enum InventoryDAO {
                if(((edgeNotebookEntity == null) || (edgeNotebookEntity != null && !(edgeNotebookEntity.getNotebookName().equals("Installed") && edgeNotebookEntity.getNotebookName().startsWith("User-"))))){
                    JsonObject jsonObject  =new JsonObject();
                    jsonObject.addProperty("macaddress",edgeNoteView.getTitle());
-                   jsonObject.addProperty("id",edgeNoteView.getNoteId());
+                   jsonObject.addProperty("id",edgeNoteView.getNoteGuid());
                    jsonArray.add(jsonObject);
                }
            }
