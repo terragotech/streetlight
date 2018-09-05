@@ -141,7 +141,7 @@ public class StreetlightChicagoService extends AbstractProcessor {
             EdgeNote edgeNote = gson.fromJson(notesData, EdgeNote.class);
 
             InstallMaintenanceLogModel installMaintenanceLogModel = new InstallMaintenanceLogModel();
-
+            installMaintenanceLogModel.setLastSyncTime(edgeNote.getSyncTime());
             installMaintenanceLogModel.setProcessedNoteId(edgeNote.getNoteGuid());
             installMaintenanceLogModel.setNoteName(edgeNote.getTitle());
             installMaintenanceLogModel.setCreatedDatetime(String.valueOf(edgeNote.getCreatedDateTime()));
@@ -180,6 +180,12 @@ public class StreetlightChicagoService extends AbstractProcessor {
             reSync(accessToken);
             logger.info("ReSync Process Ends.");
             System.exit(0);
+            return;
+        }
+
+
+        if( contextListHashMap.isEmpty()){
+            logger.error("Proposed context data are not loaded.");
             return;
         }
 

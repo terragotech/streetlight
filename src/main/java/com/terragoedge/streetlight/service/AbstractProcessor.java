@@ -137,6 +137,9 @@ public abstract class AbstractProcessor {
 
 
         String dimmingGroupName = contextListHashMap.get(idOnContoller);
+        logger.info("DimmingGroupName :"+dimmingGroupName);
+        logger.info("edgeNote :"+edgeNote.toString());
+        logger.info("edgeNote :"+edgeNote.getEdgeNotebook().toString());
         String edgeNotebookName = edgeNote.getEdgeNotebook().getNotebookName();
         /*if (dimmingGroupName != null && dimmingGroupName.trim().toLowerCase().contains("acorns")) {
             edgeNotebookName = "Acorn Calendar";
