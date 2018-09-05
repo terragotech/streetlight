@@ -37,6 +37,12 @@ public class LoadForAssignmentService {
             JsonArray jsonArray = inventoryDAO.getNotebookFromNoteTitle(macAddresses);
             System.out.println("result = "+jsonArray.toString());
             System.out.println("result size = "+jsonArray.size());
+            for(JsonElement jsonElement : jsonArray){
+                JsonObject jsonObject = (JsonObject) jsonElement;
+                String noteguid = jsonObject.get("id").getAsString();
+                System.out.println("delete comedinstallsync item: "+noteguid);
+                connectionDAO.deleteComedInstallSyncEntity(noteguid);
+            }
         }
         System.out.println("************** End **************");
     }

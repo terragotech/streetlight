@@ -4,16 +4,14 @@ import com.j256.ormlite.dao.Dao;
 import com.j256.ormlite.dao.DaoManager;
 import com.j256.ormlite.dao.RawRowMapper;
 import com.j256.ormlite.jdbc.JdbcConnectionSource;
+import com.j256.ormlite.stmt.DeleteBuilder;
 import com.j256.ormlite.stmt.QueryBuilder;
 import com.j256.ormlite.stmt.UpdateBuilder;
 import com.j256.ormlite.support.ConnectionSource;
 import com.j256.ormlite.table.TableUtils;
 import com.terragoedge.slvinterface.dao.tables.SlvDevice;
 import com.terragoedge.slvinterface.dao.tables.SlvSyncDetails;
-import com.terragoedge.slvinterface.entity.EdgeFormEntity;
-import com.terragoedge.slvinterface.entity.EdgeNoteEntity;
-import com.terragoedge.slvinterface.entity.EdgeNoteView;
-import com.terragoedge.slvinterface.entity.EdgeNotebookEntity;
+import com.terragoedge.slvinterface.entity.*;
 import com.terragoedge.slvinterface.enumeration.Status;
 import com.terragoedge.slvinterface.model.EdgeNote;
 import com.terragoedge.slvinterface.utils.PropertiesReader;
@@ -38,6 +36,7 @@ public enum ConnectionDAO {
     private Dao<EdgeNotebookEntity, String> notebookDao;
     public Dao<SlvDevice, String> slvDeviceDao = null;
     private Dao<EdgeNoteEntity, String> edgeNoteDao = null;
+    private Dao<ComedInstallSyncEntity, String> comedInstallSyncDAo = null;
     private Properties properties;
 
     ConnectionDAO() {
@@ -55,6 +54,7 @@ public enum ConnectionDAO {
             slvSyncDetailsDao = DaoManager.createDao(connectionSource, SlvSyncDetails.class);
             slvDeviceDao = DaoManager.createDao(connectionSource, SlvDevice.class);
             edgeNoteDao = DaoManager.createDao(connectionSource, EdgeNoteEntity.class);
+            comedInstallSyncDAo = DaoManager.createDao(connectionSource, ComedInstallSyncEntity.class);
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -264,5 +264,15 @@ public enum ConnectionDAO {
             e.printStackTrace();
         }
         return new ArrayList<>();
+    }
+
+    public void deleteComedInstallSyncEntity(String noteguid){
+        try{
+            DeleteBuilder<ComedInstallSyncEntity,String> deleteBuilder = comedInstallSyncDAo.deleteBuilder();
+            deleteBuilder.where().eq("noteid", noteguid);
+            deleteBuilder.delete();
+        }catch (Exception e){
+            e.printStackTrace();
+        }
     }
 }
