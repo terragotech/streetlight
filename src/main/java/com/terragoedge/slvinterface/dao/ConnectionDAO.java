@@ -44,8 +44,9 @@ public enum ConnectionDAO {
 
         try {
             properties = PropertiesReader.getProperties();
-            String installPublicIp = properties.getProperty("streetlight.install.public.ip");
-            connectionSource = new JdbcConnectionSource("jdbc:postgresql://"+installPublicIp+"/terragoedge?user=postgres&password=password");
+            String installDBUrl = properties.getProperty("streetlight.install.db");
+            System.out.println("install db url *** = "+installDBUrl);
+            connectionSource = new JdbcConnectionSource(installDBUrl);
             //TableUtils.createTable(connectionSource, SlvSyncDetails.class);
             // TableUtils.createTable(connectionSource, SlvDevice.class);
             edgeformDao = DaoManager.createDao(connectionSource, EdgeFormEntity.class);
@@ -256,4 +257,12 @@ public enum ConnectionDAO {
         return new ArrayList<>();
     }
 
+    public List<EdgeFormEntity> getLoadForAssignmentForms(){
+        try{
+            return edgeformDao.queryBuilder().selectColumns("formdef").where().eq("name", "Load for Assignment").and().like("formdef", "%To Installer#To Me%").query();
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+        return new ArrayList<>();
+    }
 }

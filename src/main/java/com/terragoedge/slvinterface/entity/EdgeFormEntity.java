@@ -42,7 +42,7 @@ public class EdgeFormEntity {
 	@DatabaseField(columnName="formTemplateDef")
 	private String formTemplateDef;
 
-	@DatabaseField(columnName = "formDef")
+	@DatabaseField(columnName = "formdef")
 	private String formDef;
 
 	@DatabaseField(columnName = "createdBy")
@@ -139,5 +139,21 @@ public class EdgeFormEntity {
 
 	public void setEdgenoteentity_noteid(int edgenoteentity_noteid) {
 		this.edgenoteentity_noteid = edgenoteentity_noteid;
+	}
+
+	@Override
+	public String toString() {
+		return "EdgeFormEntity{" +
+				"edgenoteentity_noteid=" + edgenoteentity_noteid +
+				", formId=" + formId +
+				", formGuid='" + formGuid + '\'' +
+				", createdDate=" + createdDate +
+				", formTemplateGuid='" + formTemplateGuid + '\'' +
+				", formTemplateDef='" + formTemplateDef + '\'' +
+				", formDef='" + formDef + '\'' +
+				", createdBy='" + createdBy + '\'' +
+				", name='" + name + '\'' +
+				", category='" + category + '\'' +
+				'}';
 	}
 }

@@ -1,5 +1,7 @@
 package com.terragoedge.automation.Dao;
 
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
 import com.j256.ormlite.dao.Dao;
 import com.j256.ormlite.dao.DaoManager;
 import com.j256.ormlite.dao.RawRowMapper;
@@ -14,12 +16,14 @@ import com.terragoedge.slvinterface.entity.EdgeNoteEntity;
 import com.terragoedge.slvinterface.entity.EdgeNoteView;
 import com.terragoedge.slvinterface.entity.EdgeNotebookEntity;
 import com.terragoedge.slvinterface.enumeration.Status;
+import com.terragoedge.slvinterface.utils.PropertiesReader;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Properties;
 
 public enum InventoryDAO {
 
@@ -33,11 +37,14 @@ public enum InventoryDAO {
     private Dao<EdgeNoteEntity, String> edgeNoteDao;
     private Dao<EdgeNotebookEntity, String> notebookDao;
     public Dao<SlvDevice, String> slvDeviceDao = null;
+    private Properties properties;
 
     InventoryDAO() {
 
         try {
-            connectionSource = new JdbcConnectionSource(DATABASE_URL);
+            properties = PropertiesReader.getProperties();
+            String inventoryDBUrl = properties.getProperty("streetlight.inventory.db");
+            connectionSource = new JdbcConnectionSource(inventoryDBUrl);
             System.out.println("ConnectionSucess");
             //TableUtils.createTable(connectionSource, SlvSyncDetails.class);
             // TableUtils.createTable(connectionSource, SlvDevice.class);
@@ -284,5 +291,25 @@ public enum InventoryDAO {
             e.printStackTrace();
         }
         return new ArrayList<>();
+    }
+
+    public JsonArray getNotebookFromNoteTitle(List<String> titles){
+        JsonArray jsonArray = new JsonArray();
+        try{
+           List<EdgeNoteView> edgeNoteEntities = edgeNoteViewDao.queryBuilder().where().in("title", titles).and().eq("iscurrent",true).and().eq("isdeleted",false).query();
+           for(EdgeNoteView edgeNoteView : edgeNoteEntities){
+               EdgeNotebookEntity edgeNotebookEntity = notebookDao.queryBuilder().where().eq("notebookid", edgeNoteView.getNotebookid()).queryForFirst();
+               if(((edgeNotebookEntity == null) || (edgeNotebookEntity != null && !(edgeNotebookEntity.getNotebookName().equals("Installed") && edgeNotebookEntity.getNotebookName().startsWith("User-"))))){
+                   JsonObject jsonObject  =new JsonObject();
+                   jsonObject.addProperty("macaddress",edgeNoteView.getTitle());
+                   jsonObject.addProperty("id",edgeNoteView.getNoteId());
+                   jsonArray.add(jsonObject);
+               }
+           }
+
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+        return jsonArray;
     }
 }

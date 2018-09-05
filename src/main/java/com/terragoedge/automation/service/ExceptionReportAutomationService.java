@@ -48,6 +48,7 @@ public class ExceptionReportAutomationService extends EdgeService {
         int index = 0;
         List<String> results = new ArrayList<>();
         logger.info("input data: "+jsonArray);
+        logger.info("Total records : "+jsonArray.size());
         for(JsonElement jsonElement : jsonArray){
             JsonObject jsonObject = (JsonObject) jsonElement;
             if(jsonObject != null){
@@ -55,17 +56,20 @@ public class ExceptionReportAutomationService extends EdgeService {
                 if(index == 0){
                     results.add(line+",Status");
                 }else {
+                    int id = jsonObject.get("id").getAsInt();
                     String macAddress = jsonObject.get("macaddress").getAsString();
                     String workflow = jsonObject.get("workflow").getAsString();
                     List<String> destinationLocations = new ArrayList<>();
                     List<String> currentLocations = new ArrayList<>();
                     List<String> selectedLocations = new ArrayList<>();
-                    List<InventoryReport> inventoryReports = edgeReportDAO.getReportDetails(macAddress);
+                    List<InventoryReport> inventoryReports = edgeReportDAO.getReportDetails(macAddress,id);
+                    logger.info("macaddress = "+macAddress);
+                    logger.info("inventory reports : "+inventoryReports.size());
                     for (InventoryReport inventoryReport : inventoryReports) {
                         String processingGuid = inventoryReport.getProcessingnoteguid();
                         String sourceGuid = inventoryReport.getSourcenoteguid();
-                        logger.info("processingGuid: "+processingGuid);
-                        logger.info("sourceGuid: "+sourceGuid);
+                        /*logger.info("processingGuid: "+processingGuid);
+                        logger.info("sourceGuid: "+sourceGuid);*/
                         currentLocations.add(getCurrentLocation(processingGuid));
                         ExceptionLocation exceptionLocation = getSelectedLocation(workflow,sourceGuid, jsonObject.get("username").getAsString());
                         selectedLocations.addAll(exceptionLocation.getSelectedLoc());
@@ -92,6 +96,8 @@ public class ExceptionReportAutomationService extends EdgeService {
                 }
             }
             index++;
+            logger.info("processed records: "+index);
+            logger.info("*********************************");
         }
         if(results.size() > 0){
             writeStatus(results);
@@ -120,13 +126,14 @@ public class ExceptionReportAutomationService extends EdgeService {
                 while((str = bufferedReader.readLine()) != null){
                         String[] arr = str.split(",");
                         JsonObject jsonObject = new JsonObject();
-                        jsonObject.addProperty("current", arr[1]);
-                        jsonObject.addProperty("destination", arr[3]);
-                        jsonObject.addProperty("selected", arr[2]);
-                        jsonObject.addProperty("macaddress", arr[0]);
-                        jsonObject.addProperty("workflow", arr[6]);
+                        jsonObject.addProperty("current", arr[2]);
+                        jsonObject.addProperty("destination", arr[4]);
+                        jsonObject.addProperty("selected", arr[3]);
+                        jsonObject.addProperty("macaddress", arr[1]);
+                        jsonObject.addProperty("workflow", arr[7]);
                         jsonObject.addProperty("line", str);
-                        jsonObject.addProperty("username", arr[5]);
+                        jsonObject.addProperty("username", arr[6]);
+                        jsonObject.addProperty("id", arr[0]);
                         jsonArray.add(jsonObject);
                 }
             }catch (Exception e){
@@ -204,6 +211,18 @@ public class ExceptionReportAutomationService extends EdgeService {
                         destinations.add(AbstractService.getValueById(edgeFormDataList,28));
                         destinations.add(AbstractService.getValueById(edgeFormDataList,30));
                     }
+        }else if(workflow.equals("RMA Workflow")){
+            List<EdgeFormEntity> edgeFormEntities = inventoryDAO.getFormDef(sourceGuid);
+            for (EdgeFormEntity formData : edgeFormEntities) {
+                List<EdgeFormData> edgeFormDataList = gson.fromJson(formData.getFormDef(),new TypeToken<List<EdgeFormData>>(){}.getType());
+                selectedLocations.add(AbstractService.getValueById(edgeFormDataList, 1));
+                selectedLocations.add(AbstractService.getValueById(edgeFormDataList, 8));
+                selectedLocations.add(AbstractService.getValueById(edgeFormDataList, 10));
+
+                destinations.add(AbstractService.getValueById(edgeFormDataList, 2));
+                destinations.add(AbstractService.getValueById(edgeFormDataList, 9));
+                destinations.add("Vendor");
+            }
         }
         ExceptionLocation exceptionLocation = new ExceptionLocation();
         exceptionLocation.setSelectedLoc(selectedLocations);

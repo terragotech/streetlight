@@ -7,6 +7,7 @@ import com.terragoedge.automation.service.ReportAutomationService;
 import com.terragoedge.slvinterface.json.slvInterface.ConfigurationJson;
 import com.terragoedge.slvinterface.service.AbstractSlvService;
 import com.terragoedge.slvinterface.service.AmerescoReportService;
+import com.terragoedge.slvinterface.service.LoadForAssignmentService;
 import com.terragoedge.slvinterface.service.SlvInterfaceService;
 import com.terragoedge.slvinterface.utils.PropertiesReader;
 import org.springframework.context.ApplicationContext;
@@ -25,8 +26,10 @@ public class SlvInterfaceApp extends AbstractSlvService {
         // amerescoReportService.start();
         /*ReportAutomationService reportAutomationService = new ReportAutomationService();
         reportAutomationService.run();*/
-        ExceptionReportAutomationService exceptionReportAutomationService = new ExceptionReportAutomationService();
-        exceptionReportAutomationService.start();
+        /*ExceptionReportAutomationService exceptionReportAutomationService = new ExceptionReportAutomationService();
+        exceptionReportAutomationService.start();*/
+        LoadForAssignmentService loadForAssignmentService = new LoadForAssignmentService();
+        loadForAssignmentService.start();
 /*
         while (true) {
             try {
