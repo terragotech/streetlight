@@ -1,5 +1,7 @@
 package com.terragoedge.automation.Dao;
 
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
 import com.j256.ormlite.dao.Dao;
 import com.j256.ormlite.dao.DaoManager;
 import com.j256.ormlite.dao.RawRowMapper;
@@ -10,6 +12,7 @@ import com.j256.ormlite.support.ConnectionSource;
 import com.terragoedge.slvinterface.dao.tables.SlvDevice;
 import com.terragoedge.slvinterface.dao.tables.SlvSyncDetails;
 import com.terragoedge.slvinterface.entity.EdgeFormEntity;
+import com.terragoedge.slvinterface.entity.EdgeNoteEntity;
 import com.terragoedge.slvinterface.entity.EdgeNoteView;
 import com.terragoedge.slvinterface.entity.EdgeNotebookEntity;
 import com.terragoedge.slvinterface.enumeration.Status;
@@ -20,18 +23,21 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Properties;
 
 public enum InventoryDAO {
 
     INSTANCE;
-    private final static String DATABASE_URL = "jdbc:postgresql://127.0.0.1:5432/terragoinventory?user=postgres&password=password";
+    private final static String DATABASE_URL = "jdbc:postgresql://127.0.0.1:5432/terragoedge?user=postgres&password=password";
 
     ConnectionSource connectionSource = null;
     private Dao<SlvSyncDetails, String> slvSyncDetailsDao;
     Dao<EdgeFormEntity, String> edgeformDao;
     private Dao<EdgeNoteView, String> edgeNoteViewDao;
+    private Dao<EdgeNoteEntity, String> edgeNoteDao;
     private Dao<EdgeNotebookEntity, String> notebookDao;
     public Dao<SlvDevice, String> slvDeviceDao = null;
+    private Properties properties;
 
     InventoryDAO() {
 
@@ -46,6 +52,7 @@ public enum InventoryDAO {
             edgeNoteViewDao = DaoManager.createDao(connectionSource, EdgeNoteView.class);
             slvSyncDetailsDao = DaoManager.createDao(connectionSource, SlvSyncDetails.class);
             slvDeviceDao = DaoManager.createDao(connectionSource, SlvDevice.class);
+            edgeNoteDao = DaoManager.createDao(connectionSource, EdgeNoteEntity.class);
 
         } catch (Exception e) {
             System.out.println("Failed inventory");
@@ -262,5 +269,46 @@ public enum InventoryDAO {
 
     public ConnectionSource getConnection() {
         return connectionSource;
+    }
+
+    public EdgeNoteView getEdgeNoteViewFromTitle(String title) {
+        try {
+            return edgeNoteViewDao.queryBuilder().where().eq(EdgeNoteView.TITLE, title).queryForFirst();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    public List<EdgeFormEntity> getFormDef(String noteGuid){
+        try {
+            QueryBuilder<EdgeFormEntity,String> formBuilder = edgeformDao.queryBuilder();
+            QueryBuilder<EdgeNoteEntity,String> noteBuilder = edgeNoteDao.queryBuilder();
+            EdgeNoteEntity edgeNoteEntity = noteBuilder.where().eq("noteguid", noteGuid).queryForFirst();
+            return formBuilder.where().eq("edgenoteentity_noteid", edgeNoteEntity.getNoteid()).query();
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+        return new ArrayList<>();
+    }
+
+    public JsonArray getNotebookFromNoteTitle(List<String> titles){
+        JsonArray jsonArray = new JsonArray();
+        try{
+           List<EdgeNoteView> edgeNoteEntities = edgeNoteViewDao.queryBuilder().where().in("title", titles).and().eq("iscurrent",true).and().eq("isdeleted",false).query();
+           for(EdgeNoteView edgeNoteView : edgeNoteEntities){
+               EdgeNotebookEntity edgeNotebookEntity = notebookDao.queryBuilder().where().eq("notebookid", edgeNoteView.getNotebookid()).queryForFirst();
+               if(((edgeNotebookEntity == null) || (edgeNotebookEntity != null && !(edgeNotebookEntity.getNotebookName().equals("Installed") && edgeNotebookEntity.getNotebookName().startsWith("User-"))))){
+                   JsonObject jsonObject  =new JsonObject();
+                   jsonObject.addProperty("macaddress",edgeNoteView.getTitle());
+                   jsonObject.addProperty("id",edgeNoteView.getNoteGuid());
+                   jsonArray.add(jsonObject);
+               }
+           }
+
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+        return jsonArray;
     }
 }

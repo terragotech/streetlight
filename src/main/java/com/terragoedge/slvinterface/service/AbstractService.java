@@ -29,4 +29,22 @@ public class AbstractService {
         }
         return "";
     }
+
+    public static String getValueById(List<EdgeFormData> edgeFormDatas, int id) {
+        for(EdgeFormData edgeFormData : edgeFormDatas){
+                if(edgeFormData.getId() == id){
+                    return edgeFormData.getValue();
+                }
+        }
+        return "";
+    }
+
+    public static String getValueByTitle(List<EdgeFormData> edgeFormDatas, String label) {
+        for(EdgeFormData edgeFormData : edgeFormDatas){
+            if(edgeFormData.getLabel().equals(label)){
+                return edgeFormData.getValue();
+            }
+        }
+        return "";
+    }
 }

@@ -4,17 +4,19 @@ import com.j256.ormlite.dao.Dao;
 import com.j256.ormlite.dao.DaoManager;
 import com.j256.ormlite.dao.RawRowMapper;
 import com.j256.ormlite.jdbc.JdbcConnectionSource;
+import com.j256.ormlite.stmt.DeleteBuilder;
 import com.j256.ormlite.stmt.QueryBuilder;
 import com.j256.ormlite.stmt.UpdateBuilder;
 import com.j256.ormlite.support.ConnectionSource;
 import com.j256.ormlite.table.TableUtils;
-import com.terragoedge.automation.enumeration.Status;
 import com.terragoedge.automation.model.MacValidationModel;
 import com.terragoedge.slvinterface.dao.tables.SlvDevice;
 import com.terragoedge.slvinterface.dao.tables.SlvSyncDetails;
 import com.terragoedge.slvinterface.entity.EdgeFormEntity;
 import com.terragoedge.slvinterface.entity.EdgeNoteView;
 import com.terragoedge.slvinterface.entity.EdgeNotebookEntity;
+import com.terragoedge.slvinterface.entity.*;
+import com.terragoedge.slvinterface.enumeration.Status;
 import com.terragoedge.slvinterface.model.EdgeNote;
 import com.terragoedge.slvinterface.utils.PropertiesReader;
 
@@ -23,12 +25,13 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Properties;
 
 public enum ConnectionDAO {
 
     INSTANCE;
 
-    private final static String DATABASE_URL = "jdbc:postgresql://127.0.0.1:5432/terragoinstall?user=postgres&password=password";
+    private final static String DATABASE_URL = "jdbc:postgresql://127.0.0.1:5432/terragoedge?user=postgres&password=password";
 
     ConnectionSource connectionSource = null;
     private Dao<SlvSyncDetails, String> slvSyncDetailsDao;
@@ -36,6 +39,9 @@ public enum ConnectionDAO {
     private Dao<EdgeNoteView, String> edgeNoteViewDao;
     private Dao<EdgeNotebookEntity, String> notebookDao;
     public Dao<SlvDevice, String> slvDeviceDao = null;
+    private Dao<EdgeNoteEntity, String> edgeNoteDao = null;
+    private Dao<ComedInstallSyncEntity, String> comedInstallSyncDAo = null;
+    private Properties properties;
 
     ConnectionDAO() {
 
@@ -49,6 +55,8 @@ public enum ConnectionDAO {
             edgeNoteViewDao = DaoManager.createDao(connectionSource, EdgeNoteView.class);
             slvSyncDetailsDao = DaoManager.createDao(connectionSource, SlvSyncDetails.class);
             slvDeviceDao = DaoManager.createDao(connectionSource, SlvDevice.class);
+            edgeNoteDao = DaoManager.createDao(connectionSource, EdgeNoteEntity.class);
+            comedInstallSyncDAo = DaoManager.createDao(connectionSource, ComedInstallSyncEntity.class);
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -63,6 +71,15 @@ public enum ConnectionDAO {
     public EdgeNoteView getEdgeNoteView(String noteGuid) {
         try {
             return edgeNoteViewDao.queryBuilder().where().eq(EdgeNoteView.NOTE_GUID, noteGuid).queryForFirst();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    public EdgeNoteView getEdgeNoteViewFromTitle(String title) {
+        try {
+            return edgeNoteViewDao.queryBuilder().where().eq(EdgeNoteView.TITLE, title).queryForFirst();
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -160,7 +177,7 @@ public enum ConnectionDAO {
 
     public List<SlvSyncDetails> getUnSyncedTalqaddress() {
         try {
-            return slvSyncDetailsDao.queryBuilder().where().isNull(SlvSyncDetails.TALQ_ADDRESS).and().eq(SlvSyncDetails.STATUS, Status
+            return slvSyncDetailsDao.queryBuilder().where().isNull(SlvSyncDetails.TALQ_ADDRESS).and().eq(SlvSyncDetails.STATUS, com.terragoedge.automation.enumeration.Status
                     .Success.toString()).query();
         } catch (Exception e) {
             e.printStackTrace();
@@ -186,7 +203,7 @@ public enum ConnectionDAO {
             if (!edgeFormEntity.getFormTemplateGuid().equals(loadFormTemplateGuid)) {
                 noteId.add(edgeFormEntity.getEdgenoteentity_noteid());
             } else {
-                macValidationModel.setInstallStatus(Status.LoadForAssignmentPresent.toString());
+                macValidationModel.setInstallStatus(com.terragoedge.automation.enumeration.Status.LoadForAssignmentPresent.toString());
             }
         }
         return noteId;
@@ -252,12 +269,34 @@ public enum ConnectionDAO {
         return connectionSource;
     }
 
-    public EdgeNoteView getEdgeNoteViewFromTitle(String title) {
+    public List<EdgeFormEntity> getFormDef(String noteGuid) {
         try {
-            return edgeNoteViewDao.queryBuilder().where().eq(EdgeNoteView.TITLE, title).queryForFirst();
+            QueryBuilder<EdgeFormEntity, String> formBuilder = edgeformDao.queryBuilder();
+            QueryBuilder<EdgeNoteEntity, String> noteBuilder = edgeNoteDao.queryBuilder();
+            EdgeNoteEntity edgeNoteEntity = noteBuilder.where().eq("noteguid", noteGuid).queryForFirst();
+            return formBuilder.where().eq("edgenoteentity_noteid", edgeNoteEntity.getNoteid()).query();
         } catch (Exception e) {
             e.printStackTrace();
         }
-        return null;
+        return new ArrayList<>();
+    }
+
+    public List<EdgeFormEntity> getLoadForAssignmentForms() {
+        try {
+            return edgeformDao.queryBuilder().selectColumns("formdef").where().eq("name", "Load for Assignment").and().like("formdef", "%To Installer#To Me%").query();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return new ArrayList<>();
+    }
+
+    public void deleteComedInstallSyncEntity(String noteguid) {
+        try {
+            DeleteBuilder<ComedInstallSyncEntity, String> deleteBuilder = comedInstallSyncDAo.deleteBuilder();
+            deleteBuilder.where().eq("noteid", noteguid);
+            deleteBuilder.delete();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 }

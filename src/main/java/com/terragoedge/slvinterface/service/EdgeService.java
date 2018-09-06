@@ -4,9 +4,18 @@ import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import org.apache.commons.codec.binary.Base64;
+import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
+import org.apache.http.conn.ssl.SSLContextBuilder;
+import org.apache.http.conn.ssl.TrustStrategy;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClients;
 import org.apache.log4j.Logger;
 import org.springframework.http.*;
+import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.web.client.RestTemplate;
+
+import java.security.cert.CertificateException;
+import java.security.cert.X509Certificate;
 
 public class EdgeService {
     private Logger logger = Logger.getLogger(EdgeService.class);
@@ -16,7 +25,7 @@ public class EdgeService {
         logger.info("Request Url:" + url);
         logger.info("------------ input data ------------------");
         logger.info("Request Data:" + body);
-        RestTemplate restTemplate = new RestTemplate();
+        RestTemplate restTemplate = getRestTemplate();
         HttpHeaders headers = getHeaders(null);
 
         HttpEntity request = null;
@@ -45,7 +54,7 @@ public class EdgeService {
             return headers;
         }else{
             userName = "admin";
-            password = "admin";
+            password = "T455wy04ry41!";
         }
         String plainCreds = userName + ":" + password;
 
@@ -55,5 +64,31 @@ public class EdgeService {
 
         headers.add("Authorization", "Basic " + base64Creds);
         return headers;
+    }
+
+
+    public RestTemplate getRestTemplate(){
+        try{
+            SSLContextBuilder builder = new SSLContextBuilder();
+            builder.loadTrustMaterial(null, new TrustStrategy() {
+                public boolean isTrusted(final X509Certificate[] chain, String authType) throws CertificateException {
+                    return true;
+                }
+            });
+            SSLConnectionSocketFactory sslsf = new SSLConnectionSocketFactory(builder.build());
+
+            CloseableHttpClient httpclient = HttpClients.custom().setSSLSocketFactory(sslsf).build();
+
+
+            HttpComponentsClientHttpRequestFactory requestFactory =
+                    new HttpComponentsClientHttpRequestFactory();
+
+            requestFactory.setHttpClient(httpclient);
+            RestTemplate restTemplate = new RestTemplate(requestFactory);
+            return restTemplate;
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+        return null;
     }
 }
