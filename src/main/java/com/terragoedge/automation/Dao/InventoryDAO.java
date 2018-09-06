@@ -13,6 +13,7 @@ import com.terragoedge.slvinterface.entity.EdgeFormEntity;
 import com.terragoedge.slvinterface.entity.EdgeNoteView;
 import com.terragoedge.slvinterface.entity.EdgeNotebookEntity;
 import com.terragoedge.slvinterface.enumeration.Status;
+import com.terragoedge.slvinterface.utils.PropertiesReader;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -35,7 +36,8 @@ public enum InventoryDAO {
     InventoryDAO() {
 
         try {
-            connectionSource = new JdbcConnectionSource(DATABASE_URL);
+            String inventoryConnection = PropertiesReader.getProperties().getProperty("edge.reports.inventoryUrl");
+            connectionSource = new JdbcConnectionSource(inventoryConnection);
             System.out.println("ConnectionSucess");
             //TableUtils.createTable(connectionSource, SlvSyncDetails.class);
             // TableUtils.createTable(connectionSource, SlvDevice.class);

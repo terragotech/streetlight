@@ -23,7 +23,7 @@ public class SlvInterfaceApp extends AbstractSlvService {
         // AmerescoReportService amerescoReportService = new AmerescoReportService();
         // amerescoReportService.start();
         ReportAutomationService reportAutomationService = new ReportAutomationService();
-        reportAutomationService.run();
+        reportAutomationService.start();
 /*
         while (true) {
             try {

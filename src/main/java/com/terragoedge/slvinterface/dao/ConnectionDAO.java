@@ -8,13 +8,15 @@ import com.j256.ormlite.stmt.QueryBuilder;
 import com.j256.ormlite.stmt.UpdateBuilder;
 import com.j256.ormlite.support.ConnectionSource;
 import com.j256.ormlite.table.TableUtils;
+import com.terragoedge.automation.enumeration.Status;
+import com.terragoedge.automation.model.MacValidationModel;
 import com.terragoedge.slvinterface.dao.tables.SlvDevice;
 import com.terragoedge.slvinterface.dao.tables.SlvSyncDetails;
 import com.terragoedge.slvinterface.entity.EdgeFormEntity;
 import com.terragoedge.slvinterface.entity.EdgeNoteView;
 import com.terragoedge.slvinterface.entity.EdgeNotebookEntity;
-import com.terragoedge.slvinterface.enumeration.Status;
 import com.terragoedge.slvinterface.model.EdgeNote;
+import com.terragoedge.slvinterface.utils.PropertiesReader;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -38,7 +40,8 @@ public enum ConnectionDAO {
     ConnectionDAO() {
 
         try {
-            connectionSource = new JdbcConnectionSource(DATABASE_URL);
+            String installConnection = PropertiesReader.getProperties().getProperty("edge.reports.installUrl");
+            connectionSource = new JdbcConnectionSource(installConnection);
             //TableUtils.createTable(connectionSource, SlvSyncDetails.class);
             // TableUtils.createTable(connectionSource, SlvDevice.class);
             edgeformDao = DaoManager.createDao(connectionSource, EdgeFormEntity.class);
@@ -71,7 +74,7 @@ public enum ConnectionDAO {
             QueryBuilder<EdgeNoteView, String> queryBuilder = edgeNoteViewDao.queryBuilder();
             queryBuilder.where().eq(EdgeNoteView.GROUP_NAME, "Complete").and().in(EdgeNoteView.NOTE_ID, noteId);
             queryBuilder.orderBy(EdgeNoteView.CREATED_DATE_TIME, true);
-           return queryBuilder.queryForFirst();
+            return queryBuilder.queryForFirst();
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -176,13 +179,26 @@ public enum ConnectionDAO {
 
     }
 
-    public List<Integer> getEdgeNoteId(String macAddress) {
+    public List<Integer> getEdgeNoteId(String macAddress, MacValidationModel macValidationModel, String loadFormTemplateGuid) {
         List<Integer> noteId = new ArrayList<>();
         List<EdgeFormEntity> edgeFormEntities = getEdgeFormEntities(macAddress);
         for (EdgeFormEntity edgeFormEntity : edgeFormEntities) {
-            noteId.add(edgeFormEntity.getEdgenoteentity_noteid());
+            if (!edgeFormEntity.getFormTemplateGuid().equals(loadFormTemplateGuid)) {
+                noteId.add(edgeFormEntity.getEdgenoteentity_noteid());
+            } else {
+                macValidationModel.setInstallStatus(Status.LoadForAssignmentPresent.toString());
+            }
         }
         return noteId;
+    }
+
+    public List<EdgeFormEntity> getEdgeNoteEntity(Integer noteId, String formTemplateGuid) {
+        try {
+            return edgeformDao.queryBuilder().where().eq(EdgeFormEntity.NOTEID, noteId).query();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return new ArrayList<>();
     }
 
     public List<EdgeFormEntity> getEdgeFormEntities(String macAddress) {
