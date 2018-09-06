@@ -135,7 +135,7 @@
                             <goal>single</goal>
                         </goals>
                         <configuration>
-                            <finalName>bgne_slv_interface-v1</finalName>
+                            <finalName>report-automation-v4</finalName>
                             <archive>
                                 <manifest>
                                     <mainClass>
