@@ -2,6 +2,7 @@ package com.terragoedge.slvinterface.utils;
 
 import com.opencsv.CSVWriter;
 import com.terragoedge.automation.model.MacValidationModel;
+import com.terragoedge.automation.model.ReplaceModel;
 import com.terragoedge.slvinterface.model.CsvReportModel;
 import org.supercsv.cellprocessor.FmtDate;
 import org.supercsv.cellprocessor.ParseDouble;
@@ -105,11 +106,11 @@ public class Utils {
         return records;
     }
 
-    public static void write(String data) {
+    public static void write(String data, String filePath) {
+        System.out.println("OutputFile path is :" + filePath);
         FileOutputStream fileOutputStream = null;
         try {
-            String macValidationReportPath = PropertiesReader.getProperties().getProperty("edge.reports.reportoutpath");
-            fileOutputStream = new FileOutputStream(macValidationReportPath);
+            fileOutputStream = new FileOutputStream(filePath);
             // fileOutputStream = new FileOutputStream(filePath + fileName);
             fileOutputStream.write(data.getBytes());
             fileOutputStream.flush();
@@ -135,10 +136,12 @@ public class Utils {
         csvWriter.writeAll(data);
         csvWriter.close();
         System.out.println(writer);
-        write(writer.toString());
+        String filePath = PropertiesReader.getProperties().getProperty("edge.replacepath.output");
+        ;
+        write(writer.toString(), filePath);
     }
 
-    public static void writeMacValidationData(List<MacValidationModel> csvReportModelList,String fileName) {
+    public static void writeMacValidationData(List<MacValidationModel> csvReportModelList, String outputFilePath) {
         try {
             StringWriter writer = new StringWriter();
             CSVWriter csvWriter = new CSVWriter(writer, ',');
@@ -146,7 +149,21 @@ public class Utils {
             csvWriter.writeAll(data);
             csvWriter.close();
             System.out.println(writer);
-            write(writer.toString());
+            write(writer.toString(), outputFilePath);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static void writeReplacementData(List<ReplaceModel> replaceModelList, String outputFilePath) {
+        try {
+            StringWriter writer = new StringWriter();
+            CSVWriter csvWriter = new CSVWriter(writer, ',');
+            List<String[]> data = toStringReplacementArray(replaceModelList);
+            csvWriter.writeAll(data);
+            csvWriter.close();
+            System.out.println(writer);
+            write(writer.toString(), outputFilePath);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -166,6 +183,27 @@ public class Utils {
                     csvReportModel.getAssigneduser(),
                     csvReportModel.getInstallStatus(),
                     csvReportModel.getInventoryStatus(),
+            });
+        }
+        //   }
+        return records;
+    }
+
+    public static List<String[]> toStringReplacementArray(List<ReplaceModel> replaceModelList) {
+        List<String[]> records = new ArrayList<String[]>();
+        //add header record
+        records.add(new String[]{"FixtureId", "Municipality", "Workflow", "InstallMacAddress", "ExpectedMacAddress", "ReplaceMacAddress", "ModifiedDate", "User", "Status"});
+        for (ReplaceModel replaceModel : replaceModelList) {
+            records.add(new String[]{
+                    replaceModel.getFixtureid(),
+                    replaceModel.getMunicipality(),
+                    replaceModel.getWorkflow(),
+                    replaceModel.getInstalledmacaddress(),
+                    replaceModel.getExpectedmacaddress(),
+                    replaceModel.getReplacedmacaddress(),
+                    replaceModel.getModifieddate(),
+                    replaceModel.getUser(),
+                    replaceModel.getStatus(),
             });
         }
         //   }

@@ -42,9 +42,8 @@ public enum InventoryDAO {
     InventoryDAO() {
 
         try {
-            properties = PropertiesReader.getProperties();
-            String inventoryDBUrl = properties.getProperty("streetlight.inventory.db");
-            connectionSource = new JdbcConnectionSource(inventoryDBUrl);
+            String inventoryConnection = PropertiesReader.getProperties().getProperty("edge.reports.inventoryUrl");
+            connectionSource = new JdbcConnectionSource(inventoryConnection);
             System.out.println("ConnectionSucess");
             //TableUtils.createTable(connectionSource, SlvSyncDetails.class);
             // TableUtils.createTable(connectionSource, SlvDevice.class);

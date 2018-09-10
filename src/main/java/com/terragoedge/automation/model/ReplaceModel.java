@@ -9,6 +9,7 @@ public class ReplaceModel {
     String replacedmacaddress;
     String modifieddate;
     String user;
+    String status;
 
     public String getFixtureid() {
         return fixtureid;
@@ -74,6 +75,14 @@ public class ReplaceModel {
         this.user = user;
     }
 
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
+    }
+
     @Override
     public String toString() {
         return "ReplaceModel{" +
@@ -85,6 +94,7 @@ public class ReplaceModel {
                 ", replacedmacaddress='" + replacedmacaddress + '\'' +
                 ", modifieddate='" + modifieddate + '\'' +
                 ", user='" + user + '\'' +
+                ", status='" + status + '\'' +
                 '}';
     }
 }

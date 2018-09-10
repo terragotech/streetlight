@@ -9,8 +9,12 @@ import com.j256.ormlite.stmt.QueryBuilder;
 import com.j256.ormlite.stmt.UpdateBuilder;
 import com.j256.ormlite.support.ConnectionSource;
 import com.j256.ormlite.table.TableUtils;
+import com.terragoedge.automation.model.MacValidationModel;
 import com.terragoedge.slvinterface.dao.tables.SlvDevice;
 import com.terragoedge.slvinterface.dao.tables.SlvSyncDetails;
+import com.terragoedge.slvinterface.entity.EdgeFormEntity;
+import com.terragoedge.slvinterface.entity.EdgeNoteView;
+import com.terragoedge.slvinterface.entity.EdgeNotebookEntity;
 import com.terragoedge.slvinterface.entity.*;
 import com.terragoedge.slvinterface.enumeration.Status;
 import com.terragoedge.slvinterface.model.EdgeNote;
@@ -42,10 +46,8 @@ public enum ConnectionDAO {
     ConnectionDAO() {
 
         try {
-            properties = PropertiesReader.getProperties();
-            String installDBUrl = properties.getProperty("streetlight.install.db");
-            System.out.println("install db url *** = "+installDBUrl);
-            connectionSource = new JdbcConnectionSource(installDBUrl);
+            String installConnection = PropertiesReader.getProperties().getProperty("edge.reports.installUrl");
+            connectionSource = new JdbcConnectionSource(installConnection);
             //TableUtils.createTable(connectionSource, SlvSyncDetails.class);
             // TableUtils.createTable(connectionSource, SlvDevice.class);
             edgeformDao = DaoManager.createDao(connectionSource, EdgeFormEntity.class);
@@ -75,12 +77,21 @@ public enum ConnectionDAO {
         return null;
     }
 
+    public EdgeNoteView getEdgeNoteViewFromTitle(String title) {
+        try {
+            return edgeNoteViewDao.queryBuilder().where().eq(EdgeNoteView.TITLE, title).queryForFirst();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
     public EdgeNoteView getEdgeNoteViewById(List<Integer> noteId) {
         try {
             QueryBuilder<EdgeNoteView, String> queryBuilder = edgeNoteViewDao.queryBuilder();
             queryBuilder.where().eq(EdgeNoteView.GROUP_NAME, "Complete").and().in(EdgeNoteView.NOTE_ID, noteId);
             queryBuilder.orderBy(EdgeNoteView.CREATED_DATE_TIME, true);
-           return queryBuilder.queryForFirst();
+            return queryBuilder.queryForFirst();
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -166,7 +177,7 @@ public enum ConnectionDAO {
 
     public List<SlvSyncDetails> getUnSyncedTalqaddress() {
         try {
-            return slvSyncDetailsDao.queryBuilder().where().isNull(SlvSyncDetails.TALQ_ADDRESS).and().eq(SlvSyncDetails.STATUS, Status
+            return slvSyncDetailsDao.queryBuilder().where().isNull(SlvSyncDetails.TALQ_ADDRESS).and().eq(SlvSyncDetails.STATUS, com.terragoedge.automation.enumeration.Status
                     .Success.toString()).query();
         } catch (Exception e) {
             e.printStackTrace();
@@ -185,13 +196,26 @@ public enum ConnectionDAO {
 
     }
 
-    public List<Integer> getEdgeNoteId(String macAddress) {
+    public List<Integer> getEdgeNoteId(String macAddress, MacValidationModel macValidationModel, String loadFormTemplateGuid) {
         List<Integer> noteId = new ArrayList<>();
         List<EdgeFormEntity> edgeFormEntities = getEdgeFormEntities(macAddress);
         for (EdgeFormEntity edgeFormEntity : edgeFormEntities) {
-            noteId.add(edgeFormEntity.getEdgenoteentity_noteid());
+            if (!edgeFormEntity.getFormTemplateGuid().equals(loadFormTemplateGuid)) {
+                noteId.add(edgeFormEntity.getEdgenoteentity_noteid());
+            } else {
+                macValidationModel.setInstallStatus(com.terragoedge.automation.enumeration.Status.LoadForAssignmentPresent.toString());
+            }
         }
         return noteId;
+    }
+
+    public List<EdgeFormEntity> getEdgeNoteEntity(Integer noteId, String formTemplateGuid) {
+        try {
+            return edgeformDao.queryBuilder().where().eq(EdgeFormEntity.NOTEID, noteId).query();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return new ArrayList<>();
     }
 
     public List<EdgeFormEntity> getEdgeFormEntities(String macAddress) {
@@ -245,33 +269,33 @@ public enum ConnectionDAO {
         return connectionSource;
     }
 
-    public List<EdgeFormEntity> getFormDef(String noteGuid){
+    public List<EdgeFormEntity> getFormDef(String noteGuid) {
         try {
-            QueryBuilder<EdgeFormEntity,String> formBuilder = edgeformDao.queryBuilder();
-            QueryBuilder<EdgeNoteEntity,String> noteBuilder = edgeNoteDao.queryBuilder();
+            QueryBuilder<EdgeFormEntity, String> formBuilder = edgeformDao.queryBuilder();
+            QueryBuilder<EdgeNoteEntity, String> noteBuilder = edgeNoteDao.queryBuilder();
             EdgeNoteEntity edgeNoteEntity = noteBuilder.where().eq("noteguid", noteGuid).queryForFirst();
             return formBuilder.where().eq("edgenoteentity_noteid", edgeNoteEntity.getNoteid()).query();
-        }catch (Exception e){
+        } catch (Exception e) {
             e.printStackTrace();
         }
         return new ArrayList<>();
     }
 
-    public List<EdgeFormEntity> getLoadForAssignmentForms(){
-        try{
+    public List<EdgeFormEntity> getLoadForAssignmentForms() {
+        try {
             return edgeformDao.queryBuilder().selectColumns("formdef").where().eq("name", "Load for Assignment").and().like("formdef", "%To Installer#To Me%").query();
-        }catch (Exception e){
+        } catch (Exception e) {
             e.printStackTrace();
         }
         return new ArrayList<>();
     }
 
-    public void deleteComedInstallSyncEntity(String noteguid){
-        try{
-            DeleteBuilder<ComedInstallSyncEntity,String> deleteBuilder = comedInstallSyncDAo.deleteBuilder();
+    public void deleteComedInstallSyncEntity(String noteguid) {
+        try {
+            DeleteBuilder<ComedInstallSyncEntity, String> deleteBuilder = comedInstallSyncDAo.deleteBuilder();
             deleteBuilder.where().eq("noteid", noteguid);
             deleteBuilder.delete();
-        }catch (Exception e){
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }
