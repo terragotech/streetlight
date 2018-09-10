@@ -38,11 +38,7 @@ public class EdgeFormData {
 	}
 
 	public String getValue() {
-		if(value != null){
-			return value.replace(label+"#", "");
-		}
-		return null;
-		
+		return value;
 	}
 
 	public void setValue(String value) {

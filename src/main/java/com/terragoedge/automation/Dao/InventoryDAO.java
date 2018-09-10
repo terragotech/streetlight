@@ -299,10 +299,11 @@ public enum InventoryDAO {
            List<EdgeNoteView> edgeNoteEntities = edgeNoteViewDao.queryBuilder().where().in("title", titles).and().eq("iscurrent",true).and().eq("isdeleted",false).query();
            for(EdgeNoteView edgeNoteView : edgeNoteEntities){
                EdgeNotebookEntity edgeNotebookEntity = notebookDao.queryBuilder().where().eq("notebookid", edgeNoteView.getNotebookid()).queryForFirst();
-               if(((edgeNotebookEntity == null) || (edgeNotebookEntity != null && !(edgeNotebookEntity.getNotebookName().equals("Installed") && edgeNotebookEntity.getNotebookName().startsWith("User-"))))){
+               if(((edgeNotebookEntity == null) ||  !(edgeNotebookEntity.getNotebookName().equals("Installed") || edgeNotebookEntity.getNotebookName().startsWith("User-")))){
                    JsonObject jsonObject  =new JsonObject();
                    jsonObject.addProperty("macaddress",edgeNoteView.getTitle());
                    jsonObject.addProperty("id",edgeNoteView.getNoteGuid());
+                   jsonObject.addProperty("notebook",edgeNotebookEntity.getNotebookName());
                    jsonArray.add(jsonObject);
                }
            }
