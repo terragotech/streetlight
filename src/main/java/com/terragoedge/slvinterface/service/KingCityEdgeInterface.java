@@ -56,6 +56,7 @@ public class KingCityEdgeInterface extends SlvInterfaceService{
 	public void updateDeviceValues(List<Object> paramsList, EdgeNote edgeNote,
 								   List<EdgeFormData> edgeFormValuesList) throws NoValueException{
 		String comment = "";
+		String power2 = null;
 		for (EdgeFormData formValues : edgeFormValuesList) {
 			JsonElement streetLightKey = mappingJson.get(formValues.getLabel());
 			if (streetLightKey != null && !streetLightKey.isJsonNull()) {
@@ -78,6 +79,10 @@ public class KingCityEdgeInterface extends SlvInterfaceService{
 					comment = comment + " " + formValues.getLabel() + ":" + formValues.getValue();
 					break;
 
+                case "power2":
+                    power2 =formValues.getValue();
+                    break;
+
 
 
 				default:
@@ -93,7 +98,17 @@ public class KingCityEdgeInterface extends SlvInterfaceService{
         if(pos != -1){
             defaultData = defaultDataHashMap.get(pos);
             addStreetLightData("power", defaultData.getWattage(), paramsList);
-            addStreetLightData("powerCorrection", defaultData.getWattage(), paramsList);
+             try {
+                 if(power2 != null){
+                     String wattage = defaultData.getWattage();
+                     int watt = Integer.valueOf(power2) - Integer.valueOf(wattage);
+                     addStreetLightData("powerCorrection", watt+ "", paramsList);
+                 }
+             }catch (Exception e){
+                 e.printStackTrace();
+             }
+
+
             addStreetLightData("DimmingGroupName", defaultData.getDimmingGroupValue(), paramsList);
             addStreetLightData("address", edgeNote.getDescription(), paramsList);
             //address
