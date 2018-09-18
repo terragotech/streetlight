@@ -25,7 +25,7 @@ public class SlvInterfaceApp extends AbstractSlvService {
         // AmerescoReportService amerescoReportService = new AmerescoReportService();
         // amerescoReportService.start();
         ReportAutomationService reportAutomationService = new ReportAutomationService();
-        reportAutomationService.start();
+      //  reportAutomationService.startReplacementProcess(new File("D:\\home\\mailscheduler\\csvfile\\MAC_Validation_Report_Replacement_Remove\\09_12_2018_15_34_35\\"));
 /*
         while (true) {
             try {

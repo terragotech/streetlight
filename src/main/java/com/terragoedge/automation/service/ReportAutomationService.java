@@ -46,48 +46,63 @@ public class ReportAutomationService extends AbstractReportService {
         boolean isEnableReplacement = Boolean.parseBoolean(PropertiesReader.getProperties().getProperty("edge.reports.replacement"));
         if (isEnabledMacValidation) {
             System.out.println("startMacValidationProcess");
-            startMacValidationProcess();
+            // startMacValidationProcess();
         }
         if (isEnableReplacement) {
             System.out.println("startReplacementProcess");
-            startReplacementProcess();
+            //  startReplacementProcess();
         }
     }
 
-    public void startMacValidationProcess() {
+    public String startMacValidationProcess(File sourceFile) {
+        String[] paths;
         //   test();
         String loadForAssignmentGuid = PropertiesReader.getProperties().getProperty("edge.reports.loadforassignentguid");
         String enabledWeeklyReport = PropertiesReader.getProperties().getProperty("edge.reports.weekly");
         if (enabledWeeklyReport != null && Boolean.parseBoolean(enabledWeeklyReport)) {
-            String weeklyReportsPath = PropertiesReader.getProperties().getProperty("edge.reports.reportpath");
-            List<MacValidationModel> macValidationModelList = getCsvToBean(weeklyReportsPath, ReportType.MAC_VALIDATION);
-            for (MacValidationModel macValidationModel : macValidationModelList) {
-                List<Integer> noteIds = connectionDAO.getEdgeNoteId(macValidationModel.getMacaddress(),macValidationModel,loadForAssignmentGuid);
-                System.out.println("Title  : " + macValidationModel.getFixtureid());
-                System.out.println("NoteIdSize  : " + noteIds);
-                if (noteIds.size() == 1) {
-                    EdgeNoteView edgeNoteView = connectionDAO.getEdgeNoteViewById(noteIds);
-                    if (edgeNoteView != null) {
-                        updateReportStatus(ServerType.Install, macValidationModel, edgeNoteView, null);
-                        //TODO
-                        System.out.println("InventoryCalled");
-                        EdgeNoteView edgeNoteViewList = inventoryDAO.getEdgeNoteViewByTitle(macValidationModel.getMacaddress());
+            // File sourceFile = new File("D:\\home\\mailscheduler\\csvfile\\MAC_Validation_Report_Install_Inventory\\09_07_2018");
+            File[] files = sourceFile.listFiles();
+            for (File file : files) {
+                String csvFileName = file.getName();
+                String fileNameWithoutExtn = Utils.getFileNameWithoutExtension(file);
+                String weeklyReportsPath = file.getPath();
+                if (true) {
+                    // String weeklyReportsPath = PropertiesReader.getProperties().getProperty("edge.reports.reportpath");
 
-                        String notebookId = edgeNoteViewList.getNotebookid();
-                        EdgeNotebookEntity edgeNotebookEntity = inventoryDAO.getEdgeNotebookEntity(notebookId);
-
-                        //  System.out.println("NotebookName : " + edgeNotebookEntity.getNotebookName());
-                        updateReportStatus(ServerType.Inventory, macValidationModel, edgeNoteView, edgeNotebookEntity);
+                    List<MacValidationModel> macValidationModelList = getCsvToBean(weeklyReportsPath, ReportType.MAC_VALIDATION);
+                    for (MacValidationModel macValidationModel : macValidationModelList) {
+                        List<Integer> noteIds = connectionDAO.getEdgeNoteId(macValidationModel.getMacaddress(), macValidationModel, loadForAssignmentGuid);
+                        System.out.println("Title  : " + macValidationModel.getFixtureid());
+                        System.out.println("NoteIdSize  : " + noteIds);
+                        if (noteIds.size() == 1) {
+                            EdgeNoteView edgeNoteView = connectionDAO.getEdgeNoteViewById(noteIds);
+                            if (edgeNoteView != null) {
+                                updateReportStatus(ServerType.Install, macValidationModel, edgeNoteView, null);
+                                //TODO
+                                System.out.println("InventoryCalled");
+                                EdgeNoteView edgeNoteViewList = inventoryDAO.getEdgeNoteViewByTitle(macValidationModel.getMacaddress());
+                                if (edgeNoteViewList != null) {
+                                    String notebookId = edgeNoteViewList.getNotebookid();
+                                    EdgeNotebookEntity edgeNotebookEntity = inventoryDAO.getEdgeNotebookEntity(notebookId);
+                                    //  System.out.println("NotebookName : " + edgeNotebookEntity.getNotebookName());
+                                    updateReportStatus(ServerType.Inventory, macValidationModel, edgeNoteView, edgeNotebookEntity);
+                                }
+                            }
+                        } else if (noteIds.size() > 1) {
+                            macValidationModel.setInstallStatus(Status.MoreThan_One_FormsPresent.toString());
+                        }
                     }
-                } else if (noteIds.size() > 1) {
-                    macValidationModel.setInstallStatus(Status.MoreThan_One_FormsPresent.toString());
+                    String outputFile = sourceFile + File.separator + fileNameWithoutExtn + "_verified.csv";
+                    System.out.println("MacValidationPath : " + outputFile);
+                    Utils.writeMacValidationData(macValidationModelList, outputFile);
+                    System.out.println("noteval" + macValidationModelList.size());
                 }
+                // prints filename and directory name
+                //  System.out.println(file1.getName());
             }
-            String filePath = PropertiesReader.getProperties().getProperty("edge.reports.reportoutpath");
-            System.out.println("MacValidationPath : " + filePath);
-            Utils.writeMacValidationData(macValidationModelList, filePath);
-            System.out.println("noteval" + macValidationModelList.size());
+
         }
+        return "Success";
     }
 
     public void test() {
@@ -129,43 +144,50 @@ public class ReportAutomationService extends AbstractReportService {
         }
     }
 
-    public void startReplacementProcess() {
+    public String startReplacementProcess(File sourceFile) {
         String formTemplateGuid = PropertiesReader.getProperties().getProperty("edge.formtemplateGuid");
-        String replaceInputPath = PropertiesReader.getProperties().getProperty("edge.replacepath");
         String newMacAddressID = PropertiesReader.getProperties().getProperty("edge.newmacId");
         String existingMacAddressID = PropertiesReader.getProperties().getProperty("edge.existingmacId");
-        List<ReplaceModel> replaceModelList = getCsvToBean(replaceInputPath, ReportType.REPLACE);
-        System.out.println("re" + replaceModelList.size());
-        for (ReplaceModel replaceModel : replaceModelList) {
-            EdgeNoteView edgeNoteView = connectionDAO.getEdgeNoteViewFromTitle(replaceModel.getFixtureid());
-            if (edgeNoteView != null) {
-                List<EdgeFormEntity> edgeFormEntityList = connectionDAO.getEdgeNoteEntity(edgeNoteView.getNoteId(), "");
-                for (EdgeFormEntity edgeFormEntity : edgeFormEntityList) {
-                    try {
-                        if (edgeFormEntity.getFormTemplateGuid().equals(formTemplateGuid)) {
-                            String formDef = edgeFormEntity.getFormDef();
-                            Type listType = new TypeToken<ArrayList<EdgeFormData>>() {
-                            }.getType();
-                            List<EdgeFormData> edgeFormDataList = gson.fromJson(formDef, listType);
-                            String newNodeMacAddress = valueById(edgeFormDataList, Integer.parseInt(newMacAddressID));
-                            String existingMacAddress = valueById(edgeFormDataList, Integer.parseInt(existingMacAddressID));
-                            System.out.println(existingMacAddress);
-                            if (newNodeMacAddress != null && existingMacAddress != null && newNodeMacAddress.equals(existingMacAddress)) {
-                                replaceModel.setStatus(Status.Success.toString());
-                            } else {
-                                replaceModel.setStatus(Status.Failure.toString());
+        File[] files = sourceFile.listFiles();
+        for (File replacementFile : files) {
+            String fileNameWithoutExtn = Utils.getFileNameWithoutExtension(replacementFile);
+            String replaceInputPath = replacementFile.getPath();
+            List<ReplaceModel> replaceModelList = getCsvToBean(replaceInputPath, ReportType.REPLACE);
+            System.out.println("re" + replaceModelList.size());
+            for (ReplaceModel replaceModel : replaceModelList) {
+                EdgeNoteView edgeNoteView = connectionDAO.getEdgeNoteViewFromTitle(replaceModel.getFixtureid());
+                if (edgeNoteView != null) {
+                    List<EdgeFormEntity> edgeFormEntityList = connectionDAO.getEdgeNoteEntity(edgeNoteView.getNoteId(), "");
+                    for (EdgeFormEntity edgeFormEntity : edgeFormEntityList) {
+                        try {
+                            if (edgeFormEntity.getFormTemplateGuid().equals(formTemplateGuid)) {
+                                String formDef = edgeFormEntity.getFormDef();
+                                Type listType = new TypeToken<ArrayList<EdgeFormData>>() {
+                                }.getType();
+                                List<EdgeFormData> edgeFormDataList = gson.fromJson(formDef, listType);
+                                String newNodeMacAddress = valueById(edgeFormDataList, Integer.parseInt(newMacAddressID));
+                                String existingMacAddress = valueById(edgeFormDataList, Integer.parseInt(existingMacAddressID));
+                                System.out.println(existingMacAddress);
+                                if (newNodeMacAddress != null && existingMacAddress != null && newNodeMacAddress.equals(existingMacAddress)) {
+                                    replaceModel.setStatus(Status.Success.toString());
+                                } else {
+                                    replaceModel.setStatus(Status.Failure.toString());
+                                }
                             }
+                        } catch (NoValueException e) {
+                            replaceModel.setStatus(Status.Failure.toString());
                         }
-                    } catch (NoValueException e) {
-                        replaceModel.setStatus(Status.Failure.toString());
                     }
-                }
 
+                }
+                // test
             }
+            String outputFilePath = sourceFile + File.separator + fileNameWithoutExtn + "_verified.csv";
+            System.out.println("ReplacePath : " + outputFilePath);
+            Utils.writeReplacementData(replaceModelList, outputFilePath);
+            System.out.println("replacementPath : " + outputFilePath);
         }
-        String outputFilePath = PropertiesReader.getProperties().getProperty("edge.replacepath.output");
-        System.out.println("ReplacePath : " + outputFilePath);
-        Utils.writeReplacementData(replaceModelList, outputFilePath);
+        return "Success";
     }
 
     private String valueById(List<EdgeFormData> edgeFormDatas, int id) throws NoValueException {

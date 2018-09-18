@@ -12,10 +12,7 @@ import org.supercsv.io.CsvBeanWriter;
 import org.supercsv.io.ICsvBeanWriter;
 import org.supercsv.prefs.CsvPreference;
 
-import java.io.FileOutputStream;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.StringWriter;
+import java.io.*;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -208,6 +205,15 @@ public class Utils {
         }
         //   }
         return records;
+    }
+    public static String getFileNameWithoutExtension(File file) {
+        String name = file.getName();
+        int pos = name.lastIndexOf('.');
+        if (pos > 0 && pos < (name.length() - 1)) {
+            // there is a '.' and it's not the first, or last character.
+            return name.substring(0,  pos);
+        }
+        return name;
     }
 
 }

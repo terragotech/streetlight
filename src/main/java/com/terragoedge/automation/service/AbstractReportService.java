@@ -31,6 +31,7 @@ public class AbstractReportService {
         Iterator<String[]> iterator = records.iterator();
         switch (reportType) {
             case MAC_VALIDATION:
+                System.out.println("MACValidationCalled");
                 List<MacValidationModel> macValidationModels = new ArrayList<>();
                 while (iterator.hasNext()) {
                     String[] record = iterator.next();
@@ -45,6 +46,7 @@ public class AbstractReportService {
                 }
                 return macValidationModels;
             case REPLACE:
+                System.out.println("ReplaceCalled");
                 List<ReplaceModel> replaceModelList = new ArrayList<>();
                 while (iterator.hasNext()) {
                     String[] record = iterator.next();
