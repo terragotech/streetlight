@@ -134,7 +134,7 @@
                             <goal>single</goal>
                         </goals>
                         <configuration>
-                            <finalName>EdgeServerMacAddressUpdate-v1</finalName>
+                            <finalName>king_city_slv_interface</finalName>
                             <archive>
                                 <manifest>
                                     <mainClass>

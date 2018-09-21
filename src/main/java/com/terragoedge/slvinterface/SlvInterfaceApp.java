@@ -20,10 +20,9 @@ import java.util.Properties;
 public class SlvInterfaceApp {
 
     public static void main(String[] args) {
-        SlvInterfaceService slvInterfaceService = new KingCityEdgeInterface();
-        slvInterfaceService.start();
 
-      /* while (true) {
+
+      while (true) {
             try {
                 SlvInterfaceService slvInterfaceService = new KingCityEdgeInterface();
                 slvInterfaceService.start();
@@ -32,7 +31,7 @@ public class SlvInterfaceApp {
                 e.printStackTrace();
             }
         }
-*/
+
     }
 
 

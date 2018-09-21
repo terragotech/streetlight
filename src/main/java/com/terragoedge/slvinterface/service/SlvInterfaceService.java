@@ -60,7 +60,14 @@ public abstract  class SlvInterfaceService extends AbstractSlvService {
 
     public void start() {
         // Get Configuration JSON
-        configurationJsonList = getConfigJson();
+        try{
+            configurationJsonList = getConfigJson();
+        }catch (Exception e){
+            logger.error("Unable to load Configuration file.", e);
+            return;
+        }
+
+        // Load Devices from SLV
         try {
             loadDevices();
         } catch (Exception e) {
@@ -68,12 +75,15 @@ public abstract  class SlvInterfaceService extends AbstractSlvService {
             return;
         }
 
+        // Get Edge Server Access Token
         String accessToken = getEdgeToken();
         logger.info("AccessToken is :" + accessToken);
         if (accessToken == null) {
             logger.error("Edge Invalid UserName and Password.");
             return;
         }
+
+        // Resync
         String dataReSync = PropertiesReader.getProperties().getProperty("streetlight.edge.data.resync");
         if (dataReSync != null && dataReSync.trim().equals("true")) {
             logger.info("ReSync Process Starts.");
@@ -83,6 +93,7 @@ public abstract  class SlvInterfaceService extends AbstractSlvService {
             return;
         }
 
+        // Get Processed List
         List<String> noteGuids = slvInterfaceDAO.getNoteGuids();
         if (noteGuids == null) {
             logger.error("Error while getting already process note list.");
@@ -95,6 +106,7 @@ public abstract  class SlvInterfaceService extends AbstractSlvService {
         String controllerStrIdValue = properties.getProperty("streetlight.controller.str.id");
 
         logger.info("GetNotesUrl :" + url);
+        // Get List of noteid
         List<String> noteGuidsList = connectionDAO.getEdgeNoteGuid(formTemplateGuid);
         for (String edgenoteGuid : noteGuidsList) {
             try {
@@ -102,11 +114,10 @@ public abstract  class SlvInterfaceService extends AbstractSlvService {
                     String restUrl = url + edgenoteGuid;
                     ResponseEntity<String> responseEntity = slvRestService.getRequest(restUrl, false, accessToken);
                     logger.info("notes response :" + restUrl);
-                    //Thread.sleep(10000);
+                    Thread.sleep(2000);
                     if (responseEntity.getStatusCode().is2xxSuccessful()) {
                         String notesData = responseEntity.getBody();
                         logger.info("notes response from server :" + notesData);
-                        System.out.println(notesData);
 
                         List<EdgeNote> edgeNoteList = new ArrayList<>();
                         EdgeNote edgeNote = gson.fromJson(notesData, EdgeNote.class);
@@ -158,7 +169,7 @@ public abstract  class SlvInterfaceService extends AbstractSlvService {
                 } catch (Exception e) {
                     e.printStackTrace();
                 } finally {
-                    // TODO
+                    connectionDAO.saveSlvSyncDetails(slvSyncDetailsError);
                 }
 
             }
@@ -193,21 +204,25 @@ public abstract  class SlvInterfaceService extends AbstractSlvService {
                                 createDevice(edgeNote, slvSyncDetail, geozoneId);
                             }
                             processSetDevice(edgeFormDataList, configurationJson, edgeNote, paramsList, slvSyncDetail, controllerStrIdValue);
-                           // replaceOLC(controllerStrIdValue, edgeNote.getTitle(), slvSyncDetail.getMacAddress());
+                            replaceOLC(controllerStrIdValue, edgeNote.getTitle(), slvSyncDetail.getMacAddress());
+                            slvSyncDetail.setStatus("Success");
                             break;
                         case UPDATE_DEVICE:
                             logger.info(edgeNote.getTitle() + " is going to Replace.");
                             slvSyncDetail.setSelectedAction(SLVProcess.UPDATE_DEVICE.toString());
                             processSetDevice(edgeFormDataList, configurationJson, edgeNote, paramsList, slvSyncDetail, controllerStrIdValue);
+                            slvSyncDetail.setStatus("Success");
                             break;
                         case REPLACE_DEVICE:
                             logger.info(edgeNote.getTitle() + " is going to Remove.");
                             slvSyncDetail.setSelectedAction(SLVProcess.REPLACE_DEVICE.toString());
                             processReplaceDevice(formData, configurationJson, edgeNote, paramsList, slvSyncDetail, controllerStrIdValue, geozoneId);
+                            slvSyncDetail.setStatus("Success");
                             break;
 
                         case REMOVE:
                             replaceOLC(controllerStrIdValue, edgeNote.getTitle(), "");
+                            slvSyncDetail.setStatus("Success");
                             break;
 
                     }
@@ -225,7 +240,7 @@ public abstract  class SlvInterfaceService extends AbstractSlvService {
         }
         slvSyncDetail.setProcessedDateTime(new Date().getTime());
         connectionDAO.updateSlvDevice(slvSyncDetail.getNoteName(), slvSyncDetail.getMacAddress());
-        connectionDAO.saveSlvSyncDetails(slvSyncDetail);
+
     }
 
     public boolean isAvailableDevice(String idOnController) {
@@ -359,21 +374,15 @@ public abstract  class SlvInterfaceService extends AbstractSlvService {
         }
     }
 
-    public List<ConfigurationJson> getConfigJson() {
+    public List<ConfigurationJson> getConfigJson() throws Exception {
         JsonParser jsonParser = new JsonParser();
-        try (FileReader reader = new FileReader(ResourceDetails.CONFIG_JSON_PATH)) {
-            String configjson = jsonParser.parse(reader).toString();
-            Type listType = new TypeToken<ArrayList<ConfigurationJson>>() {
-            }.getType();
-            List<ConfigurationJson> configurationJsons = gson.fromJson(configjson, listType);
-            return configurationJsons;
+        FileReader reader = new FileReader(ResourceDetails.CONFIG_JSON_PATH);
+        String configjson = jsonParser.parse(reader).toString();
+        Type listType = new TypeToken<ArrayList<ConfigurationJson>>() {
+        }.getType();
+        List<ConfigurationJson> configurationJsons = gson.fromJson(configjson, listType);
+        return configurationJsons;
 
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        return new ArrayList<>();
 
     }
 
@@ -385,6 +394,9 @@ public abstract  class SlvInterfaceService extends AbstractSlvService {
             try {
                 String newNodeMacAddress = valueById(edgeFormDataList, macID.getId());
                 logger.info("newNodeMacAddress:" + newNodeMacAddress);
+                if(newNodeMacAddress.contains("null") || newNodeMacAddress.equals("null")){
+                    throw new MacAddressProcessedException("InValid MAC address."+ edgeNote.getTitle(), newNodeMacAddress);
+                }
                 SlvDevice slvDevice = connectionDAO.getSlvDevices(edgeNote.getTitle());
                 if (slvDevice != null && slvDevice.getMacAddress() != null && slvDevice.getMacAddress().equals(newNodeMacAddress)) {
                     throw new MacAddressProcessedException("Already mac address processed" + edgeNote.getTitle(), newNodeMacAddress);

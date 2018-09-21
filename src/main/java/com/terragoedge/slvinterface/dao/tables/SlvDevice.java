@@ -8,6 +8,8 @@ public class SlvDevice {
     public static final String SLV_DEVICE_ID = "deviceid";
     public static final String DEVICE_NAME = "devicename";
     public static final String MACADDRESS = "macaddress";
+    public static final String PROCESSED_DATE_TIME = "processeddatetime";
+
     @DatabaseField(generatedId = true)
     private int id;
     @DatabaseField(columnName = "devicename")

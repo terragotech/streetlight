@@ -18,6 +18,7 @@ import com.terragoedge.slvinterface.json.slvInterface.ConfigurationJson;
 import com.terragoedge.slvinterface.kingcity.DefaultData;
 import com.terragoedge.slvinterface.kingcity.GeoZoneDetails;
 import com.terragoedge.slvinterface.model.EdgeNote;
+import com.terragoedge.slvinterface.utils.ResourceDetails;
 import com.terragoedge.slvinterface.utils.Utils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -213,12 +214,21 @@ public class KingCityEdgeInterface extends SlvInterfaceService{
     private void loadMappingVal(){
         FileInputStream fis = null;
 	    try{
-             fis = new FileInputStream("./src/main/resources/kingcity/mapping.json");
+             fis = new FileInputStream(ResourceDetails.MAPPING_PATH);
             String data =  IOUtils.toString(fis);
             JsonParser jsonParser = new JsonParser();
             mappingJson = (JsonObject) jsonParser.parse(data);
         }catch (Exception e){
-e.printStackTrace();
+            e.printStackTrace();
+        }finally {
+	        if(fis != null){
+	            try{
+                    fis.close();
+                }catch (Exception e){
+	                e.printStackTrace();
+                }
+
+            }
         }
 
     }

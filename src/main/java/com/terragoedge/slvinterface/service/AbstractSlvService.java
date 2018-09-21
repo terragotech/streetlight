@@ -381,7 +381,7 @@ public abstract class AbstractSlvService extends EdgeService{
                 JsonArray deviceValues = deviceValuesAsArray.get(i).getAsJsonArray();
                 SlvDevice slvDevice = new SlvDevice();
                 slvDevice.setDeviceId(deviceValues.get(0).getAsString());
-                slvDevice.setDeviceName(slvDevice.getDeviceName());
+                slvDevice.setDeviceName(slvDevice.getDeviceId());
                 if(!deviceValues.get(1).isJsonNull()){
                     slvDevice.setMacAddress(deviceValues.get(1).getAsString());
                 }

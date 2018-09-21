@@ -12,6 +12,7 @@ import com.terragoedge.slvinterface.dao.tables.SlvDevice;
 import com.terragoedge.slvinterface.dao.tables.SlvSyncDetails;
 import com.terragoedge.slvinterface.enumeration.Status;
 import com.terragoedge.slvinterface.model.EdgeNote;
+import org.apache.log4j.Logger;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -28,13 +29,14 @@ public enum ConnectionDAO {
     ConnectionSource connectionSource = null;
     private Dao<SlvSyncDetails, String> slvSyncDetailsDao;
     public Dao<SlvDevice, String> slvDeviceDao = null;
+    private static final Logger logger = Logger.getLogger(ConnectionDAO.class);
 
     ConnectionDAO() {
 
         try {
             connectionSource = new JdbcConnectionSource(DATABASE_URL);
-//              TableUtils.createTableIfNotExists(connectionSource, SlvSyncDetails.class);
-//             TableUtils.createTableIfNotExists(connectionSource, SlvDevice.class);
+            //  TableUtils.createTableIfNotExists(connectionSource, SlvSyncDetails.class);
+            // TableUtils.createTableIfNotExists(connectionSource, SlvDevice.class);
             slvSyncDetailsDao = DaoManager.createDao(connectionSource, SlvSyncDetails.class);
             slvDeviceDao = DaoManager.createDao(connectionSource, SlvDevice.class);
         } catch (Exception e) {
@@ -49,6 +51,7 @@ public enum ConnectionDAO {
 
     public void saveSlvDevices(SlvDevice slvDevice) {
         try {
+            slvDevice.setProcessedDateTime(System.currentTimeMillis());
             slvDeviceDao.create(slvDevice);
         } catch (Exception e) {
             e.printStackTrace();
@@ -83,18 +86,18 @@ public enum ConnectionDAO {
 
     public List<String> getEdgeNoteGuid(String formTemplateGuid) {
         try {
-            List<String> noteGuids = slvSyncDetailsDao.queryRaw("select noteguid from edgenote, edgeform where edgenote.isdeleted = false and edgenote.iscurrent = true and  edgenote.noteid =  edgeform.edgenoteentity_noteid and edgeform.formtemplateguid = '" + formTemplateGuid + "';", new RawRowMapper<String>() {
+            List<String> noteGuids = slvSyncDetailsDao.queryRaw("select noteguid from edgenote, edgeform where edgenote.isdeleted = false  and edgenote.iscurrent = true and  edgenote.noteid =  edgeform.edgenoteentity_noteid and formdef like '%SELC QR Code#00%' and  edgeform.formtemplateguid = '" + formTemplateGuid + "';", new RawRowMapper<String>() {
                 @Override
                 public String mapRow(String[] columnNames, String[] resultColumns) throws SQLException {
                     return resultColumns[0];
                 }
             }).getResults();
-            //return noteGuids;
+            return noteGuids;
         } catch (Exception e) {
-            //  logger.error("Error in getNoteGuids",e);
+              logger.error("Error in getNoteGuids",e);
         }
         //24c4a87e-92ee-433f-ad06-353a73640975
-        List<String> stringList = new ArrayList<>();
+       /* List<String> stringList = new ArrayList<>();
         stringList.add("f3a60382-28d2-4038-bff1-48d435fa8a16");
         stringList.add("f4f79f31-7ba9-423f-8dea-bb568738701f");
         stringList.add("a55b1731-7063-4769-a5d0-c6c0b7f61634");
@@ -122,7 +125,8 @@ public enum ConnectionDAO {
         stringList.add("dfad16ff-f7f9-440a-ae25-70c5ffbf6321");
         stringList.add("459407e2-3901-435a-9076-d80ba0c65c20");
 
-        return stringList;
+        return stringList;*/
+       return  new ArrayList<>();
 
     }
 
@@ -197,6 +201,7 @@ public enum ConnectionDAO {
             UpdateBuilder<SlvDevice, String> updateBuilder = slvDeviceDao.updateBuilder();
             updateBuilder.where().eq(SlvDevice.SLV_DEVICE_ID, idOnController);
             updateBuilder.updateColumnValue(SlvDevice.MACADDRESS, macAddress);
+            updateBuilder.updateColumnValue(SlvDevice.PROCESSED_DATE_TIME,System.currentTimeMillis());
             updateBuilder.update();
         } catch (Exception e) {
             e.printStackTrace();
