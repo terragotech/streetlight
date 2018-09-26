@@ -201,7 +201,7 @@ public abstract  class SlvInterfaceService extends AbstractSlvService {
                             slvSyncDetail.setSelectedAction(SLVProcess.NEW_DEVICE.toString());
                             boolean isDeviceExist = isAvailableDevice(edgeNote.getTitle());
                             if (!isDeviceExist) {
-                                createDevice(edgeNote, slvSyncDetail, geozoneId);
+                                createDevice(edgeNote, slvSyncDetail, geozoneId,edgeFormDataList);
                             }
                             processSetDevice(edgeFormDataList, configurationJson, edgeNote, paramsList, slvSyncDetail, controllerStrIdValue);
                             replaceOLC(controllerStrIdValue, edgeNote.getTitle(), slvSyncDetail.getMacAddress());
@@ -248,7 +248,7 @@ public abstract  class SlvInterfaceService extends AbstractSlvService {
         return slvDevice != null;
     }
 
-    public void createDevice(EdgeNote edgeNote, SlvSyncDetails slvSyncDetails, String geoZoneId) throws DeviceCreationFailedException {
+    public void createDevice(EdgeNote edgeNote, SlvSyncDetails slvSyncDetails, String geoZoneId,List<EdgeFormData> edgeFormDataList) throws DeviceCreationFailedException {
         if (geoZoneId != null) {
             ResponseEntity<String> responseEntity = createDevice(edgeNote, geoZoneId);
             String status = responseEntity.getStatusCode().toString();
@@ -357,7 +357,7 @@ public abstract  class SlvInterfaceService extends AbstractSlvService {
     }
 
 
-    private String valueById(List<EdgeFormData> edgeFormDatas, int id) throws NoValueException {
+    protected String valueById(List<EdgeFormData> edgeFormDatas, int id) throws NoValueException {
         EdgeFormData edgeFormTemp = new EdgeFormData();
         edgeFormTemp.setId(id);
 
