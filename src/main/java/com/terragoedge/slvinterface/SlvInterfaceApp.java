@@ -6,6 +6,7 @@ import com.macaddress.slvtoedge.service.MacAddressService;
 import com.report.automation.service.ReportAutomationService;
 import com.terragoedge.slvinterface.json.slvInterface.ConfigurationJson;
 import com.terragoedge.slvinterface.service.AbstractSlvService;
+import com.terragoedge.slvinterface.service.CanadaEdgeInterface;
 import com.terragoedge.slvinterface.service.KingCityEdgeInterface;
 import com.terragoedge.slvinterface.service.SlvInterfaceService;
 import com.terragoedge.slvinterface.utils.PropertiesReader;
@@ -24,7 +25,7 @@ public class SlvInterfaceApp {
 
       while (true) {
             try {
-                SlvInterfaceService slvInterfaceService = new KingCityEdgeInterface();
+                SlvInterfaceService slvInterfaceService = new CanadaEdgeInterface();
                 slvInterfaceService.start();
                 Thread.sleep(60000);
             } catch (Exception e) {
