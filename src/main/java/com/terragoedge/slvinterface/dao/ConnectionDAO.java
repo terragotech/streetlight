@@ -96,36 +96,7 @@ public enum ConnectionDAO {
         } catch (Exception e) {
               logger.error("Error in getNoteGuids",e);
         }
-        //24c4a87e-92ee-433f-ad06-353a73640975
-       /* List<String> stringList = new ArrayList<>();
-        stringList.add("f3a60382-28d2-4038-bff1-48d435fa8a16");
-        stringList.add("f4f79f31-7ba9-423f-8dea-bb568738701f");
-        stringList.add("a55b1731-7063-4769-a5d0-c6c0b7f61634");
-        stringList.add("351213f5-6330-45ba-b2ef-45b5edc0dd3f");
-        stringList.add("c6a2168d-c0f4-4771-a418-b5f48b62dcf7");
-        stringList.add("46f00b24-2eff-46f0-8f16-b179468861b2");
-        stringList.add("7627b7ef-793e-4f14-aa2f-8c40c2a2a64d");
-        stringList.add("3a599060-1a0f-4147-bb81-37708fe18371");
-        stringList.add("855e40ec-209a-469e-b329-2680746ecf81");
-        stringList.add("a33f8181-6cef-4613-a3f5-cce961c2fd8c");
-        stringList.add("940e4784-785a-4bf0-9c46-94b7034705ae");
-        stringList.add("912d569f-f692-425e-a2a4-c3ffcd91877b");
-        stringList.add("8bd5f4f1-2aa1-4142-88b5-f43fc177ce15");
-        stringList.add("c30ece6c-b379-4345-abb6-413fd8576a01");
-        stringList.add("72d09ff5-b625-4747-9ecc-e6393ebff1b1");
-        stringList.add("2e2d34fb-d585-422f-9890-641b741749d8");
 
-
-        stringList.add("79788155-8ec4-4b27-b4bb-326b6128337f");
-        stringList.add("afa6243c-117f-483e-9bd3-de76b236f1b5");
-        stringList.add("7be5c71c-455f-4a4f-9dcc-c4342808f842");
-        stringList.add("f753c654-2bd3-457e-8446-df948271d5ae");
-        stringList.add("6e2c0ccf-f0bd-454a-9ebc-45273ffd4dc6");
-
-        stringList.add("dfad16ff-f7f9-440a-ae25-70c5ffbf6321");
-        stringList.add("459407e2-3901-435a-9076-d80ba0c65c20");
-
-        return stringList;*/
        return  new ArrayList<>();
 
     }

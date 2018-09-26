@@ -57,6 +57,13 @@ public class CanadaEdgeInterface extends SlvInterfaceService {
         luminareCore.put("L12", 158);
         luminareCore.put("L13", 80);
         luminareCore.put("L14", 52);
+        luminareCore.put("P1", 25);
+        luminareCore.put("PL5", 44);
+        luminareCore.put("PL4", 44);
+        luminareCore.put("PL3", 89);
+        luminareCore.put("PL1", 89);
+        luminareCore.put("PL6", 44);
+        luminareCore.put("PL2", 89);
 
     }
 
@@ -167,7 +174,7 @@ public class CanadaEdgeInterface extends SlvInterfaceService {
 
 
         addStreetLightData("location.utillocationid",  edgeNote.getTitle()+ ".Lamp", paramsList);
-        String nodeTypeStrId = properties.getProperty("streetlight.equipment.type"); // TODO
+        String nodeTypeStrId = properties.getProperty("streetlight.slv.equipment.type");
         addStreetLightData("modelFunctionId", nodeTypeStrId, paramsList);
 
         addStreetLightData("comment", comment, paramsList);
