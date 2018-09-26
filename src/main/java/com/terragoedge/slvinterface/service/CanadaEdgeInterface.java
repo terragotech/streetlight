@@ -7,7 +7,6 @@ import com.google.gson.reflect.TypeToken;
 import com.opencsv.bean.CsvToBean;
 import com.opencsv.bean.CsvToBeanBuilder;
 import com.terragoedge.slvinterface.dao.tables.SlvSyncDetails;
-import com.terragoedge.slvinterface.enumeration.Status;
 import com.terragoedge.slvinterface.exception.DeviceCreationFailedException;
 import com.terragoedge.slvinterface.exception.DeviceUpdationFailedException;
 import com.terragoedge.slvinterface.exception.InValidBarCodeException;

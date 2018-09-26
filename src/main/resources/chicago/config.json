@@ -3,14 +3,14 @@
     "type": "NEW_DEVICE",
     "ids": [
       {
-        "id": 121,
+        "id": 22,
         "type": "MAC"
       }
     ],
     "action": [
       {
         "id": 1,
-        "value": "Install node"
+        "value": "New Streetlight"
       }
     ]
   },
@@ -22,23 +22,23 @@
         "type": "EXISTING_MAC"
       },
       {
-        "id": 27,
+        "id": 13,
         "type": "MAC"
       }
     ],
     "action": [
       {
         "id": 1,
-        "value": "Replace node"
+        "value": "Update Streetlight"
       }
     ]
   },
   {
     "type": "REMOVE",
-     "action": [
+    "action": [
       {
         "id": 1,
-        "value": "Remove node"
+        "value": "Remove Streetlight"
       }
     ]
   }
