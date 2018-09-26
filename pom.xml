@@ -140,7 +140,7 @@
                             <goal>single</goal>
                         </goals>
                         <configuration>
-                            <finalName>report-automation</finalName>
+                            <finalName>report-automation-v1</finalName>
                             <archive>
                                 <manifest>
                                     <mainClass>
