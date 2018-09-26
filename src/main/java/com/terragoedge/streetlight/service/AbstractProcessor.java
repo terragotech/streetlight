@@ -103,9 +103,9 @@ public abstract class AbstractProcessor {
                 return false;
             } else {
                 for (Value value : values) {
-                    if (value.getIdOnController().equals(idOnController)) {
+                    /*if (value.getIdOnController().equals(idOnController)) {
                         return false;
-                    }
+                    }*/
                     stringBuilder.append(value.getIdOnController());
                     stringBuilder.append("\n");
                 }
@@ -212,7 +212,7 @@ public abstract class AbstractProcessor {
             }
 
             addStreetLightData("power", powerVal, paramsList);
-            addStreetLightData("fixing.type", fixtureInfo[5], paramsList);
+            addStreetLightData("comed.litetype", fixtureInfo[5], paramsList);
             // dailyReportCSV.setFixtureType(fixtureInfo[5]);
             addStreetLightData("device.luminaire.colortemp", fixtureInfo[6], paramsList);
             addStreetLightData("device.luminaire.lumenoutput", fixtureInfo[7], paramsList);
