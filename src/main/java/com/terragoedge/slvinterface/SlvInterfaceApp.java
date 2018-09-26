@@ -3,6 +3,7 @@ package com.terragoedge.slvinterface;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import com.terragoedge.automation.service.ExceptionReportAutomationService;
+import com.terragoedge.automation.service.FinalReportService;
 import com.terragoedge.automation.service.ReportAutomationService;
 import com.terragoedge.slvinterface.json.slvInterface.ConfigurationJson;
 import com.terragoedge.slvinterface.service.AbstractSlvService;
@@ -22,11 +23,14 @@ public class SlvInterfaceApp extends AbstractSlvService {
     public static List<ConfigurationJson> configurationJsons = new ArrayList<>();
 
     public static void main(String[] args) {
+        FinalReportService finalReportService = new FinalReportService();
+        finalReportService.startProcess();
         // AmerescoReportService amerescoReportService = new AmerescoReportService();
         // amerescoReportService.start();
-        ReportAutomationService reportAutomationService = new ReportAutomationService();
+        //ReportAutomationService reportAutomationService = new ReportAutomationService();
       //  reportAutomationService.startReplacementProcess(new File("D:\\home\\mailscheduler\\csvfile\\MAC_Validation_Report_Replacement_Remove\\09_12_2018_15_34_35\\"));
 /*
+
         while (true) {
             try {
                 SlvInterfaceService slvInterfaceService = new SlvInterfaceService();
