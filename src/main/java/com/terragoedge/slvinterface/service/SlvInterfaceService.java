@@ -68,12 +68,12 @@ public abstract  class SlvInterfaceService extends AbstractSlvService {
         }
 
         // Load Devices from SLV
-        try {
+        /*try {
             loadDevices();
         } catch (Exception e) {
             logger.error("Unable to get device from SLV.", e);
             return;
-        }
+        }*/
 
         // Get Edge Server Access Token
         String accessToken = getEdgeToken();
@@ -113,11 +113,8 @@ public abstract  class SlvInterfaceService extends AbstractSlvService {
                 if (!noteGuids.contains(edgenoteGuid)) {
                     String restUrl = url + edgenoteGuid;
                     ResponseEntity<String> responseEntity = slvRestService.getRequest(restUrl, false, accessToken);
-                    logger.info("notes response :" + restUrl);
-                    Thread.sleep(2000);
                     if (responseEntity.getStatusCode().is2xxSuccessful()) {
                         String notesData = responseEntity.getBody();
-                        logger.info("notes response from server :" + notesData);
 
                         List<EdgeNote> edgeNoteList = new ArrayList<>();
                         EdgeNote edgeNote = gson.fromJson(notesData, EdgeNote.class);

@@ -129,8 +129,9 @@ public class CanadaEdgeInterface extends SlvInterfaceService {
                 }
 
 
-
-                addStreetLightData(key, value, paramsList);
+                if(!key.equals("comment") && !key.equals("MacAddress") && !key.toLowerCase().equals("power")){
+                    addStreetLightData(key, value, paramsList);
+                }
 
 
                 if (key.equalsIgnoreCase("power2")) {
@@ -181,7 +182,7 @@ public class CanadaEdgeInterface extends SlvInterfaceService {
 
         String streetLightDate = dateFormat(edgeNote.getCreatedDateTime());
         addStreetLightData("lamp.installdate", streetLightDate, paramsList);
-
+        addStreetLightData("location.locationtype", "LOCATION_TYPE_PREMISE", paramsList);
 
         DefaultData defaultData = new DefaultData();
         defaultData.setIdOnController(edgeNote.getTitle());
@@ -236,19 +237,12 @@ public class CanadaEdgeInterface extends SlvInterfaceService {
 
 
     public String getGeoZoneValue(String title){
-        DefaultData defaultData = new DefaultData();
-        defaultData.setIdOnController(title);
-        int pos = defaultDataHashMap.indexOf(defaultData);
-        if(pos != -1) {
-            defaultData = defaultDataHashMap.get(pos);
-            String geoZoneVal =  defaultData.getGeoZoneValue();
-            GeoZoneDetails geoZoneDetails = new GeoZoneDetails();
-            geoZoneDetails.setName(geoZoneVal);
-            pos =  geoZoneDetailsList.indexOf(geoZoneDetails);
-            if(pos != -1){
-                geoZoneDetails = geoZoneDetailsList.get(pos);
-                return geoZoneDetails.getId();
-            }
+        GeoZoneDetails geoZoneDetails = new GeoZoneDetails();
+        geoZoneDetails.setName(title);
+        int pos =  geoZoneDetailsList.indexOf(geoZoneDetails);
+        if(pos != -1){
+            geoZoneDetails = geoZoneDetailsList.get(pos);
+            return geoZoneDetails.getId();
         }
         return null;
     }
@@ -273,11 +267,15 @@ public class CanadaEdgeInterface extends SlvInterfaceService {
     public void createDevice(EdgeNote edgeNote, SlvSyncDetails slvSyncDetails, String geoZoneId,List<EdgeFormData> edgeFormDataList) throws DeviceCreationFailedException {
         try{
             String blockName = valueById(edgeFormDataList,34);
+
+            blockName = "Block "+blockName;
+            logger.info("Block Name:"+blockName);
             geoZoneId = getGeoZoneValue(blockName);
             if(geoZoneId == null){
+                logger.error("No GeoZone");
                 throw new DeviceCreationFailedException("Unable to find GeoZone");
             }
-            geoZoneId = "Block "+geoZoneId;
+
             super.createDevice(edgeNote,slvSyncDetails,geoZoneId,edgeFormDataList);
         }catch (NoValueException e){
             throw new DeviceCreationFailedException("Unable to get block Name");

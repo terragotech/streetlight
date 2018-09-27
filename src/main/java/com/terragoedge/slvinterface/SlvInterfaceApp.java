@@ -22,18 +22,25 @@ public class SlvInterfaceApp {
 
     public static void main(String[] args) {
 
-
       while (true) {
             try {
+
                 SlvInterfaceService slvInterfaceService = new CanadaEdgeInterface();
-                slvInterfaceService.start();
-                Thread.sleep(60000);
+                slvInterfaceService.loadDevices();
+                while (true) {
+                    slvInterfaceService.start();
+                    Thread.sleep(60000);
+                }
             } catch (Exception e) {
+                e.printStackTrace();
+            }
+            try {
+                Thread.sleep(60000);
+            }catch (Exception e) {
                 e.printStackTrace();
             }
         }
 
     }
-
 
 }

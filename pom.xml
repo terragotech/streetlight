@@ -134,7 +134,7 @@
                             <goal>single</goal>
                         </goals>
                         <configuration>
-                            <finalName>king_city_slv_interface</finalName>
+                            <finalName>canada_slv_interface</finalName>
                             <archive>
                                 <manifest>
                                     <mainClass>

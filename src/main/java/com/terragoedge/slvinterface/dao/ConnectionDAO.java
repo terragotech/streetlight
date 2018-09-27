@@ -35,7 +35,7 @@ public enum ConnectionDAO {
 
         try {
             connectionSource = new JdbcConnectionSource(DATABASE_URL);
-            //  TableUtils.createTableIfNotExists(connectionSource, SlvSyncDetails.class);
+              //TableUtils.createTableIfNotExists(connectionSource, SlvSyncDetails.class);
             // TableUtils.createTableIfNotExists(connectionSource, SlvDevice.class);
             slvSyncDetailsDao = DaoManager.createDao(connectionSource, SlvSyncDetails.class);
             slvDeviceDao = DaoManager.createDao(connectionSource, SlvDevice.class);
@@ -86,7 +86,7 @@ public enum ConnectionDAO {
 
     public List<String> getEdgeNoteGuid(String formTemplateGuid) {
         try {
-            List<String> noteGuids = slvSyncDetailsDao.queryRaw("select noteguid from edgenote, edgeform where edgenote.isdeleted = false  and edgenote.iscurrent = true and  edgenote.noteid =  edgeform.edgenoteentity_noteid and formdef like '%SELC QR Code#00%' and  edgeform.formtemplateguid = '" + formTemplateGuid + "';", new RawRowMapper<String>() {
+            List<String> noteGuids = slvSyncDetailsDao.queryRaw("select noteguid from edgenote, edgeform where edgenote.isdeleted = false  and edgenote.iscurrent = true and edgenote.createddatetime >=1537122600000 and  edgenote.noteid =  edgeform.edgenoteentity_noteid and formdef like '%SELC QR Code#00%' and  edgeform.formtemplateguid = '" + formTemplateGuid + "';", new RawRowMapper<String>() {
                 @Override
                 public String mapRow(String[] columnNames, String[] resultColumns) throws SQLException {
                     return resultColumns[0];
@@ -96,7 +96,6 @@ public enum ConnectionDAO {
         } catch (Exception e) {
               logger.error("Error in getNoteGuids",e);
         }
-
        return  new ArrayList<>();
 
     }
