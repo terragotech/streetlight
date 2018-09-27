@@ -69,7 +69,7 @@ public enum InventoryDAO {
         try {
             return edgeNoteViewDao.queryBuilder().where().eq(EdgeNoteView.NOTE_GUID, noteGuid).queryForFirst();
         } catch (Exception e) {
-            System.out.println("Error"+e.toString());
+            System.out.println("Error" + e.toString());
             e.printStackTrace();
         }
         return null;
@@ -141,6 +141,22 @@ public enum InventoryDAO {
         }
         return new ArrayList<>();
 
+    }
+
+    public List<String> getNoteGuid(String formTemplateGuid, String macAddress) {
+        String query = "select noteguid from edgenote, edgeform where edgenote.isdeleted = false and edgenote.iscurrent = true and  edgenote.noteid =  edgeform.edgenoteentity_noteid and edgeform.formtemplateguid = '" + formTemplateGuid + "' and formdef like '%"+macAddress+"%';";
+        try {
+            List<String> noteGuids = edgeNoteViewDao.queryRaw(query, new RawRowMapper<String>() {
+                @Override
+                public String mapRow(String[] columnNames, String[] resultColumns) throws SQLException {
+                    return resultColumns[0];
+                }
+            }).getResults();
+            return noteGuids;
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return new ArrayList<>();
     }
 
     /**
@@ -238,21 +254,21 @@ public enum InventoryDAO {
         return null;
     }
 
-    public EdgeNotebookEntity getInstalledNotebook(){
-        try{
-          return   notebookDao.queryBuilder().where().eq(EdgeNotebookEntity.NOTEBOOK_NAME,"Installed").and().eq(EdgeNotebookEntity.IS_DELETED,false).queryForFirst();
-        }catch (Exception e){
+    public EdgeNotebookEntity getInstalledNotebook() {
+        try {
+            return notebookDao.queryBuilder().where().eq(EdgeNotebookEntity.NOTEBOOK_NAME, "Installed").and().eq(EdgeNotebookEntity.IS_DELETED, false).queryForFirst();
+        } catch (Exception e) {
             e.printStackTrace();
         }
         return null;
     }
 
-    public EdgeNoteView getEdgeNoteViewByTitle(String title){
-        try{
+    public EdgeNoteView getEdgeNoteViewByTitle(String title) {
+        try {
             EdgeNotebookEntity installedNb = getInstalledNotebook();
-          String sss =  edgeNoteViewDao.queryBuilder().orderBy(EdgeNoteView.CREATED_DATE_TIME,false).where().eq(EdgeNoteView.TITLE,title).and().ne(EdgeNoteView.EDGE_NOTEBOOK_ENTITY,installedNb).getStatement();
-          return   edgeNoteViewDao.queryBuilder().orderBy(EdgeNoteView.CREATED_DATE_TIME,false).where().eq(EdgeNoteView.TITLE,title).and().ne(EdgeNoteView.EDGE_NOTEBOOK_ENTITY,installedNb.getNotebookId()).queryForFirst();
-        }catch (Exception e){
+            String sss = edgeNoteViewDao.queryBuilder().orderBy(EdgeNoteView.CREATED_DATE_TIME, false).where().eq(EdgeNoteView.TITLE, title).and().ne(EdgeNoteView.EDGE_NOTEBOOK_ENTITY, installedNb).getStatement();
+            return edgeNoteViewDao.queryBuilder().orderBy(EdgeNoteView.CREATED_DATE_TIME, false).where().eq(EdgeNoteView.TITLE, title).and().ne(EdgeNoteView.EDGE_NOTEBOOK_ENTITY, installedNb.getNotebookId()).queryForFirst();
+        } catch (Exception e) {
             e.printStackTrace();
         }
         return null;
@@ -280,34 +296,34 @@ public enum InventoryDAO {
         return null;
     }
 
-    public List<EdgeFormEntity> getFormDef(String noteGuid){
+    public List<EdgeFormEntity> getFormDef(String noteGuid) {
         try {
-            QueryBuilder<EdgeFormEntity,String> formBuilder = edgeformDao.queryBuilder();
-            QueryBuilder<EdgeNoteEntity,String> noteBuilder = edgeNoteDao.queryBuilder();
+            QueryBuilder<EdgeFormEntity, String> formBuilder = edgeformDao.queryBuilder();
+            QueryBuilder<EdgeNoteEntity, String> noteBuilder = edgeNoteDao.queryBuilder();
             EdgeNoteEntity edgeNoteEntity = noteBuilder.where().eq("noteguid", noteGuid).queryForFirst();
             return formBuilder.where().eq("edgenoteentity_noteid", edgeNoteEntity.getNoteid()).query();
-        }catch (Exception e){
+        } catch (Exception e) {
             e.printStackTrace();
         }
         return new ArrayList<>();
     }
 
-    public JsonArray getNotebookFromNoteTitle(List<String> titles){
+    public JsonArray getNotebookFromNoteTitle(List<String> titles) {
         JsonArray jsonArray = new JsonArray();
-        try{
-           List<EdgeNoteView> edgeNoteEntities = edgeNoteViewDao.queryBuilder().where().in("title", titles).and().eq("iscurrent",true).and().eq("isdeleted",false).query();
-           for(EdgeNoteView edgeNoteView : edgeNoteEntities){
-               EdgeNotebookEntity edgeNotebookEntity = notebookDao.queryBuilder().where().eq("notebookid", edgeNoteView.getNotebookid()).queryForFirst();
-               if(((edgeNotebookEntity == null) ||  !(edgeNotebookEntity.getNotebookName().equals("Installed") || edgeNotebookEntity.getNotebookName().startsWith("User-")))){
-                   JsonObject jsonObject  =new JsonObject();
-                   jsonObject.addProperty("macaddress",edgeNoteView.getTitle());
-                   jsonObject.addProperty("id",edgeNoteView.getNoteGuid());
-                   jsonObject.addProperty("notebook",edgeNotebookEntity.getNotebookName());
-                   jsonArray.add(jsonObject);
-               }
-           }
+        try {
+            List<EdgeNoteView> edgeNoteEntities = edgeNoteViewDao.queryBuilder().where().in("title", titles).and().eq("iscurrent", true).and().eq("isdeleted", false).query();
+            for (EdgeNoteView edgeNoteView : edgeNoteEntities) {
+                EdgeNotebookEntity edgeNotebookEntity = notebookDao.queryBuilder().where().eq("notebookid", edgeNoteView.getNotebookid()).queryForFirst();
+                if (((edgeNotebookEntity == null) || !(edgeNotebookEntity.getNotebookName().equals("Installed") || edgeNotebookEntity.getNotebookName().startsWith("User-")))) {
+                    JsonObject jsonObject = new JsonObject();
+                    jsonObject.addProperty("macaddress", edgeNoteView.getTitle());
+                    jsonObject.addProperty("id", edgeNoteView.getNoteGuid());
+                    jsonObject.addProperty("notebook", edgeNotebookEntity.getNotebookName());
+                    jsonArray.add(jsonObject);
+                }
+            }
 
-        }catch (Exception e){
+        } catch (Exception e) {
             e.printStackTrace();
         }
         return jsonArray;
