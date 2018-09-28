@@ -8,6 +8,10 @@ public class InventoryResult {
     String action;
     String assignedToUser;
     String deliveryLocation;
+    String palletNumber;
+    String inventoryHandlingPalletList;
+    String reportFrom;
+    String toInstaller;
 
     public String getNoteGuid() {
         return noteGuid;
@@ -63,5 +67,37 @@ public class InventoryResult {
 
     public void setDeliveryLocation(String deliveryLocation) {
         this.deliveryLocation = deliveryLocation;
+    }
+
+    public String getPalletNumber() {
+        return palletNumber;
+    }
+
+    public void setPalletNumber(String palletNumber) {
+        this.palletNumber = palletNumber;
+    }
+
+    public String getInventoryHandlingPalletList() {
+        return inventoryHandlingPalletList;
+    }
+
+    public void setInventoryHandlingPalletList(String inventoryHandlingPalletList) {
+        this.inventoryHandlingPalletList = inventoryHandlingPalletList;
+    }
+
+    public String getReportFrom() {
+        return reportFrom;
+    }
+
+    public void setReportFrom(String reportFrom) {
+        this.reportFrom = reportFrom;
+    }
+
+    public String getToInstaller() {
+        return toInstaller;
+    }
+
+    public void setToInstaller(String toInstaller) {
+        this.toInstaller = toInstaller;
     }
 }

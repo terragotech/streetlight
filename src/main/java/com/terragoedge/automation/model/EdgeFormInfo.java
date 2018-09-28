@@ -7,6 +7,7 @@ public class EdgeFormInfo {
     private String title;
     private String noteGuid;
     private String formName;
+    private String palletNumber;
     private EdgeNoteView edgeNoteView;
     private EdgeFormEntity edgeFormEntity;
 
@@ -48,5 +49,13 @@ public class EdgeFormInfo {
 
     public void setNoteGuid(String noteGuid) {
         this.noteGuid = noteGuid;
+    }
+
+    public String getPalletNumber() {
+        return palletNumber;
+    }
+
+    public void setPalletNumber(String palletNumber) {
+        this.palletNumber = palletNumber;
     }
 }

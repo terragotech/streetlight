@@ -1,10 +1,7 @@
 package com.terragoedge.automation.service;
 
-import com.terragoedge.Test;
-import com.terragoedge.automation.model.EdgeFormInfo;
+import com.terragoedge.automation.model.CustodyResultModel;
 import com.terragoedge.automation.model.InventoryResult;
-import com.terragoedge.slvinterface.model.EdgeFormData;
-import com.terragoedge.slvinterface.service.InventoryAutomationService;
 import com.terragoedge.slvinterface.utils.Utils;
 
 import java.util.ArrayList;
@@ -29,14 +26,14 @@ public class ComedInventoryService extends AbstractInventoryService {
         String path = "./inventorydata.csv";
         //List<String> macAddressList = new ArrayList<>();
         //macAddressList.add("00135005007F1C2D");
-        List<String> macAddressList = getCsvToEntity(path);
+        List<CustodyResultModel> macAddressList = getCsvToEntity(path);
         System.out.println("Total Records : " + macAddressList.size());
         List<Future<InventoryResult>> inventoryResultList = new ArrayList<>();
-        for (String macAddress : macAddressList) {
+        for (CustodyResultModel macAddress : macAddressList) {
             System.out.println("Processed mac: " + macAddress);
             System.out.println("Total processed : " + i);
-            Future<InventoryResult> inventoryResultFuture = reportExecutor.submit(new InventoryAutomationService(inventoryHandlingFormGuid, nodeFormGuid, macAddress));
-            inventoryResultList.add(inventoryResultFuture);
+            //Future<InventoryResult> inventoryResultFuture = reportExecutor.submit(new InventoryAutomationService(inventoryHandlingFormGuid, nodeFormGuid, macAddress.getMacaddress()));
+            //inventoryResultList.add(inventoryResultFuture);
         }
         List<InventoryResult> inventoryLists = new ArrayList<>();
         for (Future<InventoryResult> future : inventoryResultList) {

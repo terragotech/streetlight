@@ -30,6 +30,17 @@ public class Utils {
         return dff;
     }
 
+    public static String getFormValue(List<EdgeFormData> edgeFormDatas, int id) {
+        EdgeFormData tempEdgeFormData = new EdgeFormData();
+        tempEdgeFormData.setId(id);
+        int pos = edgeFormDatas.indexOf(tempEdgeFormData);
+        if (pos != -1) {
+            EdgeFormData edgeFormData = edgeFormDatas.get(pos);
+            return edgeFormData.getValue();
+        }
+        return "";
+    }
+
     public static List<String[]> toStringArray(List<CsvReportModel> csvReportModelList) {
         List<String[]> records = new ArrayList<String[]>();
         //add header record
@@ -187,7 +198,7 @@ public class Utils {
     public static List<String[]> toStringInventoryArray(List<InventoryResult> inventoryResults) {
         List<String[]> records = new ArrayList<String[]>();
         //add header record
-        records.add(new String[]{"Scanning", "PalletWorkflow", "Action", "AssignedUser", "DeliveryLocation", "Title", "noteGuid"});
+        records.add(new String[]{"Scanning", "PalletWorkflow", "Action", "AssignedUser", "DeliveryLocation", "PalletNumber", "InventoryHandlingList", "Title", "NoteGuid", "LoadingFromReport", "ToInstaller"});
         for (InventoryResult inventoryResult : inventoryResults) {
             records.add(new String[]{
                     inventoryResult.getScanning(),
@@ -195,8 +206,12 @@ public class Utils {
                     inventoryResult.getAction(),
                     inventoryResult.getAssignedToUser(),
                     inventoryResult.getDeliveryLocation(),
+                    inventoryResult.getPalletNumber(),
+                    inventoryResult.getInventoryHandlingPalletList(),
                     inventoryResult.getTitle(),
                     inventoryResult.getNoteGuid(),
+                    inventoryResult.getReportFrom(),
+                    inventoryResult.getToInstaller()
             });
         }
         //   }
@@ -243,12 +258,13 @@ public class Utils {
         //   }
         return records;
     }
+
     public static String getFileNameWithoutExtension(File file) {
         String name = file.getName();
         int pos = name.lastIndexOf('.');
         if (pos > 0 && pos < (name.length() - 1)) {
             // there is a '.' and it's not the first, or last character.
-            return name.substring(0,  pos);
+            return name.substring(0, pos);
         }
         return name;
     }

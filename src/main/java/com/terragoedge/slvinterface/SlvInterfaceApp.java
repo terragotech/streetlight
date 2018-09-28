@@ -2,10 +2,7 @@ package com.terragoedge.slvinterface;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
-import com.terragoedge.automation.service.ComedInventoryService;
-import com.terragoedge.automation.service.ExceptionReportAutomationService;
-import com.terragoedge.automation.service.FinalReportService;
-import com.terragoedge.automation.service.ReportAutomationService;
+import com.terragoedge.automation.service.*;
 import com.terragoedge.slvinterface.json.slvInterface.ConfigurationJson;
 import com.terragoedge.slvinterface.service.*;
 import com.terragoedge.slvinterface.utils.PropertiesReader;
@@ -23,8 +20,8 @@ public class SlvInterfaceApp extends AbstractSlvService {
     public static void main(String[] args) {
        // FinalReportService finalReportService = new FinalReportService();
       //  finalReportService.startProcess();
-        ComedInventoryService inventoryAutomationService=new ComedInventoryService();
-        inventoryAutomationService.run();
+        InventoryAutomationService inventoryAutomationService=new InventoryAutomationService();
+        inventoryAutomationService.start();
         // AmerescoReportService amerescoReportService = new AmerescoReportService();
         // amerescoReportService.start();
         //ReportAutomationService reportAutomationService = new ReportAutomationService();

@@ -3,7 +3,10 @@ package com.terragoedge.automation.service;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import com.opencsv.CSVReader;
+import com.terragoedge.automation.Dao.InstallDAO;
 import com.terragoedge.automation.Dao.InventoryDAO;
+import com.terragoedge.automation.model.CustodyResultModel;
+import com.terragoedge.automation.model.UserEntity;
 import com.terragoedge.slvinterface.entity.EdgeFormEntity;
 import com.terragoedge.slvinterface.entity.EdgeNoteView;
 import com.terragoedge.slvinterface.exception.NoValueException;
@@ -11,16 +14,17 @@ import com.terragoedge.slvinterface.model.EdgeFormData;
 
 import java.io.FileReader;
 import java.lang.reflect.Type;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
+import java.util.*;
 
 public class AbstractInventoryService {
     InventoryDAO inventoryDAO;
+    InstallDAO installDAO = null;
     Gson gson = null;
+    public static final String PARSE_REPEATEABLE_DELIMITER = "\\*\\|\\#\\*";
 
     public AbstractInventoryService() {
         inventoryDAO = InventoryDAO.INSTANCE;
+        installDAO = new InstallDAO();
         gson = new Gson();
 
     }
@@ -72,21 +76,67 @@ public class AbstractInventoryService {
             throw new NoValueException(id + " is not found.");
         }
     }
-    public List<String> getCsvToEntity(String path) {
+    public List<CustodyResultModel> getCsvToEntity(String path) {
         try {
-            List<String> macList=new ArrayList<>();
+            List<CustodyResultModel> custodyResultModels=new ArrayList<>();
             CSVReader reader = new CSVReader(new FileReader(path), ',');
             List<String[]> records = reader.readAll();
             Iterator<String[]> iterator = records.iterator();
             while (iterator.hasNext()) {
+                CustodyResultModel custodyResultModel = new CustodyResultModel();
+                custodyResultModels.add(custodyResultModel);
                 String[] record = iterator.next();
-                macList.add(record[0]);
+                custodyResultModel.setMacaddress(record[0]);
+                custodyResultModel.setCurrentinventorylocation(record[1]);
+                custodyResultModel.setUserselectedcurrentlocation(record[2]);
+                custodyResultModel.setDestinationlocation(record[3]);
+                custodyResultModel.setNotedatetime(record[4]);
+                custodyResultModel.setUsername(record[5]);
+                custodyResultModel.setWorkflow(record[6]);
             }
-            return macList;
+            return custodyResultModels;
         } catch (Exception e) {
             e.printStackTrace();
         }
         return new ArrayList();
     }
+
+    public static String[] getRepeatableFormValue(List<EdgeFormData> edgeFormDatas, int id, int groupId, int groupRepCount) {
+        EdgeFormData tempEdgeFormData = new EdgeFormData();
+        tempEdgeFormData.setId(id);
+        tempEdgeFormData.setGroupId(groupId);
+        tempEdgeFormData.setGroupRepeatableCount(groupRepCount);
+        int pos = edgeFormDatas.indexOf(tempEdgeFormData);
+        if (pos != -1) {
+            EdgeFormData edgeFormData = edgeFormDatas.get(pos);
+            String value = edgeFormData.getValue();
+            if (value != null) {
+                String[] values = value.split(PARSE_REPEATEABLE_DELIMITER);
+                return values;
+            }
+        }
+        return null;
+    }
+
+    public String getFormValue(String value) {
+        if (value != null) {
+            String[] values = value.split("#");
+            if (values.length == 2) {
+                return values[1];
+            }else if(!value.contains("#")){
+                return value;
+            }
+        }
+        return null;
+    }
+    public Map<String,String> getAllUsers() {
+        List<UserEntity> userList = installDAO.getUsersList();
+        Map<String,String> usersMap = new HashMap<>();
+        for(UserEntity user : userList){
+            usersMap.put(user.getUserName(),"User-"+(user.getFirstName() == null ? "" : user.getFirstName()) +" "+(user.getLastName() == null ? "" : user.getLastName()));
+        }
+        return usersMap;
+    }
+
 
 }
