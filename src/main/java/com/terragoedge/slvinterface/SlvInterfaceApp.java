@@ -2,14 +2,12 @@ package com.terragoedge.slvinterface;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
+import com.terragoedge.automation.service.ComedInventoryService;
 import com.terragoedge.automation.service.ExceptionReportAutomationService;
 import com.terragoedge.automation.service.FinalReportService;
 import com.terragoedge.automation.service.ReportAutomationService;
 import com.terragoedge.slvinterface.json.slvInterface.ConfigurationJson;
-import com.terragoedge.slvinterface.service.AbstractSlvService;
-import com.terragoedge.slvinterface.service.AmerescoReportService;
-import com.terragoedge.slvinterface.service.LoadForAssignmentService;
-import com.terragoedge.slvinterface.service.SlvInterfaceService;
+import com.terragoedge.slvinterface.service.*;
 import com.terragoedge.slvinterface.utils.PropertiesReader;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
@@ -23,8 +21,10 @@ public class SlvInterfaceApp extends AbstractSlvService {
     public static List<ConfigurationJson> configurationJsons = new ArrayList<>();
 
     public static void main(String[] args) {
-        FinalReportService finalReportService = new FinalReportService();
-        finalReportService.startProcess();
+       // FinalReportService finalReportService = new FinalReportService();
+      //  finalReportService.startProcess();
+        ComedInventoryService inventoryAutomationService=new ComedInventoryService();
+        inventoryAutomationService.run();
         // AmerescoReportService amerescoReportService = new AmerescoReportService();
         // amerescoReportService.start();
         //ReportAutomationService reportAutomationService = new ReportAutomationService();

@@ -1,9 +1,12 @@
 package com.terragoedge.slvinterface.utils;
 
 import com.opencsv.CSVWriter;
+import com.terragoedge.automation.model.InventoryResult;
 import com.terragoedge.automation.model.MacValidationModel;
 import com.terragoedge.automation.model.ReplaceModel;
+import com.terragoedge.slvinterface.exception.NoValueException;
 import com.terragoedge.slvinterface.model.CsvReportModel;
+import com.terragoedge.slvinterface.model.EdgeFormData;
 import org.supercsv.cellprocessor.FmtDate;
 import org.supercsv.cellprocessor.ParseDouble;
 import org.supercsv.cellprocessor.constraint.NotNull;
@@ -138,6 +141,20 @@ public class Utils {
         write(writer.toString(), filePath);
     }
 
+    public static void writeInventoryData(List<InventoryResult> inventoryResults, String outputFilePath) {
+        try {
+            StringWriter writer = new StringWriter();
+            CSVWriter csvWriter = new CSVWriter(writer, ',');
+            List<String[]> data = toStringInventoryArray(inventoryResults);
+            csvWriter.writeAll(data);
+            csvWriter.close();
+            System.out.println(writer);
+            write(writer.toString(), outputFilePath);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
     public static void writeMacValidationData(List<MacValidationModel> csvReportModelList, String outputFilePath) {
         try {
             StringWriter writer = new StringWriter();
@@ -164,6 +181,26 @@ public class Utils {
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+
+    public static List<String[]> toStringInventoryArray(List<InventoryResult> inventoryResults) {
+        List<String[]> records = new ArrayList<String[]>();
+        //add header record
+        records.add(new String[]{"Scanning", "PalletWorkflow", "Action", "AssignedUser", "DeliveryLocation", "Title", "noteGuid"});
+        for (InventoryResult inventoryResult : inventoryResults) {
+            records.add(new String[]{
+                    inventoryResult.getScanning(),
+                    inventoryResult.getPalletWorkflow(),
+                    inventoryResult.getAction(),
+                    inventoryResult.getAssignedToUser(),
+                    inventoryResult.getDeliveryLocation(),
+                    inventoryResult.getTitle(),
+                    inventoryResult.getNoteGuid(),
+            });
+        }
+        //   }
+        return records;
     }
 
     public static List<String[]> toStringMacReportArray(List<MacValidationModel> csvReportModelList) {
@@ -214,6 +251,30 @@ public class Utils {
             return name.substring(0,  pos);
         }
         return name;
+    }
+
+    public static String valueById(List<EdgeFormData> edgeFormDatas, int id) throws NoValueException {
+        EdgeFormData edgeFormTemp = new EdgeFormData();
+        edgeFormTemp.setId(id);
+
+        int pos = edgeFormDatas.indexOf(edgeFormTemp);
+        if (pos != -1) {
+            EdgeFormData edgeFormData = edgeFormDatas.get(pos);
+            String value = edgeFormData.getValue();
+            if (value.contains("#")) {
+                String[] values = value.split("#");
+                if (values.length == 2) {
+                    return values[1];
+                }
+            }
+
+            if (value == null || value.trim().isEmpty()) {
+                throw new NoValueException("Value is Empty or null." + value);
+            }
+            return value;
+        } else {
+            throw new NoValueException(id + " is not found.");
+        }
     }
 
 }

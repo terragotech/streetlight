@@ -38,6 +38,12 @@ public class EdgeFormData {
 	}
 
 	public String getValue() {
+		if (value.contains("#")) {
+			String[] values = value.split("#");
+			if (values.length == 2) {
+				return values[1];
+			}
+		}
 		return value;
 	}
 

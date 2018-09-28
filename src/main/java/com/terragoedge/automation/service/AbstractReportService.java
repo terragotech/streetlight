@@ -14,23 +14,7 @@ public class AbstractReportService {
     public AbstractReportService() {
 
     }
-    public List<String> getCsvToEntity(String path) {
-        try {
-            List<String> macList=new ArrayList<>();
-            CSVReader reader = new CSVReader(new FileReader(path), ',');
-            List<String[]> records = reader.readAll();
-            Iterator<String[]> iterator = records.iterator();
-            while (iterator.hasNext()) {
-                String[] record = iterator.next();
-                macList.add(record[0]);
-            }
-            return macList;
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return new ArrayList();
-    }
-    public List getCsvToBean(String path, ReportType reportType) {
+       public List getCsvToBean(String path, ReportType reportType) {
         try {
             CSVReader reader = new CSVReader(new FileReader(path), ',');
             List<String[]> records = reader.readAll();

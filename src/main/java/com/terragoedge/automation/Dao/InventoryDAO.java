@@ -40,10 +40,9 @@ public enum InventoryDAO {
     private Properties properties;
 
     InventoryDAO() {
-
         try {
             String inventoryConnection = PropertiesReader.getProperties().getProperty("edge.reports.inventoryUrl");
-            connectionSource = new JdbcConnectionSource(inventoryConnection);
+            connectionSource = new JdbcConnectionSource(DATABASE_URL);
             System.out.println("ConnectionSucess");
             //TableUtils.createTable(connectionSource, SlvSyncDetails.class);
             // TableUtils.createTable(connectionSource, SlvDevice.class);
@@ -143,8 +142,8 @@ public enum InventoryDAO {
 
     }
 
-    public List<String> getNoteGuid(String formTemplateGuid, String macAddress) {
-        String query = "select noteguid from edgenote, edgeform where edgenote.isdeleted = false and edgenote.iscurrent = true and  edgenote.noteid =  edgeform.edgenoteentity_noteid and edgeform.formtemplateguid = '" + formTemplateGuid + "' and formdef like '%"+macAddress+"%';";
+    public String getInventoryHandlingEntity(String formTemplateGuid, String macAddress) {
+        String query = "select noteguid from edgenote, edgeform where edgenote.isdeleted = false and edgenote.iscurrent = true and  edgenote.noteid =  edgeform.edgenoteentity_noteid and edgeform.formtemplateguid = '" + formTemplateGuid + "' and formdef like '%"+macAddress+"%' order by edgenote.createddatetime desc limit 1;";
         try {
             List<String> noteGuids = edgeNoteViewDao.queryRaw(query, new RawRowMapper<String>() {
                 @Override
@@ -152,11 +151,11 @@ public enum InventoryDAO {
                     return resultColumns[0];
                 }
             }).getResults();
-            return noteGuids;
+            return (noteGuids.size()>0)? noteGuids.get(0):null;
         } catch (Exception e) {
             e.printStackTrace();
         }
-        return new ArrayList<>();
+        return null;
     }
 
     /**
@@ -327,5 +326,16 @@ public enum InventoryDAO {
             e.printStackTrace();
         }
         return jsonArray;
+    }
+    public EdgeFormEntity getFormDef(String formTemplateGuid,String noteGuid) {
+        try {
+            QueryBuilder<EdgeFormEntity, String> formBuilder = edgeformDao.queryBuilder();
+            QueryBuilder<EdgeNoteEntity, String> noteBuilder = edgeNoteDao.queryBuilder();
+            EdgeNoteEntity edgeNoteEntity = noteBuilder.where().eq("noteguid", noteGuid).queryForFirst();
+            return formBuilder.where().eq("edgenoteentity_noteid", edgeNoteEntity.getNoteid()).queryForFirst();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
     }
 }
