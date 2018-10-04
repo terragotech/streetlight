@@ -31,7 +31,7 @@ import java.util.*;
 
 import static com.terragoedge.slvinterface.utils.Utils.dateFormat;
 
-public abstract  class SlvInterfaceService extends AbstractSlvService {
+public abstract class SlvInterfaceService extends AbstractSlvService {
     Properties properties = null;
     final Logger logger = Logger.getLogger(SlvInterfaceService.class);
     private List<ConfigurationJson> configurationJsonList = null;
@@ -60,9 +60,9 @@ public abstract  class SlvInterfaceService extends AbstractSlvService {
 
     public void start() {
         // Get Configuration JSON
-        try{
+        try {
             configurationJsonList = getConfigJson();
-        }catch (Exception e){
+        } catch (Exception e) {
             logger.error("Unable to load Configuration file.", e);
             return;
         }
@@ -100,6 +100,7 @@ public abstract  class SlvInterfaceService extends AbstractSlvService {
             return;
         }
         String formTemplateGuid = properties.getProperty("streetlight.edge.formtemplateguid");
+        String maintFormTemplateGuid = properties.getProperty("streetlight.edge.maintformtemplateguid");
         String url = PropertiesReader.getProperties().getProperty("streetlight.edge.url.main");
 
         url = url + PropertiesReader.getProperties().getProperty("streetlight.edge.url.notes.get");
@@ -108,6 +109,12 @@ public abstract  class SlvInterfaceService extends AbstractSlvService {
         logger.info("GetNotesUrl :" + url);
         // Get List of noteid
         List<String> noteGuidsList = connectionDAO.getEdgeNoteGuid(formTemplateGuid);
+        if (noteGuidsList.size() > 0) {
+            System.out.println("fieldActivity noteguid :" + noteGuidsList.size());
+        }
+        List<String> mainFormTemplate = connectionDAO.getEdgeNoteGuid(maintFormTemplateGuid);
+        System.out.println("maintForm noteguid :" + mainFormTemplate.size());
+        noteGuidsList.addAll(mainFormTemplate);
         for (String edgenoteGuid : noteGuidsList) {
             try {
                 if (!noteGuids.contains(edgenoteGuid)) {
@@ -123,7 +130,7 @@ public abstract  class SlvInterfaceService extends AbstractSlvService {
                         for (EdgeNote edgenote : edgeNoteList) {
                             logger.info("ProcessNoteTitle is :" + edgenote.getTitle());
                             String geozoneId = getGeoZoneValue(edgenote.getTitle());
-                            processEdgeNote(edgenote, noteGuids, formTemplateGuid, geozoneId, controllerStrIdValue);
+                            processEdgeNote(edgenote, noteGuids, formTemplateGuid, maintFormTemplateGuid, geozoneId, controllerStrIdValue);
                         }
                     }
                 }
@@ -137,7 +144,7 @@ public abstract  class SlvInterfaceService extends AbstractSlvService {
 
     }
 
-    private void processEdgeNote(EdgeNote edgeNote, List<String> noteGuids, String formTemplateGuid, String geozoneId, String controllerStrid) {
+    private void processEdgeNote(EdgeNote edgeNote, List<String> noteGuids, String formTemplateGuid, String maintFormTemplateGuid, String geozoneId, String controllerStrid) {
         try {
             // Check whether this note is already processed or not.
             if (!noteGuids.contains(edgeNote.getNoteGuid())) {
@@ -151,17 +158,25 @@ public abstract  class SlvInterfaceService extends AbstractSlvService {
                     List<FormData> formDatasList = edgeNote.getFormData();
                     Map<String, FormData> formDataMaps = new HashMap<String, FormData>();
                     boolean isFormTemplatePresent = false;
+                    boolean maintFormTemplatePresent = false;
                     for (FormData formData : formDatasList) {
                         formDataMaps.put(formData.getFormTemplateGuid(), formData);
                         if (formData.getFormTemplateGuid().equals(formTemplateGuid)) {
                             isFormTemplatePresent = true;
+                        } else if (formData.getFormTemplateGuid().equals(maintFormTemplateGuid)) {
+                            maintFormTemplatePresent = true;
                         }
                     }
                     // Check Note has correct form template or not. If not present no need to process.
-                    if (!isFormTemplatePresent) {
-                        slvSyncDetailsError.setErrorDetails("Form Template [" + formTemplateGuid + "] is not present in this note.");
-                    } else {
+                    if (isFormTemplatePresent) {
+                        System.out.println("Field Activity Present");
                         processSingleForm(formDataMaps.get(formTemplateGuid), edgeNote, slvSyncDetailsError, paramsList, configurationJsonList, geozoneId, controllerStrid);
+                    } else if (maintFormTemplatePresent) {
+                        System.out.println("Maint Activity Present");
+                        processSingleForm(formDataMaps.get(maintFormTemplateGuid), edgeNote, slvSyncDetailsError, paramsList, configurationJsonList, geozoneId, controllerStrid);
+                    } else {
+                        System.out.println("wrong formtemplate");
+                        slvSyncDetailsError.setErrorDetails("Form Template [" + formTemplateGuid + "] is not present in this note.");
                     }
                 } catch (Exception e) {
                     e.printStackTrace();
@@ -192,13 +207,14 @@ public abstract  class SlvInterfaceService extends AbstractSlvService {
                 if (checkActionType(edgeFormDataList, actionList)) {
                     switch (configurationJson.getType()) {
                         case NEW_DEVICE:
+                            System.out.println("Ener macAddress" + edgeNote.getTitle());
                             logger.info(edgeNote.getTitle() + " is going to Create.");
                             String macAddress = validateMACAddress(configurationJson, formData.getFormDef(), edgeNote, paramsList);
                             slvSyncDetail.setMacAddress(macAddress);
                             slvSyncDetail.setSelectedAction(SLVProcess.NEW_DEVICE.toString());
                             boolean isDeviceExist = isAvailableDevice(edgeNote.getTitle());
                             if (!isDeviceExist) {
-                                createDevice(edgeNote, slvSyncDetail, geozoneId,edgeFormDataList);
+                                createDevice(edgeNote, slvSyncDetail, geozoneId, edgeFormDataList);
                             }
                             processSetDevice(edgeFormDataList, configurationJson, edgeNote, paramsList, slvSyncDetail, controllerStrIdValue);
                             replaceOLC(controllerStrIdValue, edgeNote.getTitle(), slvSyncDetail.getMacAddress());
@@ -245,7 +261,7 @@ public abstract  class SlvInterfaceService extends AbstractSlvService {
         return slvDevice != null;
     }
 
-    public void createDevice(EdgeNote edgeNote, SlvSyncDetails slvSyncDetails, String geoZoneId,List<EdgeFormData> edgeFormDataList) throws DeviceCreationFailedException {
+    public void createDevice(EdgeNote edgeNote, SlvSyncDetails slvSyncDetails, String geoZoneId, List<EdgeFormData> edgeFormDataList) throws DeviceCreationFailedException {
         if (geoZoneId != null) {
             ResponseEntity<String> responseEntity = createDevice(edgeNote, geoZoneId);
             String status = responseEntity.getStatusCode().toString();
@@ -289,7 +305,6 @@ public abstract  class SlvInterfaceService extends AbstractSlvService {
         replaceOLC(controllerStrIdValue, edgeNote.getTitle(), macAddress);
 
     }
-
 
 
     public void processFixtureScan(List<EdgeFormData> edgeFormDataList, Id fixureID, EdgeNote edgeNote, List<Object> paramsList, SlvSyncDetails slvSyncDetails) throws NoValueException {
@@ -391,8 +406,8 @@ public abstract  class SlvInterfaceService extends AbstractSlvService {
             try {
                 String newNodeMacAddress = valueById(edgeFormDataList, macID.getId());
                 logger.info("newNodeMacAddress:" + newNodeMacAddress);
-                if(newNodeMacAddress.contains("null") || newNodeMacAddress.equals("null")){
-                    throw new MacAddressProcessedException("InValid MAC address."+ edgeNote.getTitle(), newNodeMacAddress);
+                if (newNodeMacAddress.contains("null") || newNodeMacAddress.equals("null")) {
+                    throw new MacAddressProcessedException("InValid MAC address." + edgeNote.getTitle(), newNodeMacAddress);
                 }
                 SlvDevice slvDevice = connectionDAO.getSlvDevices(edgeNote.getTitle());
                 if (slvDevice != null && slvDevice.getMacAddress() != null && slvDevice.getMacAddress().equals(newNodeMacAddress)) {
@@ -495,12 +510,10 @@ public abstract  class SlvInterfaceService extends AbstractSlvService {
             //  List<EdgeNote> edgeNoteList = gson.fromJson(notesData, listType);
             for (EdgeNote edgenote : edgeNoteList) {
                 logger.info("ProcessNoteTitle is :" + edgenote.getTitle());
-                processEdgeNote(edgenote, noteGuids, formTemplateGuid, geozoneId, controllerStrIdValue);
+                //processEdgeNote(edgenote, noteGuids, formTemplateGuid, geozoneId, controllerStrIdValue);
             }
         }
     }
-
-
 
 
 }

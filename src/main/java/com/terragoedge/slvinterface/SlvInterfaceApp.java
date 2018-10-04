@@ -5,10 +5,7 @@ import com.google.gson.reflect.TypeToken;
 import com.macaddress.slvtoedge.service.MacAddressService;
 import com.report.automation.service.ReportAutomationService;
 import com.terragoedge.slvinterface.json.slvInterface.ConfigurationJson;
-import com.terragoedge.slvinterface.service.AbstractSlvService;
-import com.terragoedge.slvinterface.service.CanadaEdgeInterface;
-import com.terragoedge.slvinterface.service.KingCityEdgeInterface;
-import com.terragoedge.slvinterface.service.SlvInterfaceService;
+import com.terragoedge.slvinterface.service.*;
 import com.terragoedge.slvinterface.utils.PropertiesReader;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
@@ -25,8 +22,8 @@ public class SlvInterfaceApp {
       while (true) {
             try {
 
-                SlvInterfaceService slvInterfaceService = new CanadaEdgeInterface();
-                slvInterfaceService.loadDevices();
+                SlvInterfaceService slvInterfaceService = new SlvInterfaceServiceImpl();
+               // slvInterfaceService.loadDevices();
                 while (true) {
                     slvInterfaceService.start();
                     Thread.sleep(60000);
