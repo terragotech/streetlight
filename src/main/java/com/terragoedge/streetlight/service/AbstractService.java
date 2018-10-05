@@ -53,7 +53,7 @@ public class AbstractService {
             return headers;
         } else {
             userName = "admin";
-            password = "admin";
+            password = "T455wy04ry41!";
         }
         String plainCreds = userName + ":" + password;
 

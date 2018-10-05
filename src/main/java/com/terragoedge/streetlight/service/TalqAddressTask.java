@@ -32,13 +32,12 @@ public class TalqAddressTask extends AbstractService implements Runnable {
         properties = PropertiesReader.getProperties();
         restService = new RestService();
         streetlightDao = new StreetlightDao();
-
     }
 
     @Override
     public void run() {
-        logger.info(loggingModel.getNoteName());
         String emptyTalqAddressGuid = PropertiesReader.getProperties().getProperty("empty.talkaddress.layerguid");
+        String completeLayerGuid = PropertiesReader.getProperties().getProperty("talkaddress.complete.layerguid");
         String mainUrl = PropertiesReader.getProperties().getProperty("streetlight.edge.url.main");
         String locationDescKeyword = PropertiesReader.getProperties().getProperty("edge.locationdesc.keyword");
         // loggingModel.setNoteName("a5fcf53f-d67b-41e3-8b78-d6a87c49debb");
@@ -58,26 +57,36 @@ public class TalqAddressTask extends AbstractService implements Runnable {
                 String locationDesc = edgeNote.getLocationDescription();
                 System.out.println("locationDescription is : " + locationDesc);
                 if (locationDesc != null && !locationDesc.contains(locationDescKeyword)) {
+                    logger.info("Current Location Description :"+locationDesc);
                     String oldNoteGuid = edgeNote.getNoteGuid();
                     String notebookGuid = edgeNote.getEdgeNotebook().getNotebookGuid();
                     JsonObject jsonObject = processEdgeForms(gson.toJson(edgeNote));
-                    boolean isProcess = isProcessNoteLayer(jsonObject, emptyTalqAddressGuid);
+                    boolean isProcess = isProcessNoteLayer(jsonObject, emptyTalqAddressGuid,completeLayerGuid,loggingModel);
                     if (isProcess) {
+                        logger.info("-------------------request json--------------- ");
+                        logger.info(jsonObject.toString());
+                        logger.info("-------------------request End--------------- ");
                         ResponseEntity<String> responseEntity = updateNoteDetails(jsonObject.toString(), oldNoteGuid, notebookGuid, mainUrl);
-                        streetlightDao.updateTalqGuid(edgeNote.getTitle(), responseEntity.getBody());
+                        loggingModel.setCreatedDatetime(String.valueOf(System.currentTimeMillis()));
+                        loggingModel.setStatus("Success");
+                        loggingModel.setTalqAddressnoteGuid(responseEntity.getBody());
+                        streetlightDao.insertTalqSync(loggingModel);
                         logger.info("edgenote update to server: " + responseEntity.getBody());
                     }
+                }else{
+                    logger.info("There is no valid location description, its not processed:"+locationDesc);
                 }
             }
         } catch (Exception e) {
             e.printStackTrace();
+            logger.info("Error: " + e);
         }
 
     }
 
-    public boolean isProcessNoteLayer(JsonObject jsonObject, String talqAddressGuid) {
+    public boolean isProcessNoteLayer(JsonObject jsonObject, String talqAddressGuid,String completeLayerGuid,LoggingModel loggingModel) {
         JsonArray jsonDictionary = jsonObject.get("dictionary").getAsJsonArray();
-        if (jsonDictionary.size() > 0) {
+        /*if (jsonDictionary.size() > 0) {
             for (JsonElement jsonElement : jsonDictionary) {
                 JsonObject dictionaryObject = jsonElement.getAsJsonObject();
                 if (dictionaryObject != null) {
@@ -87,14 +96,22 @@ public class TalqAddressTask extends AbstractService implements Runnable {
                 }
             }
         }
+       */
         jsonObject.addProperty("createdDateTime", System.currentTimeMillis());
         jsonObject.addProperty("noteGuid", UUID.randomUUID().toString());
         jsonObject.remove("dictionary");
-        setGroupValue(talqAddressGuid, jsonObject);
+        if(loggingModel!=null){
+            if(loggingModel.getLayerType().equals("No data ever received")){
+                setGroupValue(talqAddressGuid,jsonObject);
+            }else if(loggingModel.getLayerType().equals("complete")){
+                setGroupValue(completeLayerGuid,jsonObject);
+            }
+        }
+
         return true;
     }
 
-    public void setGroupValue(String value, JsonObject notesJson) {
+    public void setGroupValue(String value,JsonObject notesJson) {
         JsonObject jsonObject = new JsonObject();
         jsonObject.addProperty("key", "groupGuid");
         jsonObject.addProperty("value", value);

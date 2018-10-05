@@ -10,20 +10,8 @@ public class StreetlightApp {
 
 
 	public static void main(String[] args) {
-
-
-		while (true){
-		    try{
-		        /*TalkAddressService talkAddressService = new TalkAddressService();
-		        talkAddressService.getTalqAddress();*/
-                StreetlightChicagoService streetlightChicagoService = new StreetlightChicagoService();
-                streetlightChicagoService.run();
-                Thread.sleep(50000);
-            }catch (Exception e){
-		        e.printStackTrace();
-            }
-        }
-
+		TalkAddressService talkAddressService = new TalkAddressService();
+		talkAddressService.getTalqAddress();
 	}
 
 }

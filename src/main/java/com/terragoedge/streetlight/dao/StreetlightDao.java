@@ -28,6 +28,7 @@ public class StreetlightDao extends UtilDao {
     public StreetlightDao() {
         super();
         createStreetLightSyncTable();
+        talqSyncTable();
     }
 
 
@@ -72,6 +73,14 @@ public class StreetlightDao extends UtilDao {
         //sql = "CREATE TABLE IF NOT EXISTS lastsyncstatus (lastsyncstatusid integer not null, lastsynctime text, CONSTRAINT lastsyncstatus_pkey PRIMARY KEY (lastsyncstatusid))";
     }
 
+    private void talqSyncTable() {
+
+        String sql = "CREATE TABLE IF NOT EXISTS talqsync (streetlightsyncid integer NOT NULL,"
+                + " notename text, macaddress text,talqaddressnoteguid text, status text,createddatetime bigint,layername text,CONSTRAINT talqsync_pkey PRIMARY KEY (streetlightsyncid));";
+        executeStatement(sql);
+
+        //sql = "CREATE TABLE IF NOT EXISTS lastsyncstatus (lastsyncstatusid integer not null, lastsynctime text, CONSTRAINT lastsyncstatus_pkey PRIMARY KEY (lastsyncstatusid))";
+    }
 
     public long getLastSyncTime() {
         String sql = "select max(synctime) from notesyncdetails;";
@@ -112,6 +121,33 @@ public class StreetlightDao extends UtilDao {
         }
     }
 
+    public void insertTalqSync(LoggingModel loggingModel) {
+        PreparedStatement preparedStatement = null;
+        Connection connection = null;
+        try {
+            String sql = "SELECT max(streetlightsyncid) + 1 from  talqsync";
+            long id = exceuteSql(sql);
+            if (id == -1 || id == 0) {
+                id = 1;
+            }
+
+            connection = StreetlightDaoConnection.getInstance().getConnection();
+            preparedStatement = connection.prepareStatement(
+                    "INSERT INTO talqsync(streetlightsyncid ,notename , macaddress ,talqaddressnoteguid , status ,createddatetime,layername ) values (?,?,?,?,?,?,?) ;");
+            preparedStatement.setLong(1, id);
+            preparedStatement.setString(2, loggingModel.getNoteName());
+            preparedStatement.setString(3, loggingModel.getMacAddress());
+            preparedStatement.setString(4, loggingModel.getTalqAddressnoteGuid());
+            preparedStatement.setString(5, loggingModel.getStatus());
+            preparedStatement.setLong(6, Long.valueOf(loggingModel.getCreatedDatetime()));
+            preparedStatement.setString(7, loggingModel.getLayerType());
+            preparedStatement.execute();
+        } catch (Exception e) {
+            logger.error("Error in insertParentNoteId", e);
+        } finally {
+            closeStatement(preparedStatement);
+        }
+    }
 
     public void insertProcessedNotes(LoggingModel loggingModel, InstallMaintenanceLogModel installMaintenanceLogModel) {
         PreparedStatement preparedStatement = null;
@@ -474,7 +510,7 @@ public class StreetlightDao extends UtilDao {
     }
 
 
-    public List<String> getDuplicateRecords(String randomVal){
+    public List<String> getDuplicateRecords(String randomVal) {
         List<String> noteDetails = new ArrayList<>();
 
         Statement queryStatement = null;
@@ -482,10 +518,10 @@ public class StreetlightDao extends UtilDao {
         try {
             queryStatement = connection.createStatement();
 
-            queryResponse = queryStatement.executeQuery("select noteguid from needtoprocess where ran = '"+randomVal+"';");
+            queryResponse = queryStatement.executeQuery("select noteguid from needtoprocess where ran = '" + randomVal + "';");
 
             while (queryResponse.next()) {
-                String noteGuid =  queryResponse.getString("noteguid");
+                String noteGuid = queryResponse.getString("noteguid");
                 noteDetails.add(noteGuid);
             }
 
@@ -499,7 +535,6 @@ public class StreetlightDao extends UtilDao {
     }
 
 
-
     public void updateRanValue(String randomVal) {
         PreparedStatement preparedStatement = null;
         Connection connection = null;
@@ -507,7 +542,7 @@ public class StreetlightDao extends UtilDao {
             connection = StreetlightDaoConnection.getInstance().getConnection();
             preparedStatement = connection.prepareStatement(
                     "UPDATE needtoprocess SET ran = ? where  noteguid in  (select noteguid from needtoprocess where ran is null order by title limit 100);");
-            preparedStatement.setString(1,randomVal);
+            preparedStatement.setString(1, randomVal);
             preparedStatement.executeUpdate();
         } catch (Exception e) {
             logger.error("Error in update", e);
@@ -519,13 +554,14 @@ public class StreetlightDao extends UtilDao {
         List<LoggingModel> unSyncedTalqAddress = new ArrayList<>();
         return unSyncedTalqAddress;
     }*/
-    public List<LoggingModel> getTalqaddressDetails(long yesterdayAsMilli) {
+
+    public List<LoggingModel> getProcessedTalqAddress(long yesterdayAsMilli) {
         Statement queryStatement = null;
         ResultSet queryResponse = null;
         List<LoggingModel> loggingModelList = new ArrayList<>();
         try {
             queryStatement = connection.createStatement();
-            queryResponse = queryStatement.executeQuery("Select distinct(notename) from notesyncdetails where talqaddress is null and istalqprocess is null and synctime < "+yesterdayAsMilli+";");
+            queryResponse = queryStatement.executeQuery("Select * from notesyncdetails where talqaddress is not null and istalqprocess is not null and talknoteguid is not null and synctime < " + yesterdayAsMilli + ";");
             while (queryResponse.next()) {
                 LoggingModel loggingModel = new LoggingModel();
                 loggingModel.setNoteName(queryResponse.getString("notename"));
@@ -537,16 +573,41 @@ public class StreetlightDao extends UtilDao {
         }
         return loggingModelList;
     }
-    public void updateTalqGuid(String notename,String talqNoteGuid) {
+
+    public List<LoggingModel> getTalqaddressDetails(long yesterdayAsMilli) {
+        Statement queryStatement = null;
+        ResultSet queryResponse = null;
+        List<LoggingModel> loggingModelList = new ArrayList<>();
+        try {
+            queryStatement = connection.createStatement();
+            String query = "Select distinct(notename) from notesyncdetails where talqaddress is null and istalqprocess and synctime < " + yesterdayAsMilli + " or synctime is null;";
+            logger.info("------------ query ------------------");
+            logger.info(query);
+            logger.info("------------ end ------------------");
+            System.out.println(query);
+            queryResponse = queryStatement.executeQuery("Select distinct(notename) from notesyncdetails where talqaddress is null and istalqprocess is null and synctime < " + yesterdayAsMilli + " or synctime is null;");
+            while (queryResponse.next()) {
+                LoggingModel loggingModel = new LoggingModel();
+                loggingModel.setNoteName(queryResponse.getString("notename"));
+                loggingModelList.add(loggingModel);
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return loggingModelList;
+    }
+
+    public void updateTalqGuid(String notename, String talqNoteGuid) {
         PreparedStatement preparedStatement = null;
         Connection connection = null;
         try {
             connection = StreetlightDaoConnection.getInstance().getConnection();
             preparedStatement = connection.prepareStatement(
                     "UPDATE notesyncdetails SET istalqprocess = ?,talknoteguid=? where notename =?;");
-            preparedStatement.setBoolean(1,true);
-            preparedStatement.setString(2,talqNoteGuid);
-            preparedStatement.setString(3,notename);
+            preparedStatement.setBoolean(1, true);
+            preparedStatement.setString(2, talqNoteGuid);
+            preparedStatement.setString(3, notename);
             preparedStatement.executeUpdate();
         } catch (Exception e) {
             logger.error("Error in update", e);

@@ -12,7 +12,9 @@ import org.apache.commons.io.IOUtils;
 import org.apache.log4j.Logger;
 import org.springframework.http.ResponseEntity;
 
+import java.io.BufferedReader;
 import java.io.FileInputStream;
+import java.io.FileReader;
 import java.lang.reflect.Type;
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -27,7 +29,8 @@ public class TalkAddressService extends AbstractService implements Runnable {
     private RestService restService = null;
     private StreetlightDao streetlightDao = null;
     private Logger logger = Logger.getLogger(TalkAddressService.class);
-    ExecutorService executor =null;
+    ExecutorService executor = null;
+    private TalqAddressTask talqAddressTask = null;
 
     public TalkAddressService() {
         gson = new Gson();
@@ -40,26 +43,17 @@ public class TalkAddressService extends AbstractService implements Runnable {
     @Override
     public void run() {
         System.out.println("talq started");
+        logger.info("start slvtalqInterface");
         String slvBaseUrl = properties.getProperty("streetlight.slv.url.main");
         String talqAddressApi = properties.getProperty("streetlight.slv.url.gettalqaddress");
         System.out.println(slvBaseUrl + talqAddressApi);
         List<LoggingModel> unSyncedTalqAddress = streetlightDao.getUnSyncedTalqaddress();
-        System.out.println("un synced TalkAddressSize :" + unSyncedTalqAddress.size());
+        logger.info("unSyncedTalqAddress size :" + unSyncedTalqAddress.size());
+        logger.info("Request Url :" + slvBaseUrl + talqAddressApi);
         if (unSyncedTalqAddress.size() > 0) {
             ResponseEntity<String> responseEntity = restService.getRequest(slvBaseUrl + talqAddressApi, true, null);
             if (responseEntity.getStatusCode().is2xxSuccessful()) {
                 String response = responseEntity.getBody();
-                //test
-           /* String response=null;
-            try {
-               // FileInputStream fis = new FileInputStream("./resources/sampletal.txt");
-                 FileInputStream fis = new FileInputStream("./src/main/resources/sampletal.txt");
-                 response = IOUtils.toString(fis);
-            }catch (Exception e){
-                e.printStackTrace();
-            }
-           // end
-          */
                 JsonObject jsonObject = (JsonObject) jsonParser.parse(response);
                 JsonArray deviceValuesAsArray = jsonObject.get("values").getAsJsonArray();
                 for (JsonElement jsonElement : deviceValuesAsArray) {
@@ -75,6 +69,7 @@ public class TalkAddressService extends AbstractService implements Runnable {
                             loggingModel.setTalqAddress(talqAddress);
                             loggingModel.setTalqCreatedTime(new Date().getTime());
                             streetlightDao.updateTalqAddress(idOnController, talqAddress);
+                            logger.info("updateTalqAddress :" + idOnController + " - " + talqAddress);
                             System.out.println("Updated : " + idOnController + " - " + talqAddress);
                         }
                     }
@@ -86,17 +81,61 @@ public class TalkAddressService extends AbstractService implements Runnable {
     }
 
     public void getTalqAddress() {
+        logger.info("start terragotalqudate");
         int threadCount = Integer.parseInt(PropertiesReader.getProperties().getProperty("edge.threadcount"));
         System.out.println("ThreadCount: " + threadCount);
-        executor= Executors.newFixedThreadPool(threadCount);
-        List<LoggingModel> unSyncedTalqAddress = streetlightDao.getTalqaddressDetails(getYesterdayDate());
+        logger.info("ThreadCount :" + threadCount);
+        executor = Executors.newFixedThreadPool(threadCount);
+        //  List<LoggingModel> unSyncedTalqAddress = streetlightDao.getTalqaddressDetails(getYesterdayDate());
+        List<LoggingModel> unSyncedTalqAddress = getUnsyncedTalqAddress();
+        logger.info("------------ Total records ------------------");
+        logger.info(unSyncedTalqAddress.size());
+        logger.info("------------ end ------------------");
+        System.out.println("unSyncedTalqAddress: " + unSyncedTalqAddress);
         for (LoggingModel loggingModel : unSyncedTalqAddress) {
-            logger.info(loggingModel.getNoteName());
+            System.out.println("Process NoteName" + loggingModel.getNoteName());
+            logger.info("Process NoteName" + loggingModel.getNoteName());
             Runnable processTask = new TalqAddressTask(loggingModel);
             executor.execute(processTask);
         }
         executor.shutdown();
         System.out.println("All thread Finished");
+    }
+
+    public void processCompleteLayer() {
+        List<LoggingModel> unSyncedTalqAddress = streetlightDao.getProcessedTalqAddress(getYesterdayDate());
+        for (LoggingModel loggingModel : unSyncedTalqAddress) {
+            String completeLayerGuid = PropertiesReader.getProperties().getProperty("talkaddress.complete.layerguid");
+            String mainUrl = PropertiesReader.getProperties().getProperty("streetlight.edge.url.main");
+            String locationDescKeyword = PropertiesReader.getProperties().getProperty("edge.locationdesc.keyword");
+            try {
+                String notesJson = geTalqNoteDetails(mainUrl, loggingModel.getNoteName());
+                if (notesJson == null) {
+                    logger.info("Note not in Edge.");
+                    throw new NotesNotFoundException("Note [" + loggingModel.getNoteName() + "] not in Edge.");
+                }
+                Type listType = new TypeToken<ArrayList<EdgeNote>>() {
+                }.getType();
+                List<EdgeNote> edgeNoteList = gson.fromJson(notesJson, listType);
+                for (EdgeNote edgeNote : edgeNoteList) {
+                    String locationDesc = edgeNote.getLocationDescription();
+                    System.out.println("locationDescription is : " + locationDesc);
+                    if (locationDesc != null && !locationDesc.contains(locationDescKeyword)) {
+                        String oldNoteGuid = edgeNote.getNoteGuid();
+                        String notebookGuid = edgeNote.getEdgeNotebook().getNotebookGuid();
+                        JsonObject jsonObject = talqAddressTask.processEdgeForms(gson.toJson(edgeNote));
+                        if (true) {
+                            ResponseEntity<String> responseEntity = updateNoteDetails(jsonObject.toString(), oldNoteGuid, notebookGuid, mainUrl);
+                            streetlightDao.updateTalqGuid(edgeNote.getTitle(), responseEntity.getBody());
+                            logger.info("edgenote update to server: " + responseEntity.getBody());
+                        }
+                    }
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+
+        }
     }
 
     public long getYesterdayDate() {
@@ -105,4 +144,34 @@ public class TalkAddressService extends AbstractService implements Runnable {
         return cal.getTimeInMillis();
     }
 
+    public List<LoggingModel> getUnsyncedTalqAddress() {
+        List<LoggingModel> loggingModelList = new ArrayList<>();
+        try {
+            String data = null;
+            System.out.println("Started");
+
+            BufferedReader fis = new BufferedReader(new FileReader("./data/emptytalq.txt"));
+            while ((data = fis.readLine()) != null) {
+                LoggingModel loggingModel = new LoggingModel();
+                try {
+                    List<Object> paramsList = new ArrayList<>();
+                    String[] res = data.split(",");
+                    loggingModel.setNoteName(res[0]);
+                    loggingModel.setMacAddress(res[1]);
+                    loggingModel.setLayerType(res[2]);
+                    logger.info("------------------------------process Notes------------------");
+                    logger.info(res[0] + " - " + res[1]);
+                    logger.info("--------------------------------end----------------------------");
+                    System.out.println("IdonController-MAC : " + res[0] + " - " + res[1]);
+                    loggingModelList.add(loggingModel);
+                    // logger.info("Response Code"+errorCode);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return loggingModelList;
+    }
 }
