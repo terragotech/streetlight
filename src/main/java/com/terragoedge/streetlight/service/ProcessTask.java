@@ -50,14 +50,14 @@ public class ProcessTask extends FailureAbstractService implements Runnable {
             FailureReportModel dbFailureReportModel = streetlightDao.getProcessedReportsByFixtureId(failureReportModel.getFixtureId());
             if (dbFailureReportModel != null) {
                 if (dbFailureReportModel.getFailureReason() != null && dbFailureReportModel.getFailureReason().equals(failureReportModel.getFailureReason())) {
-                    System.out.println("Already Exist LocalDB: " + failureReportModel.getFixtureId());
+                    logger.info("Already Exist LocalDB: " + failureReportModel.getFixtureId());
                     return;
                 } else if (dbFailureReportModel.isOutage() != failureReportModel.isOutage()) {
-                    System.out.println("Set CompleteLayer"+failureReportModel.getFixtureId());
+                    logger.info("Set CompleteLayer"+failureReportModel.getFixtureId());
                     failureReportModel.setComplete(true);
                 }
             }
-            System.out.println("Set OutageLayer"+failureReportModel.getFixtureId());
+            logger.info("Set OutageLayer"+failureReportModel.getFixtureId());
             String notesJson = getNoteDetails(failureReportModel.getFixtureId());
             if (notesJson == null) {
                 logger.info("Note not in Edge.");
@@ -68,16 +68,19 @@ public class ProcessTask extends FailureAbstractService implements Runnable {
             }.getType();
             List<EdgeNote> edgeNoteList = gson.fromJson(notesJson, listType);
             for (EdgeNote edgeNote : edgeNoteList) {
-                List<FormData> formDatasList = edgeNote.getFormData();
-                Map<String, FormData> formDataMaps = new HashMap<>();
-                for (FormData formData : formDatasList) {
-                    formDataMaps.put(formData.getFormTemplateGuid(), formData);
+                if(edgeNote.getTitle().equals(failureReportModel.getFixtureId())){
+                    List<FormData> formDatasList = edgeNote.getFormData();
+                    Map<String, FormData> formDataMaps = new HashMap<>();
+                    for (FormData formData : formDatasList) {
+                        formDataMaps.put(formData.getFormTemplateGuid(), formData);
+                    }
+                    String errorFormTemplateGuid = PropertiesReader.getProperties().getProperty("streetlight.edge.formtemplateguid.errorform");
+                    FormData errorFormData = formDataMaps.get(errorFormTemplateGuid);
+                    failureFormDBmodel.setNoteid(edgeNote.getNoteGuid());
+                    failureFormDBmodel.setCreatedDatetime(String.valueOf(edgeNote.getCreatedDateTime()));
+                    processErrorFormTemplate(errorFormData, edgeNote, failureReportModel, errorFormTemplateGuid, failureFormDBmodel);
                 }
-                String errorFormTemplateGuid = PropertiesReader.getProperties().getProperty("streetlight.edge.formtemplateguid.errorform");
-                FormData errorFormData = formDataMaps.get(errorFormTemplateGuid);
-                failureFormDBmodel.setNoteid(edgeNote.getNoteGuid());
-                failureFormDBmodel.setCreatedDatetime(String.valueOf(edgeNote.getCreatedDateTime()));
-                processErrorFormTemplate(errorFormData, edgeNote, failureReportModel, errorFormTemplateGuid, failureFormDBmodel);
+
             }
 
         } catch (Exception e) {
@@ -156,7 +159,7 @@ public class ProcessTask extends FailureAbstractService implements Runnable {
         logger.info("ProcessedFormJson " + edgeNoteJsonObject.toString());
         ResponseEntity<String> responseEntity = updateNoteDetails(edgeNoteJsonObject.toString(), oldNoteGuid, notebookGuid);
         failureFormDBmodel.setErrorDetails(responseEntity.getBody());
-        System.out.println("ProcessedNote is :" + edgeNote.getTitle());
+        logger.info("ProcessedNote is :" + edgeNote.getTitle());
         logger.info("edgenote update to server: " + responseEntity.getBody());
         //save
         failureFormDBmodel.setNewNoteGuid(newNoteGuid);

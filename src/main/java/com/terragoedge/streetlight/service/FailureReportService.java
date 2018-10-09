@@ -33,7 +33,6 @@ public class FailureReportService extends FailureAbstractService {
     private JsonParser jsonParser = null;
     private Gson gson = null;
     private String errorFormJson;
-    //  private String tempResponse;
     private StreetlightDao streetlightDao = null;
     ExecutorService executor = Executors.newFixedThreadPool(2);
 
@@ -45,34 +44,37 @@ public class FailureReportService extends FailureAbstractService {
     }
 
     public void loadErrorFormJson() {
+        FileInputStream fis = null;
         try {
             logger.info("Loading Error FromTemplate.");
-            FileInputStream fis = new FileInputStream("./resources/ErrorForm.json");
-            //FileInputStream fis = new FileInputStream("./src/main/resources/ErrorForm.json");
+            fis = new FileInputStream("./resources/ErrorForm.json");
             errorFormJson = IOUtils.toString(fis);
-
-            // FileInputStream fisTemp = new FileInputStream("./src/main/resources/failurereportjson.txt");
-            // FileInputStream fisTemp = new FileInputStream("./resources/failurereportjson.txt");
-            //tempResponse = IOUtils.toString(fisTemp);
-
         } catch (Exception e) {
             logger.error("Error in loadErrorFormJson", e);
+        }finally{
+            if(fis != null){
+                try{
+                    fis.close();
+                }catch (Exception e){
+                    e.printStackTrace();
+                }
+
+            }
         }
     }
 
     public void run() {
         loadErrorFormJson();
-        System.out.println("process started");
+        logger.info("process started");
         Set<String> fixtureIdList = streetlightDao.getFixtureId();
         Set<String> processedFixtureIds = new TreeSet<>();
         // String accessToken = getEdgeToken();
         String url = PropertiesReader.getProperties().getProperty("streetlight.slv.url.main");
         url = url + PropertiesReader.getProperties().getProperty("streetlight.slv.geozoneUrl");
         List<GeozoneModel> geozoneModelList = getGeozoneModelList(url);
-        System.out.println("GeozoneSize" + geozoneModelList.size());
         logger.info("GeozoneModelList Size:" + geozoneModelList.size());
         logger.info("FixtureIdList Size:" + fixtureIdList.size());
-        logger.info("FixtureIdList Size:" + fixtureIdList.toString());
+        logger.info("FixtureIdList Data:" + fixtureIdList.toString());
         for (GeozoneModel geozoneModel : geozoneModelList) {
             if (geozoneModel.getChildrenCount() == 0) {
                 List<FailureReportModel> failureReportModelList = new ArrayList<>();
@@ -80,7 +82,6 @@ public class FailureReportService extends FailureAbstractService {
 
                 for (FailureReportModel failureReportModel : failureReportModelList) {
                     logger.info("ProcessForm Started Title " + failureReportModel.toString());
-                    System.out.println("title is:" + failureReportModel.getFixtureId());
 
                     if (failureReportModel.isOutage() || failureReportModel.isWarning()) {
                         Runnable processTask = new ProcessTask(failureReportModel);
@@ -120,10 +121,11 @@ public class FailureReportService extends FailureAbstractService {
         try {
             // logger.info("Getting Failure Report for "+geozoneModel.getId());
             JsonObject jsonObject = getFailureReport(geozoneModel);
-            JsonObject jsonSubObject = jsonObject.get("properties").getAsJsonObject();
-            JsonElement jsonElement = jsonSubObject.get("rows");
-            JsonArray jsonArray = jsonElement.getAsJsonArray();
             if (jsonObject != null) {
+                JsonObject jsonSubObject = jsonObject.get("properties").getAsJsonObject();
+                JsonElement jsonElement = jsonSubObject.get("rows");
+                JsonArray jsonArray = jsonElement.getAsJsonArray();
+
                 for (JsonElement jsonElementObject : jsonArray) {
                     FailureReportModel failureReportModel = new FailureReportModel();
                     failureReportModelList.add(failureReportModel);

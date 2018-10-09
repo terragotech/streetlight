@@ -39,7 +39,7 @@ public class FailureAbstractService {
 
     protected String getNoteDetails(String noteName) {
        try {
-            String urlNew = baseUrl + "/rest/notes?search=" + noteName;
+            String urlNew = baseUrl + "/rest/notes/notesdata/" + noteName;
             logger.info("Url to get Note Details:"+urlNew);
             ResponseEntity<String> responseEntity = restService.serverCall(urlNew, HttpMethod.GET, null);
             if (responseEntity.getStatusCode().is2xxSuccessful()) {
