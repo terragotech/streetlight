@@ -118,14 +118,7 @@ public class ProcessTask extends FailureAbstractService implements Runnable {
         if (failureReportModel.isOutage()) {
             type = type + "," + "Outage";
         }
-     /*  if (isAlreadyProcessedError(edgeFormDatas, failureReportModel)) {
-            System.out.println("Already Exist: " + failureReportModel.getFixtureId());
-            logger.info("Already Exist :" + failureReportModel.getFixtureId());
-            return;
-        }*/
-       /* if (typeValue != null && failureValue != null && !typeValue.trim().isEmpty()) {
-            processNewErrorForm(type, edgeFormDataList, failureReportModel, typeId, failureId, lastUpdateId, failedSinceId, burningId, lifeTimeId);
-        } else*/
+
         if (!isExist) {
             processNewErrorForm(type, edgeFormDataList, failureReportModel, typeId, failureId, lastUpdateId, failedSinceId, burningId, lifeTimeId);
         } else {
