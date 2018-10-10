@@ -51,7 +51,7 @@ public class RestService {
 
 	private HttpHeaders getHeaders() {
 		String userName = "admin";
-		String password = "admin";
+		String password = "T455wy04ry41!";
 		HttpHeaders headers = new HttpHeaders();
 
 		String plainCreds = userName + ":" + password;
