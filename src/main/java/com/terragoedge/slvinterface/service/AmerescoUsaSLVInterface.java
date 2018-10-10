@@ -70,7 +70,7 @@ public class AmerescoUsaSLVInterface extends SlvInterfaceService {
         paramsList.add("nodeTypeStrId=" + nodeTypeStrId);
         addStreetLightData("nodeTypeStrId", nodeTypeStrId, paramsList);
         addOtherParams(edgeNote, paramsList);
-        setDeviceValues(paramsList, slvSyncDetails);
+         setDeviceValues(paramsList, slvSyncDetails);
 
     }
 

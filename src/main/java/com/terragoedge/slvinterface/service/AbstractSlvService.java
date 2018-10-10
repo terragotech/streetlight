@@ -26,14 +26,14 @@ import org.wololo.jts2geojson.GeoJSONReader;
 
 import java.util.*;
 
-public abstract class AbstractSlvService extends EdgeService{
+public abstract class AbstractSlvService extends EdgeService {
     private Properties properties = null;
     private JsonParser jsonParser = null;
-     SlvRestService slvRestService = null;
-     SLVInterfaceDAO slvInterfaceDAO = null;
-     Gson gson = null;
+    SlvRestService slvRestService = null;
+    SLVInterfaceDAO slvInterfaceDAO = null;
+    Gson gson = null;
     private static Logger logger = Logger.getLogger(AbstractSlvService.class);
-     ConnectionDAO connectionDAO;
+    ConnectionDAO connectionDAO;
 
     public AbstractSlvService() {
         gson = new Gson();
@@ -115,7 +115,7 @@ public abstract class AbstractSlvService extends EdgeService{
         streetLightDataParams.put("lng", String.valueOf(geom.getCoordinate().x));
         streetLightDataParams.put("lat", String.valueOf(geom.getCoordinate().y));
         streetLightDataParams.put("nodeTypeStrId", nodeTypeStrId);
-       // streetLightDataParams.put("modelFunctionId", nodeTypeStrId);
+        // streetLightDataParams.put("modelFunctionId", nodeTypeStrId);
         // modelFunctionId
         return slvRestService.getRequest(streetLightDataParams, url, true);
     }
@@ -131,7 +131,6 @@ public abstract class AbstractSlvService extends EdgeService{
     }
 
 
-
     public String validateMACAddress(String existingNodeMacAddress, String idOnController, String geoZoneId)
             throws QRCodeNotMatchedException {
         String mainUrl = properties.getProperty("streetlight.slv.url.main");
@@ -140,7 +139,7 @@ public abstract class AbstractSlvService extends EdgeService{
 
         List<Object> paramsList = new ArrayList<Object>();
         if (geoZoneId != null) {
-            paramsList.add("geoZoneId=" + geoZoneId);
+            //  paramsList.add("geoZoneId=" + geoZoneId);
         }
 
         paramsList.add("valueNames=idOnController");
@@ -153,29 +152,32 @@ public abstract class AbstractSlvService extends EdgeService{
         if (response.getStatusCode().is2xxSuccessful()) {
             String geoZoneDeviceDetails = response.getBody();
             JsonObject jsonObject = (JsonObject) jsonParser.parse(geoZoneDeviceDetails);
-            JsonArray deviceValuesAsArray = jsonObject.get("values").getAsJsonArray();
-            int totalSize = deviceValuesAsArray.size();
-            for (int i = 0; i < totalSize; i++) {
-                JsonArray deviceValues = deviceValuesAsArray.get(i).getAsJsonArray();
-                if (deviceValues.get(0).getAsString().equals(idOnController)) {
-                    if (deviceValues.get(2).getAsString().equals(existingNodeMacAddress)) {
-                        if (deviceValues.get(1).isJsonNull()) {
-                            return "";
-                        } else {
-                            String comment = deviceValues.get(1).getAsString();
-                            return comment;
+            if (jsonObject != null) {
+                JsonArray deviceValuesAsArray = jsonObject.get("values").getAsJsonArray();
+                int totalSize = deviceValuesAsArray.size();
+                for (int i = 0; i < totalSize; i++) {
+                    JsonArray deviceValues = deviceValuesAsArray.get(i).getAsJsonArray();
+                    if (deviceValues.get(0).getAsString().equals(idOnController)) {
+                        if (deviceValues.get(2).getAsString().equals(existingNodeMacAddress)) {
+                            if (deviceValues.get(1).isJsonNull()) {
+                                return "";
+                            } else {
+                                String comment = deviceValues.get(1).getAsString();
+                                return comment;
+                            }
                         }
                     }
                 }
+                // Throws given MAC Address not matched
+                throw new QRCodeNotMatchedException(idOnController, existingNodeMacAddress);
             }
-            // Throws given MAC Address not matched
-            throw new QRCodeNotMatchedException(idOnController, existingNodeMacAddress);
         }
         return null;
     }
 
     public boolean checkMacAddressExists(String macAddress, String idOnController)
             throws QRCodeAlreadyUsedException {
+        System.out.println("Getting Mac Address from SLV");
         logger.info("Getting Mac Address from SLV.");
         String mainUrl = properties.getProperty("streetlight.slv.url.main");
         String updateDeviceValues = properties.getProperty("streetlight.slv.url.search.device");
@@ -188,6 +190,7 @@ public abstract class AbstractSlvService extends EdgeService{
         paramsList.add("ser=json");
         String params = StringUtils.join(paramsList, "&");
         url = url + "?" + params;
+        System.out.println("Url :"+url);
         ResponseEntity<String> response = slvRestService.getRequest(url, true, null);
         if (response.getStatusCodeValue() == 200) {
             String responseString = response.getBody();
@@ -223,7 +226,9 @@ public abstract class AbstractSlvService extends EdgeService{
         paramsList.add("ser=json");
         String params = StringUtils.join(paramsList, "&");
         url = url + "&" + params;
-        ResponseEntity<String> response = slvRestService.getPostRequest(url, null);
+        System.out.println("SetDevice Called");
+        System.out.println("URL : " + url);
+       /* ResponseEntity<String> response = slvRestService.getPostRequest(url, null);
         String responseString = response.getBody();
         JsonObject replaceOlcResponse = (JsonObject) jsonParser.parse(responseString);
         int errorCode = replaceOlcResponse.get("errorCode").getAsInt();
@@ -231,7 +236,7 @@ public abstract class AbstractSlvService extends EdgeService{
             slvSyncDetails.setErrorDetails(gson.toJson(replaceOlcResponse));
             slvSyncDetails.setStatus(Status.Failure.toString());
             throw new DeviceUpdationFailedException(gson.toJson(replaceOlcResponse));
-        }
+        }*/
     }
 
     public abstract void buildFixtureStreetLightData(String data, List<Object> paramsList, EdgeNote edgeNote)
@@ -288,12 +293,12 @@ public abstract class AbstractSlvService extends EdgeService{
         // controller.installdate - 2017/10/10
 
         addStreetLightData("installStatus", "Installed", paramsList);
-        addStreetLightData("location.utillocationid", edgeNote.getTitle()+".Lamp", paramsList);
+        addStreetLightData("location.utillocationid", edgeNote.getTitle() + ".Lamp", paramsList);
         addStreetLightData("location.locationtype", "LOCATION_TYPE_PREMISE", paramsList);
         String nodeTypeStrId = properties.getProperty("streetlight.slv.equipment.type");
         System.out.println(nodeTypeStrId);
 
-      //  addStreetLightData("DimmingGroupName", "Dimming Evaluation", paramsList);
+        //  addStreetLightData("DimmingGroupName", "Dimming Evaluation", paramsList);
     }
 
     public void getTalqAddress() {
@@ -340,7 +345,9 @@ public abstract class AbstractSlvService extends EdgeService{
             paramsList.add("ser=json");
             String params = StringUtils.join(paramsList, "&");
             url = url + "?" + params;
-            ResponseEntity<String> response = slvRestService.getPostRequest(url, null);
+            System.out.println("Replace OLc called: " + macAddress);
+            System.out.println("Replace OLc Url" + url);
+           /* ResponseEntity<String> response = slvRestService.getPostRequest(url, null);
             String responseString = response.getBody();
             JsonObject replaceOlcResponse = (JsonObject) jsonParser.parse(responseString);
             String errorStatus = replaceOlcResponse.get("status").getAsString();
@@ -351,7 +358,7 @@ public abstract class AbstractSlvService extends EdgeService{
             } else {
                 if (macAddress != null)
                     clearAndUpdateDeviceData(idOnController, controllerStrId);
-            }
+            }*/
 
         } catch (Exception e) {
             logger.error("Error in replaceOLC", e);
@@ -361,7 +368,7 @@ public abstract class AbstractSlvService extends EdgeService{
     }
 
 
-    public void loadDevices()throws DeviceLoadException{
+    public void loadDevices() throws DeviceLoadException {
         String mainUrl = properties.getProperty("streetlight.slv.url.main");
         String devicesUrl = properties.getProperty("streetlight.slv.url.getgeozone.devices");
         String url = mainUrl + devicesUrl;
@@ -382,29 +389,26 @@ public abstract class AbstractSlvService extends EdgeService{
                 SlvDevice slvDevice = new SlvDevice();
                 slvDevice.setDeviceId(deviceValues.get(0).getAsString());
                 slvDevice.setDeviceName(slvDevice.getDeviceId());
-                if(!deviceValues.get(1).isJsonNull()){
+                if (!deviceValues.get(1).isJsonNull()) {
                     slvDevice.setMacAddress(deviceValues.get(1).getAsString());
                 }
 
                 SlvDevice dbSlvDevice = connectionDAO.getSlvDevices(slvDevice.getDeviceId());
-                if(dbSlvDevice != null){
+                if (dbSlvDevice != null) {
                     dbSlvDevice.setMacAddress(slvDevice.getMacAddress());
-                    connectionDAO.updateSlvDevice(slvDevice.getDeviceId(),slvDevice.getMacAddress());
-                }else{
+                    connectionDAO.updateSlvDevice(slvDevice.getDeviceId(), slvDevice.getMacAddress());
+                } else {
                     connectionDAO.saveSlvDevices(slvDevice);
                 }
             }
 
-        }else{
-            throw  new DeviceLoadException("Unable to load device from SLV Interface");
+        } else {
+            throw new DeviceLoadException("Unable to load device from SLV Interface");
         }
     }
 
 
-
-
-
-    public String getGeoZoneValue(String title){
+    public String getGeoZoneValue(String title) {
         String geozoneId = properties.getProperty("streetlight.slv.geozoneid");
         return geozoneId;
     }

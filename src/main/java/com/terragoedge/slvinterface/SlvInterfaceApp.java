@@ -22,18 +22,13 @@ public class SlvInterfaceApp {
       while (true) {
             try {
 
-                SlvInterfaceService slvInterfaceService = new SlvInterfaceServiceImpl();
-               // slvInterfaceService.loadDevices();
+                AmerescoUsaSLVInterface amerescoUsaSLVInterface = new AmerescoUsaSLVInterface();
+                amerescoUsaSLVInterface.loadDevices();
                 while (true) {
-                    slvInterfaceService.start();
+                    amerescoUsaSLVInterface.start();
                     Thread.sleep(60000);
                 }
             } catch (Exception e) {
-                e.printStackTrace();
-            }
-            try {
-                Thread.sleep(60000);
-            }catch (Exception e) {
                 e.printStackTrace();
             }
         }

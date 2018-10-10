@@ -86,7 +86,7 @@ public class SlvRestService {
         logger.info("------------ Response ------------------");
         logger.info("Response Code:" + response.getStatusCode().toString());
         String responseBody = response.getBody();
-        logger.info(responseBody);
+      //  logger.info(responseBody);
         logger.info("------------ Response End ------------------");
         return response;
     }
