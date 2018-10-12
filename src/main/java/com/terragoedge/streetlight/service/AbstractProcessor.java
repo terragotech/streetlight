@@ -176,6 +176,7 @@ public abstract class AbstractProcessor {
     protected String dateFormat(Long dateTime) {
         Date date = new Date(Long.valueOf(dateTime));
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        dateFormat.setTimeZone(TimeZone.getTimeZone("CST"));
         String dff = dateFormat.format(date);
         return dff;
     }
