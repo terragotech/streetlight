@@ -7,6 +7,8 @@ import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
+import com.terragoedge.streetlight.edgeinterface.SlvData;
+import com.terragoedge.streetlight.edgeinterface.SlvToEdgeService;
 import com.terragoedge.streetlight.json.model.ContextList;
 import com.terragoedge.streetlight.logging.InstallMaintenanceLogModel;
 import com.terragoedge.streetlight.logging.LoggingModel;
@@ -39,13 +41,13 @@ public class StreetlightChicagoService extends AbstractProcessor {
 
     final Logger logger = Logger.getLogger(StreetlightChicagoService.class);
     InstallationMaintenanceProcessor installationMaintenanceProcessor;
-
+    SlvToEdgeService slvToEdgeService = null;
 
     public StreetlightChicagoService() {
         super();
         loadContextList();
         installationMaintenanceProcessor = new InstallationMaintenanceProcessor(contextListHashMap);
-
+        slvToEdgeService = new SlvToEdgeService();
     }
 
 
@@ -139,28 +141,39 @@ public class StreetlightChicagoService extends AbstractProcessor {
             String notesData = responseEntity.getBody();
 
             EdgeNote edgeNote = gson.fromJson(notesData, EdgeNote.class);
+            if(!edgeNote.getCreatedBy().contains("admin")){
+                InstallMaintenanceLogModel installMaintenanceLogModel = new InstallMaintenanceLogModel();
+                installMaintenanceLogModel.setLastSyncTime(edgeNote.getSyncTime());
+                installMaintenanceLogModel.setProcessedNoteId(edgeNote.getNoteGuid());
+                installMaintenanceLogModel.setNoteName(edgeNote.getTitle());
+                installMaintenanceLogModel.setCreatedDatetime(String.valueOf(edgeNote.getCreatedDateTime()));
+                loadDefaultVal(edgeNote, installMaintenanceLogModel);
 
-            InstallMaintenanceLogModel installMaintenanceLogModel = new InstallMaintenanceLogModel();
-            installMaintenanceLogModel.setLastSyncTime(edgeNote.getSyncTime());
-            installMaintenanceLogModel.setProcessedNoteId(edgeNote.getNoteGuid());
-            installMaintenanceLogModel.setNoteName(edgeNote.getTitle());
-            installMaintenanceLogModel.setCreatedDatetime(String.valueOf(edgeNote.getCreatedDateTime()));
-            loadDefaultVal(edgeNote, installMaintenanceLogModel);
-            installationMaintenanceProcessor.processNewAction(edgeNote, installMaintenanceLogModel, isResync, utilLocId);
-            if (installMaintenanceLogModel.isProcessOtherForm()) {
-                LoggingModel loggingModel = new LoggingModel();
-                loadDefaultVal(edgeNote, loggingModel);
-                syncData(edgeNote, new ArrayList<String>(), loggingModel, isResync, utilLocId);
-                if (!loggingModel.isNoteAlreadySynced()) {
-                    streetlightDao.insertProcessedNotes(loggingModel, installMaintenanceLogModel);
-                }
-            } else {
+                installationMaintenanceProcessor.processNewAction(edgeNote, installMaintenanceLogModel, isResync, utilLocId);
+                updateSlvStatusToEdge(installMaintenanceLogModel,edgeNote);
                 LoggingModel loggingModel = installMaintenanceLogModel;
                 streetlightDao.insertProcessedNotes(loggingModel, installMaintenanceLogModel);
             }
 
+
         }
 
+
+    }
+
+
+    private void updateSlvStatusToEdge(InstallMaintenanceLogModel installMaintenanceLogModel,EdgeNote edgeNote){
+        try {
+            SlvData slvData = new SlvData();
+            slvData.setNoteGuid(edgeNote.getNoteGuid());
+            slvData.setNoteTitle(edgeNote.getTitle());
+            slvData.setProcessedTime(String.valueOf(System.currentTimeMillis()));
+            slvData.setSyncToSlvStatus(installMaintenanceLogModel.getStatus());
+            slvData.setErrorDetails(installMaintenanceLogModel.getErrorDetails());
+            slvToEdgeService.run(slvData);
+        }catch (Exception e){
+            logger.error("Error in updateSlvStatusToEdge");
+        }
 
     }
 
@@ -227,26 +240,20 @@ public class StreetlightChicagoService extends AbstractProcessor {
             for (EdgeNote edgeNote : edgeNoteList) {
                 try {
                     if (!noteGuids.contains(edgeNote.getNoteGuid())) {
-                        InstallMaintenanceLogModel installMaintenanceLogModel = new InstallMaintenanceLogModel();
+                        if(!edgeNote.getCreatedBy().contains("admin")){
+                            InstallMaintenanceLogModel installMaintenanceLogModel = new InstallMaintenanceLogModel();
 
-                        installMaintenanceLogModel.setProcessedNoteId(edgeNote.getNoteGuid());
-                        installMaintenanceLogModel.setNoteName(edgeNote.getTitle());
-                        installMaintenanceLogModel.setLastSyncTime(edgeNote.getSyncTime());
-                        installMaintenanceLogModel.setCreatedDatetime(String.valueOf(edgeNote.getCreatedDateTime()));
-                        loadDefaultVal(edgeNote, installMaintenanceLogModel);
-                        installationMaintenanceProcessor.processNewAction(edgeNote, installMaintenanceLogModel, false, null);
-                        if (installMaintenanceLogModel.isProcessOtherForm()) {
-                            LoggingModel loggingModel = new LoggingModel();
-                            loggingModel.setLastSyncTime(edgeNote.getSyncTime());
-                            loadDefaultVal(edgeNote, loggingModel);
-                            syncData(edgeNote, noteGuids, loggingModel, false, null);
-                            if (!loggingModel.isNoteAlreadySynced()) {
-                                streetlightDao.insertProcessedNotes(loggingModel, installMaintenanceLogModel);
-                            }
-                        } else {
+                            installMaintenanceLogModel.setProcessedNoteId(edgeNote.getNoteGuid());
+                            installMaintenanceLogModel.setNoteName(edgeNote.getTitle());
+                            installMaintenanceLogModel.setLastSyncTime(edgeNote.getSyncTime());
+                            installMaintenanceLogModel.setCreatedDatetime(String.valueOf(edgeNote.getCreatedDateTime()));
+                            loadDefaultVal(edgeNote, installMaintenanceLogModel);
+                            installationMaintenanceProcessor.processNewAction(edgeNote, installMaintenanceLogModel, false, null);
+                            updateSlvStatusToEdge(installMaintenanceLogModel,edgeNote);
                             LoggingModel loggingModel = installMaintenanceLogModel;
                             streetlightDao.insertProcessedNotes(loggingModel, installMaintenanceLogModel);
                         }
+
                     }
 
                 } catch (Exception e) {

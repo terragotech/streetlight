@@ -28,7 +28,7 @@ public class EdgeService {
     final Logger logger = Logger.getLogger(EdgeService.class);
 
     public EdgeService() {
-        baseUrl = PropertiesReader.getProperties().getProperty("ameresocousa.edge.url");
+        baseUrl = PropertiesReader.getProperties().getProperty("streetlight.edge.url.main");
         jsonParser = new JsonParser();
         gson = new Gson();
     }
@@ -77,8 +77,8 @@ public class EdgeService {
     }
 
     private HttpHeaders getHeaders() {
-        String userName = "admin";
-        String password = "T455wy04ry41!";
+        String userName = PropertiesReader.getProperties().getProperty("streetlight.slv.username");
+        String password = PropertiesReader.getProperties().getProperty("streetlight.slv.password");
         HttpHeaders headers = new HttpHeaders();
         String plainCreds = userName + ":" + password;
         byte[] plainCredsBytes = plainCreds.getBytes();
@@ -137,7 +137,7 @@ public class EdgeService {
         String processTimeId = PropertiesReader.getProperties().getProperty("edge.slv.processtime");
         updateFormValue(edgeFormDataList, Integer.parseInt(syncToSlvId), slvData.getSyncToSlvStatus());
         updateFormValue(edgeFormDataList, Integer.parseInt(errorDetailid), slvData.getErrorDetails());
-        updateFormValue(edgeFormDataList, Integer.parseInt(processTimeId), formatDate(System.currentTimeMillis()));
+        updateFormValue(edgeFormDataList, Integer.parseInt(processTimeId), formatDate(Long.valueOf(slvData.getProcessedTime())));
     }
 
     public static void updateFormValue(List<EdgeFormData> edgeFormDatas, int id, String value) {
@@ -146,7 +146,12 @@ public class EdgeService {
         int pos = edgeFormDatas.indexOf(tempEdgeFormData);
         if (pos != -1) {
             EdgeFormData edgeFormData = edgeFormDatas.get(pos);
-            edgeFormData.setValue(edgeFormData.getLabel() + "#" + value);
+            if(value != null && !value.trim().isEmpty()){
+                edgeFormData.setValue(edgeFormData.getLabel() + "#" + value);
+            }else{
+                edgeFormData.setValue(edgeFormData.getLabel() + "#");
+            }
+
         }
     }
 

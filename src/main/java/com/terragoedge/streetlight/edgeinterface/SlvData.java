@@ -1,5 +1,7 @@
 package com.terragoedge.streetlight.edgeinterface;
 
+import com.terragoedge.streetlight.service.MessageConstants;
+
 public class SlvData {
     private String noteTitle;
     private String noteGuid;
@@ -24,6 +26,11 @@ public class SlvData {
     }
 
     public String getSyncToSlvStatus() {
+        if(syncToSlvStatus.equals(MessageConstants.ERROR)){
+            return "Failure";
+        }else if(syncToSlvStatus.equals(MessageConstants.SUCCESS)){
+            return "Success";
+        }
         return syncToSlvStatus;
     }
 

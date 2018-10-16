@@ -66,18 +66,16 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
                     logger.error("error in processNewAction method", e);
                     installMaintenanceLogModel.setErrorDetails(MessageConstants.ACTION_NO_VAL);
                     installMaintenanceLogModel.setStatus(MessageConstants.ERROR);
-                    installMaintenanceLogModel.setProcessOtherForm(true);
                 }
-            } else {
+            } /*else {
                 installMaintenanceLogModel.setErrorDetails(MessageConstants.ACTION_NO_VAL);
                 installMaintenanceLogModel.setStatus(MessageConstants.ERROR);
-                installMaintenanceLogModel.setProcessOtherForm(true);
                 installMaintenanceLogModel.setInstallFormPresent(false);
-            }
+            }*/
         }
     }
 
-    private void sync2SlvInstallStatus(String idOnController, String controllerStrIdValue, InstallMaintenanceLogModel loggingModel){
+    private int sync2SlvInstallStatus(String idOnController, String controllerStrIdValue, InstallMaintenanceLogModel loggingModel){
         List<Object> paramsList = new ArrayList<>();
         String installStatus = properties.getProperty("could_note_complete_install_status");
         paramsList.add("idOnController=" + idOnController);
@@ -85,10 +83,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
         addStreetLightData("installStatus", installStatus, paramsList);
         int errorCode = setDeviceValues(paramsList);
         logger.info("Error code"+errorCode);
-        if (errorCode != 0) {
-            loggingModel.setErrorDetails("Error while updating device value for install status.");
-            loggingModel.setStatus(MessageConstants.ERROR);
-        }
+        return errorCode;
     }
 
     private void sync2Slv(String macAddress, String fixerQrScanValue, EdgeNote edgeNote, InstallMaintenanceLogModel loggingModel, String idOnController, String controllerStrIdValue, String comment,String utilLocId, boolean isNew) {
@@ -98,7 +93,6 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
 
             paramsList.add("idOnController=" + idOnController);
             paramsList.add("controllerStrId=" + controllerStrIdValue);
-            loggingModel.setProcessOtherForm(false);
             addOtherParams(edgeNote, paramsList,idOnController,utilLocId,isNew);
             if (fixerQrScanValue != null) {
                 buildFixtureStreetLightData(fixerQrScanValue, paramsList, edgeNote);//update fixer qrscan value
@@ -180,10 +174,15 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
                 logger.error("Error in while getting installStatusValue",e);
             }
             if(installStatusValue != null && installStatusValue.equals("Could not complete")){
-                sync2SlvInstallStatus(loggingModel.getIdOnController(), loggingModel.getControllerSrtId(), loggingModel);
-                loggingModel.setErrorDetails(MessageConstants.COULD_NOT_COMPLETE_SUCCESS_MSG);
-                loggingModel.setStatus(MessageConstants.SUCCESS);
-                loggingModel.setProcessOtherForm(true);
+               int errorCode = sync2SlvInstallStatus(loggingModel.getIdOnController(), loggingModel.getControllerSrtId(), loggingModel);
+                if (errorCode != 0) {
+                    loggingModel.setErrorDetails("Error while updating Could not complete install status.Corresponding Error code :"+errorCode);
+                    loggingModel.setStatus(MessageConstants.ERROR);
+                }else{
+                    loggingModel.setErrorDetails(MessageConstants.COULD_NOT_COMPLETE_SUCCESS_MSG);
+                    loggingModel.setStatus(MessageConstants.SUCCESS);
+                }
+
                 return;
             }
 
@@ -196,7 +195,6 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
                 logger.error("Error in while getting MAC Address",e);
                 loggingModel.setErrorDetails(MessageConstants.NODE_MAC_ADDRESS_NOT_AVAILABLE);
                 loggingModel.setStatus(MessageConstants.ERROR);
-                loggingModel.setProcessOtherForm(true);
                 return;
             }
 
@@ -237,8 +235,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
                         + ")  - Already in use. So this pole is not synced with SLV. Note Title :[" + edgeNote.getTitle()
                         + " ]");
                 loggingModel.setStatus(MessageConstants.ERROR);
-                loggingModel.setProcessOtherForm(true);
-                loggingModel.setErrorDetails("MacAddress (" + e1.getMacAddress() + ")  - Already in use");
+                loggingModel.setErrorDetails("MacAddress (" + e1.getMacAddress() + ")  - Already in use.");
                 return;
             }
 
@@ -247,7 +244,6 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
             logger.error("Error no value",e);
             loggingModel.setErrorDetails(e.getMessage());
             loggingModel.setStatus(MessageConstants.ERROR);
-            loggingModel.setProcessOtherForm(true);
             return;
         } catch (Exception e) {
             loggingModel.setErrorDetails(MessageConstants.ERROR + "" + e.getMessage());
@@ -266,7 +262,6 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
         } catch (NoValueException e) {
             loggingModel.setStatus(MessageConstants.ERROR);
             loggingModel.setErrorDetails("Repairs & Outages options are not selected.");
-            loggingModel.setProcessOtherForm(true);
             return;
         }
 
@@ -280,11 +275,11 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
                 break;
             case "Replace Fixture only":
                 loggingModel.setStatus(MessageConstants.ERROR);
-                loggingModel.setErrorDetails("Replace Fixture only option is selected.");
+                loggingModel.setErrorDetails("SLV Interface Doest not support this(Replace Fixture only option is selected).");
                 break;
             case "Power Issue":
                 loggingModel.setStatus(MessageConstants.ERROR);
-                loggingModel.setErrorDetails("Power Issue option is not selected.");
+                loggingModel.setErrorDetails("SLV Interface Doest not support this(Power Issue option is selected).");
                 break;
         }
     }
@@ -301,7 +296,6 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
                 loggingModel.setNewNodeMACaddress(newNodeMacAddress);
             } catch (NoValueException e) {
                 loggingModel.setErrorDetails(MessageConstants.NEW_MAC_ADDRESS_NOT_AVAILABLE);
-                loggingModel.setProcessOtherForm(true);
                 loggingModel.setStatus(MessageConstants.ERROR);
                 return;
             }
@@ -351,7 +345,6 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
                     comment = validateMacAddress(existingNodeMacAddress, idOnController, controllerStrIdValue);
                 } catch (QRCodeNotMatchedException e1) {
                     loggingModel.setStatus(MessageConstants.ERROR);
-                    loggingModel.setProcessOtherForm(true);
                     loggingModel.setErrorDetails(MessageConstants.REPLACE_MAC_NOT_MATCH);
                     return;
                 }
@@ -394,7 +387,6 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
         } catch (Exception e) {
             loggingModel.setErrorDetails(e.getMessage());
             loggingModel.setStatus(MessageConstants.ERROR);
-            loggingModel.setProcessOtherForm(true);
             return;
         }
 
@@ -412,7 +404,6 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
             } catch (NoValueException e) {
                 loggingModel.setErrorDetails(MessageConstants.NEW_MAC_ADDRESS_NOT_AVAILABLE);
                 loggingModel.setStatus(MessageConstants.ERROR);
-                loggingModel.setProcessOtherForm(true);
                 return;
             }
 
@@ -423,7 +414,6 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
             } catch (NoValueException e) {
                 /*loggingModel.setErrorDetails(MessageConstants.OLD_MAC_ADDRESS_NOT_AVAILABLE);
                 loggingModel.setStatus(MessageConstants.ERROR);
-                loggingModel.setProcessOtherForm(true);
                 return;*/
             }
 
@@ -439,10 +429,9 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
                 try {
                     comment = validateMacAddress(existingNodeMacAddress, idOnController, controllerStrIdValue);
                 } catch (QRCodeNotMatchedException e1) {
-                    /*loggingModel.setStatus(MessageConstants.ERROR);
+                    loggingModel.setStatus(MessageConstants.ERROR);
                     loggingModel.setErrorDetails(MessageConstants.REPLACE_MAC_NOT_MATCH);
-                    loggingModel.setProcessOtherForm(true);
-                    return;*/
+                    return;
                 }
             }
 
@@ -454,7 +443,6 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
                         + ")  - Already in use. So this pole is not synced with SLV. Note Title :[" + edgeNote.getTitle()
                         + " ]");
                 loggingModel.setStatus(MessageConstants.ERROR);
-                loggingModel.setProcessOtherForm(true);
                 loggingModel.setErrorDetails("MacAddress (" + e1.getMacAddress() + ")  - Already in use");
             } catch (Exception e) {
                 logger.error(e.getMessage());
@@ -462,7 +450,6 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
                 return;
             }
 
-            loggingModel.setProcessOtherForm(false);
 
             // Call Empty ReplaceOLC
             try {
@@ -479,7 +466,6 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
         } catch (Exception e) {
             loggingModel.setErrorDetails(e.getMessage());
             loggingModel.setStatus(MessageConstants.ERROR);
-            loggingModel.setProcessOtherForm(true);
             return;
         }
 

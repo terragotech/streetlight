@@ -16,20 +16,15 @@ import java.util.List;
 import java.util.Map;
 
 public class SlvToEdgeService extends EdgeService {
-    private SlvData slvData;
     private Gson gson;
 
-    public SlvToEdgeService(SlvData slvData) {
-        this.slvData = slvData;
-        slvData.setNoteGuid("436f1736-13fa-4c7b-9bc8-afea14302b76");
-        slvData.setNoteTitle("161565");
-        slvData.setErrorDetails("Error Value");
-        slvData.setProcessedTime("Yesterday test");
-        slvData.setSyncToSlvStatus("Successed");
+    public SlvToEdgeService() {
         this.gson = new Gson();
     }
 
-    public void run() {
+    public void run(SlvData slvData) {
+        logger.info("-----SLV to Edge Sync Process------------");
+        logger.info(slvData.toString());
         String formTemplateGuid = PropertiesReader.getProperties().getProperty("amerescousa.edge.formtemplateGuid");
         String notesJson = getNoteDetails(slvData.getNoteGuid());
         if (notesJson == null) {
@@ -42,6 +37,7 @@ public class SlvToEdgeService extends EdgeService {
             for (FormData formData : formDataList) {
                 if (formData.getFormTemplateGuid().equals(formTemplateGuid)) {
                     processInstallationForm(edgeNote, formData,formTemplateGuid,slvData);
+                    return;
                 }
             }
         }
@@ -55,7 +51,7 @@ public class SlvToEdgeService extends EdgeService {
         String newNoteGuid = edgeNoteJsonObject.get("noteGuid").getAsString();
         logger.info("ProcessedFormJson " + edgeNoteJsonObject.toString());
         ResponseEntity<String> responseEntity = updateNoteDetails(edgeNoteJsonObject.toString(), oldNoteGuid, notebookGuid);
-        System.out.println(responseEntity.getBody());
+        logger.info(responseEntity.getBody());
 
     }
 }
