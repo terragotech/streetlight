@@ -14,7 +14,7 @@ import java.util.WeakHashMap;
 
 public class InstallationMaintenanceProcessor extends AbstractProcessor {
 
-    public InstallationMaintenanceProcessor(WeakHashMap<String,String> contextListHashMap) {
+    public InstallationMaintenanceProcessor(WeakHashMap<String, String> contextListHashMap) {
         super();
         this.contextListHashMap = contextListHashMap;
     }
@@ -24,11 +24,11 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
     final Logger logger = Logger.getLogger(InstallationMaintenanceProcessor.class);
 
 
-    private LoggingModel getExistingIdOnContoller(EdgeNote edgeNote){
+    private LoggingModel getExistingIdOnContoller(EdgeNote edgeNote) {
         String fixtureFormTemplateGuid = properties.getProperty("streetlight.edge.formtemplateguid.fixture");
         LoggingModel loggingModel = new LoggingModel();
         for (FormData formData : edgeNote.getFormData()) {
-            if(formData.getFormTemplateGuid().equals(fixtureFormTemplateGuid)){
+            if (formData.getFormTemplateGuid().equals(fixtureFormTemplateGuid)) {
                 List<EdgeFormData> fixtureFromDef = formData.getFormDef();
                 loggingModel.setIdOnController(getIdOnController(fixtureFromDef));
                 loggingModel.setControllerSrtId(getControllerStrId(fixtureFromDef));
@@ -39,27 +39,26 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
 
     }
 
-    public void processNewAction(EdgeNote edgeNote, InstallMaintenanceLogModel installMaintenanceLogModel,boolean isReSync,String utilLocId) {
+    public void processNewAction(EdgeNote edgeNote, InstallMaintenanceLogModel installMaintenanceLogModel, boolean isReSync, String utilLocId) {
         List<FormData> formDatas = edgeNote.getFormData();
         for (FormData formData : formDatas) {
             if (formData.getFormTemplateGuid().equals(INSTATALLATION_AND_MAINTENANCE_GUID) || formData.getFormTemplateGuid().equals("fa47c708-fb82-4877-938c-992e870ae2a4") || formData.getFormTemplateGuid().equals("c8acc150-6228-4a27-bc7e-0fabea0e2b93")) {
                 installMaintenanceLogModel.setInstallFormPresent(true);
-                LoggingModel existingFixtureInfo =  getExistingIdOnContoller(edgeNote);
+                LoggingModel existingFixtureInfo = getExistingIdOnContoller(edgeNote);
                 List<EdgeFormData> edgeFormDatas = formData.getFormDef();
                 try {
 
                     String value = value(edgeFormDatas, "Action");
-                    logger.info("Action Val"+value);
+                    logger.info("Action Val" + value);
                     switch (value) {
                         case "New":
-                            processNewGroup(edgeFormDatas, edgeNote, installMaintenanceLogModel,isReSync,existingFixtureInfo,utilLocId);
+                            processNewGroup(edgeFormDatas, edgeNote, installMaintenanceLogModel, isReSync, existingFixtureInfo, utilLocId);
                             return;
                         case "Repairs & Outages":
-                            repairAndOutage(edgeFormDatas, edgeNote, installMaintenanceLogModel,existingFixtureInfo,utilLocId);
+                            repairAndOutage(edgeFormDatas, edgeNote, installMaintenanceLogModel, existingFixtureInfo, utilLocId);
                             return;
                         case "Other Task":
-                            installMaintenanceLogModel.setErrorDetails("Action option is Other Task.");
-                            installMaintenanceLogModel.setStatus(MessageConstants.ERROR);
+                            processOtherTask(edgeFormDatas, edgeNote, installMaintenanceLogModel);
                             return;
                     }
                 } catch (NoValueException e) {
@@ -67,7 +66,36 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
                     installMaintenanceLogModel.setErrorDetails(MessageConstants.ACTION_NO_VAL);
                     installMaintenanceLogModel.setStatus(MessageConstants.ERROR);
                 }
-            } /*else {
+            } else if (formData.getFormTemplateGuid().equals("29a5f0ea-d04e-4d39-9769-5fac4fcb396d")) {
+                List<Object> paramsList = new ArrayList<>();
+                List<EdgeFormData> edgeFormDatas = formData.getFormDef();
+                String nightRideValue = null;
+                try {
+                    nightRideValue = valueById(edgeFormDatas, 1);
+                    logger.info("nightRideValue's Value :" + nightRideValue);
+                    String controllerStarId = getControllerStrId(edgeFormDatas);
+                    String idOnController = installMaintenanceLogModel.getIdOnController();
+                    paramsList.add("idOnController=" + idOnController);
+                    paramsList.add("controllerStrId=" + controllerStarId);
+                    String formatedValue = dateFormat(edgeNote.getCreatedDateTime()) + " :" + nightRideValue;
+                    addStreetLightData("key", formatedValue, paramsList);
+                    int errorCode = setDeviceValues(paramsList);
+                    if (errorCode != 0) {
+                        installMaintenanceLogModel.setErrorDetails(MessageConstants.ERROR_NIGHTRIDE_FORM_VAL);
+                        installMaintenanceLogModel.setStatus(MessageConstants.ERROR);
+                        return;
+                    } else {
+                        logger.info("Night ride value successfully updated");
+                        installMaintenanceLogModel.setStatus(MessageConstants.SUCCESS);
+                        logger.info("Status Changed. to Success");
+                    }
+
+                } catch (NoValueException e) {
+                    logger.error("Error in while getting nightRideValue's value : ", e);
+                }
+
+            }
+                /*else {
                 installMaintenanceLogModel.setErrorDetails(MessageConstants.ACTION_NO_VAL);
                 installMaintenanceLogModel.setStatus(MessageConstants.ERROR);
                 installMaintenanceLogModel.setInstallFormPresent(false);
@@ -75,25 +103,26 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
         }
     }
 
-    private int sync2SlvInstallStatus(String idOnController, String controllerStrIdValue, InstallMaintenanceLogModel loggingModel){
+
+    private int sync2SlvInstallStatus(String idOnController, String controllerStrIdValue, InstallMaintenanceLogModel loggingModel) {
         List<Object> paramsList = new ArrayList<>();
         String installStatus = properties.getProperty("could_note_complete_install_status");
         paramsList.add("idOnController=" + idOnController);
         paramsList.add("controllerStrId=" + controllerStrIdValue);
         addStreetLightData("installStatus", installStatus, paramsList);
         int errorCode = setDeviceValues(paramsList);
-        logger.info("Error code"+errorCode);
+        logger.info("Error code" + errorCode);
         return errorCode;
     }
 
-    private void sync2Slv(String macAddress, String fixerQrScanValue, EdgeNote edgeNote, InstallMaintenanceLogModel loggingModel, String idOnController, String controllerStrIdValue, String comment,String utilLocId, boolean isNew) {
+    private void sync2Slv(String macAddress, String fixerQrScanValue, EdgeNote edgeNote, InstallMaintenanceLogModel loggingModel, String idOnController, String controllerStrIdValue, String comment, String utilLocId, boolean isNew) {
         try {
 
             List<Object> paramsList = new ArrayList<>();
 
             paramsList.add("idOnController=" + idOnController);
             paramsList.add("controllerStrId=" + controllerStrIdValue);
-            addOtherParams(edgeNote, paramsList,idOnController,utilLocId,isNew);
+            addOtherParams(edgeNote, paramsList, idOnController, utilLocId, isNew);
             if (fixerQrScanValue != null) {
                 buildFixtureStreetLightData(fixerQrScanValue, paramsList, edgeNote);//update fixer qrscan value
             }
@@ -108,7 +137,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
 
 
             int errorCode = setDeviceValues(paramsList);
-            logger.info("Error code"+errorCode);
+            logger.info("Error code" + errorCode);
             if (errorCode != 0) {
                 loggingModel.setErrorDetails(MessageConstants.ERROR_UPDATE_DEVICE_VAL);
                 loggingModel.setStatus(MessageConstants.ERROR);
@@ -136,7 +165,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
     }
 
 
-    private String getIdOnController(List<EdgeFormData> fixtureFromDef){
+    private String getIdOnController(List<EdgeFormData> fixtureFromDef) {
         // Get IdOnController value
         String idOnController = null;
         try {
@@ -148,7 +177,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
     }
 
 
-    private String getControllerStrId(List<EdgeFormData> fixtureFromDef){
+    private String getControllerStrId(List<EdgeFormData> fixtureFromDef) {
         // Get ControllerStdId value
         String controllerStrId = null;
         try {
@@ -158,27 +187,51 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
         return controllerStrId;
     }
 
+    public void processOtherTask(List<EdgeFormData> edgeFormDatas, EdgeNote edgeNote, InstallMaintenanceLogModel loggingModel) {
+        List<Object> paramsList = new ArrayList<>();
+        String otherTaskValue = null;
+        try {
+            otherTaskValue = valueById(edgeFormDatas, 44);
+            logger.info("OtherTask's issue Value :" + otherTaskValue);
+        } catch (NoValueException e) {
+            logger.error("Error in while getting processTask's issue", e);
+        }
+        String controllerStarId = getControllerStrId(edgeFormDatas);
+        String idOnController = loggingModel.getIdOnController();
+        paramsList.add("idOnController=" + idOnController);
+        paramsList.add("controllerStrId=" + controllerStarId);
+        String formatedValue = dateFormat(edgeNote.getCreatedDateTime()) + " :" + otherTaskValue;
+        addStreetLightData("key", formatedValue, paramsList);
+        int errorCode = setDeviceValues(paramsList);
+        if (errorCode != 0) {
+            loggingModel.setErrorDetails(MessageConstants.ERROR_OTHERTASK_DEVICE_VAL);
+            loggingModel.setStatus(MessageConstants.ERROR);
+            return;
+        } else {
+            logger.info("OtherTask's value updated successfully in SLV");
+            loggingModel.setStatus(MessageConstants.SUCCESS);
+            logger.info("Status Changed. to Success");
+        }
+    }
 
 
-
-
-    private void processNewGroup(List<EdgeFormData> edgeFormDatas, EdgeNote edgeNote, InstallMaintenanceLogModel loggingModel, boolean isResync, LoggingModel existingFixtureInfo,String utilLocId) {
+    private void processNewGroup(List<EdgeFormData> edgeFormDatas, EdgeNote edgeNote, InstallMaintenanceLogModel loggingModel, boolean isResync, LoggingModel existingFixtureInfo, String utilLocId) {
         try {
 
             // Get Install status
             String installStatusValue = null;
             try {
                 installStatusValue = valueById(edgeFormDatas, 22);
-                logger.info("installStatus Val"+installStatusValue);
+                logger.info("installStatus Val" + installStatusValue);
             } catch (NoValueException e) {
-                logger.error("Error in while getting installStatusValue",e);
+                logger.error("Error in while getting installStatusValue", e);
             }
-            if(installStatusValue != null && installStatusValue.equals("Could not complete")){
-               int errorCode = sync2SlvInstallStatus(loggingModel.getIdOnController(), loggingModel.getControllerSrtId(), loggingModel);
+            if (installStatusValue != null && installStatusValue.equals("Could not complete")) {
+                int errorCode = sync2SlvInstallStatus(loggingModel.getIdOnController(), loggingModel.getControllerSrtId(), loggingModel);
                 if (errorCode != 0) {
-                    loggingModel.setErrorDetails("Error while updating Could not complete install status.Corresponding Error code :"+errorCode);
+                    loggingModel.setErrorDetails("Error while updating Could not complete install status.Corresponding Error code :" + errorCode);
                     loggingModel.setStatus(MessageConstants.ERROR);
-                }else{
+                } else {
                     loggingModel.setErrorDetails(MessageConstants.COULD_NOT_COMPLETE_SUCCESS_MSG);
                     loggingModel.setStatus(MessageConstants.SUCCESS);
                 }
@@ -190,9 +243,9 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
             String nodeMacValue = null;
             try {
                 nodeMacValue = valueById(edgeFormDatas, 19);
-                logger.info("Node MAC Val"+nodeMacValue);
+                logger.info("Node MAC Val" + nodeMacValue);
             } catch (NoValueException e) {
-                logger.error("Error in while getting MAC Address",e);
+                logger.error("Error in while getting MAC Address", e);
                 loggingModel.setErrorDetails(MessageConstants.NODE_MAC_ADDRESS_NOT_AVAILABLE);
                 loggingModel.setStatus(MessageConstants.ERROR);
                 return;
@@ -202,9 +255,9 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
             String fixerQrScanValue = null;
             try {
                 fixerQrScanValue = valueById(edgeFormDatas, 20);
-                logger.info("Fixture QR Scan Val"+fixerQrScanValue);
+                logger.info("Fixture QR Scan Val" + fixerQrScanValue);
             } catch (NoValueException e) {
-                logger.error("Error in while getting MAC Fixture QR Scan",e);
+                logger.error("Error in while getting MAC Fixture QR Scan", e);
                 /*loggingModel.setErrorDetails(MessageConstants.FIXTURE_CODE_NOT_AVAILABLE);
                 loggingModel.setStatus(MessageConstants.ERROR);*/
                 // loggingModel.setProcessOtherForm(true);
@@ -217,11 +270,11 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
                 fixerQrScanValue = temp;
             }
 
-            if(isResync){
-                try{
-                    replaceOLC(loggingModel.getControllerSrtId(),loggingModel.getIdOnController(),"");
-                }catch (ReplaceOLCFailedException e){
-                   String message =  e.getMessage();
+            if (isResync) {
+                try {
+                    replaceOLC(loggingModel.getControllerSrtId(), loggingModel.getIdOnController(), "");
+                } catch (ReplaceOLCFailedException e) {
+                    String message = e.getMessage();
 
                 }
 
@@ -239,9 +292,9 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
                 return;
             }
 
-            sync2Slv(nodeMacValue, fixerQrScanValue, edgeNote, loggingModel, loggingModel.getIdOnController(), loggingModel.getControllerSrtId(), null,utilLocId, true);
+            sync2Slv(nodeMacValue, fixerQrScanValue, edgeNote, loggingModel, loggingModel.getIdOnController(), loggingModel.getControllerSrtId(), null, utilLocId, true);
         } catch (NoValueException e) {
-            logger.error("Error no value",e);
+            logger.error("Error no value", e);
             loggingModel.setErrorDetails(e.getMessage());
             loggingModel.setStatus(MessageConstants.ERROR);
             return;
@@ -254,7 +307,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
     }
 
 
-    public void repairAndOutage(List<EdgeFormData> edgeFormDatas, EdgeNote edgeNote, InstallMaintenanceLogModel loggingModel,LoggingModel existingFixtureInfo,String utilLocId) {
+    public void repairAndOutage(List<EdgeFormData> edgeFormDatas, EdgeNote edgeNote, InstallMaintenanceLogModel loggingModel, LoggingModel existingFixtureInfo, String utilLocId) {
 
         String repairsOutagesValue = null;
         try {
@@ -268,10 +321,10 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
 
         switch (repairsOutagesValue) {
             case "Replace Node and Fixture":
-                replaceNodeFixture(edgeFormDatas, edgeNote, loggingModel,existingFixtureInfo,utilLocId);
+                replaceNodeFixture(edgeFormDatas, edgeNote, loggingModel, existingFixtureInfo, utilLocId);
                 break;
             case "Replace Node only":
-                replaceNodeOnly(edgeFormDatas, edgeNote, loggingModel,existingFixtureInfo,utilLocId);
+                replaceNodeOnly(edgeFormDatas, edgeNote, loggingModel, existingFixtureInfo, utilLocId);
                 break;
             case "Replace Fixture only":
                 loggingModel.setStatus(MessageConstants.ERROR);
@@ -285,7 +338,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
     }
 
 
-    private void replaceNodeFixture(List<EdgeFormData> edgeFormDatas, EdgeNote edgeNote, InstallMaintenanceLogModel loggingModel,LoggingModel existingFixtureInfo,String utilLocId) {
+    private void replaceNodeFixture(List<EdgeFormData> edgeFormDatas, EdgeNote edgeNote, InstallMaintenanceLogModel loggingModel, LoggingModel existingFixtureInfo, String utilLocId) {
         try {
             String existingNodeMacAddress = null;
             String newNodeMacAddress = null;
@@ -336,11 +389,9 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
             String controllerStrIdValue = loggingModel.getControllerSrtId();
 
 
-
-
             String comment = "";
             // Check existingNodeMacAddress is valid or not
-            if(existingNodeMacAddress != null && !existingNodeMacAddress.trim().isEmpty()){
+            if (existingNodeMacAddress != null && !existingNodeMacAddress.trim().isEmpty()) {
                 try {
                     comment = validateMacAddress(existingNodeMacAddress, idOnController, controllerStrIdValue);
                 } catch (QRCodeNotMatchedException e1) {
@@ -380,7 +431,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
 
             comment = comment + " replaced on " + dateFormat(edgeNote.getCreatedDateTime());
 
-            sync2Slv(newNodeMacAddress, fixerQrScanValue, edgeNote, loggingModel, idOnController, controllerStrIdValue, comment,utilLocId,false);
+            sync2Slv(newNodeMacAddress, fixerQrScanValue, edgeNote, loggingModel, idOnController, controllerStrIdValue, comment, utilLocId, false);
             if (isError) {
                 loggingModel.setErrorDetails(loggingModel.getErrorDetails() + statusDescription.toString());
             }
@@ -393,7 +444,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
     }
 
 
-    private void replaceNodeOnly(List<EdgeFormData> edgeFormDatas, EdgeNote edgeNote, InstallMaintenanceLogModel loggingModel,LoggingModel existingFixtureInfo,String utilLocId) {
+    private void replaceNodeOnly(List<EdgeFormData> edgeFormDatas, EdgeNote edgeNote, InstallMaintenanceLogModel loggingModel, LoggingModel existingFixtureInfo, String utilLocId) {
         try {
             String existingNodeMacAddress = null;
             String newNodeMacAddress = null;
@@ -425,7 +476,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
             String comment = null;
 
 
-            if(existingNodeMacAddress != null && !existingNodeMacAddress.trim().isEmpty()){
+            if (existingNodeMacAddress != null && !existingNodeMacAddress.trim().isEmpty()) {
                 try {
                     comment = validateMacAddress(existingNodeMacAddress, idOnController, controllerStrIdValue);
                 } catch (QRCodeNotMatchedException e1) {
@@ -460,7 +511,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
 
             comment = comment + " replaced on " + dateFormat(edgeNote.getCreatedDateTime());
 
-            sync2Slv(newNodeMacAddress, null, edgeNote, loggingModel, idOnController, controllerStrIdValue, comment,utilLocId,false);
+            sync2Slv(newNodeMacAddress, null, edgeNote, loggingModel, idOnController, controllerStrIdValue, comment, utilLocId, false);
 
 
         } catch (Exception e) {

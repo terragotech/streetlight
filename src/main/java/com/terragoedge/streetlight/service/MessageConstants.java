@@ -19,5 +19,6 @@ public class MessageConstants {
 	public static String NODE_MAC_ADDRESS_NOT_AVAILABLE ="Node MAC Address is not available.";
 	public static String ACTION_NO_VAL ="Action option is not selected.";
 	public static String COULD_NOT_COMPLETE_SUCCESS_MSG ="Note process completed due to Could not complete.";
-
+	public static String ERROR_OTHERTASK_DEVICE_VAL ="Error while processing OtherTask device value. Corresponding error code is ";
+	public static String ERROR_NIGHTRIDE_FORM_VAL ="Error while processing NightRides formValue. Corresponding error code is ";
 }
