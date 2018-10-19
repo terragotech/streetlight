@@ -8,6 +8,8 @@ public class SlvData {
     private String syncToSlvStatus;
     private String errorDetails;
     private String processedTime;
+    private long installedDate;
+    private long replacedDate;
 
     public String getNoteTitle() {
         return noteTitle;
@@ -26,9 +28,9 @@ public class SlvData {
     }
 
     public String getSyncToSlvStatus() {
-        if(syncToSlvStatus.equals(MessageConstants.ERROR)){
+        if (syncToSlvStatus.equals(MessageConstants.ERROR)) {
             return "Failure";
-        }else if(syncToSlvStatus.equals(MessageConstants.SUCCESS)){
+        } else if (syncToSlvStatus.equals(MessageConstants.SUCCESS)) {
             return "Success";
         }
         return syncToSlvStatus;
@@ -54,6 +56,22 @@ public class SlvData {
         this.processedTime = processedTime;
     }
 
+    public long getInstalledDate() {
+        return installedDate;
+    }
+
+    public void setInstalledDate(long installedDate) {
+        this.installedDate = installedDate;
+    }
+
+    public long getReplacedDate() {
+        return replacedDate;
+    }
+
+    public void setReplacedDate(long replacedDate) {
+        this.replacedDate = replacedDate;
+    }
+
     @Override
     public String toString() {
         return "SlvData{" +
@@ -62,6 +80,8 @@ public class SlvData {
                 ", syncToSlvStatus='" + syncToSlvStatus + '\'' +
                 ", errorDetails='" + errorDetails + '\'' +
                 ", processedTime='" + processedTime + '\'' +
+                ", installedDate='" + installedDate + '\'' +
+                ", replacedDate='" + replacedDate + '\'' +
                 '}';
     }
 }

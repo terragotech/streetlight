@@ -26,6 +26,9 @@ public class LoggingModel {
     private long lastSyncTime;
     private String layerType;
 
+    private long installedDate;
+    private long replacedDate;
+
     public String getControllerSrtId() {
         return controllerSrtId;
     }
@@ -170,6 +173,22 @@ public class LoggingModel {
         this.talqAddressnoteGuid = talqAddressnoteGuid;
     }
 
+    public long getInstalledDate() {
+        return installedDate;
+    }
+
+    public void setInstalledDate(long installedDate) {
+        this.installedDate = installedDate;
+    }
+
+    public long getReplacedDate() {
+        return replacedDate;
+    }
+
+    public void setReplacedDate(long replacedDate) {
+        this.replacedDate = replacedDate;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -213,6 +232,8 @@ public class LoggingModel {
                 ", talqAddress='" + talqAddress + '\'' +
                 ", lastSyncTime=" + lastSyncTime +
                 ", layerType='" + layerType + '\'' +
+                ", installedDate='" + installedDate + '\'' +
+                ", replacedDate='" + replacedDate + '\'' +
                 '}';
     }
 }

@@ -35,7 +35,7 @@ public class EdgeService {
 
     protected String getNoteDetails(String noteGuid) {
         try {
-           // String urlNew = baseUrl + "/rest/notes/notesdata/" + noteName;
+            // String urlNew = baseUrl + "/rest/notes/notesdata/" + noteName;
             String urlNew = baseUrl + "/rest/notes/" + noteGuid;
             logger.info("Url to get Note Details:" + urlNew);
             ResponseEntity<String> responseEntity = serverCall(urlNew, HttpMethod.GET, null);
@@ -135,9 +135,16 @@ public class EdgeService {
         String syncToSlvId = PropertiesReader.getProperties().getProperty("edge.slv.status");
         String errorDetailid = PropertiesReader.getProperties().getProperty("edge.slv.error");
         String processTimeId = PropertiesReader.getProperties().getProperty("edge.slv.processtime");
+        String installedDateId = PropertiesReader.getProperties().getProperty("edge.slv.installedid");
+        String relacedDateId = PropertiesReader.getProperties().getProperty("edge.slv.replacedid");
         updateFormValue(edgeFormDataList, Integer.parseInt(syncToSlvId), slvData.getSyncToSlvStatus());
         updateFormValue(edgeFormDataList, Integer.parseInt(errorDetailid), slvData.getErrorDetails());
         updateFormValue(edgeFormDataList, Integer.parseInt(processTimeId), formatDate(Long.valueOf(slvData.getProcessedTime())));
+        if (slvData.getInstalledDate() != -1 && slvData.getInstalledDate() != 0) {
+            updateFormValue(edgeFormDataList, Integer.parseInt(installedDateId), formatDate(slvData.getInstalledDate()));
+        } else if (slvData.getReplacedDate() != -1 && slvData.getReplacedDate() != 0) {
+            updateFormValue(edgeFormDataList, Integer.parseInt(relacedDateId), formatDate(slvData.getReplacedDate()));
+        }
     }
 
     public static void updateFormValue(List<EdgeFormData> edgeFormDatas, int id, String value) {
@@ -146,19 +153,19 @@ public class EdgeService {
         int pos = edgeFormDatas.indexOf(tempEdgeFormData);
         if (pos != -1) {
             EdgeFormData edgeFormData = edgeFormDatas.get(pos);
-            if(value != null && !value.trim().isEmpty()){
+            if (value != null && !value.trim().isEmpty()) {
                 edgeFormData.setValue(edgeFormData.getLabel() + "#" + value);
-            }else{
+            } else {
                 edgeFormData.setValue(edgeFormData.getLabel() + "#");
             }
 
         }
     }
 
-    public String formatDate(long time){
+    public String formatDate(long time) {
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
         dateFormat.setTimeZone(TimeZone.getTimeZone("CST"));
         Date dd = new Date(Long.valueOf(time));
-        return  dateFormat.format(dd);
+        return dateFormat.format(dd);
     }
 }
