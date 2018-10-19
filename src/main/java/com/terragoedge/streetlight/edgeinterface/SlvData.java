@@ -1,15 +1,11 @@
 package com.terragoedge.streetlight.edgeinterface;
 
-import com.terragoedge.streetlight.service.MessageConstants;
 
 public class SlvData {
     private String noteTitle;
     private String noteGuid;
-    private String syncToSlvStatus;
-    private String errorDetails;
-    private String processedTime;
-    private long installedDate;
-    private long replacedDate;
+    private String componentId;
+    private String componentValue;
 
     public String getNoteTitle() {
         return noteTitle;
@@ -27,49 +23,20 @@ public class SlvData {
         this.noteGuid = noteGuid;
     }
 
-    public String getSyncToSlvStatus() {
-        if (syncToSlvStatus.equals(MessageConstants.ERROR)) {
-            return "Failure";
-        } else if (syncToSlvStatus.equals(MessageConstants.SUCCESS)) {
-            return "Success";
-        }
-        return syncToSlvStatus;
+    public String getComponentId() {
+        return componentId;
     }
 
-    public void setSyncToSlvStatus(String syncToSlvStatus) {
-        this.syncToSlvStatus = syncToSlvStatus;
+    public void setComponentId(String componentId) {
+        this.componentId = componentId;
     }
 
-    public String getErrorDetails() {
-        return errorDetails;
+    public String getComponentValue() {
+        return componentValue;
     }
 
-    public void setErrorDetails(String errorDetails) {
-        this.errorDetails = errorDetails;
-    }
-
-    public String getProcessedTime() {
-        return processedTime;
-    }
-
-    public void setProcessedTime(String processedTime) {
-        this.processedTime = processedTime;
-    }
-
-    public long getInstalledDate() {
-        return installedDate;
-    }
-
-    public void setInstalledDate(long installedDate) {
-        this.installedDate = installedDate;
-    }
-
-    public long getReplacedDate() {
-        return replacedDate;
-    }
-
-    public void setReplacedDate(long replacedDate) {
-        this.replacedDate = replacedDate;
+    public void setComponentValue(String componentValue) {
+        this.componentValue = componentValue;
     }
 
     @Override
@@ -77,11 +44,8 @@ public class SlvData {
         return "SlvData{" +
                 "noteTitle='" + noteTitle + '\'' +
                 ", noteGuid='" + noteGuid + '\'' +
-                ", syncToSlvStatus='" + syncToSlvStatus + '\'' +
-                ", errorDetails='" + errorDetails + '\'' +
-                ", processedTime='" + processedTime + '\'' +
-                ", installedDate='" + installedDate + '\'' +
-                ", replacedDate='" + replacedDate + '\'' +
+                ", componentId='" + componentId + '\'' +
+                ", componentValue='" + componentValue + '\'' +
                 '}';
     }
 }

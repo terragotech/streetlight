@@ -1,5 +1,7 @@
 package com.terragoedge.edgeserver;
 
+import java.util.Objects;
+
 public class EdgeFormData {
 
 	protected int id;
@@ -92,28 +94,17 @@ public class EdgeFormData {
 	}
 
 	@Override
-	public int hashCode() {
-		final int prime = 31;
-		int result = 1;
-		result = prime * result + ((label == null) ? 0 : label.hashCode());
-		return result;
+	public boolean equals(Object o) {
+		if (this == o) return true;
+		if (o == null || getClass() != o.getClass()) return false;
+		EdgeFormData that = (EdgeFormData) o;
+		return id == that.id;
 	}
 
 	@Override
-	public boolean equals(Object obj) {
-		if (this == obj)
-			return true;
-		if (obj == null)
-			return false;
-		if (getClass() != obj.getClass())
-			return false;
-		EdgeFormData other = (EdgeFormData) obj;
-		if (label == null) {
-			if (other.label != null)
-				return false;
-		} else if (!label.equals(other.label))
-			return false;
-		return true;
+	public int hashCode() {
+
+		return Objects.hash(id);
 	}
 
 

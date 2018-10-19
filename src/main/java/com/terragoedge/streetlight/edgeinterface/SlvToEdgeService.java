@@ -36,7 +36,7 @@ public class SlvToEdgeService extends EdgeService {
             List<FormData> formDataList = edgeNote.getFormData();
             for (FormData formData : formDataList) {
                 if (formData.getFormTemplateGuid().equals(formTemplateGuid)) {
-                    processInstallationForm(edgeNote, formData,formTemplateGuid,slvData);
+                    processInstallationForm(edgeNote, formData, formTemplateGuid, slvData);
                     return;
                 }
             }
@@ -45,9 +45,12 @@ public class SlvToEdgeService extends EdgeService {
 
     public void processInstallationForm(EdgeNote edgeNote, FormData formData, String formTemplateGuid, SlvData slvData) {
         String oldNoteGuid = edgeNote.getNoteGuid();
+        if (slvData.getNoteTitle() != null) {
+            edgeNote.setTitle(slvData.getNoteTitle());
+        }
         String notebookGuid = edgeNote.getEdgeNotebook().getNotebookGuid();
         List<EdgeFormData> edgeFormDataList = formData.getFormDef();
-        JsonObject edgeNoteJsonObject = processEdgeForms(gson.toJson(edgeNote), edgeFormDataList,formTemplateGuid,slvData);
+        JsonObject edgeNoteJsonObject = processEdgeForms(gson.toJson(edgeNote), edgeFormDataList, formTemplateGuid, slvData);
         String newNoteGuid = edgeNoteJsonObject.get("noteGuid").getAsString();
         logger.info("ProcessedFormJson " + edgeNoteJsonObject.toString());
         ResponseEntity<String> responseEntity = updateNoteDetails(edgeNoteJsonObject.toString(), oldNoteGuid, notebookGuid);

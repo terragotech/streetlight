@@ -1,24 +1,14 @@
 package com.terragoedge.streetlight;
 
-import com.terragoedge.streetlight.service.InstallDateFix;
-import com.terragoedge.streetlight.service.SlvService;
-import com.terragoedge.streetlight.service.StreetlightChicagoService;
-import com.terragoedge.streetlight.service.TalkAddressService;
+import com.terragoedge.streetlight.edgeinterface.ReadCSvservice;
 
 
 public class StreetlightApp {
 
 
-	public static void main(String[] args) {
-        while (true){
-            try{
-                StreetlightChicagoService streetlightChicagoService = new StreetlightChicagoService();
-                streetlightChicagoService.run();
-                Thread.sleep(50000);
-            }catch (Exception e){
-                e.printStackTrace();
-            }
-        }
-	}
+    public static void main(String[] args) {
+        ReadCSvservice readCSvservice = new ReadCSvservice();
+        readCSvservice.start();
+    }
 
 }

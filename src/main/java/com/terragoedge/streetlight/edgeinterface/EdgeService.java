@@ -77,8 +77,8 @@ public class EdgeService {
     }
 
     private HttpHeaders getHeaders() {
-        String userName = PropertiesReader.getProperties().getProperty("streetlight.slv.username");
-        String password = PropertiesReader.getProperties().getProperty("streetlight.slv.password");
+        String userName = PropertiesReader.getProperties().getProperty("edge.username");
+        String password = PropertiesReader.getProperties().getProperty("edge.password");
         HttpHeaders headers = new HttpHeaders();
         String plainCreds = userName + ":" + password;
         byte[] plainCredsBytes = plainCreds.getBytes();
@@ -126,26 +126,13 @@ public class EdgeService {
     }
 
     public ResponseEntity<String> updateNoteDetails(String noteDetails, String noteGuid, String notebookGuid) {
-        String baseUrl = PropertiesReader.getProperties().getProperty("ameresocousa.edge.url");
+        String baseUrl = PropertiesReader.getProperties().getProperty("streetlight.edge.url.main");
         String urlNew = baseUrl + "/rest/notebooks/" + notebookGuid + "/notes/" + noteGuid;
         return serverCall(urlNew, HttpMethod.PUT, noteDetails);
     }
 
     public void updateInstallationForm(List<EdgeFormData> edgeFormDataList, SlvData slvData) {
-        String syncToSlvId = PropertiesReader.getProperties().getProperty("edge.slv.status");
-        String errorDetailid = PropertiesReader.getProperties().getProperty("edge.slv.error");
-        String processTimeId = PropertiesReader.getProperties().getProperty("edge.slv.processtime");
-        String installedDateId = PropertiesReader.getProperties().getProperty("edge.slv.installedid");
-        String relacedDateId = PropertiesReader.getProperties().getProperty("edge.slv.replacedid");
-        updateFormValue(edgeFormDataList, Integer.parseInt(syncToSlvId), slvData.getSyncToSlvStatus());
-        updateFormValue(edgeFormDataList, Integer.parseInt(errorDetailid), slvData.getErrorDetails());
-        updateFormValue(edgeFormDataList, Integer.parseInt(processTimeId), formatDate(Long.valueOf(slvData.getProcessedTime())));
-        if (slvData.getInstalledDate() > 0) {
-            updateFormValue(edgeFormDataList, Integer.parseInt(installedDateId), formatDate(slvData.getInstalledDate()));
-        }
-        if (slvData.getReplacedDate() > 0) {
-            updateFormValue(edgeFormDataList, Integer.parseInt(relacedDateId), formatDate(slvData.getReplacedDate()));
-        }
+        updateFormValue(edgeFormDataList, Integer.parseInt(slvData.getComponentId()), slvData.getComponentValue());
     }
 
     public static void updateFormValue(List<EdgeFormData> edgeFormDatas, int id, String value) {
