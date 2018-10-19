@@ -7,6 +7,7 @@ import com.terragoedge.edgeserver.EdgeFormData;
 import com.terragoedge.edgeserver.EdgeNote;
 import com.terragoedge.edgeserver.FormData;
 import com.terragoedge.streetlight.PropertiesReader;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
 import java.lang.reflect.Type;
@@ -44,17 +45,27 @@ public class SlvToEdgeService extends EdgeService {
     }
 
     public void processInstallationForm(EdgeNote edgeNote, FormData formData, String formTemplateGuid, SlvData slvData) {
-        String oldNoteGuid = edgeNote.getNoteGuid();
-        if (slvData.getNoteTitle() != null) {
-            edgeNote.setTitle(slvData.getNoteTitle());
-        }
-        String notebookGuid = edgeNote.getEdgeNotebook().getNotebookGuid();
-        List<EdgeFormData> edgeFormDataList = formData.getFormDef();
-        JsonObject edgeNoteJsonObject = processEdgeForms(gson.toJson(edgeNote), edgeFormDataList, formTemplateGuid, slvData);
-        String newNoteGuid = edgeNoteJsonObject.get("noteGuid").getAsString();
-        logger.info("ProcessedFormJson " + edgeNoteJsonObject.toString());
-        ResponseEntity<String> responseEntity = updateNoteDetails(edgeNoteJsonObject.toString(), oldNoteGuid, notebookGuid);
-        logger.info(responseEntity.getBody());
+       try{
+           String oldNoteGuid = edgeNote.getNoteGuid();
+           if (slvData.getNoteTitle() != null) {
+               edgeNote.setTitle(slvData.getComponentValue());
+           }
+           String notebookGuid = edgeNote.getEdgeNotebook().getNotebookGuid();
+           List<EdgeFormData> edgeFormDataList = formData.getFormDef();
+           JsonObject edgeNoteJsonObject = processEdgeForms(gson.toJson(edgeNote), edgeFormDataList, formTemplateGuid, slvData);
+           String newNoteGuid = edgeNoteJsonObject.get("noteGuid").getAsString();
+           logger.info("ProcessedFormJson " + edgeNoteJsonObject.toString());
+           ResponseEntity<String> responseEntity = updateNoteDetails(edgeNoteJsonObject.toString(), oldNoteGuid, notebookGuid);
+           if(responseEntity.getStatusCode().value() == HttpStatus.CREATED.value()){
+               String body = responseEntity.getBody();
+               slvData.setNewNoteGuid(body);
+               slvData.setStatus("Success");
+               return;
+           }
+       }catch (Exception e){
+           slvData.setStatus("Failure");
+           slvData.setErrorDetails(e.getMessage());
+       }
 
     }
 }

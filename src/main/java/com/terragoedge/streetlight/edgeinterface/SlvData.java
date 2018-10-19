@@ -1,11 +1,60 @@
 package com.terragoedge.streetlight.edgeinterface;
 
 
-public class SlvData {
+import com.opencsv.bean.CsvBindByName;
+import com.opencsv.bean.CsvToBean;
+
+public class SlvData extends CsvToBean {
+    @CsvBindByName(column = "Note Title")
     private String noteTitle;
+    @CsvBindByName(column = "Note Guid")
     private String noteGuid;
+
     private String componentId;
+    @CsvBindByName(column = "Component Value")
     private String componentValue;
+    @CsvBindByName(column = "New Note Title")
+    private String newNoteTitle;
+    @CsvBindByName(column = "New Note Guid")
+    private String newNoteGuid;
+    @CsvBindByName(column = "Status")
+    private String status;
+    @CsvBindByName(column = "Error Details")
+    private String errorDetails;
+
+
+
+    public String getNewNoteTitle() {
+        return newNoteTitle;
+    }
+
+    public void setNewNoteTitle(String newNoteTitle) {
+        this.newNoteTitle = newNoteTitle;
+    }
+
+    public String getNewNoteGuid() {
+        return newNoteGuid;
+    }
+
+    public void setNewNoteGuid(String newNoteGuid) {
+        this.newNoteGuid = newNoteGuid;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
+    }
+
+    public String getErrorDetails() {
+        return errorDetails;
+    }
+
+    public void setErrorDetails(String errorDetails) {
+        this.errorDetails = errorDetails;
+    }
 
     public String getNoteTitle() {
         return noteTitle;
