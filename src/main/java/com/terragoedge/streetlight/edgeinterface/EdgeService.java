@@ -140,9 +140,10 @@ public class EdgeService {
         updateFormValue(edgeFormDataList, Integer.parseInt(syncToSlvId), slvData.getSyncToSlvStatus());
         updateFormValue(edgeFormDataList, Integer.parseInt(errorDetailid), slvData.getErrorDetails());
         updateFormValue(edgeFormDataList, Integer.parseInt(processTimeId), formatDate(Long.valueOf(slvData.getProcessedTime())));
-        if (slvData.getInstalledDate() != -1 && slvData.getInstalledDate() != 0) {
+        if (slvData.getInstalledDate() > 0) {
             updateFormValue(edgeFormDataList, Integer.parseInt(installedDateId), formatDate(slvData.getInstalledDate()));
-        } else if (slvData.getReplacedDate() != -1 && slvData.getReplacedDate() != 0) {
+        }
+        if (slvData.getReplacedDate() > 0) {
             updateFormValue(edgeFormDataList, Integer.parseInt(relacedDateId), formatDate(slvData.getReplacedDate()));
         }
     }
