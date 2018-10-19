@@ -53,11 +53,11 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
                     switch (value) {
                         case "New":
                             processNewGroup(edgeFormDatas, edgeNote, installMaintenanceLogModel, isReSync, existingFixtureInfo, utilLocId);
-                            installMaintenanceLogModel.setInstalledDate(String.valueOf(edgeNote.getCreatedDateTime()));
+                            installMaintenanceLogModel.setInstalledDate(edgeNote.getCreatedDateTime());
                             return;
                         case "Repairs & Outages":
                             repairAndOutage(edgeFormDatas, edgeNote, installMaintenanceLogModel, existingFixtureInfo, utilLocId);
-                            installMaintenanceLogModel.setReplacedDate(String.valueOf(edgeNote.getCreatedDateTime()));
+                            installMaintenanceLogModel.setReplacedDate(edgeNote.getCreatedDateTime());
                             return;
                         case "Other Task":
                             processOtherTask(edgeFormDatas, edgeNote, installMaintenanceLogModel);
