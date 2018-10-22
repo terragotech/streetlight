@@ -8,6 +8,7 @@ import com.terragoedge.edgeserver.Value;
 import com.terragoedge.streetlight.PropertiesReader;
 import com.terragoedge.streetlight.dao.StreetlightDao;
 import com.terragoedge.streetlight.exception.*;
+import com.terragoedge.streetlight.logging.InstallMaintenanceLogModel;
 import com.terragoedge.streetlight.logging.LoggingModel;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
@@ -76,7 +77,7 @@ public abstract class AbstractProcessor {
      *
      * @throws Exception
      */
-    public boolean checkMacAddressExists(String macAddress, String idOnController)
+    public boolean checkMacAddressExists(String macAddress, String idOnController, String nightRideKey, String nightRideValue)
             throws QRCodeAlreadyUsedException, Exception {
         logger.info("Getting Mac Address from SLV.");
         String mainUrl = properties.getProperty("streetlight.slv.url.main");
@@ -103,9 +104,9 @@ public abstract class AbstractProcessor {
                 return false;
             } else {
                 for (Value value : values) {
-                    /*if (value.getIdOnController().equals(idOnController)) {
-                        return false;
-                    }*/
+                    if (value.getIdOnController().equals(idOnController)) {
+                        sendNightRideToSLV(value.getIdOnController(), nightRideKey, nightRideValue);
+                    }
                     stringBuilder.append(value.getIdOnController());
                     stringBuilder.append("\n");
                 }
@@ -449,5 +450,24 @@ public abstract class AbstractProcessor {
         loggingModel.setIdOnController(edgeNote.getTitle());
         String controllerStrId = properties.getProperty("streetlight.slv.controllerstrid");
         loggingModel.setControllerSrtId(controllerStrId);
+    }
+
+    private void sendNightRideToSLV(String idOnController, String nightRideKey, String nightRideValue){
+        List<Object> paramsList = new ArrayList<>();
+        String controllerStrId = properties.getProperty("streetlight.slv.controllerstrid");
+        paramsList.add("idOnController=" + idOnController);
+        paramsList.add("controllerStrId=" + controllerStrId);
+        if(nightRideValue != null){
+            addStreetLightData(nightRideKey, nightRideValue, paramsList);
+            int errorCode = setDeviceValues(paramsList);
+            logger.info("Error code" + errorCode);
+            if (errorCode != 0) {
+                logger.error(MessageConstants.ERROR_UPDATE_DEVICE_VAL);
+                logger.error(MessageConstants.ERROR);
+            }else{
+                logger.info(MessageConstants.SET_DEVICE_SUCCESS);
+                logger.info(MessageConstants.SUCCESS);
+            }
+        }
     }
 }

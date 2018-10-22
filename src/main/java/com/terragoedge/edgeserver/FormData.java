@@ -3,6 +3,7 @@ package com.terragoedge.edgeserver;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
@@ -66,6 +67,17 @@ public class FormData {
 		this.name = name;
 	}
 
-	
+	@Override
+	public boolean equals(Object o) {
+		if (this == o) return true;
+		if (o == null || getClass() != o.getClass()) return false;
+		FormData formData = (FormData) o;
+		return Objects.equals(formTemplateGuid, formData.formTemplateGuid);
+	}
 
+	@Override
+	public int hashCode() {
+
+		return Objects.hash(formTemplateGuid);
+	}
 }

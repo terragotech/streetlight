@@ -473,7 +473,7 @@ public class StreetlightChicagoService extends AbstractProcessor {
             return;
         }
 
-        checkMacAddressExists(newNodeMacAddress, idOnController);
+        checkMacAddressExists(newNodeMacAddress, idOnController, null, null);
 
         boolean isError = false;
         StringBuffer statusDescription = new StringBuffer();
@@ -563,14 +563,14 @@ public class StreetlightChicagoService extends AbstractProcessor {
                 for (String nodeData : nodeInfo) {
                     if (nodeData.startsWith("MACid")) {
                         String macAddress = nodeData.substring(6);
-                        checkMacAddressExists(macAddress, idOnController);
+                        checkMacAddressExists(macAddress, idOnController, null, null);
                         addStreetLightData("MacAddress", macAddress, paramsList);
                         return macAddress;
                     }
                 }
             }
         } else {
-            checkMacAddressExists(data, idOnController);
+            checkMacAddressExists(data, idOnController, null, null);
             addStreetLightData("MacAddress", data, paramsList);
             return data;
         }

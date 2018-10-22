@@ -41,6 +41,39 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
 
     public void processNewAction(EdgeNote edgeNote, InstallMaintenanceLogModel installMaintenanceLogModel, boolean isReSync, String utilLocId) {
         List<FormData> formDatas = edgeNote.getFormData();
+        String nightRideTemplateGuid = properties.getProperty("amerescousa.night.ride.formtemplateGuid");
+        int pos = formDatas.indexOf(nightRideTemplateGuid);
+        String nightRideKey = properties.getProperty("amerescousa.night.ride.key_for_slv");
+        String formatedValueNR = null;
+        if(pos != -1){
+            FormData formData = formDatas.get(pos);
+            List<Object> paramsList = new ArrayList<>();
+            List<EdgeFormData> edgeFormDatas = formData.getFormDef();
+            String nightRideValue = null;
+            try {
+                nightRideValue = valueById(edgeFormDatas, 1);
+                logger.info("nightRideValue's Value :" + nightRideValue);
+                String controllerStarId = getControllerStrId(edgeFormDatas);
+                String idOnController = installMaintenanceLogModel.getIdOnController();
+                paramsList.add("idOnController=" + idOnController);
+                paramsList.add("controllerStrId=" + controllerStarId);
+                formatedValueNR = dateFormat(edgeNote.getCreatedDateTime()) + " :" + nightRideValue;
+                addStreetLightData(nightRideKey, formatedValueNR, paramsList);
+                int errorCode = setDeviceValues(paramsList);
+                if (errorCode != 0) {
+                    installMaintenanceLogModel.setErrorDetails(MessageConstants.ERROR_NIGHTRIDE_FORM_VAL);
+                    installMaintenanceLogModel.setStatus(MessageConstants.ERROR);
+                    return;
+                } else {
+                    logger.info("Night ride value successfully updated");
+                    installMaintenanceLogModel.setStatus(MessageConstants.SUCCESS);
+                    logger.info("Status Changed. to Success");
+                }
+
+            } catch (NoValueException e) {
+                logger.error("Error in while getting nightRideValue's value : ", e);
+            }
+        }
         for (FormData formData : formDatas) {
             if (formData.getFormTemplateGuid().equals(INSTATALLATION_AND_MAINTENANCE_GUID) || formData.getFormTemplateGuid().equals("fa47c708-fb82-4877-938c-992e870ae2a4") || formData.getFormTemplateGuid().equals("c8acc150-6228-4a27-bc7e-0fabea0e2b93")) {
                 installMaintenanceLogModel.setInstallFormPresent(true);
@@ -52,15 +85,15 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
                     logger.info("Action Val" + value);
                     switch (value) {
                         case "New":
-                            processNewGroup(edgeFormDatas, edgeNote, installMaintenanceLogModel, isReSync, existingFixtureInfo, utilLocId);
+                            processNewGroup(edgeFormDatas, edgeNote, installMaintenanceLogModel, isReSync, existingFixtureInfo, utilLocId, nightRideKey, formatedValueNR);
                             installMaintenanceLogModel.setInstalledDate(edgeNote.getCreatedDateTime());
                             return;
                         case "Repairs & Outages":
-                            repairAndOutage(edgeFormDatas, edgeNote, installMaintenanceLogModel, existingFixtureInfo, utilLocId);
+                            repairAndOutage(edgeFormDatas, edgeNote, installMaintenanceLogModel, existingFixtureInfo, utilLocId, nightRideKey, formatedValueNR);
                             installMaintenanceLogModel.setReplacedDate(edgeNote.getCreatedDateTime());
                             return;
                         case "Other Task":
-                            processOtherTask(edgeFormDatas, edgeNote, installMaintenanceLogModel);
+                            processOtherTask(edgeFormDatas, edgeNote, installMaintenanceLogModel, nightRideKey, formatedValueNR);
                             return;
                     }
                 } catch (NoValueException e) {
@@ -68,56 +101,26 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
                     installMaintenanceLogModel.setErrorDetails(MessageConstants.ACTION_NO_VAL);
                     installMaintenanceLogModel.setStatus(MessageConstants.ERROR);
                 }
-            } else if (formData.getFormTemplateGuid().equals("29a5f0ea-d04e-4d39-9769-5fac4fcb396d")) {
-                List<Object> paramsList = new ArrayList<>();
-                List<EdgeFormData> edgeFormDatas = formData.getFormDef();
-                String nightRideValue = null;
-                try {
-                    nightRideValue = valueById(edgeFormDatas, 1);
-                    logger.info("nightRideValue's Value :" + nightRideValue);
-                    String controllerStarId = getControllerStrId(edgeFormDatas);
-                    String idOnController = installMaintenanceLogModel.getIdOnController();
-                    paramsList.add("idOnController=" + idOnController);
-                    paramsList.add("controllerStrId=" + controllerStarId);
-                    String formatedValue = dateFormat(edgeNote.getCreatedDateTime()) + " :" + nightRideValue;
-                    addStreetLightData("key", formatedValue, paramsList);
-                    int errorCode = setDeviceValues(paramsList);
-                    if (errorCode != 0) {
-                        installMaintenanceLogModel.setErrorDetails(MessageConstants.ERROR_NIGHTRIDE_FORM_VAL);
-                        installMaintenanceLogModel.setStatus(MessageConstants.ERROR);
-                        return;
-                    } else {
-                        logger.info("Night ride value successfully updated");
-                        installMaintenanceLogModel.setStatus(MessageConstants.SUCCESS);
-                        logger.info("Status Changed. to Success");
-                    }
-
-                } catch (NoValueException e) {
-                    logger.error("Error in while getting nightRideValue's value : ", e);
-                }
-
             }
-                /*else {
-                installMaintenanceLogModel.setErrorDetails(MessageConstants.ACTION_NO_VAL);
-                installMaintenanceLogModel.setStatus(MessageConstants.ERROR);
-                installMaintenanceLogModel.setInstallFormPresent(false);
-            }*/
         }
     }
 
 
-    private int sync2SlvInstallStatus(String idOnController, String controllerStrIdValue, InstallMaintenanceLogModel loggingModel) {
+    private int sync2SlvInstallStatus(String idOnController, String controllerStrIdValue, InstallMaintenanceLogModel loggingModel, String nightRideKey, String nightRideValue) {
         List<Object> paramsList = new ArrayList<>();
         String installStatus = properties.getProperty("could_note_complete_install_status");
         paramsList.add("idOnController=" + idOnController);
         paramsList.add("controllerStrId=" + controllerStrIdValue);
+        if (nightRideValue != null) {
+            addStreetLightData(nightRideKey, nightRideValue, paramsList);
+        }
         addStreetLightData("installStatus", installStatus, paramsList);
         int errorCode = setDeviceValues(paramsList);
         logger.info("Error code" + errorCode);
         return errorCode;
     }
 
-    private void sync2Slv(String macAddress, String fixerQrScanValue, EdgeNote edgeNote, InstallMaintenanceLogModel loggingModel, String idOnController, String controllerStrIdValue, String comment, String utilLocId, boolean isNew) {
+    private void sync2Slv(String macAddress, String fixerQrScanValue, EdgeNote edgeNote, InstallMaintenanceLogModel loggingModel, String idOnController, String controllerStrIdValue, String comment, String utilLocId, boolean isNew, String nightRideKey, String nightRideValue) {
         try {
 
             List<Object> paramsList = new ArrayList<>();
@@ -133,6 +136,9 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
                 addStreetLightData("comment", comment, paramsList);
             }
 
+            if(nightRideValue != null){
+                addStreetLightData(nightRideKey, nightRideValue, paramsList);
+            }
             if (macAddress != null && !macAddress.trim().isEmpty()) {
                 addStreetLightData("MacAddress", macAddress, paramsList);
             }
@@ -189,7 +195,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
         return controllerStrId;
     }
 
-    public void processOtherTask(List<EdgeFormData> edgeFormDatas, EdgeNote edgeNote, InstallMaintenanceLogModel loggingModel) {
+    public void processOtherTask(List<EdgeFormData> edgeFormDatas, EdgeNote edgeNote, InstallMaintenanceLogModel loggingModel, String nightRideKey, String nightRideValue) {
         List<Object> paramsList = new ArrayList<>();
         String otherTaskValue = null;
         try {
@@ -204,6 +210,9 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
         paramsList.add("controllerStrId=" + controllerStarId);
         String formatedValue = dateFormat(edgeNote.getCreatedDateTime()) + " :" + otherTaskValue;
         addStreetLightData("key", formatedValue, paramsList);
+        if(nightRideValue != null){
+            addStreetLightData(nightRideKey, nightRideValue, paramsList);
+        }
         int errorCode = setDeviceValues(paramsList);
         if (errorCode != 0) {
             loggingModel.setErrorDetails(MessageConstants.ERROR_OTHERTASK_DEVICE_VAL);
@@ -217,7 +226,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
     }
 
 
-    private void processNewGroup(List<EdgeFormData> edgeFormDatas, EdgeNote edgeNote, InstallMaintenanceLogModel loggingModel, boolean isResync, LoggingModel existingFixtureInfo, String utilLocId) {
+    private void processNewGroup(List<EdgeFormData> edgeFormDatas, EdgeNote edgeNote, InstallMaintenanceLogModel loggingModel, boolean isResync, LoggingModel existingFixtureInfo, String utilLocId, String nightRideKey, String nightRideValue) {
         try {
 
             // Get Install status
@@ -229,7 +238,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
                 logger.error("Error in while getting installStatusValue", e);
             }
             if (installStatusValue != null && installStatusValue.equals("Could not complete")) {
-                int errorCode = sync2SlvInstallStatus(loggingModel.getIdOnController(), loggingModel.getControllerSrtId(), loggingModel);
+                int errorCode = sync2SlvInstallStatus(loggingModel.getIdOnController(), loggingModel.getControllerSrtId(), loggingModel, nightRideKey, nightRideValue);
                 if (errorCode != 0) {
                     loggingModel.setErrorDetails("Error while updating Could not complete install status.Corresponding Error code :" + errorCode);
                     loggingModel.setStatus(MessageConstants.ERROR);
@@ -284,7 +293,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
 
             // Check Whether MAC Address is already assigned to other fixtures or not.
             try {
-                checkMacAddressExists(nodeMacValue, loggingModel.getIdOnController());
+                checkMacAddressExists(nodeMacValue, loggingModel.getIdOnController(), nightRideKey, nightRideValue);
             } catch (QRCodeAlreadyUsedException e1) {
                 logger.error("MacAddress (" + e1.getMacAddress()
                         + ")  - Already in use. So this pole is not synced with SLV. Note Title :[" + edgeNote.getTitle()
@@ -294,7 +303,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
                 return;
             }
 
-            sync2Slv(nodeMacValue, fixerQrScanValue, edgeNote, loggingModel, loggingModel.getIdOnController(), loggingModel.getControllerSrtId(), null, utilLocId, true);
+            sync2Slv(nodeMacValue, fixerQrScanValue, edgeNote, loggingModel, loggingModel.getIdOnController(), loggingModel.getControllerSrtId(), null, utilLocId, true, nightRideKey, nightRideValue);
         } catch (NoValueException e) {
             logger.error("Error no value", e);
             loggingModel.setErrorDetails(e.getMessage());
@@ -309,7 +318,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
     }
 
 
-    public void repairAndOutage(List<EdgeFormData> edgeFormDatas, EdgeNote edgeNote, InstallMaintenanceLogModel loggingModel, LoggingModel existingFixtureInfo, String utilLocId) {
+    public void repairAndOutage(List<EdgeFormData> edgeFormDatas, EdgeNote edgeNote, InstallMaintenanceLogModel loggingModel, LoggingModel existingFixtureInfo, String utilLocId, String nightRideKey, String nightRideValue) {
 
         String repairsOutagesValue = null;
         try {
@@ -323,10 +332,10 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
 
         switch (repairsOutagesValue) {
             case "Replace Node and Fixture":
-                replaceNodeFixture(edgeFormDatas, edgeNote, loggingModel, existingFixtureInfo, utilLocId);
+                replaceNodeFixture(edgeFormDatas, edgeNote, loggingModel, existingFixtureInfo, utilLocId, nightRideKey, nightRideValue);
                 break;
             case "Replace Node only":
-                replaceNodeOnly(edgeFormDatas, edgeNote, loggingModel, existingFixtureInfo, utilLocId);
+                replaceNodeOnly(edgeFormDatas, edgeNote, loggingModel, existingFixtureInfo, utilLocId, nightRideKey, nightRideValue);
                 break;
             case "Replace Fixture only":
                 loggingModel.setStatus(MessageConstants.ERROR);
@@ -340,7 +349,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
     }
 
 
-    private void replaceNodeFixture(List<EdgeFormData> edgeFormDatas, EdgeNote edgeNote, InstallMaintenanceLogModel loggingModel, LoggingModel existingFixtureInfo, String utilLocId) {
+    private void replaceNodeFixture(List<EdgeFormData> edgeFormDatas, EdgeNote edgeNote, InstallMaintenanceLogModel loggingModel, LoggingModel existingFixtureInfo, String utilLocId, String nightRideKey, String nightRideValue) {
         try {
             String existingNodeMacAddress = null;
             String newNodeMacAddress = null;
@@ -405,7 +414,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
 
 
             try {
-                checkMacAddressExists(newNodeMacAddress, idOnController);
+                checkMacAddressExists(newNodeMacAddress, idOnController, nightRideKey, nightRideValue);
             } catch (QRCodeAlreadyUsedException e1) {
                 logger.error("MacAddress (" + e1.getMacAddress()
                         + ")  - Already in use. So this pole is not synced with SLV. Note Title :[" + edgeNote.getTitle()
@@ -433,7 +442,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
 
             comment = comment + " replaced on " + dateFormat(edgeNote.getCreatedDateTime());
 
-            sync2Slv(newNodeMacAddress, fixerQrScanValue, edgeNote, loggingModel, idOnController, controllerStrIdValue, comment, utilLocId, false);
+            sync2Slv(newNodeMacAddress, fixerQrScanValue, edgeNote, loggingModel, idOnController, controllerStrIdValue, comment, utilLocId, false, nightRideKey, nightRideValue);
             if (isError) {
                 loggingModel.setErrorDetails(loggingModel.getErrorDetails() + statusDescription.toString());
             }
@@ -446,7 +455,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
     }
 
 
-    private void replaceNodeOnly(List<EdgeFormData> edgeFormDatas, EdgeNote edgeNote, InstallMaintenanceLogModel loggingModel, LoggingModel existingFixtureInfo, String utilLocId) {
+    private void replaceNodeOnly(List<EdgeFormData> edgeFormDatas, EdgeNote edgeNote, InstallMaintenanceLogModel loggingModel, LoggingModel existingFixtureInfo, String utilLocId, String nightRideKey, String nightRideValue) {
         try {
             String existingNodeMacAddress = null;
             String newNodeMacAddress = null;
@@ -490,7 +499,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
 
 
             try {
-                checkMacAddressExists(newNodeMacAddress, idOnController);
+                checkMacAddressExists(newNodeMacAddress, idOnController, nightRideKey, nightRideValue);
             } catch (QRCodeAlreadyUsedException e1) {
                 logger.error("MacAddress (" + e1.getMacAddress()
                         + ")  - Already in use. So this pole is not synced with SLV. Note Title :[" + edgeNote.getTitle()
@@ -513,7 +522,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
 
             comment = comment + " replaced on " + dateFormat(edgeNote.getCreatedDateTime());
 
-            sync2Slv(newNodeMacAddress, null, edgeNote, loggingModel, idOnController, controllerStrIdValue, comment, utilLocId, false);
+            sync2Slv(newNodeMacAddress, null, edgeNote, loggingModel, idOnController, controllerStrIdValue, comment, utilLocId, false, nightRideKey, nightRideValue);
 
 
         } catch (Exception e) {
@@ -521,8 +530,5 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
             loggingModel.setStatus(MessageConstants.ERROR);
             return;
         }
-
-
     }
-
 }
