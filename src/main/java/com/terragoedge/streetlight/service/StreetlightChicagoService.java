@@ -15,6 +15,7 @@ import com.terragoedge.edgeserver.InspectionsReport;
 import com.terragoedge.streetlight.PropertiesReader;
 import com.terragoedge.streetlight.dao.NoteData;
 import com.terragoedge.streetlight.dao.UtilDao;
+import com.terragoedge.streetlight.pdfreport.FilterNewInstallationOnly;
 import com.terragoedge.streetlight.pdfreport.PDFReport;
 
 import org.apache.log4j.Logger;
@@ -222,7 +223,7 @@ public class StreetlightChicagoService {
     }
 
     public void run() throws IOException {
-
+    	
         String fileName = getDateTime();
 
         DataSetManager.reset();
@@ -326,13 +327,18 @@ public class StreetlightChicagoService {
         System.out.println("File Created.");
 
         edgeMailService.sendMail(dupMacAddressFile, dailyReportFile, quickNoteFileName, inspectionFileName,notCompleteFileName);
+    	
         String inputFile = "./report/" + dailyReportFile;
 
 
         Properties properties = PropertiesReader.getProperties();
         String destFile = properties.getProperty("dailyreport.inputfile");
         String hostString = properties.getProperty("dailyreport.geomapservice");
-        Path source = Paths.get(inputFile);
+        /*** Apply Filter : Current Installs only ***/
+        String filterFile1 = "./report/" + "dailyreport_filtered.txt";
+        FilterNewInstallationOnly.applyOperation(inputFile, filterFile1);
+        /** End of Filter : Current Installs only ***/
+        Path source = Paths.get(filterFile1);
         Path destination = Paths.get(destFile);
         Files.copy(source, destination, StandardCopyOption.REPLACE_EXISTING);
         String strDate = getDateTime2();
