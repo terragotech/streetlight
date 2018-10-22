@@ -159,7 +159,7 @@ public class PDFReport implements Runnable{
 			EdgeMailService edgeMailService = new EdgeMailService();
 			edgeMailService.sendMailPDF(strDropBoxLink,strDate);
 		}
-		private static void sendErrorMail(String errorMessage)
+		public static void sendErrorMail(String errorMessage)
 		{
 			Properties properties = PropertiesReader.getProperties();
 			EdgeMailService edgeMailService = new EdgeMailService();

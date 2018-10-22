@@ -16,6 +16,7 @@ import com.terragoedge.streetlight.PropertiesReader;
 import com.terragoedge.streetlight.dao.NoteData;
 import com.terragoedge.streetlight.dao.UtilDao;
 import com.terragoedge.streetlight.pdfreport.FilterNewInstallationOnly;
+import com.terragoedge.streetlight.pdfreport.PDFExceptionUtils;
 import com.terragoedge.streetlight.pdfreport.PDFReport;
 
 import org.apache.log4j.Logger;
@@ -336,18 +337,25 @@ public class StreetlightChicagoService {
         String hostString = properties.getProperty("dailyreport.geomapservice");
         /*** Apply Filter : Current Installs only ***/
         String filterFile1 = "./report/" + "dailyreport_filtered.txt";
-        FilterNewInstallationOnly.applyOperation(inputFile, filterFile1);
-        /** End of Filter : Current Installs only ***/
-        Path source = Paths.get(filterFile1);
-        Path destination = Paths.get(destFile);
-        Files.copy(source, destination, StandardCopyOption.REPLACE_EXISTING);
-        String strDate = getDateTime2();
-        PDFReport pdfReport = new PDFReport();
-        pdfReport.setHostString(hostString);
-        pdfReport.setDateString(strDate);
-
-        new Thread(pdfReport).start();
-
+        try{
+        	FilterNewInstallationOnly.applyOperation(inputFile, filterFile1);
+        	/** End of Filter : Current Installs only ***/
+            Path source = Paths.get(filterFile1);
+            Path destination = Paths.get(destFile);
+            Files.copy(source, destination, StandardCopyOption.REPLACE_EXISTING);
+            String strDate = getDateTime2();
+            PDFReport pdfReport = new PDFReport();
+            pdfReport.setHostString(hostString);
+            pdfReport.setDateString(strDate);
+            new Thread(pdfReport).start();
+        }
+        catch(Exception e){
+        	String errorTrace = PDFExceptionUtils.getStackTrace(e);
+			logger.error(e.getMessage());
+			logger.error(errorTrace);
+			PDFReport.sendErrorMail(errorTrace);
+        }
+      
     }
 
 

@@ -7,7 +7,7 @@ import java.util.List;
 import  com.terragoedge.streetlight.pdfreport.CSVUtils;
 
 public class FilterNewInstallationOnly {
-	public static void applyOperation(String inputFile, String outputFile)
+	public static void applyOperation(String inputFile, String outputFile) throws IOException
 	{
 		
 		
@@ -63,11 +63,9 @@ public class FilterNewInstallationOnly {
 			 textFileReader.closeFile();
 			 textFileWriter.closeFile();
 		} catch (FileNotFoundException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			throw e;
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			throw e;
 		}
 	}
 }
