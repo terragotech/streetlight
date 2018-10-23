@@ -2,7 +2,7 @@ package com.terragoedge.edgeserver;
 
 public class EdgeFormData {
 
-	protected int id;
+	public int id;
 	private String label;
 	private String value;
 	private NotesType type;
@@ -109,7 +109,7 @@ public class EdgeFormData {
 			return false;
 		EdgeFormData other = (EdgeFormData) obj;
 		if (label == null) {
-			if (other.label != null)
+			if (other.label != null){}
 				return false;
 		} else if (!label.equals(other.label))
 			return false;
@@ -118,6 +118,6 @@ public class EdgeFormData {
 
 
 
-	
+
 
 }

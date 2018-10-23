@@ -7,6 +7,7 @@ import com.terragoedge.edgeserver.EdgeFormData;
 import com.terragoedge.edgeserver.EdgeNote;
 import com.terragoedge.edgeserver.FormData;
 import com.terragoedge.streetlight.PropertiesReader;
+import com.terragoedge.streetlight.json.model.SLVEdgeFormData;
 import org.springframework.http.ResponseEntity;
 
 import java.lang.reflect.Type;
@@ -46,12 +47,11 @@ public class SlvToEdgeService extends EdgeService {
     public void processInstallationForm(EdgeNote edgeNote, FormData formData, String formTemplateGuid, SlvData slvData) {
         String oldNoteGuid = edgeNote.getNoteGuid();
         String notebookGuid = edgeNote.getEdgeNotebook().getNotebookGuid();
-        List<EdgeFormData> edgeFormDataList = formData.getFormDef();
+        List<SLVEdgeFormData> edgeFormDataList = formData.getSlvEdgeFormDef();
         JsonObject edgeNoteJsonObject = processEdgeForms(gson.toJson(edgeNote), edgeFormDataList,formTemplateGuid,slvData);
         String newNoteGuid = edgeNoteJsonObject.get("noteGuid").getAsString();
         logger.info("ProcessedFormJson " + edgeNoteJsonObject.toString());
         ResponseEntity<String> responseEntity = updateNoteDetails(edgeNoteJsonObject.toString(), oldNoteGuid, notebookGuid);
         logger.info(responseEntity.getBody());
-
     }
 }

@@ -7,6 +7,7 @@ import com.google.gson.JsonParser;
 import com.google.gson.reflect.TypeToken;
 import com.terragoedge.edgeserver.EdgeFormData;
 import com.terragoedge.streetlight.PropertiesReader;
+import com.terragoedge.streetlight.json.model.SLVEdgeFormData;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.log4j.Logger;
 import org.springframework.http.HttpEntity;
@@ -77,8 +78,8 @@ public class EdgeService {
     }
 
     private HttpHeaders getHeaders() {
-        String userName = PropertiesReader.getProperties().getProperty("streetlight.slv.username");
-        String password = PropertiesReader.getProperties().getProperty("streetlight.slv.password");
+        String userName = PropertiesReader.getProperties().getProperty("streetlight.edge.username");
+        String password = PropertiesReader.getProperties().getProperty("streetlight.edge.password");
         HttpHeaders headers = new HttpHeaders();
         String plainCreds = userName + ":" + password;
         byte[] plainCredsBytes = plainCreds.getBytes();
@@ -101,7 +102,7 @@ public class EdgeService {
         }
     }
 
-    public JsonObject processEdgeForms(String edgenoteJson, List<EdgeFormData> edgeFormDataList, String errorFormTemplateGuid, SlvData slvData) {
+    public JsonObject processEdgeForms(String edgenoteJson, List<SLVEdgeFormData> edgeFormDataList, String errorFormTemplateGuid, SlvData slvData) {
         updateInstallationForm(edgeFormDataList, slvData);
         JsonObject edgeJsonObject = (JsonObject) jsonParser.parse(edgenoteJson);
         JsonArray serverEdgeFormJsonArray = edgeJsonObject.get("formData").getAsJsonArray();
@@ -126,17 +127,19 @@ public class EdgeService {
     }
 
     public ResponseEntity<String> updateNoteDetails(String noteDetails, String noteGuid, String notebookGuid) {
-        String baseUrl = PropertiesReader.getProperties().getProperty("ameresocousa.edge.url");
+        String baseUrl = PropertiesReader.getProperties().getProperty("streetlight.edge.url.main");
         String urlNew = baseUrl + "/rest/notebooks/" + notebookGuid + "/notes/" + noteGuid;
         return serverCall(urlNew, HttpMethod.PUT, noteDetails);
     }
 
-    public void updateInstallationForm(List<EdgeFormData> edgeFormDataList, SlvData slvData) {
+    public void updateInstallationForm(List<SLVEdgeFormData> edgeFormDataList, SlvData slvData) {
         String syncToSlvId = PropertiesReader.getProperties().getProperty("edge.slv.status");
         String errorDetailid = PropertiesReader.getProperties().getProperty("edge.slv.error");
         String processTimeId = PropertiesReader.getProperties().getProperty("edge.slv.processtime");
         String installedDateId = PropertiesReader.getProperties().getProperty("edge.slv.installedid");
         String relacedDateId = PropertiesReader.getProperties().getProperty("edge.slv.replacedid");
+        System.out.println("synctoslv :" + syncToSlvId);
+        System.out.println("errorDetailid :" + errorDetailid);
         updateFormValue(edgeFormDataList, Integer.parseInt(syncToSlvId), slvData.getSyncToSlvStatus());
         updateFormValue(edgeFormDataList, Integer.parseInt(errorDetailid), slvData.getErrorDetails());
         updateFormValue(edgeFormDataList, Integer.parseInt(processTimeId), formatDate(Long.valueOf(slvData.getProcessedTime())));
@@ -148,18 +151,18 @@ public class EdgeService {
         }
     }
 
-    public static void updateFormValue(List<EdgeFormData> edgeFormDatas, int id, String value) {
-        EdgeFormData tempEdgeFormData = new EdgeFormData();
+    public static void updateFormValue(List<SLVEdgeFormData> edgeFormDatas, int id, String value) {
+        SLVEdgeFormData tempEdgeFormData = new SLVEdgeFormData();
         tempEdgeFormData.setId(id);
         int pos = edgeFormDatas.indexOf(tempEdgeFormData);
         if (pos != -1) {
-            EdgeFormData edgeFormData = edgeFormDatas.get(pos);
+            SLVEdgeFormData edgeFormData = edgeFormDatas.get(pos);
             if (value != null && !value.trim().isEmpty()) {
-                edgeFormData.setValue(edgeFormData.getLabel() + "#" + value);
+                String componentValue = edgeFormData.getLabel() + "#" + value;
+                edgeFormData.setValue(componentValue);
             } else {
                 edgeFormData.setValue(edgeFormData.getLabel() + "#");
             }
-
         }
     }
 

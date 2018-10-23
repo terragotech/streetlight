@@ -7,6 +7,7 @@ import java.util.Objects;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
+import com.terragoedge.streetlight.json.model.SLVEdgeFormData;
 
 public class FormData {
 
@@ -33,7 +34,14 @@ public class FormData {
 		return edgeFormDatas;
 	}
 
-	
+	public List<SLVEdgeFormData> getSlvEdgeFormDef() {
+		Type listType = new TypeToken<ArrayList<SLVEdgeFormData>>() {
+		}.getType();
+		Gson gson = new Gson();
+		List<SLVEdgeFormData> slvEdgeFormData = gson.fromJson(formDef, listType);
+		return slvEdgeFormData;
+	}
+
 
 	public String getCategory() {
 		return category;

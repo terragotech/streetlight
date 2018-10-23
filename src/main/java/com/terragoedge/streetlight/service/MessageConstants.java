@@ -3,7 +3,7 @@ package com.terragoedge.streetlight.service;
 public class MessageConstants {
 	
 	public static String SUCCESS = "Success";
-	public static String ERROR = "Error";
+	public static String ERROR = "Failure";
 	public static String CHICAGO_FORM_NOT_AVAILABLE ="Chicago Street Light form is not available";
 	public static String FIXTURE_FORM_NOT_AVAILABLE ="Chicago Street Light form is not available";
 	public static String ID_ON_CONTROLLER_NOT_AVAILABLE ="Id on controller is not available";
