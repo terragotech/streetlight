@@ -26,12 +26,17 @@ public class ReadCSvservice {
     }
 
     public void start() {
-        String filePath ="/Users/apple/Desktop/input.csv";
+        String filePath ="./resource/input.csv";
         List<SlvData> slvDataList = getSlvDataFromCSV(filePath);
         try {
             for (SlvData slvData : slvDataList) {
                 if(slvData.getStatus() == null){
-                    slvToEdgeService.run(slvData);
+                    try{
+                        slvToEdgeService.run(slvData);
+                    }catch (Exception e){
+                        slvData.setStatus("Failure");
+                    }
+
                 }
 
             }
@@ -91,9 +96,20 @@ public class ReadCSvservice {
                    }
                    slvData.setErrorDetails("Given Title has more than one record."+tem);
                }else{
-                   com.terragoedge.edgeserver.SlvData  slvData1 = dbSlvDataList.get(0);
+                   List<com.terragoedge.edgeserver.SlvData> newSlvDataList =  streetlightDao.getNoteDetails(values[0]);
+                  /* com.terragoedge.edgeserver.SlvData  slvData1 = dbSlvDataList.get(0);
                    slvData.setNoteGuid(slvData1.getGuid());
-                   slvData.setComponentId("74");
+                   slvData.setComponentId("74");*/
+                    if(newSlvDataList.size() > 0){
+                        slvData.setStatus("Failure");
+                        slvData.setErrorDetails("New Title already present.");
+                    }else{
+                        com.terragoedge.edgeserver.SlvData  slvData1 = dbSlvDataList.get(0);
+                        slvData.setNoteGuid(slvData1.getGuid());
+                        slvData.setComponentId("74");
+                    }
+
+
                    slvDataList.add(slvData);
                }
 
