@@ -40,14 +40,16 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
     }
 
 
-    private String getNightRideFormVal(List<FormData> formDataList){
+    private String getNightRideFormVal(List<FormData> formDataList,EdgeNote edgeNote){
         String nightRideTemplateGuid = properties.getProperty("amerescousa.night.ride.formtemplateGuid");
         int pos = formDataList.indexOf(nightRideTemplateGuid);
         if(pos != -1){
             FormData formData = formDataList.get(pos);
             List<EdgeFormData> edgeFormDatas = formData.getFormDef();
             try{
-               return valueById(edgeFormDatas, 1);
+                String  nightRideValue = valueById(edgeFormDatas, 1);
+                return dateFormat(edgeNote.getCreatedDateTime()) + " :" + nightRideValue;
+
             }catch (NoValueException e){
 
             }
@@ -64,24 +66,28 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
                 int pos = formDataList.indexOf(nightRideTemplateGuid);
                 if(pos != -1){
                     List<Object> paramsList = new ArrayList<>();
-                    String nightRideValue = getNightRideFormVal(formDataList);
-                    String idOnController = installMaintenanceLogModel.getIdOnController();
-                    paramsList.add("idOnController=" + idOnController);
-                    paramsList.add("controllerStrId=" + installMaintenanceLogModel.getControllerSrtId());
+                    String nightRideValue = getNightRideFormVal(formDataList,edgeNote);
+                    if(nightRideValue != null){
+                        String idOnController = installMaintenanceLogModel.getIdOnController();
+                        paramsList.add("idOnController=" + idOnController);
+                        paramsList.add("controllerStrId=" + installMaintenanceLogModel.getControllerSrtId());
+                        addStreetLightData(nightRideKey, nightRideValue, paramsList);
 
-                    String formatedValueNR = dateFormat(edgeNote.getCreatedDateTime()) + " :" + nightRideValue;
-                    addStreetLightData(nightRideKey, formatedValueNR, paramsList);
-
-                    int errorCode = setDeviceValues(paramsList);
-                    if (errorCode != 0) {
-                        installMaintenanceLogModel.setErrorDetails(MessageConstants.ERROR_NIGHTRIDE_FORM_VAL);
+                        int errorCode = setDeviceValues(paramsList);
+                        if (errorCode != 0) {
+                            installMaintenanceLogModel.setErrorDetails(MessageConstants.ERROR_NIGHTRIDE_FORM_VAL);
+                            installMaintenanceLogModel.setStatus(MessageConstants.ERROR);
+                            return;
+                        } else {
+                            logger.info("Night ride value successfully updated");
+                            installMaintenanceLogModel.setStatus(MessageConstants.SUCCESS);
+                            logger.info("Status Changed. to Success");
+                        }
+                    }else{
+                        installMaintenanceLogModel.setErrorDetails(MessageConstants.NOVALUE_NIGHTRIDE_FORM);
                         installMaintenanceLogModel.setStatus(MessageConstants.ERROR);
-                        return;
-                    } else {
-                        logger.info("Night ride value successfully updated");
-                        installMaintenanceLogModel.setStatus(MessageConstants.SUCCESS);
-                        logger.info("Status Changed. to Success");
                     }
+
                 }
             } catch (Exception e) {
                 logger.error("Error in while getting nightRideValue's value : ", e);
@@ -100,7 +106,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
         List<FormData> formDatas = edgeNote.getFormData();
 
         String nightRideKey = properties.getProperty("amerescousa.night.ride.key_for_slv");
-        String formatedValueNR = getNightRideFormVal(formDatas);;
+        String formatedValueNR = getNightRideFormVal(formDatas,edgeNote);;
         boolean isInstallForm = false;
         for (FormData formData : formDatas) {
             if (formData.getFormTemplateGuid().equals(INSTATALLATION_AND_MAINTENANCE_GUID) || formData.getFormTemplateGuid().equals("fa47c708-fb82-4877-938c-992e870ae2a4") || formData.getFormTemplateGuid().equals("c8acc150-6228-4a27-bc7e-0fabea0e2b93")) {
