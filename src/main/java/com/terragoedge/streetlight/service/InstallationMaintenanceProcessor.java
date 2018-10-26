@@ -196,6 +196,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
     }
 
     public void processOtherTask(List<EdgeFormData> edgeFormDatas, EdgeNote edgeNote, InstallMaintenanceLogModel loggingModel, String nightRideKey, String nightRideValue) {
+        String Key = properties.getProperty("amerescousa.night.ride.key_for_slv");
         List<Object> paramsList = new ArrayList<>();
         String otherTaskValue = null;
         try {
@@ -209,7 +210,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
         paramsList.add("idOnController=" + idOnController);
         paramsList.add("controllerStrId=" + controllerStarId);
         String formatedValue = dateFormat(edgeNote.getCreatedDateTime()) + " :" + otherTaskValue;
-        addStreetLightData("key", formatedValue, paramsList);
+        addStreetLightData(Key, formatedValue, paramsList);
         if(nightRideValue != null){
             addStreetLightData(nightRideKey, nightRideValue, paramsList);
         }
