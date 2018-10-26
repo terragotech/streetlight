@@ -39,43 +39,72 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
 
     }
 
-    public void processNewAction(EdgeNote edgeNote, InstallMaintenanceLogModel installMaintenanceLogModel, boolean isReSync, String utilLocId) {
-        List<FormData> formDatas = edgeNote.getFormData();
-        String nightRideTemplateGuid = properties.getProperty("amerescousa.night.ride.formtemplateGuid");
-        int pos = formDatas.indexOf(nightRideTemplateGuid);
-        String nightRideKey = properties.getProperty("amerescousa.night.ride.key_for_slv");
-        String formatedValueNR = null;
-        if(pos != -1){
-            FormData formData = formDatas.get(pos);
-            List<Object> paramsList = new ArrayList<>();
-            List<EdgeFormData> edgeFormDatas = formData.getFormDef();
-            String nightRideValue = null;
-            try {
-                nightRideValue = valueById(edgeFormDatas, 1);
-                logger.info("nightRideValue's Value :" + nightRideValue);
-                String controllerStarId = getControllerStrId(edgeFormDatas);
-                String idOnController = installMaintenanceLogModel.getIdOnController();
-                paramsList.add("idOnController=" + idOnController);
-                paramsList.add("controllerStrId=" + controllerStarId);
-                formatedValueNR = dateFormat(edgeNote.getCreatedDateTime()) + " :" + nightRideValue;
-                addStreetLightData(nightRideKey, formatedValueNR, paramsList);
-                int errorCode = setDeviceValues(paramsList);
-                if (errorCode != 0) {
-                    installMaintenanceLogModel.setErrorDetails(MessageConstants.ERROR_NIGHTRIDE_FORM_VAL);
-                    installMaintenanceLogModel.setStatus(MessageConstants.ERROR);
-                    return;
-                } else {
-                    logger.info("Night ride value successfully updated");
-                    installMaintenanceLogModel.setStatus(MessageConstants.SUCCESS);
-                    logger.info("Status Changed. to Success");
-                }
 
-            } catch (NoValueException e) {
-                logger.error("Error in while getting nightRideValue's value : ", e);
+    private String getNightRideFormVal(List<FormData> formDataList){
+        String nightRideTemplateGuid = properties.getProperty("amerescousa.night.ride.formtemplateGuid");
+        int pos = formDataList.indexOf(nightRideTemplateGuid);
+        if(pos != -1){
+            FormData formData = formDataList.get(pos);
+            List<EdgeFormData> edgeFormDatas = formData.getFormDef();
+            try{
+               return valueById(edgeFormDatas, 1);
+            }catch (NoValueException e){
+
             }
         }
+        return null;
+    }
+
+    private void syncNightRideFormAlone(List<FormData> formDataList,InstallMaintenanceLogModel installMaintenanceLogModel,EdgeNote edgeNote){
+        try{
+            String nightRideKey = properties.getProperty("amerescousa.night.ride.key_for_slv");
+            try {
+
+                String nightRideTemplateGuid = properties.getProperty("amerescousa.night.ride.formtemplateGuid");
+                int pos = formDataList.indexOf(nightRideTemplateGuid);
+                if(pos != -1){
+                    List<Object> paramsList = new ArrayList<>();
+                    String nightRideValue = getNightRideFormVal(formDataList);
+                    String idOnController = installMaintenanceLogModel.getIdOnController();
+                    paramsList.add("idOnController=" + idOnController);
+                    paramsList.add("controllerStrId=" + installMaintenanceLogModel.getControllerSrtId());
+
+                    String formatedValueNR = dateFormat(edgeNote.getCreatedDateTime()) + " :" + nightRideValue;
+                    addStreetLightData(nightRideKey, formatedValueNR, paramsList);
+
+                    int errorCode = setDeviceValues(paramsList);
+                    if (errorCode != 0) {
+                        installMaintenanceLogModel.setErrorDetails(MessageConstants.ERROR_NIGHTRIDE_FORM_VAL);
+                        installMaintenanceLogModel.setStatus(MessageConstants.ERROR);
+                        return;
+                    } else {
+                        logger.info("Night ride value successfully updated");
+                        installMaintenanceLogModel.setStatus(MessageConstants.SUCCESS);
+                        logger.info("Status Changed. to Success");
+                    }
+                }
+            } catch (Exception e) {
+                logger.error("Error in while getting nightRideValue's value : ", e);
+                installMaintenanceLogModel.setErrorDetails("Error while syncing Night Ride value.");
+                installMaintenanceLogModel.setStatus(MessageConstants.ERROR);
+            }
+        }catch (Exception e){
+            e.printStackTrace();
+            logger.error("Error in while getting nightRideValue's value : ", e);
+            installMaintenanceLogModel.setErrorDetails("Error while syncing Night Ride value.");
+            installMaintenanceLogModel.setStatus(MessageConstants.ERROR);
+        }
+    }
+
+    public void processNewAction(EdgeNote edgeNote, InstallMaintenanceLogModel installMaintenanceLogModel, boolean isReSync, String utilLocId) {
+        List<FormData> formDatas = edgeNote.getFormData();
+
+        String nightRideKey = properties.getProperty("amerescousa.night.ride.key_for_slv");
+        String formatedValueNR = getNightRideFormVal(formDatas);;
+        boolean isInstallForm = false;
         for (FormData formData : formDatas) {
             if (formData.getFormTemplateGuid().equals(INSTATALLATION_AND_MAINTENANCE_GUID) || formData.getFormTemplateGuid().equals("fa47c708-fb82-4877-938c-992e870ae2a4") || formData.getFormTemplateGuid().equals("c8acc150-6228-4a27-bc7e-0fabea0e2b93")) {
+                isInstallForm = true;
                 installMaintenanceLogModel.setInstallFormPresent(true);
                 LoggingModel existingFixtureInfo = getExistingIdOnContoller(edgeNote);
                 List<EdgeFormData> edgeFormDatas = formData.getFormDef();
@@ -102,6 +131,10 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
                     installMaintenanceLogModel.setStatus(MessageConstants.ERROR);
                 }
             }
+        }
+
+        if(!isInstallForm){
+            syncNightRideFormAlone(formDatas,installMaintenanceLogModel,edgeNote);
         }
     }
 
@@ -204,15 +237,21 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
             logger.info("OtherTask's issue Value :" + otherTaskValue);
         } catch (NoValueException e) {
             logger.error("Error in while getting processTask's issue", e);
+            loggingModel.setErrorDetails("Value is not selected");
+            loggingModel.setStatus(MessageConstants.ERROR);
+            return;
         }
         String controllerStarId = getControllerStrId(edgeFormDatas);
         String idOnController = loggingModel.getIdOnController();
         paramsList.add("idOnController=" + idOnController);
         paramsList.add("controllerStrId=" + controllerStarId);
         String formatedValue = dateFormat(edgeNote.getCreatedDateTime()) + " :" + otherTaskValue;
-        addStreetLightData(Key, formatedValue, paramsList);
+
         if(nightRideValue != null){
+            nightRideValue = nightRideValue + ","+otherTaskValue;
             addStreetLightData(nightRideKey, nightRideValue, paramsList);
+        }else{
+            addStreetLightData(Key, formatedValue, paramsList);
         }
         int errorCode = setDeviceValues(paramsList);
         if (errorCode != 0) {
@@ -239,6 +278,18 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
                 logger.error("Error in while getting installStatusValue", e);
             }
             if (installStatusValue != null && installStatusValue.equals("Could not complete")) {
+                try {
+                    String skippedFixtureReasonVal = valueById(edgeFormDatas, 23);
+                    logger.info("Skipped Fixture Reason Val" + installStatusValue);
+                    if(nightRideValue != null && !nightRideValue.trim().isEmpty()){
+                        nightRideValue = nightRideValue + ","+skippedFixtureReasonVal;
+                    }else{
+                        nightRideValue = dateFormat(edgeNote.getCreatedDateTime()) + " :" + skippedFixtureReasonVal;
+                    }
+                } catch (NoValueException e) {
+                    logger.error("Error in while getting installStatusValue", e);
+                }
+
                 int errorCode = sync2SlvInstallStatus(loggingModel.getIdOnController(), loggingModel.getControllerSrtId(), loggingModel, nightRideKey, nightRideValue);
                 if (errorCode != 0) {
                     loggingModel.setErrorDetails("Error while updating Could not complete install status.Corresponding Error code :" + errorCode);
