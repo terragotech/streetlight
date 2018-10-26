@@ -177,7 +177,6 @@ public abstract class AbstractSlvService extends EdgeService {
 
     public boolean checkMacAddressExists(String macAddress, String idOnController)
             throws QRCodeAlreadyUsedException {
-        System.out.println("Getting Mac Address from SLV");
         logger.info("Getting Mac Address from SLV.");
         String mainUrl = properties.getProperty("streetlight.slv.url.main");
         String updateDeviceValues = properties.getProperty("streetlight.slv.url.search.device");
@@ -205,7 +204,7 @@ public abstract class AbstractSlvService extends EdgeService {
             } else {
                 for (Value value : values) {
                     if (value.getIdOnController().equals(idOnController)) {
-                        return false;
+                       // return false;
                     }
                     stringBuilder.append(value.getIdOnController());
                     stringBuilder.append("\n");
@@ -228,7 +227,7 @@ public abstract class AbstractSlvService extends EdgeService {
         url = url + "&" + params;
         System.out.println("SetDevice Called");
         System.out.println("URL : " + url);
-       /* ResponseEntity<String> response = slvRestService.getPostRequest(url, null);
+        ResponseEntity<String> response = slvRestService.getPostRequest(url, null);
         String responseString = response.getBody();
         JsonObject replaceOlcResponse = (JsonObject) jsonParser.parse(responseString);
         int errorCode = replaceOlcResponse.get("errorCode").getAsInt();
@@ -236,7 +235,7 @@ public abstract class AbstractSlvService extends EdgeService {
             slvSyncDetails.setErrorDetails(gson.toJson(replaceOlcResponse));
             slvSyncDetails.setStatus(Status.Failure.toString());
             throw new DeviceUpdationFailedException(gson.toJson(replaceOlcResponse));
-        }*/
+        }
     }
 
     public abstract void buildFixtureStreetLightData(String data, List<Object> paramsList, EdgeNote edgeNote)
@@ -347,7 +346,7 @@ public abstract class AbstractSlvService extends EdgeService {
             url = url + "?" + params;
             System.out.println("Replace OLc called: " + macAddress);
             System.out.println("Replace OLc Url" + url);
-           /* ResponseEntity<String> response = slvRestService.getPostRequest(url, null);
+            ResponseEntity<String> response = slvRestService.getPostRequest(url, null);
             String responseString = response.getBody();
             JsonObject replaceOlcResponse = (JsonObject) jsonParser.parse(responseString);
             String errorStatus = replaceOlcResponse.get("status").getAsString();
@@ -358,7 +357,7 @@ public abstract class AbstractSlvService extends EdgeService {
             } else {
                 if (macAddress != null)
                     clearAndUpdateDeviceData(idOnController, controllerStrId);
-            }*/
+            }
 
         } catch (Exception e) {
             logger.error("Error in replaceOLC", e);

@@ -21,11 +21,10 @@ public class SlvInterfaceApp {
 
       while (true) {
             try {
-
-                AmerescoUsaSLVInterface amerescoUsaSLVInterface = new AmerescoUsaSLVInterface();
-                amerescoUsaSLVInterface.loadDevices();
+                SlvInterfaceService slvInterfaceService = new CanadaEdgeInterface();
+                slvInterfaceService.loadDevices();
                 while (true) {
-                    amerescoUsaSLVInterface.start();
+                    slvInterfaceService.start();
                     Thread.sleep(60000);
                 }
             } catch (Exception e) {

@@ -109,11 +109,7 @@ public abstract class SlvInterfaceService extends AbstractSlvService {
 
         logger.info("GetNotesUrl :" + url);
         // Get List of noteid
-        //  List<String> noteGuidsList = connectionDAO.getEdgeNoteGuid(formTemplateGuid);
-        List<String> noteGuidsList = new ArrayList<>();
-        //test
-        noteGuidsList.clear();
-        noteGuidsList.add(properties.getProperty("streetlight.edge.processguid"));
+        List<String> noteGuidsList = connectionDAO.getEdgeNoteGuid(formTemplateGuid);
         System.out.println("noteList: " + noteGuidsList);
         //end
         for (String edgenoteGuid : noteGuidsList) {
@@ -207,14 +203,13 @@ public abstract class SlvInterfaceService extends AbstractSlvService {
                 if (checkActionType(edgeFormDataList, actionList)) {
                     switch (configurationJson.getType()) {
                         case NEW_DEVICE:
-                            System.out.println("new device called");
-                            System.out.println("Ener macAddress" + edgeNote.getTitle());
-                            logger.info(edgeNote.getTitle() + " is going to Create.");
+                            logger.info("User New Device option is seleted.");
                             String macAddress = validateMACAddress(configurationJson, formData.getFormDef(), edgeNote, paramsList);
                             slvSyncDetail.setMacAddress(macAddress);
                             slvSyncDetail.setSelectedAction(SLVProcess.NEW_DEVICE.toString());
                             boolean isDeviceExist = isAvailableDevice(edgeNote.getTitle());
                             if (!isDeviceExist) {
+                                logger.info(edgeNote.getTitle() + " is going to Create.");
                                 createDevice(edgeNote, slvSyncDetail, geozoneId, edgeFormDataList);
                             }
                             processSetDevice(edgeFormDataList, configurationJson, edgeNote, paramsList, slvSyncDetail, controllerStrIdValue);
@@ -273,11 +268,9 @@ public abstract class SlvInterfaceService extends AbstractSlvService {
     public void createDevice(EdgeNote edgeNote, SlvSyncDetails slvSyncDetails, String geoZoneId, List<EdgeFormData> edgeFormDataList) throws DeviceCreationFailedException {
         if (geoZoneId != null) {
             System.out.println("Device created method called");
-            //ResponseEntity<String> responseEntity = createDevice(edgeNote, geoZoneId);
-           /* String status = responseEntity.getStatusCode().toString();
-            String responseBody = responseEntity.getBody();*/
-            String status = "200";
-            String responseBody = "success";
+            ResponseEntity<String> responseEntity = createDevice(edgeNote, geoZoneId);
+            String status = responseEntity.getStatusCode().toString();
+            String responseBody = responseEntity.getBody();
             if ((status.equalsIgnoreCase("200") || status.equalsIgnoreCase("ok"))
                     && !responseBody.contains("<status>ERROR</status>")) {
                 logger.info("Device Created Successfully, NoteId:" + edgeNote.getNoteGuid() + "-"
@@ -421,17 +414,14 @@ public abstract class SlvInterfaceService extends AbstractSlvService {
             try {
                 String newNodeMacAddress = valueById(edgeFormDataList, macID.getId());
                 logger.info("newNodeMacAddress:" + newNodeMacAddress);
-                System.out.println("newNodeMacAddress:" + newNodeMacAddress);
                 if (newNodeMacAddress.contains("null") || newNodeMacAddress.equals("null")) {
                     throw new MacAddressProcessedException("InValid MAC address." + edgeNote.getTitle(), newNodeMacAddress);
                 }
                 SlvDevice slvDevice = connectionDAO.getSlvDevices(edgeNote.getTitle());
-                if (slvDevice != null && slvDevice.getMacAddress() != null && slvDevice.getMacAddress().equals(newNodeMacAddress)) {
+                if (slvDevice != null && slvDevice.getMacAddress() != null && slvDevice.getMacAddress().toLowerCase().equals(newNodeMacAddress.toLowerCase())) {
                     throw new MacAddressProcessedException("Already mac address processed" + edgeNote.getTitle(), newNodeMacAddress);
                 }
-                System.out.println("slvdev" +slvDevice.getDeviceName());
                 checkMacAddressExists(newNodeMacAddress, edgeNote.getTitle());
-                System.out.println("Called checkmacaddressExist");
                 addStreetLightData("MacAddress", newNodeMacAddress, paramsList);
                 return newNodeMacAddress;
             } catch (NoValueException e) {
