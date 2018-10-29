@@ -21,4 +21,5 @@ public class MessageConstants {
 	public static String COULD_NOT_COMPLETE_SUCCESS_MSG ="Note process completed due to Could not complete.";
 	public static String ERROR_OTHERTASK_DEVICE_VAL ="Error while processing OtherTask device value. Corresponding error code is ";
 	public static String ERROR_NIGHTRIDE_FORM_VAL ="Error while processing NightRides formValue. Corresponding error code is ";
+	public static String NOVALUE_NIGHTRIDE_FORM ="Night Ride form is empty.";
 }
