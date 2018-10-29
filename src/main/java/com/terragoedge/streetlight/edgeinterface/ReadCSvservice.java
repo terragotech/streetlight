@@ -26,19 +26,15 @@ public class ReadCSvservice {
     }
 
     public void start() {
-        String filePath ="./resource/input.csv";
+        String filePath = "D:/Report/resource/input.csv";
         List<SlvData> slvDataList = getSlvDataFromCSV(filePath);
         try {
             for (SlvData slvData : slvDataList) {
-                if(slvData.getStatus() == null){
-                    try{
+                    try {
                         slvToEdgeService.run(slvData);
-                    }catch (Exception e){
+                    } catch (Exception e) {
                         slvData.setStatus("Failure");
                     }
-
-                }
-
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -47,22 +43,22 @@ public class ReadCSvservice {
     }
 
 
-    private void beanToCSV(List<SlvData> slvData){
+    private void beanToCSV(List<SlvData> slvData) {
         Writer writer = null;
-        try{
-            String filePath =  "./res.csv";
+        try {
+            String filePath = "./res.csv";
             writer = new FileWriter(filePath);
             StatefulBeanToCsv<SlvData> beanToCsv = new StatefulBeanToCsvBuilder(writer)
                     .withQuotechar(CSVWriter.DEFAULT_QUOTE_CHARACTER)
                     .build();
             beanToCsv.write(slvData);
-        }catch (Exception e){
+        } catch (Exception e) {
             e.printStackTrace();
-        }finally {
-            if(writer != null){
-                try{
+        } finally {
+            if (writer != null) {
+                try {
                     writer.close();
-                }catch (Exception e){
+                } catch (Exception e) {
                     e.printStackTrace();
                 }
 
@@ -81,38 +77,8 @@ public class ReadCSvservice {
             while ((currentRow = bufferedReader.readLine()) != null) {
                 String values[] = currentRow.split(",");
                 SlvData slvData = new SlvData();
-                String tt = values[1]+values[2];
-                slvData.setNoteTitle(tt);
-                slvData.setComponentValue(values[0]);
-               List<com.terragoedge.edgeserver.SlvData> dbSlvDataList = streetlightDao.getNoteDetails(slvData.getNoteTitle());
-               if(dbSlvDataList.size() == 0){
-                   slvData.setStatus("Failure");
-                   slvData.setErrorDetails("Given Title not matched.");
-               }else if(dbSlvDataList.size() > 1){
-                   slvData.setStatus("Failure");
-                   String tem = "";
-                   for(com.terragoedge.edgeserver.SlvData slvData1 : dbSlvDataList){
-                       tem = tem + slvData1.getTitle()+" | ";
-                   }
-                   slvData.setErrorDetails("Given Title has more than one record."+tem);
-               }else{
-                   List<com.terragoedge.edgeserver.SlvData> newSlvDataList =  streetlightDao.getNoteDetails(values[0]);
-                  /* com.terragoedge.edgeserver.SlvData  slvData1 = dbSlvDataList.get(0);
-                   slvData.setNoteGuid(slvData1.getGuid());
-                   slvData.setComponentId("74");*/
-                    if(newSlvDataList.size() > 0){
-                        slvData.setStatus("Failure");
-                        slvData.setErrorDetails("New Title already present.");
-                    }else{
-                        com.terragoedge.edgeserver.SlvData  slvData1 = dbSlvDataList.get(0);
-                        slvData.setNoteGuid(slvData1.getGuid());
-                        slvData.setComponentId("74");
-                    }
-
-
-                   slvDataList.add(slvData);
-               }
-
+                slvData.setNoteGuid(values[0]);
+                slvDataList.add(slvData);
             }
             System.out.println("Successfully");
         } catch (Exception e) {

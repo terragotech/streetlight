@@ -30,14 +30,13 @@ public class StreetlightDao extends UtilDao {
     }
 
 
-
     public List<SlvData> getNoteDetails(String title) {
         Statement queryStatement = null;
         ResultSet queryResponse = null;
         List<SlvData> slvDataList = new ArrayList<>();
         try {
             queryStatement = connection.createStatement();
-            queryResponse = queryStatement.executeQuery("Select noteguid, title from edgenote where iscurrent = true and isdeleted = false and title = '"+title+"';");
+            queryResponse = queryStatement.executeQuery("Select noteguid, title from edgenote where iscurrent = true and isdeleted = false and title = '" + title + "';");
 
             while (queryResponse.next()) {
                 SlvData slvData = new SlvData();
@@ -55,7 +54,23 @@ public class StreetlightDao extends UtilDao {
         return slvDataList;
     }
 
-
+    public void updateNoteDetails(long createddatetime, String createdby, String noteGuid) {
+        PreparedStatement preparedStatement = null;
+        Connection connection = null;
+        try {
+            connection = StreetlightDaoConnection.getInstance().getConnection();
+            preparedStatement = connection.prepareStatement(
+                    "UPDATE edgenote SET createddatetime = ?,createdby=? where noteguid =?;");
+            preparedStatement.setLong(1, createddatetime);
+            preparedStatement.setString(2, createdby);
+            preparedStatement.setString(3, noteGuid);
+            preparedStatement.executeUpdate();
+        } catch (Exception e) {
+            logger.error("Error in update", e);
+        } finally {
+            closeStatement(preparedStatement);
+        }
+    }
 
 
 }

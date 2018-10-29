@@ -7,6 +7,7 @@ import com.terragoedge.edgeserver.EdgeFormData;
 import com.terragoedge.edgeserver.EdgeNote;
 import com.terragoedge.edgeserver.FormData;
 import com.terragoedge.streetlight.PropertiesReader;
+import com.terragoedge.streetlight.dao.StreetlightDao;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
@@ -18,9 +19,10 @@ import java.util.Map;
 
 public class SlvToEdgeService extends EdgeService {
     private Gson gson;
-
+private StreetlightDao streetlightDao;
     public SlvToEdgeService() {
         this.gson = new Gson();
+        streetlightDao=new StreetlightDao();
     }
 
     public void run(SlvData slvData) {
@@ -37,16 +39,23 @@ public class SlvToEdgeService extends EdgeService {
             List<FormData> formDataList = edgeNote.getFormData();
             for (FormData formData : formDataList) {
                 if (formData.getFormTemplateGuid().equals(formTemplateGuid)) {
-                    processInstallationForm(edgeNote, formData, formTemplateGuid, slvData);
+                    String createdBy = edgeNote.getCreatedBy();
+                    long createddatetime=edgeNote.getCreatedDateTime();
+                   SlvData resultSlvData = processInstallationForm(edgeNote, formData, formTemplateGuid, slvData);
+                   if(resultSlvData.getStatus().equals("Success")){
+                       streetlightDao.updateNoteDetails(createddatetime,createdBy,resultSlvData.getNewNoteGuid());
+                   }
                     return;
                 }
             }
         }
     }
 
-    public void processInstallationForm(EdgeNote edgeNote, FormData formData, String formTemplateGuid, SlvData slvData) {
+    public SlvData processInstallationForm(EdgeNote edgeNote, FormData formData, String formTemplateGuid, SlvData slvData) {
        try{
            String oldNoteGuid = edgeNote.getNoteGuid();
+           long createdDateTime= edgeNote.getCreatedDateTime();
+           String createdBy = edgeNote.getCreatedBy();
            edgeNote.setTitle(slvData.getComponentValue());
            String notebookGuid = edgeNote.getEdgeNotebook().getNotebookGuid();
            List<EdgeFormData> edgeFormDataList = formData.getFormDef();
@@ -58,12 +67,11 @@ public class SlvToEdgeService extends EdgeService {
                String body = responseEntity.getBody();
                slvData.setNewNoteGuid(body);
                slvData.setStatus("Success");
-               return;
            }
        }catch (Exception e){
            slvData.setStatus("Failure");
            slvData.setErrorDetails(e.getMessage());
        }
-
+        return slvData;
     }
 }

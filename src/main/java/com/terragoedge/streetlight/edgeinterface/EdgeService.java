@@ -7,6 +7,7 @@ import com.google.gson.JsonParser;
 import com.google.gson.reflect.TypeToken;
 import com.terragoedge.edgeserver.EdgeFormData;
 import com.terragoedge.streetlight.PropertiesReader;
+import com.terragoedge.streetlight.exception.NoValueException;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.log4j.Logger;
 import org.springframework.http.HttpEntity;
@@ -132,7 +133,27 @@ public class EdgeService {
     }
 
     public void updateInstallationForm(List<EdgeFormData> edgeFormDataList, SlvData slvData) {
-        updateFormValue(edgeFormDataList, Integer.parseInt(slvData.getComponentId()), slvData.getComponentValue());
+        try {
+            String dispersionStr = valueById(edgeFormDataList, 68);
+            String trimValue = dispersionStr.trim();
+            int dispersionValue = Integer.parseInt(trimValue);
+            switch (dispersionValue) {
+                case 2:
+                    updateFormValue(edgeFormDataList, 68, "TYPE 2");
+                    break;
+                case 3:
+                    updateFormValue(edgeFormDataList, 68, "TYPE 3");
+                    break;
+                case 4:
+                    updateFormValue(edgeFormDataList, 68, "TYPE 4");
+                    break;
+                case 5:
+                    updateFormValue(edgeFormDataList, 68, "TYPE 5");
+                    break;
+            }
+        } catch (NoValueException e) {
+            return;
+        }
     }
 
     public static void updateFormValue(List<EdgeFormData> edgeFormDatas, int id, String value) {
@@ -156,4 +177,19 @@ public class EdgeService {
         Date dd = new Date(Long.valueOf(time));
         return dateFormat.format(dd);
     }
+
+    protected String valueById(List<EdgeFormData> edgeFormDatas, int id) throws NoValueException {
+        for (EdgeFormData edgeFormData : edgeFormDatas) {
+            if (edgeFormData.getId() == id) {
+                String value = edgeFormData.getValue();
+                if (value == null || value.trim().isEmpty()) {
+                    throw new NoValueException("Value is Empty or null." + value);
+                }
+                return value;
+            }
+        }
+
+        throw new NoValueException(id + " is not found.");
+    }
+
 }
