@@ -54,10 +54,12 @@ private StreetlightDao streetlightDao;
     public SlvData processInstallationForm(EdgeNote edgeNote, FormData formData, String formTemplateGuid, SlvData slvData) {
        try{
            String oldNoteGuid = edgeNote.getNoteGuid();
-           long createdDateTime= edgeNote.getCreatedDateTime();
-           String createdBy = edgeNote.getCreatedBy();
-           edgeNote.setTitle(slvData.getComponentValue());
-           String notebookGuid = edgeNote.getEdgeNotebook().getNotebookGuid();
+           String notebookGuid=null;
+           if(edgeNote.getEdgeNotebook()==null){
+                notebookGuid="77e7dcb5-8ffc-4bf9-b6af-5aa672c28e19";
+           }else {
+                notebookGuid = edgeNote.getEdgeNotebook().getNotebookGuid();
+           }
            List<EdgeFormData> edgeFormDataList = formData.getFormDef();
            JsonObject edgeNoteJsonObject = processEdgeForms(gson.toJson(edgeNote), edgeFormDataList, formTemplateGuid, slvData);
            String newNoteGuid = edgeNoteJsonObject.get("noteGuid").getAsString();

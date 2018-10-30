@@ -13,285 +13,285 @@ import com.terragoedge.streetlight.json.model.Dictionary;
 
 public class EdgeNote {
 
-	private String PDOP = null;
-	private String gpsTime = null;
-	private String altitude = null;
-	private String title = null;
-	private List<FormData> formData = new ArrayList<>();
-	private Integer satellitesCount = null;
-	private String description = null;
-	private String HDOP = null;
-	private String notesType = null;
-	private Boolean isTaskNote = null;
-	private String locationDescription = null;
-	private String speed = null;
-	private String horizontalAccuracy = null;
-	private String locationProvider = null;
-	private String noteGuid = null;
-	private String geometry = null;
-	private String VDOP = null;
-	private String createdBy = null;
-	private String lockType = null;
-	private Long createdDateTime = null;
-	private String bearing = null;
-	private String bearingAccuracy = null;
-	private String bearingTruenorth = null;
-	private String corrected = null;
-	private String resourceRef = null;
-	private String sourceType = null;
+    private String PDOP = null;
+    private String gpsTime = null;
+    private String altitude = null;
+    private String title = null;
+    private List<FormData> formData = new ArrayList<>();
+    private Integer satellitesCount = null;
+    private String description = null;
+    private String HDOP = null;
+    private String notesType = null;
+    private Boolean isTaskNote = null;
+    private String locationDescription = null;
+    private String speed = null;
+    private String horizontalAccuracy = null;
+    private String locationProvider = null;
+    private String noteGuid = null;
+    private String geometry = null;
+    private String VDOP = null;
+    private String createdBy = null;
+    private String lockType = null;
+    private Long createdDateTime = null;
+    private String bearing = null;
+    private String bearingAccuracy = null;
+    private String bearingTruenorth = null;
+    private String corrected = null;
+    private String resourceRef = null;
+    private String sourceType = null;
 
-	private String altitudeAccuracy = null;
-	private List<Dictionary> dictionary = new ArrayList<Dictionary>();
-	private Long syncTime=null;
+    private String altitudeAccuracy = null;
+    private List<Dictionary> dictionary = new ArrayList<Dictionary>();
+    private Long syncTime = null;
 
-private EdgeNotebook edgeNotebook = null;
-	public EdgeNote() {
+    private EdgeNotebook edgeNotebook = null;
 
-	}
+    public EdgeNote() {
 
-	public String getPDOP() {
-		return PDOP;
-	}
+    }
 
-	public void setPDOP(String pDOP) {
-		PDOP = pDOP;
-	}
+    public String getPDOP() {
+        return PDOP;
+    }
 
-	public String getGpsTime() {
-		return gpsTime;
-	}
+    public void setPDOP(String pDOP) {
+        PDOP = pDOP;
+    }
 
-	public void setGpsTime(String gpsTime) {
-		this.gpsTime = gpsTime;
-	}
+    public String getGpsTime() {
+        return gpsTime;
+    }
 
-	public String getAltitude() {
-		return altitude;
-	}
+    public void setGpsTime(String gpsTime) {
+        this.gpsTime = gpsTime;
+    }
 
-	public void setAltitude(String altitude) {
-		this.altitude = altitude;
-	}
+    public String getAltitude() {
+        return altitude;
+    }
 
-	public String getTitle() {
-		return title;
-	}
+    public void setAltitude(String altitude) {
+        this.altitude = altitude;
+    }
 
-	public void setTitle(String title) {
-		this.title = title;
-	}
+    public String getTitle() {
+        return title;
+    }
 
-	public List<FormData> getFormData() {
-		System.out.println(formData);
-		System.out.println(formData.toString());
+    public void setTitle(String title) {
+        this.title = title;
+    }
+
+    public List<FormData> getFormData() {
+        System.out.println(formData);
+        System.out.println(formData.toString());
 	/*	Type listType = new TypeToken<ArrayList<FormData>>() {
 		}.getType();
 		Gson gson = new Gson();
 		List<FormData> edgeNoteList = gson.fromJson(formData.toString(), listType);*/
-		
-		return formData;
-	}
+
+        return formData;
+    }
 
 
-	public void setFormData(List<FormData> formData) {
-		this.formData = formData;
-	}
+    public void setFormData(List<FormData> formData) {
+        this.formData = formData;
+    }
 
-	public Boolean getTaskNote() {
-		return isTaskNote;
-	}
+    public Boolean getTaskNote() {
+        return isTaskNote;
+    }
 
-	public void setTaskNote(Boolean taskNote) {
-		isTaskNote = taskNote;
-	}
+    public void setTaskNote(Boolean taskNote) {
+        isTaskNote = taskNote;
+    }
 
-	public List<Dictionary> getDictionary() {
-		return dictionary;
-	}
+    public List<Dictionary> getDictionary() {
+        return dictionary;
+    }
 
-	public void setDictionary(List<Dictionary> dictionary) {
-		this.dictionary = dictionary;
-	}
+    public void setDictionary(List<Dictionary> dictionary) {
+        this.dictionary = dictionary;
+    }
 
-	public Integer getSatellitesCount() {
-		return satellitesCount;
-	}
+    public Integer getSatellitesCount() {
+        return satellitesCount;
+    }
 
-	public void setSatellitesCount(Integer satellitesCount) {
-		this.satellitesCount = satellitesCount;
-	}
+    public void setSatellitesCount(Integer satellitesCount) {
+        this.satellitesCount = satellitesCount;
+    }
 
-	public String getDescription() {
-		return description;
-	}
+    public String getDescription() {
+        return description;
+    }
 
-	public void setDescription(String description) {
-		this.description = description;
-	}
+    public void setDescription(String description) {
+        this.description = description;
+    }
 
-	public String getHDOP() {
-		return HDOP;
-	}
+    public String getHDOP() {
+        return HDOP;
+    }
 
-	public void setHDOP(String hDOP) {
-		HDOP = hDOP;
-	}
+    public void setHDOP(String hDOP) {
+        HDOP = hDOP;
+    }
 
-	
 
-	public String getNotesType() {
-		return notesType;
-	}
+    public String getNotesType() {
+        return notesType;
+    }
 
-	public void setNotesType(String notesType) {
-		this.notesType = notesType;
-	}
+    public void setNotesType(String notesType) {
+        this.notesType = notesType;
+    }
 
-	public Boolean getIsTaskNote() {
-		return isTaskNote;
-	}
+    public Boolean getIsTaskNote() {
+        return isTaskNote;
+    }
 
-	public void setIsTaskNote(Boolean isTaskNote) {
-		this.isTaskNote = isTaskNote;
-	}
+    public void setIsTaskNote(Boolean isTaskNote) {
+        this.isTaskNote = isTaskNote;
+    }
 
-	public String getLocationDescription() {
-		return locationDescription;
-	}
+    public String getLocationDescription() {
+        return locationDescription;
+    }
 
-	public void setLocationDescription(String locationDescription) {
-		this.locationDescription = locationDescription;
-	}
+    public void setLocationDescription(String locationDescription) {
+        this.locationDescription = locationDescription;
+    }
 
-	public String getSpeed() {
-		return speed;
-	}
+    public String getSpeed() {
+        return speed;
+    }
 
-	public void setSpeed(String speed) {
-		this.speed = speed;
-	}
+    public void setSpeed(String speed) {
+        this.speed = speed;
+    }
 
-	public String getHorizontalAccuracy() {
-		return horizontalAccuracy;
-	}
+    public String getHorizontalAccuracy() {
+        return horizontalAccuracy;
+    }
 
-	public void setHorizontalAccuracy(String horizontalAccuracy) {
-		this.horizontalAccuracy = horizontalAccuracy;
-	}
+    public void setHorizontalAccuracy(String horizontalAccuracy) {
+        this.horizontalAccuracy = horizontalAccuracy;
+    }
 
-	
-	public String getLocationProvider() {
-		return locationProvider;
-	}
 
-	public void setLocationProvider(String locationProvider) {
-		this.locationProvider = locationProvider;
-	}
+    public String getLocationProvider() {
+        return locationProvider;
+    }
 
-	public String getNoteGuid() {
-		return noteGuid;
-	}
+    public void setLocationProvider(String locationProvider) {
+        this.locationProvider = locationProvider;
+    }
 
-	public void setNoteGuid(String noteGuid) {
-		this.noteGuid = noteGuid;
-	}
+    public String getNoteGuid() {
+        return noteGuid;
+    }
 
-	public String getGeometry() {
-		return geometry;
-	}
+    public void setNoteGuid(String noteGuid) {
+        this.noteGuid = noteGuid;
+    }
 
-	public void setGeometry(String geometry) {
-		this.geometry = geometry;
-	}
+    public String getGeometry() {
+        return geometry;
+    }
 
-	public String getVDOP() {
-		return VDOP;
-	}
+    public void setGeometry(String geometry) {
+        this.geometry = geometry;
+    }
 
-	public void setVDOP(String vDOP) {
-		VDOP = vDOP;
-	}
+    public String getVDOP() {
+        return VDOP;
+    }
 
-	public String getCreatedBy() {
-		return createdBy;
-	}
+    public void setVDOP(String vDOP) {
+        VDOP = vDOP;
+    }
 
-	public void setCreatedBy(String createdBy) {
-		this.createdBy = createdBy;
-	}
+    public String getCreatedBy() {
+        return createdBy;
+    }
 
-	public String getLockType() {
-		return lockType;
-	}
+    public void setCreatedBy(String createdBy) {
+        this.createdBy = createdBy;
+    }
 
-	public void setLockType(String lockType) {
-		this.lockType = lockType;
-	}
+    public String getLockType() {
+        return lockType;
+    }
 
-	public Long getCreatedDateTime() {
-		return createdDateTime;
-	}
+    public void setLockType(String lockType) {
+        this.lockType = lockType;
+    }
 
-	public void setCreatedDateTime(Long createdDateTime) {
-		this.createdDateTime = createdDateTime;
-	}
+    public Long getCreatedDateTime() {
+        return createdDateTime;
+    }
 
-	public String getBearing() {
-		return bearing;
-	}
+    public void setCreatedDateTime(Long createdDateTime) {
+        this.createdDateTime = createdDateTime;
+    }
 
-	public void setBearing(String bearing) {
-		this.bearing = bearing;
-	}
+    public String getBearing() {
+        return bearing;
+    }
 
-	public String getBearingAccuracy() {
-		return bearingAccuracy;
-	}
+    public void setBearing(String bearing) {
+        this.bearing = bearing;
+    }
 
-	public void setBearingAccuracy(String bearingAccuracy) {
-		this.bearingAccuracy = bearingAccuracy;
-	}
+    public String getBearingAccuracy() {
+        return bearingAccuracy;
+    }
 
-	public String getBearingTruenorth() {
-		return bearingTruenorth;
-	}
+    public void setBearingAccuracy(String bearingAccuracy) {
+        this.bearingAccuracy = bearingAccuracy;
+    }
 
-	public void setBearingTruenorth(String bearingTruenorth) {
-		this.bearingTruenorth = bearingTruenorth;
-	}
+    public String getBearingTruenorth() {
+        return bearingTruenorth;
+    }
 
-	public String getCorrected() {
-		return corrected;
-	}
+    public void setBearingTruenorth(String bearingTruenorth) {
+        this.bearingTruenorth = bearingTruenorth;
+    }
 
-	public void setCorrected(String corrected) {
-		this.corrected = corrected;
-	}
+    public String getCorrected() {
+        return corrected;
+    }
 
-	public String getResourceRef() {
-		return resourceRef;
-	}
+    public void setCorrected(String corrected) {
+        this.corrected = corrected;
+    }
 
-	public void setResourceRef(String resourceRef) {
-		this.resourceRef = resourceRef;
-	}
+    public String getResourceRef() {
+        return resourceRef;
+    }
 
-	public String getSourceType() {
-		return sourceType;
-	}
+    public void setResourceRef(String resourceRef) {
+        this.resourceRef = resourceRef;
+    }
 
-	public void setSourceType(String sourceType) {
-		this.sourceType = sourceType;
-	}
+    public String getSourceType() {
+        return sourceType;
+    }
 
-	
-	public String getAltitudeAccuracy() {
-		return altitudeAccuracy;
-	}
+    public void setSourceType(String sourceType) {
+        this.sourceType = sourceType;
+    }
 
-	public void setAltitudeAccuracy(String altitudeAccuracy) {
-		this.altitudeAccuracy = altitudeAccuracy;
-	}
+
+    public String getAltitudeAccuracy() {
+        return altitudeAccuracy;
+    }
+
+    public void setAltitudeAccuracy(String altitudeAccuracy) {
+        this.altitudeAccuracy = altitudeAccuracy;
+    }
 
 
     public EdgeNotebook getEdgeNotebook() {
@@ -302,47 +302,47 @@ private EdgeNotebook edgeNotebook = null;
         this.edgeNotebook = edgeNotebook;
     }
 
-	public Long getSyncTime() {
-		return syncTime;
-	}
+    public Long getSyncTime() {
+        return syncTime;
+    }
 
-	public void setSyncTime(Long syncTime) {
-		this.syncTime = syncTime;
-	}
+    public void setSyncTime(Long syncTime) {
+        this.syncTime = syncTime;
+    }
 
-	@Override
-	public String toString() {
-		return "EdgeNote{" +
-				"PDOP='" + PDOP + '\'' +
-				", gpsTime='" + gpsTime + '\'' +
-				", altitude='" + altitude + '\'' +
-				", title='" + title + '\'' +
-				", formData=" + formData +
-				", satellitesCount=" + satellitesCount +
-				", description='" + description + '\'' +
-				", HDOP='" + HDOP + '\'' +
-				", notesType='" + notesType + '\'' +
-				", isTaskNote=" + isTaskNote +
-				", locationDescription='" + locationDescription + '\'' +
-				", speed='" + speed + '\'' +
-				", horizontalAccuracy='" + horizontalAccuracy + '\'' +
-				", locationProvider='" + locationProvider + '\'' +
-				", noteGuid='" + noteGuid + '\'' +
-				", geometry='" + geometry + '\'' +
-				", VDOP='" + VDOP + '\'' +
-				", createdBy='" + createdBy + '\'' +
-				", lockType='" + lockType + '\'' +
-				", createdDateTime=" + createdDateTime +
-				", bearing='" + bearing + '\'' +
-				", bearingAccuracy='" + bearingAccuracy + '\'' +
-				", bearingTruenorth='" + bearingTruenorth + '\'' +
-				", corrected='" + corrected + '\'' +
-				", resourceRef='" + resourceRef + '\'' +
-				", sourceType='" + sourceType + '\'' +
-				", altitudeAccuracy='" + altitudeAccuracy + '\'' +
-				", dictionary=" + dictionary +
-				", syncTime=" + syncTime +
-				", edgeNotebook=" + edgeNotebook +
-				'}';
-	}
+    @Override
+    public String toString() {
+        return "EdgeNote{" +
+                "PDOP='" + PDOP + '\'' +
+                ", gpsTime='" + gpsTime + '\'' +
+                ", altitude='" + altitude + '\'' +
+                ", title='" + title + '\'' +
+                ", formData=" + formData +
+                ", satellitesCount=" + satellitesCount +
+                ", description='" + description + '\'' +
+                ", HDOP='" + HDOP + '\'' +
+                ", notesType='" + notesType + '\'' +
+                ", isTaskNote=" + isTaskNote +
+                ", locationDescription='" + locationDescription + '\'' +
+                ", speed='" + speed + '\'' +
+                ", horizontalAccuracy='" + horizontalAccuracy + '\'' +
+                ", locationProvider='" + locationProvider + '\'' +
+                ", noteGuid='" + noteGuid + '\'' +
+                ", geometry='" + geometry + '\'' +
+                ", VDOP='" + VDOP + '\'' +
+                ", createdBy='" + createdBy + '\'' +
+                ", lockType='" + lockType + '\'' +
+                ", createdDateTime=" + createdDateTime +
+                ", bearing='" + bearing + '\'' +
+                ", bearingAccuracy='" + bearingAccuracy + '\'' +
+                ", bearingTruenorth='" + bearingTruenorth + '\'' +
+                ", corrected='" + corrected + '\'' +
+                ", resourceRef='" + resourceRef + '\'' +
+                ", sourceType='" + sourceType + '\'' +
+                ", altitudeAccuracy='" + altitudeAccuracy + '\'' +
+                ", dictionary=" + dictionary +
+                ", syncTime=" + syncTime +
+                ", edgeNotebook=" + edgeNotebook +
+                '}';
+    }
 }
