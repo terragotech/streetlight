@@ -141,7 +141,7 @@ public class StreetlightChicagoService extends AbstractProcessor {
             String notesData = responseEntity.getBody();
 
             EdgeNote edgeNote = gson.fromJson(notesData, EdgeNote.class);
-            if(!edgeNote.getCreatedBy().contains("admin")){
+         //   if(!edgeNote.getCreatedBy().contains("admin")){
                 InstallMaintenanceLogModel installMaintenanceLogModel = new InstallMaintenanceLogModel();
                 installMaintenanceLogModel.setLastSyncTime(edgeNote.getSyncTime());
                 installMaintenanceLogModel.setProcessedNoteId(edgeNote.getNoteGuid());
@@ -153,9 +153,7 @@ public class StreetlightChicagoService extends AbstractProcessor {
                 updateSlvStatusToEdge(installMaintenanceLogModel,edgeNote);
                 LoggingModel loggingModel = installMaintenanceLogModel;
                 streetlightDao.insertProcessedNotes(loggingModel, installMaintenanceLogModel);
-            }
-
-
+          //  }
         }
 
 
