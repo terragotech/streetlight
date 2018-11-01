@@ -98,7 +98,7 @@
                             <goal>single</goal>
                         </goals>
                         <configuration>
-                            <finalName>ameresco_usa_streetlight_v43</finalName>
+                            <finalName>pole_name_update_v1</finalName>
 
                             <archive>
                                 <manifest>

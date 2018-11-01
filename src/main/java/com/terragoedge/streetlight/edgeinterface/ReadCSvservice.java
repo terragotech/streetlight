@@ -7,11 +7,10 @@ import com.opencsv.bean.StatefulBeanToCsvBuilder;
 import com.terragoedge.streetlight.PropertiesReader;
 import com.terragoedge.streetlight.dao.StreetlightDao;
 
-import java.io.BufferedReader;
-import java.io.FileReader;
-import java.io.FileWriter;
-import java.io.Writer;
+import java.io.*;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 public class ReadCSvservice {
@@ -26,7 +25,7 @@ public class ReadCSvservice {
     }
 
     public void start() {
-        String filePath ="./resource/input.csv";
+        String filePath ="./input/data.csv";
         List<SlvData> slvDataList = getSlvDataFromCSV(filePath);
         try {
             for (SlvData slvData : slvDataList) {
@@ -46,11 +45,20 @@ public class ReadCSvservice {
         beanToCSV(slvDataList);
     }
 
+    private String getTime(){
+        SimpleDateFormat sd = new SimpleDateFormat("yyyy_MM_dd_HH_mm");
+        return sd.format(new Date());
+    }
+
 
     private void beanToCSV(List<SlvData> slvData){
         Writer writer = null;
         try{
-            String filePath =  "./res.csv";
+            String filePath =  "./res/"+getTime();
+            File ff = new File(filePath);
+            ff.mkdirs();
+            filePath = filePath+"/res.csv";
+
             writer = new FileWriter(filePath);
             StatefulBeanToCsv<SlvData> beanToCsv = new StatefulBeanToCsvBuilder(writer)
                     .withQuotechar(CSVWriter.DEFAULT_QUOTE_CHARACTER)
@@ -82,6 +90,7 @@ public class ReadCSvservice {
                 String values[] = currentRow.split(",");
                 SlvData slvData = new SlvData();
                 String tt = values[1]+values[2];
+                values[0] = values[0] + values[2];
                 slvData.setNoteTitle(tt);
                 slvData.setComponentValue(values[0]);
                List<com.terragoedge.edgeserver.SlvData> dbSlvDataList = streetlightDao.getNoteDetails(slvData.getNoteTitle());

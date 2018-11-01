@@ -11,7 +11,7 @@ public class SlvData extends CsvToBean {
     private String noteGuid;
 
     private String componentId;
-    @CsvBindByName(column = "Component Value")
+    @CsvBindByName(column = "New Note Name")
     private String componentValue;
     @CsvBindByName(column = "New Note Title")
     private String newNoteTitle;
