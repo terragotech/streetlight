@@ -26,7 +26,8 @@ public class ReadCSvservice {
     }
 
     public void start() {
-        String filePath = "D:/Report/resource/input.csv";
+        String filePath = "./resources/input.csv";
+      //  String filePath = "D:/Report/input.csv";
         List<SlvData> slvDataList = getSlvDataFromCSV(filePath);
         try {
             for (SlvData slvData : slvDataList) {
