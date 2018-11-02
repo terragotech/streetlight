@@ -57,7 +57,11 @@
             <artifactId>commons-io</artifactId>
             <version>2.4</version>
         </dependency>
-
+        <dependency>
+            <groupId>com.opencsv</groupId>
+            <artifactId>opencsv</artifactId>
+            <version>4.0</version>
+        </dependency>
 
         <dependency>
             <groupId>javax.mail</groupId>
@@ -98,7 +102,7 @@
                             <goal>single</goal>
                         </goals>
                         <configuration>
-                            <finalName>ameresco_usa_streetlight_v43</finalName>
+                            <finalName>fieldActivityInterface-v1</finalName>
 
                             <archive>
                                 <manifest>
