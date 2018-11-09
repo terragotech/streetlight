@@ -134,23 +134,15 @@ public class EdgeService {
 
     public void updateInstallationForm(List<EdgeFormData> edgeFormDataList, SlvData slvData) {
         try {
-            String dispersionStr = valueById(edgeFormDataList, 68);
-            String trimValue = dispersionStr.trim();
-            int dispersionValue = Integer.parseInt(trimValue);
-            switch (dispersionValue) {
-                case 2:
-                    updateFormValue(edgeFormDataList, 68, "TYPE 2");
-                    break;
-                case 3:
-                    updateFormValue(edgeFormDataList, 68, "TYPE 3");
-                    break;
-                case 4:
-                    updateFormValue(edgeFormDataList, 68, "TYPE 4");
-                    break;
-                case 5:
-                    updateFormValue(edgeFormDataList, 68, "TYPE 5");
-                    break;
-            }
+            String existingFixtureStyle = valueById(edgeFormDataList, 110);
+            existingFixtureStyle = existingFixtureStyle.trim();
+
+            String existingFixtureType = valueById(edgeFormDataList, 111);
+            existingFixtureType = existingFixtureType.trim();
+
+            updateFormValue(edgeFormDataList, 111, existingFixtureStyle);
+            updateFormValue(edgeFormDataList, 110, existingFixtureType);
+
         } catch (NoValueException e) {
             return;
         }

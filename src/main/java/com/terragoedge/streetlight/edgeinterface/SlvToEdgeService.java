@@ -55,17 +55,7 @@ public class SlvToEdgeService extends EdgeService {
     public SlvData processInstallationForm(EdgeNote edgeNote, FormData formData, String formTemplateGuid, SlvData slvData) {
         try {
             String oldNoteGuid = edgeNote.getNoteGuid();
-            String locationDescription = edgeNote.getLocationDescription();
-            if (locationDescription != null) {
-                if (locationDescription.endsWith("| 2")) {
-                    locationDescription = locationDescription.replace("| 2", "| TYPE 2");
-                } else if (locationDescription.endsWith("| 3")) {
-                    locationDescription = locationDescription.replace("| 3", "| TYPE 3");
-                } else if (locationDescription.endsWith("| 5")) {
-                    locationDescription = locationDescription.replace("| 5", "| TYPE 5");
-                }
-                edgeNote.setLocationDescription(locationDescription);
-            }
+
             String notebookGuid = null;
             notebookGuid = edgeNote.getEdgeNotebook().getNotebookGuid();
             List<EdgeFormData> edgeFormDataList = formData.getFormDef();
