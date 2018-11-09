@@ -21,7 +21,7 @@ public class SlvInterfaceApp {
 
       while (true) {
             try {
-                SlvInterfaceService slvInterfaceService = new CanadaEdgeInterface();
+                SlvInterfaceService slvInterfaceService = new SlvInterfaceServiceImpl();
                 slvInterfaceService.loadDevices();
                 while (true) {
                     slvInterfaceService.start();
