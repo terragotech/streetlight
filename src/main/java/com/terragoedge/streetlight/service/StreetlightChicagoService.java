@@ -240,7 +240,7 @@ public class StreetlightChicagoService extends AbstractProcessor {
             for (EdgeNote edgeNote : edgeNoteList) {
                 try {
                     if (!noteGuids.contains(edgeNote.getNoteGuid())) {
-                        if(!edgeNote.getCreatedBy().contains("admin")){
+                        if(!edgeNote.getCreatedBy().contains("admin") && !edgeNote.getCreatedBy().contains("slvinterface")){
                             InstallMaintenanceLogModel installMaintenanceLogModel = new InstallMaintenanceLogModel();
 
                             installMaintenanceLogModel.setProcessedNoteId(edgeNote.getNoteGuid());
