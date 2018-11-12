@@ -124,11 +124,11 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
                             installMaintenanceLogModel.setInstalledDate(edgeNote.getCreatedDateTime());
                             return;
                         case "Repairs & Outages":
-                            repairAndOutage(edgeFormDatas, edgeNote, installMaintenanceLogModel, existingFixtureInfo, utilLocId, nightRideKey, formatedValueNR);
+                            repairAndOutage(edgeFormDatas, edgeNote, installMaintenanceLogModel, existingFixtureInfo, utilLocId, nightRideKey, formatedValueNR,formatedValueNR);
                             installMaintenanceLogModel.setReplacedDate(edgeNote.getCreatedDateTime());
                             return;
                         case "Other Task":
-                            processOtherTask(edgeFormDatas, edgeNote, installMaintenanceLogModel, nightRideKey, formatedValueNR);
+                           // processOtherTask(edgeFormDatas, edgeNote, installMaintenanceLogModel, nightRideKey, formatedValueNR);
                             return;
                     }
                 } catch (NoValueException e) {
@@ -166,7 +166,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
 
             paramsList.add("idOnController=" + idOnController);
             paramsList.add("controllerStrId=" + controllerStrIdValue);
-            addOtherParams(edgeNote, paramsList, idOnController, utilLocId, isNew);
+            addOtherParams(edgeNote, paramsList, idOnController, utilLocId, isNew,fixerQrScanValue);
             if (fixerQrScanValue != null) {
                 buildFixtureStreetLightData(fixerQrScanValue, paramsList, edgeNote);//update fixer qrscan value
             }
@@ -235,32 +235,36 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
     }
 
     public void processOtherTask(List<EdgeFormData> edgeFormDatas, EdgeNote edgeNote, InstallMaintenanceLogModel loggingModel, String nightRideKey, String nightRideValue) {
+       logger.info("Other task value processed");
         String Key = properties.getProperty("amerescousa.night.ride.key_for_slv");
+        logger.info("key :"+Key);
         List<Object> paramsList = new ArrayList<>();
-        String otherTaskValue = null;
+        String cdotIssue = null;
         try {
-            otherTaskValue = valueById(edgeFormDatas, 44);
-            logger.info("OtherTask's issue Value :" + otherTaskValue);
+            cdotIssue = valueById(edgeFormDatas, 106);
+            logger.info("cdotIssue's issue Value :" + cdotIssue);
         } catch (NoValueException e) {
-            logger.error("Error in while getting processTask's issue", e);
+            logger.error("Error in while getting cdotIssue's issue", e);
             loggingModel.setErrorDetails("Value is not selected");
             loggingModel.setStatus(MessageConstants.ERROR);
             return;
         }
+        logger.info("value :"+cdotIssue);
         String controllerStarId = getControllerStrId(edgeFormDatas);
         String idOnController = loggingModel.getIdOnController();
         paramsList.add("idOnController=" + idOnController);
         paramsList.add("controllerStrId=" + controllerStarId);
-        String formatedValue = dateFormat(edgeNote.getCreatedDateTime()) + " :" + otherTaskValue;
+        String formatedValue = dateFormat(edgeNote.getCreatedDateTime()) + " :" + cdotIssue;
 
         if(nightRideValue != null){
-            nightRideValue = nightRideValue + ","+otherTaskValue;
+            nightRideValue = nightRideValue + ","+cdotIssue;
             addStreetLightData(nightRideKey, nightRideValue, paramsList);
         }else{
             addStreetLightData(Key, formatedValue, paramsList);
         }
         int errorCode = setDeviceValues(paramsList);
         if (errorCode != 0) {
+            logger.info("CDOT issue value serDevice error");
             loggingModel.setErrorDetails(MessageConstants.ERROR_OTHERTASK_DEVICE_VAL);
             loggingModel.setStatus(MessageConstants.ERROR);
             return;
@@ -376,7 +380,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
     }
 
 
-    public void repairAndOutage(List<EdgeFormData> edgeFormDatas, EdgeNote edgeNote, InstallMaintenanceLogModel loggingModel, LoggingModel existingFixtureInfo, String utilLocId, String nightRideKey, String nightRideValue) {
+    public void repairAndOutage(List<EdgeFormData> edgeFormDatas, EdgeNote edgeNote, InstallMaintenanceLogModel loggingModel, LoggingModel existingFixtureInfo, String utilLocId, String nightRideKey, String nightRideValue,String formatedValueNR) {
 
         String repairsOutagesValue = null;
         try {
@@ -402,6 +406,12 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
             case "Power Issue":
                 loggingModel.setStatus(MessageConstants.ERROR);
                 loggingModel.setErrorDetails("SLV Interface Doest not support this(Power Issue option is selected).");
+                break;
+            case "Unable to Repair(CDOT Issue)":
+                logger.info("Processed Unable to Repair option :"+edgeNote.getTitle());
+                logger.info("Processed NoteGuid :"+edgeNote.getNoteGuid());
+              //  String nightRideKey = properties.getProperty("amerescousa.night.ride.key_for_slv");
+                processOtherTask(edgeFormDatas, edgeNote, loggingModel, nightRideKey, formatedValueNR);
                 break;
         }
     }

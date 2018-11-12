@@ -414,7 +414,7 @@ public class StreetlightChicagoService extends AbstractProcessor {
                 if (macAddress != null) {
                     loggingModel.setMacAddress(macAddress);
 
-                    addOtherParams(edgeNote, paramsList, idOnController, utilLocId, true);
+                  //  addOtherParams(edgeNote, paramsList, idOnController, utilLocId, true);
 
 
                     // DimmingGroupName
