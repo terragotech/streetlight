@@ -55,7 +55,7 @@ public class StreetlightDao extends UtilDao {
             calendar.set(Calendar.DAY_OF_MONTH, calendar.get(Calendar.DAY_OF_MONTH) - 1);
             long startOfDay = calendar.getTime().getTime();
 
-            return "select noteid  from edgenote  a, (select distinct(title),max(createddatetime) as createddatetime from edgenote where createdby != 'admin' and createddatetime >= " + startOfDay + " group by title) b where a.title = b.title and a.createddatetime = b.createddatetime;";
+            return "select noteid  from edgenote  a, (select distinct(title),max(createddatetime) as createddatetime from edgenote where createdby != 'admin' and createdby != 'slvinterface' and createddatetime >= " + startOfDay + " group by title) b where a.title = b.title and a.createddatetime = b.createddatetime;";
             //return "select distinct(title), noteid, max(createddatetime) from edgenote where createdby != 'admin'  and edgenoteview.createddatetime >= "+startOfDay+" group by title;";
         }
     }
@@ -680,7 +680,7 @@ public class StreetlightDao extends UtilDao {
                     inspectionsReport.setDateModified(queryResponse.getLong("createddatetime"));
                     //int pos = getIndex(addressSetList,title);
 
-                    if (inspectionsReport.getCreatedBy() != null && inspectionsReport.getCreatedBy().equals("admin")) {
+                    if (inspectionsReport.getCreatedBy() != null && ( inspectionsReport.getCreatedBy().equals("admin") || inspectionsReport.getCreatedBy().equals("slvinterface") )) {
                         getCreatedBy(title, inspectionsReport);
                     }
 
@@ -707,7 +707,7 @@ public class StreetlightDao extends UtilDao {
 
 
     public void getCreatedBy(String title, InspectionsReport inspectionsReport) {
-        String query = "select createdby, createddatetime from edgenote where createdby != 'admin' and title = '" + title + "' order by createddatetime desc limit 1;";
+        String query = "select createdby, createddatetime from edgenote where createdby != 'admin' and createdby != 'slvinterface' and title = '" + title + "' order by createddatetime desc limit 1;";
         Statement queryStatement = null;
         ResultSet queryResponse = null;
         try {
