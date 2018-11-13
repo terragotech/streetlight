@@ -139,9 +139,32 @@ public class EdgeService {
 
             String existingFixtureType = valueById(edgeFormDataList, 111);
             existingFixtureType = existingFixtureType.trim();
-
+            // Swap two formtemplate values
             updateFormValue(edgeFormDataList, 111, existingFixtureStyle);
             updateFormValue(edgeFormDataList, 110, existingFixtureType);
+            //set municipality values from csv
+            String municipality = slvData.getMunicipality().trim();
+            updateFormValue(edgeFormDataList, 53, municipality);
+            //Update dispersionType
+            String despersionStr = valueById(edgeFormDataList, 68);
+            int dispersionType = Integer.parseInt(despersionStr.trim());
+            switch (dispersionType) {
+                case 1:
+                    updateFormValue(edgeFormDataList, 68, "TYPE 1");
+                    break;
+                case 2:
+                    updateFormValue(edgeFormDataList, 68, "TYPE 2");
+                    break;
+                case 3:
+                    updateFormValue(edgeFormDataList, 68, "TYPE 3");
+                    break;
+                case 4:
+                    updateFormValue(edgeFormDataList, 68, "TYPE 4");
+                    break;
+                case 5:
+                    updateFormValue(edgeFormDataList, 68, "TYPE 5");
+                    break;
+            }
 
         } catch (NoValueException e) {
             return;

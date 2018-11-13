@@ -45,6 +45,8 @@ public class SlvToEdgeService extends EdgeService {
                     SlvData resultSlvData = processInstallationForm(edgeNote, formData, formTemplateGuid, slvData);
                     if (resultSlvData.getStatus().equals("Success")) {
                         streetlightDao.updateNoteDetails(createddatetime + 1000, createdBy, resultSlvData.getNewNoteGuid());
+                        logger.info("------------------Success---------------------");
+                        logger.info("Processed notetitle: "+edgeNote.getTitle());
                     }
                     return;
                 }

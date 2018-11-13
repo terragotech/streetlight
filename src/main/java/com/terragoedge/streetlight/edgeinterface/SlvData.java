@@ -21,7 +21,8 @@ public class SlvData extends CsvToBean {
     private String status;
     @CsvBindByName(column = "Error Details")
     private String errorDetails;
-
+    @CsvBindByName(column = "Municipality")
+    private String municipality;
 
 
     public String getNewNoteTitle() {
@@ -88,6 +89,14 @@ public class SlvData extends CsvToBean {
         this.componentValue = componentValue;
     }
 
+    public String getMunicipality() {
+        return municipality;
+    }
+
+    public void setMunicipality(String municipality) {
+        this.municipality = municipality;
+    }
+
     @Override
     public String toString() {
         return "SlvData{" +
@@ -95,6 +104,11 @@ public class SlvData extends CsvToBean {
                 ", noteGuid='" + noteGuid + '\'' +
                 ", componentId='" + componentId + '\'' +
                 ", componentValue='" + componentValue + '\'' +
+                ", newNoteTitle='" + newNoteTitle + '\'' +
+                ", newNoteGuid='" + newNoteGuid + '\'' +
+                ", status='" + status + '\'' +
+                ", errorDetails='" + errorDetails + '\'' +
+                ", municipality='" + municipality + '\'' +
                 '}';
     }
 }
