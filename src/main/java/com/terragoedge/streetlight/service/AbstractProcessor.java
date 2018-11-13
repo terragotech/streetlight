@@ -135,7 +135,8 @@ public abstract class AbstractProcessor {
                 // controller.installdate - 2017/10/10
                 addStreetLightData("luminaire.installdate", dateFormat(edgeNote.getCreatedDateTime()), paramsList);
             }else {
-                addStreetLightData("installStatus", "Verified", paramsList);
+               // addStreetLightData("installStatus", "Verified", paramsList);
+                addStreetLightData("installStatus", "Installed", paramsList);
             }
         }
 
