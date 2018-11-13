@@ -266,9 +266,8 @@ public class CanadaEdgeInterface extends SlvInterfaceService {
     @Override
     public void createDevice(EdgeNote edgeNote, SlvSyncDetails slvSyncDetails, String geoZoneId,List<EdgeFormData> edgeFormDataList) throws DeviceCreationFailedException {
         try{
-            String blockName = valueById(edgeFormDataList,34);
-
-            blockName = "Block "+blockName;
+           // String blockName = valueById(edgeFormDataList,34);
+            String blockName = valueById(edgeFormDataList,32);
             logger.info("Block Name:"+blockName);
             geoZoneId = getGeoZoneValue(blockName);
             if(geoZoneId == null){

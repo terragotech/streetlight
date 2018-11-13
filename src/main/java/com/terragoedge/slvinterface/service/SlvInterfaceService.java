@@ -209,6 +209,7 @@ public abstract class SlvInterfaceService extends AbstractSlvService {
                             slvSyncDetail.setSelectedAction(SLVProcess.NEW_DEVICE.toString());
                             boolean isDeviceExist = isAvailableDevice(edgeNote.getTitle());
                             if (!isDeviceExist) {
+                                //Added only for parking templates
                                 logger.info(edgeNote.getTitle() + " is going to Create.");
                                 createDevice(edgeNote, slvSyncDetail, geozoneId, edgeFormDataList);
                             }
