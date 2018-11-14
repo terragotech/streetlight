@@ -134,17 +134,46 @@ public class EdgeService {
 
     public void updateInstallationForm(List<EdgeFormData> edgeFormDataList, SlvData slvData) {
         try {
-            String existingFixtureStyle = valueById(edgeFormDataList, 110);
-            existingFixtureStyle = existingFixtureStyle.trim();
+            String existingFixtureStyle = null;
+            try{
+                existingFixtureStyle = valueById(edgeFormDataList, 110);
+                existingFixtureStyle = existingFixtureStyle.trim();
 
-            String existingFixtureType = valueById(edgeFormDataList, 111);
-            existingFixtureType = existingFixtureType.trim();
-            // Swap two formtemplate values
-            updateFormValue(edgeFormDataList, 111, existingFixtureStyle);
-            updateFormValue(edgeFormDataList, 110, existingFixtureType);
-            //set municipality values from csv
-            String municipality = slvData.getMunicipality().trim();
-            updateFormValue(edgeFormDataList, 53, municipality);
+            }catch (Exception e){
+                e.printStackTrace();
+            }
+            String existingFixtureType = null;
+            try{
+                 existingFixtureType = valueById(edgeFormDataList, 111);
+                existingFixtureType = existingFixtureType.trim();
+            }catch (Exception e){
+                e.printStackTrace();
+            }
+
+            if(existingFixtureStyle != null && existingFixtureType != null){
+                // Swap two formtemplate values
+                updateFormValue(edgeFormDataList, 111, existingFixtureStyle);
+                updateFormValue(edgeFormDataList, 110, existingFixtureType);
+            }
+
+            if(slvData.getMunicipality() != null){
+                //set municipality values from csv
+                String municipality = slvData.getMunicipality().trim();
+                updateFormValue(edgeFormDataList, 53, municipality);
+            }else{
+                String municipality = null;
+                try{
+                     municipality = valueById(edgeFormDataList, 53);
+                }catch (Exception e){
+                    e.printStackTrace();
+                }
+
+                if(municipality != null){
+                    municipality = municipality.replace("_"," ");
+                    updateFormValue(edgeFormDataList, 53, municipality);
+                }
+            }
+
             //Update dispersionType
             String despersionStr = valueById(edgeFormDataList, 68);
             int dispersionType = Integer.parseInt(despersionStr.trim());
