@@ -158,9 +158,10 @@ public class EdgeService {
                 updateFormValue(edgeFormDataList, 110, existingFixtureType);
             }
 
-            if(slvData.getMunicipality() != null){
+            if(slvData.getMunicipality() != null && slvData.getExistingMunicipality()!=null){
                 //set municipality values from csv
                 String municipality = slvData.getMunicipality().trim();
+                if(slvData.getExistingMunicipality().equals(municipality))
                 updateFormValue(edgeFormDataList, 53, municipality);
             }else{
                 String municipality = null;
