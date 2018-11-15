@@ -79,8 +79,8 @@ public class ReadCSvservice {
                 String values[] = currentRow.split(",");
                 SlvData slvData = new SlvData();
                 slvData.setNoteGuid(values[0]);
-                slvData.setExistingMunicipality(values[1]);
-                slvData.setMunicipality(values[2]);
+                //slvData.setExistingMunicipality(values[1]);
+                //slvData.setMunicipality(values[2]);
                 slvDataList.add(slvData);
             }
             System.out.println("Successfully");
