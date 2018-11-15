@@ -102,7 +102,7 @@
                             <goal>single</goal>
                         </goals>
                         <configuration>
-                            <finalName>fieldActivityInterface-v2</finalName>
+                            <finalName>fieldActivityInterface-withoutmunicipality</finalName>
 
                             <archive>
                                 <manifest>
