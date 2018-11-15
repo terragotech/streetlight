@@ -27,7 +27,7 @@ public class ReadCSvservice {
 
     public void start() {
         String filePath = "./resources/input.csv";
-      //  String filePath = "D:/Report/input.csv";
+       // String filePath = "D:/Report/input.csv";
         List<SlvData> slvDataList = getSlvDataFromCSV(filePath);
         try {
             for (SlvData slvData : slvDataList) {
@@ -79,7 +79,8 @@ public class ReadCSvservice {
                 String values[] = currentRow.split(",");
                 SlvData slvData = new SlvData();
                 slvData.setNoteGuid(values[0]);
-                slvData.setMunicipality(values[1]);
+                slvData.setExistingMunicipality(values[1]);
+                slvData.setMunicipality(values[2]);
                 slvDataList.add(slvData);
             }
             System.out.println("Successfully");

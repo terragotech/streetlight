@@ -35,8 +35,12 @@ public class SlvToEdgeService extends EdgeService {
             logger.info("Note not in AmerescoUSA.");
             return;
         }
-        EdgeNote edgeNote = gson.fromJson(notesJson, EdgeNote.class);
-        if (edgeNote != null) {
+        Type listType = new TypeToken<ArrayList<EdgeNote>>() {
+        }.getType();
+        Gson gson = new Gson();
+        List<EdgeNote> edgeNoteList = gson.fromJson(notesJson, listType);
+        //EdgeNote edgeNote = gson.fromJson(notesJson, EdgeNote.class);
+        for (EdgeNote edgeNote : edgeNoteList) {
             List<FormData> formDataList = edgeNote.getFormData();
             for (FormData formData : formDataList) {
                 if (formData.getFormTemplateGuid().equals(formTemplateGuid)) {
@@ -46,7 +50,7 @@ public class SlvToEdgeService extends EdgeService {
                     if (resultSlvData.getStatus().equals("Success")) {
                         streetlightDao.updateNoteDetails(createddatetime + 1000, createdBy, resultSlvData.getNewNoteGuid());
                         logger.info("------------------Success---------------------");
-                        logger.info("Processed notetitle: "+edgeNote.getTitle());
+                        logger.info("Processed notetitle: " + edgeNote.getTitle());
                     }
                     return;
                 }
@@ -57,11 +61,10 @@ public class SlvToEdgeService extends EdgeService {
     public SlvData processInstallationForm(EdgeNote edgeNote, FormData formData, String formTemplateGuid, SlvData slvData) {
         try {
             String oldNoteGuid = edgeNote.getNoteGuid();
-
             String notebookGuid = null;
             notebookGuid = edgeNote.getEdgeNotebook().getNotebookGuid();
             List<EdgeFormData> edgeFormDataList = formData.getFormDef();
-            JsonObject edgeNoteJsonObject = processEdgeForms(gson.toJson(edgeNote), edgeFormDataList, formTemplateGuid, slvData);
+            JsonObject edgeNoteJsonObject = processEdgeForms(edgeNote, edgeFormDataList, formTemplateGuid, slvData);
             String newNoteGuid = edgeNoteJsonObject.get("noteGuid").getAsString();
             logger.info("ProcessedFormJson " + edgeNoteJsonObject.toString());
             ResponseEntity<String> responseEntity = updateNoteDetails(edgeNoteJsonObject.toString(), oldNoteGuid, notebookGuid);

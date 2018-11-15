@@ -6,6 +6,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.reflect.TypeToken;
 import com.terragoedge.edgeserver.EdgeFormData;
+import com.terragoedge.edgeserver.EdgeNote;
 import com.terragoedge.streetlight.PropertiesReader;
 import com.terragoedge.streetlight.exception.NoValueException;
 import org.apache.commons.codec.binary.Base64;
@@ -36,8 +37,8 @@ public class EdgeService {
 
     protected String getNoteDetails(String noteGuid) {
         try {
-            // String urlNew = baseUrl + "/rest/notes/notesdata/" + noteName;
-            String urlNew = baseUrl + "/rest/notes/" + noteGuid;
+            String urlNew = baseUrl + "/rest/notes/notesdata/" + noteGuid;
+            //String urlNew = baseUrl + "/rest/notes/" + noteGuid;
             logger.info("Url to get Note Details:" + urlNew);
             ResponseEntity<String> responseEntity = serverCall(urlNew, HttpMethod.GET, null);
             if (responseEntity.getStatusCode().is2xxSuccessful()) {
@@ -102,8 +103,9 @@ public class EdgeService {
         }
     }
 
-    public JsonObject processEdgeForms(String edgenoteJson, List<EdgeFormData> edgeFormDataList, String errorFormTemplateGuid, SlvData slvData) {
-        updateInstallationForm(edgeFormDataList, slvData);
+    public JsonObject processEdgeForms(EdgeNote edgeNote, List<EdgeFormData> edgeFormDataList, String errorFormTemplateGuid, SlvData slvData) {
+        updateInstallationForm(edgeFormDataList, slvData,edgeNote);
+        String edgenoteJson = gson.toJson(edgeNote);
         JsonObject edgeJsonObject = (JsonObject) jsonParser.parse(edgenoteJson);
         JsonArray serverEdgeFormJsonArray = edgeJsonObject.get("formData").getAsJsonArray();
         int size = serverEdgeFormJsonArray.size();
@@ -132,7 +134,7 @@ public class EdgeService {
         return serverCall(urlNew, HttpMethod.PUT, noteDetails);
     }
 
-    public void updateInstallationForm(List<EdgeFormData> edgeFormDataList, SlvData slvData) {
+    public void updateInstallationForm(List<EdgeFormData> edgeFormDataList, SlvData slvData,EdgeNote edgeNote) {
         try {
             String existingFixtureStyle = valueById(edgeFormDataList, 110);
             existingFixtureStyle = existingFixtureStyle.trim();
@@ -143,29 +145,47 @@ public class EdgeService {
             updateFormValue(edgeFormDataList, 111, existingFixtureStyle);
             updateFormValue(edgeFormDataList, 110, existingFixtureType);
             //set municipality values from csv
+            String formMunicipality = valueById(edgeFormDataList, 53);
             String municipality = slvData.getMunicipality().trim();
-            updateFormValue(edgeFormDataList, 53, municipality);
+            if (formMunicipality.trim().equals(slvData.getExistingMunicipality().trim())) {
+                updateFormValue(edgeFormDataList, 53, municipality);
+            }
             //Update dispersionType
             String despersionStr = valueById(edgeFormDataList, 68);
             int dispersionType = Integer.parseInt(despersionStr.trim());
+            String type="";
             switch (dispersionType) {
                 case 1:
                     updateFormValue(edgeFormDataList, 68, "TYPE 1");
+                    type="TYPE 1";
                     break;
                 case 2:
                     updateFormValue(edgeFormDataList, 68, "TYPE 2");
+                    type="TYPE 2";
                     break;
                 case 3:
                     updateFormValue(edgeFormDataList, 68, "TYPE 3");
+                    type="TYPE 3";
                     break;
                 case 4:
                     updateFormValue(edgeFormDataList, 68, "TYPE 4");
+                    type="TYPE 4";
                     break;
                 case 5:
                     updateFormValue(edgeFormDataList, 68, "TYPE 5");
+                    type="TYPE 5";
                     break;
             }
+            String locationDescription=edgeNote.getLocationDescription();
+            if(locationDescription!=null) {
+                String locationValues[] = locationDescription.split("\\|");
+                if(locationValues.length>1){
+                    edgeNote.setLocationDescription(locationValues[0]+" | "+type);
+                }
+            }
 
+        } catch (NumberFormatException e) {
+            e.printStackTrace();
         } catch (NoValueException e) {
             return;
         }
