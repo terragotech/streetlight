@@ -158,11 +158,11 @@ public class EdgeService {
                 updateFormValue(edgeFormDataList, 110, existingFixtureType);
             }
 
-            if(slvData.getMunicipality() != null && slvData.getExistingMunicipality()!=null){
+            if(slvData.getMunicipality() != null){
                 //set municipality values from csv
                 String municipality = slvData.getMunicipality().trim();
-                if(slvData.getExistingMunicipality().equals(municipality))
                 updateFormValue(edgeFormDataList, 53, municipality);
+
             }else{
                 String municipality = null;
                 try{
@@ -178,42 +178,56 @@ public class EdgeService {
             }
             //Update dispersionType
             String despersionStr = valueById(edgeFormDataList, 68);
-            int dispersionType = Integer.parseInt(despersionStr.trim());
-            String type="";
-            switch (dispersionType) {
-                case 1:
-                    updateFormValue(edgeFormDataList, 68, "TYPE 1");
-                    type="TYPE 1";
-                    break;
-                case 2:
-                    updateFormValue(edgeFormDataList, 68, "TYPE 2");
-                    type="TYPE 2";
-                    break;
-                case 3:
-                    updateFormValue(edgeFormDataList, 68, "TYPE 3");
-                    type="TYPE 3";
-                    break;
-                case 4:
-                    updateFormValue(edgeFormDataList, 68, "TYPE 4");
-                    type="TYPE 4";
-                    break;
-                case 5:
-                    updateFormValue(edgeFormDataList, 68, "TYPE 5");
-                    type="TYPE 5";
-                    break;
-            }
-            String locationDescription=edgeNote.getLocationDescription();
-            if(locationDescription!=null) {
-                String locationValues[] = locationDescription.split("\\|");
-                if(locationValues.length>=1){
-                    edgeNote.setLocationDescription(locationValues[0]+" | "+type);
+            if(despersionStr != null){
+                String type="";
+                if(despersionStr.startsWith("Type")){
+                    despersionStr = despersionStr.toUpperCase();
+                    type = despersionStr;
+                    updateFormValue(edgeFormDataList, 68, despersionStr);
+                }else {
+                    String numberOnly= despersionStr.replaceAll("[^0-9]", "");
+                    int dispersionType = Integer.parseInt(numberOnly.trim());
+
+                    switch (dispersionType) {
+                        case 1:
+                            updateFormValue(edgeFormDataList, 68, "TYPE 1");
+                            type="TYPE 1";
+                            break;
+                        case 2:
+                            updateFormValue(edgeFormDataList, 68, "TYPE 2");
+                            type="TYPE 2";
+                            break;
+                        case 3:
+                            updateFormValue(edgeFormDataList, 68, "TYPE 3");
+                            type="TYPE 3";
+                            break;
+                        case 4:
+                            updateFormValue(edgeFormDataList, 68, "TYPE 4");
+                            type="TYPE 4";
+                            break;
+                        case 5:
+                            updateFormValue(edgeFormDataList, 68, "TYPE 5");
+                            type="TYPE 5";
+                            break;
+                    }
+                }
+                String locationDescription=edgeNote.getLocationDescription();
+                if(locationDescription!=null) {
+                    String locationValues[] = locationDescription.split("\\|");
+                    if(locationValues.length>=1){
+                        edgeNote.setLocationDescription(locationValues[0]+" | "+type);
+                    }
                 }
             }
+
+
 
         } catch (NumberFormatException e) {
             e.printStackTrace();
         } catch (NoValueException e) {
             return;
+        }catch (Exception e){
+            e.printStackTrace();
         }
     }
 
