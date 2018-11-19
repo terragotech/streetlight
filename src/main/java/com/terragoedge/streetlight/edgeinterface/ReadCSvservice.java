@@ -40,7 +40,7 @@ public class ReadCSvservice {
         } catch (Exception e) {
             e.printStackTrace();
         }
-        beanToCSV(slvDataList);
+//        beanToCSV(slvDataList);
     }
 
 
@@ -78,7 +78,7 @@ public class ReadCSvservice {
             while ((currentRow = bufferedReader.readLine()) != null) {
                 String values[] = currentRow.split(",");
                 SlvData slvData = new SlvData();
-                slvData.setNoteGuid(values[0]);
+                slvData.setNoteGuid(values[1]);
                 //slvData.setExistingMunicipality(values[1]);
                 //slvData.setMunicipality(values[2]);
                 slvDataList.add(slvData);

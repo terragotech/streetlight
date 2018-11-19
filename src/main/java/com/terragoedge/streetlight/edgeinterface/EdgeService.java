@@ -108,7 +108,7 @@ public class EdgeService {
         String edgenoteJson = gson.toJson(edgeNote);
         JsonObject edgeJsonObject = (JsonObject) jsonParser.parse(edgenoteJson);
         JsonArray serverEdgeFormJsonArray = edgeJsonObject.get("formData").getAsJsonArray();
-        int size = serverEdgeFormJsonArray.size();
+        int size = 0;
         for (int i = 0; i < size; i++) {
             JsonObject serverEdgeForm = serverEdgeFormJsonArray.get(i).getAsJsonObject();
             String currentFormTemplateGuid = serverEdgeForm.get("formTemplateGuid").getAsString();
@@ -122,6 +122,9 @@ public class EdgeService {
             serverEdgeForm.add("formDef", gson.toJsonTree(formDataList));
             serverEdgeForm.addProperty("formGuid", UUID.randomUUID().toString());
         }
+        JsonArray dictionaryArr = new JsonArray();
+        dictionaryArr.add("f1fbdfd3-89f4-4ffe-b7fa-160437d782be");
+        edgeJsonObject.add("dictionary", dictionaryArr);
         edgeJsonObject.add("formData", serverEdgeFormJsonArray);
         edgeJsonObject.addProperty("createdDateTime", System.currentTimeMillis());
         edgeJsonObject.addProperty("noteGuid", UUID.randomUUID().toString());
