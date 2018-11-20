@@ -163,6 +163,9 @@ public abstract class AbstractProcessor {
             if (dimmingGroupName.startsWith("4") || dimmingGroupName.startsWith("13")) {
                 edgeNotebookName = edgeNotebookName + " Acorns";
             }
+            if(dimmingGroupName.contains("Node Only") && isNew){
+                addStreetLightData("installStatus", "Verified", paramsList);
+            }
         }
 
         logger.info("DimmingGroupName After:" + edgeNotebookName);
