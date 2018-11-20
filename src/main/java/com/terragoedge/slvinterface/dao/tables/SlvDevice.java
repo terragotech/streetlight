@@ -3,7 +3,7 @@ package com.terragoedge.slvinterface.dao.tables;
 import com.j256.ormlite.field.DatabaseField;
 import com.j256.ormlite.table.DatabaseTable;
 
-@DatabaseTable(tableName = "parkingslvdevice")
+@DatabaseTable(tableName = "slvdevice")
 public class SlvDevice {
     public static final String SLV_DEVICE_ID = "deviceid";
     public static final String DEVICE_NAME = "devicename";

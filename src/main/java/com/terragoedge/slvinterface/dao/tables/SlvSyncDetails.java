@@ -3,7 +3,7 @@ package com.terragoedge.slvinterface.dao.tables;
 import com.j256.ormlite.field.DatabaseField;
 import com.j256.ormlite.table.DatabaseTable;
 
-@DatabaseTable(tableName = "parkingslvsyncdetails")
+@DatabaseTable(tableName = "slvsyncdetails")
 public class SlvSyncDetails {
     public static final String TALQ_ADDRESS = "talcaddress";
     public static final String NOTE_GUID = "noteguid";
