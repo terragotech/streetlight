@@ -104,7 +104,6 @@ public class EdgeService {
     }
 
     public JsonObject processEdgeForms(EdgeNote edgeNote, List<EdgeFormData> edgeFormDataList, String errorFormTemplateGuid, SlvData slvData) {
-        updateInstallationForm(edgeFormDataList, slvData,edgeNote);
         String edgenoteJson = gson.toJson(edgeNote);
         JsonObject edgeJsonObject = (JsonObject) jsonParser.parse(edgenoteJson);
         JsonArray serverEdgeFormJsonArray = edgeJsonObject.get("formData").getAsJsonArray();
