@@ -37,8 +37,8 @@ public class EdgeService {
 
     protected String getNoteDetails(String noteGuid) {
         try {
-            String urlNew = baseUrl + "/rest/notes/notesdata/" + noteGuid;
-            //String urlNew = baseUrl + "/rest/notes/" + noteGuid;
+            //String urlNew = baseUrl + "/rest/notes/notesdata/" + noteGuid;
+            String urlNew = baseUrl + "/rest/notes/" + noteGuid;
             logger.info("Url to get Note Details:" + urlNew);
             ResponseEntity<String> responseEntity = serverCall(urlNew, HttpMethod.GET, null);
             if (responseEntity.getStatusCode().is2xxSuccessful()) {
@@ -108,23 +108,24 @@ public class EdgeService {
         String edgenoteJson = gson.toJson(edgeNote);
         JsonObject edgeJsonObject = (JsonObject) jsonParser.parse(edgenoteJson);
         JsonArray serverEdgeFormJsonArray = edgeJsonObject.get("formData").getAsJsonArray();
-        int size = 0;
+        int size = serverEdgeFormJsonArray.size();
         for (int i = 0; i < size; i++) {
             JsonObject serverEdgeForm = serverEdgeFormJsonArray.get(i).getAsJsonObject();
-            String currentFormTemplateGuid = serverEdgeForm.get("formTemplateGuid").getAsString();
-            if (currentFormTemplateGuid.equals(errorFormTemplateGuid)) {
-                serverEdgeForm.add("formDef", gson.toJsonTree(edgeFormDataList));
-                serverEdgeForm.addProperty("formGuid", UUID.randomUUID().toString());
-            }
             String formDefJson = serverEdgeForm.get("formDef").toString();
             formDefJson = formDefJson.replaceAll("\\\\", "");
             List<EdgeFormData> formDataList = getEdgeFormData(formDefJson);
             serverEdgeForm.add("formDef", gson.toJsonTree(formDataList));
             serverEdgeForm.addProperty("formGuid", UUID.randomUUID().toString());
         }
-        JsonArray dictionaryArr = new JsonArray();
-        dictionaryArr.add("f1fbdfd3-89f4-4ffe-b7fa-160437d782be");
-        edgeJsonObject.add("dictionary", dictionaryArr);
+
+        JsonObject jsonObject = new JsonObject();
+        jsonObject.addProperty("key", "groupGuid");
+        jsonObject.addProperty("value", "f1fbdfd3-89f4-4ffe-b7fa-160437d782be");
+        JsonArray jsonArray = new JsonArray();
+        jsonArray.add(jsonObject);
+        edgeJsonObject.add("dictionary", jsonArray);
+
+
         edgeJsonObject.add("formData", serverEdgeFormJsonArray);
         edgeJsonObject.addProperty("createdDateTime", System.currentTimeMillis());
         edgeJsonObject.addProperty("noteGuid", UUID.randomUUID().toString());
