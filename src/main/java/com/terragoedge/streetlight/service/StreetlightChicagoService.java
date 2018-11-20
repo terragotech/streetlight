@@ -141,7 +141,7 @@ public class StreetlightChicagoService extends AbstractProcessor {
             String notesData = responseEntity.getBody();
 
             EdgeNote edgeNote = gson.fromJson(notesData, EdgeNote.class);
-            if(!edgeNote.getCreatedBy().contains("admin")){
+         //   if(!edgeNote.getCreatedBy().contains("admin")){
                 InstallMaintenanceLogModel installMaintenanceLogModel = new InstallMaintenanceLogModel();
                 installMaintenanceLogModel.setLastSyncTime(edgeNote.getSyncTime());
                 installMaintenanceLogModel.setProcessedNoteId(edgeNote.getNoteGuid());
@@ -153,9 +153,7 @@ public class StreetlightChicagoService extends AbstractProcessor {
                 updateSlvStatusToEdge(installMaintenanceLogModel,edgeNote);
                 LoggingModel loggingModel = installMaintenanceLogModel;
                 streetlightDao.insertProcessedNotes(loggingModel, installMaintenanceLogModel);
-            }
-
-
+          //  }
         }
 
 
@@ -242,7 +240,7 @@ public class StreetlightChicagoService extends AbstractProcessor {
             for (EdgeNote edgeNote : edgeNoteList) {
                 try {
                     if (!noteGuids.contains(edgeNote.getNoteGuid())) {
-                        if(!edgeNote.getCreatedBy().contains("admin")){
+                        if(!edgeNote.getCreatedBy().contains("admin") && !edgeNote.getCreatedBy().contains("slvinterface")){
                             InstallMaintenanceLogModel installMaintenanceLogModel = new InstallMaintenanceLogModel();
 
                             installMaintenanceLogModel.setProcessedNoteId(edgeNote.getNoteGuid());
@@ -416,7 +414,7 @@ public class StreetlightChicagoService extends AbstractProcessor {
                 if (macAddress != null) {
                     loggingModel.setMacAddress(macAddress);
 
-                    addOtherParams(edgeNote, paramsList, idOnController, utilLocId, true);
+                  //  addOtherParams(edgeNote, paramsList, idOnController, utilLocId, true);
 
 
                     // DimmingGroupName

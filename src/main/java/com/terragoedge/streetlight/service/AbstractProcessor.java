@@ -28,9 +28,9 @@ public abstract class AbstractProcessor {
     JsonParser jsonParser = null;
     EdgeMailService edgeMailService = null;
 
-    WeakHashMap<String,String> contextListHashMap = new WeakHashMap<>();
+    WeakHashMap<String, String> contextListHashMap = new WeakHashMap<>();
 
-    public AbstractProcessor(){
+    public AbstractProcessor() {
         this.streetlightDao = new StreetlightDao();
         this.restService = new RestService();
         this.properties = PropertiesReader.getProperties();
@@ -58,15 +58,15 @@ public abstract class AbstractProcessor {
 
 
     protected String valueById(List<EdgeFormData> edgeFormDatas, int id) throws NoValueException {
-       for(EdgeFormData edgeFormData : edgeFormDatas){
-           if(edgeFormData.getId() == id){
-               String value = edgeFormData.getValue();
-               if (value == null || value.trim().isEmpty()) {
-                   throw new NoValueException("Value is Empty or null." + value);
-               }
-               return value;
-           }
-       }
+        for (EdgeFormData edgeFormData : edgeFormDatas) {
+            if (edgeFormData.getId() == id) {
+                String value = edgeFormData.getValue();
+                if (value == null || value.trim().isEmpty()) {
+                    throw new NoValueException("Value is Empty or null." + value);
+                }
+                return value;
+            }
+        }
 
         throw new NoValueException(id + " is not found.");
     }
@@ -119,18 +119,27 @@ public abstract class AbstractProcessor {
     }
 
 
-    protected void addOtherParams(EdgeNote edgeNote, List<Object> paramsList, String idOnContoller, String utilLocId, boolean isNew) {
+    protected void addOtherParams(EdgeNote edgeNote, List<Object> paramsList, String idOnContoller, String utilLocId, boolean isNew, String fixerQrScanValue) {
         // luminaire.installdate - 2017-09-07 09:47:35
         addStreetLightData("install.date", dateFormat(edgeNote.getCreatedDateTime()), paramsList);
-        // controller.installdate - 2017/10/10
-        addStreetLightData("luminaire.installdate", dateFormat(edgeNote.getCreatedDateTime()), paramsList);
+        /*// controller.installdate - 2017/10/10
+        addStreetLightData("luminaire.installdate", dateFormat(edgeNote.getCreatedDateTime()), paramsList);*/
 
         if (isNew) {
             addStreetLightData("cslp.node.install.date", dateFormat(edgeNote.getCreatedDateTime()), paramsList);
-            addStreetLightData("cslp.lum.install.date", dateFormat(edgeNote.getCreatedDateTime()), paramsList);
+            if (fixerQrScanValue != null && fixerQrScanValue.trim().length() > 0) {
+                logger.info("Fixture QR scan not empty and set luminare installdate" + dateFormat(edgeNote.getCreatedDateTime()));
+                logger.info("Fixture QR scan not empty and set cslp.lum.install.date" + dateFormat(edgeNote.getCreatedDateTime()));
+                addStreetLightData("cslp.lum.install.date", dateFormat(edgeNote.getCreatedDateTime()), paramsList);
+                addStreetLightData("installStatus", "Installed", paramsList);
+                // controller.installdate - 2017/10/10
+                addStreetLightData("luminaire.installdate", dateFormat(edgeNote.getCreatedDateTime()), paramsList);
+            }else {
+               // addStreetLightData("installStatus", "Verified", paramsList);
+                addStreetLightData("installStatus", "Installed", paramsList);
+            }
         }
 
-        addStreetLightData("installStatus", "Installed", paramsList);
 
         if (utilLocId != null) {
             addStreetLightData("location.utillocationid", utilLocId, paramsList);
@@ -138,25 +147,25 @@ public abstract class AbstractProcessor {
 
 
         String dimmingGroupName = contextListHashMap.get(idOnContoller);
-        logger.info("DimmingGroupName :"+dimmingGroupName);
-        logger.info("edgeNote :"+edgeNote.toString());
-        logger.info("edgeNote :"+edgeNote.getEdgeNotebook().toString());
+        logger.info("DimmingGroupName :" + dimmingGroupName);
+        logger.info("edgeNote :" + edgeNote.toString());
+        logger.info("edgeNote :" + edgeNote.getEdgeNotebook().toString());
         String edgeNotebookName = edgeNote.getEdgeNotebook().getNotebookName();
         /*if (dimmingGroupName != null && dimmingGroupName.trim().toLowerCase().contains("acorns")) {
             edgeNotebookName = "Acorn Calendar";
         } else {
             edgeNotebookName = "Group Calendar 1";
         }*/
-        edgeNotebookName = edgeNotebookName.replace("Residential","").trim();
-        logger.info("ProposedContextName :"+dimmingGroupName);
-        logger.info("DimmingGroupName :"+edgeNotebookName);
-        if(dimmingGroupName != null){
-            if(dimmingGroupName.startsWith("4") || dimmingGroupName.startsWith("13")){
-                edgeNotebookName = edgeNotebookName +" Acorns";
+        edgeNotebookName = edgeNotebookName.replace("Residential", "").trim();
+        logger.info("ProposedContextName :" + dimmingGroupName);
+        logger.info("DimmingGroupName :" + edgeNotebookName);
+        if (dimmingGroupName != null) {
+            if (dimmingGroupName.startsWith("4") || dimmingGroupName.startsWith("13")) {
+                edgeNotebookName = edgeNotebookName + " Acorns";
             }
         }
 
-        logger.info("DimmingGroupName After:"+edgeNotebookName);
+        logger.info("DimmingGroupName After:" + edgeNotebookName);
 
        /* if (dimmingGroupName != null && dimmingGroupName.trim().toLowerCase().contains("acorns")) {
             edgeNotebookName = edgeNotebookName +" Acorns";
@@ -190,7 +199,7 @@ public abstract class AbstractProcessor {
     public void buildFixtureStreetLightData(String data, List<Object> paramsList, EdgeNote edgeNote)
             throws InValidBarCodeException {
         String[] fixtureInfo = data.split(",");
-        logger.info("Fixture QR Scan Val lenght"+fixtureInfo.length);
+        logger.info("Fixture QR Scan Val lenght" + fixtureInfo.length);
         if (fixtureInfo.length >= 13) {
             addStreetLightData("luminaire.brand", fixtureInfo[0], paramsList);
             /**
@@ -283,7 +292,7 @@ public abstract class AbstractProcessor {
                 throw new ReplaceOLCFailedException(value);
             } else {
 
-                if (macAddress != null){
+                if (macAddress != null) {
                     logger.info("Clear device process starts.");
                     clearAndUpdateDeviceData(idOnController, controllerStrId);
                     logger.info("Clear device process End.");
@@ -300,7 +309,7 @@ public abstract class AbstractProcessor {
 
 
     public void clearAndUpdateDeviceData(String idOnController, String controllerStrId) {
-        try{
+        try {
             String mainUrl = properties.getProperty("streetlight.slv.url.main");
             String updateDeviceValues = properties.getProperty("streetlight.slv.url.updatedevice");
             String url = mainUrl + updateDeviceValues;
@@ -337,8 +346,8 @@ public abstract class AbstractProcessor {
             } else {
                 // failure
             }
-        }catch (Exception e){
-            logger.error("Error in clearAndUpdateDeviceData",e);
+        } catch (Exception e) {
+            logger.error("Error in clearAndUpdateDeviceData", e);
         }
 
     }
@@ -435,36 +444,36 @@ public abstract class AbstractProcessor {
     }
 
 
-   protected String getUtilLocationId(String errorDetails){
-        if(errorDetails != null && errorDetails.contains("Service point is already associated with LocationUtilID")){
+    protected String getUtilLocationId(String errorDetails) {
+        if (errorDetails != null && errorDetails.contains("Service point is already associated with LocationUtilID")) {
             int startAt = errorDetails.indexOf("LocationUtilID");
-            int endAt = errorDetails.indexOf("with type",startAt);
-            String utilLocationId =  errorDetails.substring(startAt + 17,endAt);
+            int endAt = errorDetails.indexOf("with type", startAt);
+            String utilLocationId = errorDetails.substring(startAt + 17, endAt);
             return utilLocationId.trim();
         }
         return null;
     }
 
 
-    protected void loadDefaultVal(EdgeNote edgeNote, LoggingModel loggingModel){
+    protected void loadDefaultVal(EdgeNote edgeNote, LoggingModel loggingModel) {
         loggingModel.setIdOnController(edgeNote.getTitle());
         String controllerStrId = properties.getProperty("streetlight.slv.controllerstrid");
         loggingModel.setControllerSrtId(controllerStrId);
     }
 
-    private void sendNightRideToSLV(String idOnController, String nightRideKey, String nightRideValue){
+    private void sendNightRideToSLV(String idOnController, String nightRideKey, String nightRideValue) {
         List<Object> paramsList = new ArrayList<>();
         String controllerStrId = properties.getProperty("streetlight.slv.controllerstrid");
         paramsList.add("idOnController=" + idOnController);
         paramsList.add("controllerStrId=" + controllerStrId);
-        if(nightRideValue != null){
+        if (nightRideValue != null) {
             addStreetLightData(nightRideKey, nightRideValue, paramsList);
             int errorCode = setDeviceValues(paramsList);
             logger.info("Error code" + errorCode);
             if (errorCode != 0) {
                 logger.error(MessageConstants.ERROR_UPDATE_DEVICE_VAL);
                 logger.error(MessageConstants.ERROR);
-            }else{
+            } else {
                 logger.info(MessageConstants.SET_DEVICE_SUCCESS);
                 logger.info(MessageConstants.SUCCESS);
             }
