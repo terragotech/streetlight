@@ -113,16 +113,19 @@ public class EdgeService {
             String formDefJson = serverEdgeForm.get("formDef").toString();
             formDefJson = formDefJson.replaceAll("\\\\", "");
             List<EdgeFormData> formDataList = getEdgeFormData(formDefJson);
+            EdgeFormData edgeFormData = new EdgeFormData();
+            edgeFormData.setId(115);
+
+           int pos = formDataList.indexOf(edgeFormData);
+           if(pos != -1){
+               edgeFormData = formDataList.get(pos);
+               edgeFormData.setId(20);
+           }
             serverEdgeForm.add("formDef", gson.toJsonTree(formDataList));
             serverEdgeForm.addProperty("formGuid", UUID.randomUUID().toString());
         }
 
-        JsonObject jsonObject = new JsonObject();
-        jsonObject.addProperty("key", "groupGuid");
-        jsonObject.addProperty("value", "f1fbdfd3-89f4-4ffe-b7fa-160437d782be");
-        JsonArray jsonArray = new JsonArray();
-        jsonArray.add(jsonObject);
-        edgeJsonObject.add("dictionary", jsonArray);
+
 
 
         edgeJsonObject.add("formData", serverEdgeFormJsonArray);
