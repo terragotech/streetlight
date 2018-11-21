@@ -122,6 +122,7 @@ public class EdgeService {
         }
         edgeJsonObject.add("formData", serverEdgeFormJsonArray);
         edgeJsonObject.addProperty("createdDateTime", System.currentTimeMillis());
+        edgeJsonObject.addProperty("createdBy", "slvinterface");
         edgeJsonObject.addProperty("noteGuid", UUID.randomUUID().toString());
         return edgeJsonObject;
     }

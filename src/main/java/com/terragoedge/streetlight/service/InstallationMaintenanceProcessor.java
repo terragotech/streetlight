@@ -193,8 +193,10 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
             } else {
                 logger.info("Replace OLC called");
                 // replace OlC
-                if (isNew && macAddress==null || macAddress.isEmpty())
-                   return;
+                if (isNew && macAddress==null || macAddress.isEmpty()) {
+                    loggingModel.setStatus(MessageConstants.SUCCESS);
+                    return;
+                }
                 else {
                     replaceOLC(controllerStrIdValue, idOnController, macAddress);// insert mac address
                 }
@@ -203,7 +205,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
                 logger.info("Status Changed. to Success");
             }
 
-        } catch (ReplaceOLCFailedException | InValidBarCodeException e) {
+        } catch (InValidBarCodeException e) {
             logger.error("Error in processNewGroup", e);
             loggingModel.setStatus(MessageConstants.ERROR);
             loggingModel.setErrorDetails(e.getMessage());
@@ -324,8 +326,8 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
                 logger.info("Node MAC Val" + nodeMacValue);
             } catch (NoValueException e) {
                 logger.error("Error in while getting MAC Address", e);
-                loggingModel.setErrorDetails(MessageConstants.NODE_MAC_ADDRESS_NOT_AVAILABLE);
-                loggingModel.setStatus(MessageConstants.ERROR);
+               // loggingModel.setErrorDetails(MessageConstants.NODE_MAC_ADDRESS_NOT_AVAILABLE);
+               // loggingModel.setStatus(MessageConstants.ERROR);
                // return;
             }
 
@@ -350,10 +352,9 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
 
             if (isResync) {
                 try {
-                    replaceOLC(loggingModel.getControllerSrtId(), loggingModel.getIdOnController(), "");
-                } catch (ReplaceOLCFailedException e) {
+                 replaceOLC(loggingModel.getControllerSrtId(), loggingModel.getIdOnController(), "");
+                } catch (Exception e) {
                     String message = e.getMessage();
-
                 }
 
             }

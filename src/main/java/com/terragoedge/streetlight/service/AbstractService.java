@@ -52,8 +52,8 @@ public class AbstractService {
             headers.add("Authorization", "Bearer " + accessToken);
             return headers;
         } else {
-            userName = "admin";
-            password = "T455wy04ry41!";
+            userName = "slvinterface";
+            password = "TerraGoEdge1!";
         }
         String plainCreds = userName + ":" + password;
 
