@@ -342,7 +342,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
                 // return;
             }
 
-            if (!nodeMacValue.startsWith("00") && (fixerQrScanValue != null && fixerQrScanValue.startsWith("00"))) {
+            if (nodeMacValue!=null && !nodeMacValue.startsWith("00") && (fixerQrScanValue != null && fixerQrScanValue.startsWith("00"))) {
                 String temp = nodeMacValue;
                 nodeMacValue = fixerQrScanValue;
                 fixerQrScanValue = temp;
@@ -360,6 +360,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
 
             // Check Whether MAC Address is already assigned to other fixtures or not.
             try {
+                if(nodeMacValue!=null)
                 checkMacAddressExists(nodeMacValue, loggingModel.getIdOnController(), nightRideKey, nightRideValue);
             } catch (QRCodeAlreadyUsedException e1) {
                 logger.error("MacAddress (" + e1.getMacAddress()
