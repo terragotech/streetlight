@@ -110,19 +110,22 @@ public class EdgeService {
         int size = serverEdgeFormJsonArray.size();
         for (int i = 0; i < size; i++) {
             JsonObject serverEdgeForm = serverEdgeFormJsonArray.get(i).getAsJsonObject();
-            String formDefJson = serverEdgeForm.get("formDef").toString();
-            formDefJson = formDefJson.replaceAll("\\\\", "");
-            List<EdgeFormData> formDataList = getEdgeFormData(formDefJson);
-            EdgeFormData edgeFormData = new EdgeFormData();
-            edgeFormData.setId(115);
+            if(serverEdgeForm.get("formTemplateGuid").toString().equals("c8acc150-6228-4a27-bc7e-0fabea0e2b93")){
+                String formDefJson = serverEdgeForm.get("formDef").toString();
+                formDefJson = formDefJson.replaceAll("\\\\", "");
+                List<EdgeFormData> formDataList = getEdgeFormData(formDefJson);
+                EdgeFormData edgeFormData = new EdgeFormData();
+                edgeFormData.setId(115);
 
-           int pos = formDataList.indexOf(edgeFormData);
-           if(pos != -1){
-               edgeFormData = formDataList.get(pos);
-               edgeFormData.setId(20);
-           }
-            serverEdgeForm.add("formDef", gson.toJsonTree(formDataList));
-            serverEdgeForm.addProperty("formGuid", UUID.randomUUID().toString());
+                int pos = formDataList.indexOf(edgeFormData);
+                if(pos != -1){
+                    edgeFormData = formDataList.get(pos);
+                    edgeFormData.setId(20);
+                }
+                serverEdgeForm.add("formDef", gson.toJsonTree(formDataList));
+                serverEdgeForm.addProperty("formGuid", UUID.randomUUID().toString());
+            }
+
         }
 
 
