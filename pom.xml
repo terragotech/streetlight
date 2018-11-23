@@ -102,7 +102,7 @@
                             <goal>single</goal>
                         </goals>
                         <configuration>
-                            <finalName>fieldActivityInterface-withoutmunicipality</finalName>
+                            <finalName>amerescousa-layer-v4</finalName>
 
                             <archive>
                                 <manifest>
