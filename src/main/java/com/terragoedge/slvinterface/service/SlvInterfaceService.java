@@ -142,6 +142,7 @@ public abstract class SlvInterfaceService extends AbstractSlvService {
     }
 
     private void processEdgeNote(EdgeNote edgeNote, List<String> noteGuids, String formTemplateGuid, String geozoneId, String controllerStrid) {
+        System.out.println("processEdgeNote :" + edgeNote.getTitle());
         try {
             // Check whether this note is already processed or not.
             if (!noteGuids.contains(edgeNote.getNoteGuid())) {
@@ -211,7 +212,9 @@ public abstract class SlvInterfaceService extends AbstractSlvService {
                             if (!isDeviceExist) {
                                 //Added only for parking templates
                                 logger.info(edgeNote.getTitle() + " is going to Create.");
+                                System.out.println("Device going to create");
                                 createDevice(edgeNote, slvSyncDetail, geozoneId, edgeFormDataList);
+                                System.out.println("Device created");
                             }
                             processSetDevice(edgeFormDataList, configurationJson, edgeNote, paramsList, slvSyncDetail, controllerStrIdValue);
                             replaceOLC(controllerStrIdValue, edgeNote.getTitle(), slvSyncDetail.getMacAddress());
@@ -252,8 +255,8 @@ public abstract class SlvInterfaceService extends AbstractSlvService {
         } catch (MacAddressProcessedException macException) {
             slvSyncDetail.setErrorDetails(macException.getMessage());
             slvSyncDetail.setStatus(Status.Failure.toString());
-        }catch (QRCodeNotMatchedException e){
-            slvSyncDetail.setErrorDetails("Existing QR Code ["+e.getMacAddress()+"] is not matched with SVL.");
+        } catch (QRCodeNotMatchedException e) {
+            slvSyncDetail.setErrorDetails("Existing QR Code [" + e.getMacAddress() + "] is not matched with SVL.");
             slvSyncDetail.setStatus(Status.Failure.toString());
         }
         slvSyncDetail.setProcessedDateTime(new Date().getTime());
@@ -302,7 +305,7 @@ public abstract class SlvInterfaceService extends AbstractSlvService {
         connectionDAO.saveSlvDevices(slvDevice);
     }
 
-    public void processReplaceDevice(FormData formData, ConfigurationJson configurationJson, EdgeNote edgeNote, List<Object> paramsList, SlvSyncDetails slvSyncDetails, String controllerStrIdValue, String geozoneId) throws NoValueException, QRCodeAlreadyUsedException, ReplaceOLCFailedException, DeviceUpdationFailedException, MacAddressProcessedException,QRCodeNotMatchedException {
+    public void processReplaceDevice(FormData formData, ConfigurationJson configurationJson, EdgeNote edgeNote, List<Object> paramsList, SlvSyncDetails slvSyncDetails, String controllerStrIdValue, String geozoneId) throws NoValueException, QRCodeAlreadyUsedException, ReplaceOLCFailedException, DeviceUpdationFailedException, MacAddressProcessedException, QRCodeNotMatchedException {
         List<EdgeFormData> edgeFormDatas = formData.getFormDef();
         String macAddress = validateMACAddress(configurationJson, edgeFormDatas, edgeNote, paramsList);
         slvSyncDetails.setMacAddress(macAddress);
@@ -339,16 +342,16 @@ public abstract class SlvInterfaceService extends AbstractSlvService {
     }
 
 
-    private void validateExistingMACAddress(ConfigurationJson configurationJson, List<EdgeFormData> edgeFormDataList, EdgeNote edgeNote, List<Object> paramsList, SlvSyncDetails slvSyncDetails, String geozoneId) throws NoValueException,QRCodeNotMatchedException {
+    private void validateExistingMACAddress(ConfigurationJson configurationJson, List<EdgeFormData> edgeFormDataList, EdgeNote edgeNote, List<Object> paramsList, SlvSyncDetails slvSyncDetails, String geozoneId) throws NoValueException, QRCodeNotMatchedException {
         List<Id> idList = configurationJson.getIds();
         Id existingMacAddressId = getIDByType(idList, EdgeComponentType.EXISTING_MAC.toString());
         if (existingMacAddressId != null) {
             try {
                 String existingMacAddress = valueById(edgeFormDataList, existingMacAddressId.getId());
-                System.out.println("Existingmac :"+existingMacAddress);
+                System.out.println("Existingmac :" + existingMacAddress);
                 String validMacAddressResult = validateMACAddress(existingMacAddress, edgeNote.getTitle(), geozoneId);
                 validMacAddressResult = validMacAddressResult + " replaced on " + dateFormat(edgeNote.getCreatedDateTime());
-                System.out.println("validMacAddressResult :"+validMacAddressResult);
+                System.out.println("validMacAddressResult :" + validMacAddressResult);
                 addStreetLightData("comment", validMacAddressResult, paramsList);
             } catch (NoValueException e) {
                 if (existingMacAddressId.isRequired()) {
@@ -387,7 +390,8 @@ public abstract class SlvInterfaceService extends AbstractSlvService {
             EdgeFormData edgeFormData = edgeFormDatas.get(pos);
             String value = edgeFormData.getValue();
             if (value == null || value.trim().isEmpty()) {
-                throw new NoValueException("Value is Empty or null." + value);
+                return "";
+                //throw new NoValueException("Value is Empty or null." + value);
             }
             return value;
         } else {
@@ -414,6 +418,14 @@ public abstract class SlvInterfaceService extends AbstractSlvService {
         if (macID != null) {
             try {
                 String newNodeMacAddress = valueById(edgeFormDataList, macID.getId());
+                if (newNodeMacAddress == null || newNodeMacAddress.isEmpty()) {
+                    System.out.println("process validation method interchange mac as fixture");
+                    String fixture = valueById(edgeFormDataList, 23);
+                    if (fixture != null && fixture.startsWith("00")) {
+                        newNodeMacAddress = fixture;
+                        System.out.println("Given fixture mac as fixture : " + newNodeMacAddress);
+                    }
+                }
                 logger.info("newNodeMacAddress:" + newNodeMacAddress);
                 if (newNodeMacAddress.contains("null") || newNodeMacAddress.equals("null")) {
                     throw new MacAddressProcessedException("InValid MAC address." + edgeNote.getTitle(), newNodeMacAddress);
@@ -519,7 +531,8 @@ public abstract class SlvInterfaceService extends AbstractSlvService {
             //  List<EdgeNote> edgeNoteList = gson.fromJson(notesData, listType);
             for (EdgeNote edgenote : edgeNoteList) {
                 logger.info("ProcessNoteTitle is :" + edgenote.getTitle());
-                //processEdgeNote(edgenote, noteGuids, formTemplateGuid, geozoneId, controllerStrIdValue);
+                System.out.print("geozoneId :" + geozoneId);
+                processEdgeNote(edgenote, noteGuids, formTemplateGuid, geozoneId, controllerStrIdValue);
             }
         }
     }

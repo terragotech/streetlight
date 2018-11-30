@@ -272,6 +272,7 @@ public class CanadaEdgeInterface extends SlvInterfaceService {
             geoZoneId = getGeoZoneValue(blockName);
             if(geoZoneId == null){
                 logger.error("No GeoZone");
+                slvSyncDetails.setErrorDetails("No GeoZone");
                 throw new DeviceCreationFailedException("Unable to find GeoZone");
             }
 
