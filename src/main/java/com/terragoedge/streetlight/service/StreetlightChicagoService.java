@@ -96,9 +96,9 @@ public class StreetlightChicagoService extends AbstractProcessor {
 
                 int pos = loggingModelList.indexOf(loggingModelTemp);
                 if (pos != -1) {
-                    logger.info("Note is Already Synced. Previous Sync Status" + loggingModelTemp.getStatus());
                     loggingModelTemp = loggingModelList.get(pos);
-                    if (loggingModelTemp.getStatus() == null || loggingModelTemp.getStatus().toLowerCase().equals("error")) {
+                    logger.info("Note is Already Synced. Previous Sync Status" + loggingModelTemp.getStatus());
+                    if (loggingModelTemp.getStatus() == null || loggingModelTemp.getStatus().toLowerCase().equals("error") || loggingModelTemp.getStatus().toLowerCase().equals("failure")) {
                         streetlightDao.deleteProcessedNotes(loggingModelTemp.getProcessedNoteId());
                         String utilLocId = getUtilLocationId(loggingModelTemp.getErrorDetails());
                         reSync(line, accessToken, true, utilLocId);
