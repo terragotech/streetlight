@@ -6,6 +6,8 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.reflect.TypeToken;
 import com.terragoedge.edgeserver.EdgeFormData;
+import com.terragoedge.edgeserver.EdgeNote;
+import com.terragoedge.edgeserver.FormData;
 import com.terragoedge.streetlight.PropertiesReader;
 import com.terragoedge.streetlight.json.model.SLVEdgeFormData;
 import org.apache.commons.codec.binary.Base64;
@@ -102,8 +104,21 @@ public class EdgeService {
         }
     }
 
-    public JsonObject processEdgeForms(String edgenoteJson, List<SLVEdgeFormData> edgeFormDataList, String errorFormTemplateGuid, SlvData slvData) {
-        updateInstallationForm(edgeFormDataList, slvData);
+
+    protected List<SLVEdgeFormData> getSLVEdgeFormData(String formDefJson) {
+        try {
+            List<SLVEdgeFormData> edgeFormDatas = gson.fromJson(formDefJson, new TypeToken<List<SLVEdgeFormData>>() {
+            }.getType());
+            return edgeFormDatas;
+        } catch (Exception e) {
+            formDefJson = formDefJson.substring(1, formDefJson.length() - 1);
+            List<SLVEdgeFormData> edgeFormDatas = gson.fromJson(formDefJson, new TypeToken<List<SLVEdgeFormData>>() {
+            }.getType());
+            return edgeFormDatas;
+        }
+    }
+
+    public JsonObject processEdgeForms(String edgenoteJson,  String errorFormTemplateGuid, SlvData slvData) {
         JsonObject edgeJsonObject = (JsonObject) jsonParser.parse(edgenoteJson);
         JsonArray serverEdgeFormJsonArray = edgeJsonObject.get("formData").getAsJsonArray();
         int size = serverEdgeFormJsonArray.size();
@@ -111,14 +126,21 @@ public class EdgeService {
             JsonObject serverEdgeForm = serverEdgeFormJsonArray.get(i).getAsJsonObject();
             String currentFormTemplateGuid = serverEdgeForm.get("formTemplateGuid").getAsString();
             if (currentFormTemplateGuid.equals(errorFormTemplateGuid)) {
+                String formDefJson = serverEdgeForm.get("formDef").toString();
+                formDefJson = formDefJson.replaceAll("\\\\", "");
+
+                List<SLVEdgeFormData> edgeFormDataList = getSLVEdgeFormData(formDefJson);
+                updateInstallationForm(edgeFormDataList, slvData);
                 serverEdgeForm.add("formDef", gson.toJsonTree(edgeFormDataList));
                 serverEdgeForm.addProperty("formGuid", UUID.randomUUID().toString());
+            }else{
+                String formDefJson = serverEdgeForm.get("formDef").toString();
+                formDefJson = formDefJson.replaceAll("\\\\", "");
+                List<EdgeFormData> formDataList = getEdgeFormData(formDefJson);
+                serverEdgeForm.add("formDef", gson.toJsonTree(formDataList));
+                serverEdgeForm.addProperty("formGuid", UUID.randomUUID().toString());
             }
-            String formDefJson = serverEdgeForm.get("formDef").toString();
-            formDefJson = formDefJson.replaceAll("\\\\", "");
-            List<EdgeFormData> formDataList = getEdgeFormData(formDefJson);
-            serverEdgeForm.add("formDef", gson.toJsonTree(formDataList));
-            serverEdgeForm.addProperty("formGuid", UUID.randomUUID().toString());
+
         }
         edgeJsonObject.add("formData", serverEdgeFormJsonArray);
         edgeJsonObject.addProperty("createdDateTime", System.currentTimeMillis());
