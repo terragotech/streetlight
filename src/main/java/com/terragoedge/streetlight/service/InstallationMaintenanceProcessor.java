@@ -123,14 +123,14 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
                         case "New":
                             processNewGroup(edgeFormDatas, edgeNote, installMaintenanceLogModel, isReSync, existingFixtureInfo, utilLocId, nightRideKey, formatedValueNR);
                             installMaintenanceLogModel.setInstalledDate(edgeNote.getCreatedDateTime());
-                            return;
+                            break;
                         case "Repairs & Outages":
                             repairAndOutage(edgeFormDatas, edgeNote, installMaintenanceLogModel, existingFixtureInfo, utilLocId, nightRideKey, formatedValueNR, formatedValueNR);
                             installMaintenanceLogModel.setReplacedDate(edgeNote.getCreatedDateTime());
-                            return;
+                            break;
                         case "Other Task":
                             // processOtherTask(edgeFormDatas, edgeNote, installMaintenanceLogModel, nightRideKey, formatedValueNR);
-                            return;
+                            break;
                     }
                 } catch (NoValueException e) {
                     logger.error("error in processNewAction method", e);
@@ -193,11 +193,10 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
             } else {
                 logger.info("Replace OLC called");
                 // replace OlC
-                if (isNew && macAddress==null || macAddress.isEmpty()) {
+                if (isNew && macAddress == null || macAddress.isEmpty()) {
                     loggingModel.setStatus(MessageConstants.SUCCESS);
                     return;
-                }
-                else {
+                } else {
                     replaceOLC(controllerStrIdValue, idOnController, macAddress);// insert mac address
                 }
                 logger.info("Replace OLC End");
@@ -326,9 +325,9 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
                 logger.info("Node MAC Val" + nodeMacValue);
             } catch (NoValueException e) {
                 logger.error("Error in while getting MAC Address", e);
-               // loggingModel.setErrorDetails(MessageConstants.NODE_MAC_ADDRESS_NOT_AVAILABLE);
-               // loggingModel.setStatus(MessageConstants.ERROR);
-               // return;
+                // loggingModel.setErrorDetails(MessageConstants.NODE_MAC_ADDRESS_NOT_AVAILABLE);
+                // loggingModel.setStatus(MessageConstants.ERROR);
+                // return;
             }
 
             // Get Fixer QR Scan value
@@ -343,8 +342,10 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
                 // loggingModel.setProcessOtherForm(true);
                 // return;
             }
-
-            if (nodeMacValue!=null && !nodeMacValue.startsWith("00") && (fixerQrScanValue != null && fixerQrScanValue.startsWith("00"))) {
+            if ((nodeMacValue == null && fixerQrScanValue == null) || (nodeMacValue.isEmpty() && fixerQrScanValue.isEmpty())) {
+                return;
+            }
+            if (nodeMacValue != null && !nodeMacValue.startsWith("00") && (fixerQrScanValue != null && fixerQrScanValue.startsWith("00"))) {
                 String temp = nodeMacValue;
                 nodeMacValue = fixerQrScanValue;
                 fixerQrScanValue = temp;
@@ -352,7 +353,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
 
             if (isResync) {
                 try {
-                 replaceOLC(loggingModel.getControllerSrtId(), loggingModel.getIdOnController(), "");
+                    replaceOLC(loggingModel.getControllerSrtId(), loggingModel.getIdOnController(), "");
                 } catch (Exception e) {
                     String message = e.getMessage();
                 }
@@ -361,8 +362,8 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
 
             // Check Whether MAC Address is already assigned to other fixtures or not.
             try {
-                if(nodeMacValue!=null)
-                checkMacAddressExists(nodeMacValue, loggingModel.getIdOnController(), nightRideKey, nightRideValue);
+                if (nodeMacValue != null)
+                    checkMacAddressExists(nodeMacValue, loggingModel.getIdOnController(), nightRideKey, nightRideValue);
             } catch (QRCodeAlreadyUsedException e1) {
                 logger.error("MacAddress (" + e1.getMacAddress()
                         + ")  - Already in use. So this pole is not synced with SLV. Note Title :[" + edgeNote.getTitle()
