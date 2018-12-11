@@ -10,6 +10,7 @@ public class SlvData {
     private String processedTime;
     private long installedDate;
     private long replacedDate;
+    private boolean isFixtureOnly;
 
     public String getNoteTitle() {
         return noteTitle;
@@ -70,6 +71,14 @@ public class SlvData {
 
     public void setReplacedDate(long replacedDate) {
         this.replacedDate = replacedDate;
+    }
+
+    public boolean isFixtureOnly() {
+        return isFixtureOnly;
+    }
+
+    public void setFixtureOnly(boolean fixtureOnly) {
+        isFixtureOnly = fixtureOnly;
     }
 
     @Override
