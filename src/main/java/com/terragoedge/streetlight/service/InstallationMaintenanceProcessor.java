@@ -352,7 +352,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
                 nodeMacValue = fixerQrScanValue;
                 fixerQrScanValue = temp;
             }
-            if (nodeMacValue == null && fixerQrScanValue != null) {
+            if ((nodeMacValue == null || nodeMacValue.isEmpty()) && fixerQrScanValue != null) {
                 loggingModel.setFixtureOnly(true);
             } else {
                 loggingModel.setFixtureOnly(false);

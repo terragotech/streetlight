@@ -35,6 +35,9 @@ public class SlvToEdgeService extends EdgeService {
         }
         EdgeNote edgeNote = gson.fromJson(notesJson, EdgeNote.class);
         if (edgeNote != null) {
+            if(slvData.isFixtureOnly()){
+                setFixtureOnly(edgeNote);
+            }
             List<FormData> formDataList = edgeNote.getFormData();
             for (FormData formData : formDataList) {
                 if (formData.getFormTemplateGuid().equals(formTemplateGuid)) {
