@@ -7,6 +7,7 @@ import com.terragoedge.edgeserver.EdgeFormData;
 import com.terragoedge.edgeserver.EdgeNote;
 import com.terragoedge.edgeserver.FormData;
 import com.terragoedge.streetlight.PropertiesReader;
+import com.terragoedge.streetlight.json.model.Dictionary;
 import com.terragoedge.streetlight.json.model.SLVEdgeFormData;
 import org.springframework.http.ResponseEntity;
 
@@ -41,6 +42,27 @@ public class SlvToEdgeService extends EdgeService {
                     return;
                 }
             }
+        }
+    }
+
+
+    private void setFixtureOnly(EdgeNote edgeNote) {
+        List<Dictionary> dictionaryList = edgeNote.getDictionary();
+        boolean isLayerPresent = false;
+        for (Dictionary dictionary : dictionaryList) {
+            if (dictionary.getKey() != null && dictionary.getKey().equals("groupGuid")) {
+                isLayerPresent = true;
+                if (dictionary.getValue() == null || !dictionary.getValue().equals("f1fbdfd3-89f4-4ffe-b7fa-160437d782be")) {
+                    dictionary.setValue("f1fbdfd3-89f4-4ffe-b7fa-160437d782be");
+                }
+            }
+        }
+
+        if (!isLayerPresent) {
+            Dictionary dictionary = new Dictionary();
+            dictionary.setKey("groupGuid");
+            dictionary.setValue("f1fbdfd3-89f4-4ffe-b7fa-160437d782be");
+            dictionaryList.add(dictionary);
         }
     }
 
