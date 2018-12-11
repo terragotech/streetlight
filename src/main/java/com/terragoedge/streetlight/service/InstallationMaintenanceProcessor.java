@@ -342,13 +342,20 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
                 // loggingModel.setProcessOtherForm(true);
                 // return;
             }
-            if ((nodeMacValue == null && fixerQrScanValue == null) || (nodeMacValue.isEmpty() && fixerQrScanValue.isEmpty())) {
+            if ((nodeMacValue == null && fixerQrScanValue == null) || ((nodeMacValue != null && nodeMacValue.isEmpty()) && (fixerQrScanValue != null && fixerQrScanValue.isEmpty()))) {
+                loggingModel.setStatus(MessageConstants.ERROR);
+                loggingModel.setErrorDetails("No MacAddress and FixtureQrScan");
                 return;
             }
             if (nodeMacValue != null && !nodeMacValue.startsWith("00") && (fixerQrScanValue != null && fixerQrScanValue.startsWith("00"))) {
                 String temp = nodeMacValue;
                 nodeMacValue = fixerQrScanValue;
                 fixerQrScanValue = temp;
+            }
+            if (nodeMacValue == null && fixerQrScanValue != null) {
+                loggingModel.setFixtureOnly(true);
+            } else {
+                loggingModel.setFixtureOnly(false);
             }
 
             if (isResync) {

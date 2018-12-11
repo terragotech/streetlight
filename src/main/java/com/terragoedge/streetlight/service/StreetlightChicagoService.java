@@ -170,6 +170,7 @@ public class StreetlightChicagoService extends AbstractProcessor {
             slvData.setErrorDetails(installMaintenanceLogModel.getErrorDetails());
             slvData.setInstalledDate(installMaintenanceLogModel.getInstalledDate());
             slvData.setReplacedDate(installMaintenanceLogModel.getReplacedDate());
+            slvData.setFixtureOnly(installMaintenanceLogModel.isFixtureOnly());
             slvToEdgeService.run(slvData);
         }catch (Exception e){
             logger.error("Error in updateSlvStatusToEdge",e);
