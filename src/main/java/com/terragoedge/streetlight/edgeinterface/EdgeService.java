@@ -118,7 +118,7 @@ public class EdgeService {
         }
     }
 
-    public JsonObject processEdgeForms(String edgenoteJson,  String errorFormTemplateGuid, SlvData slvData) {
+    public JsonObject processEdgeForms(String edgenoteJson, String errorFormTemplateGuid, SlvData slvData) {
         JsonObject edgeJsonObject = (JsonObject) jsonParser.parse(edgenoteJson);
         JsonArray serverEdgeFormJsonArray = edgeJsonObject.get("formData").getAsJsonArray();
         int size = serverEdgeFormJsonArray.size();
@@ -133,7 +133,7 @@ public class EdgeService {
                 updateInstallationForm(edgeFormDataList, slvData);
                 serverEdgeForm.add("formDef", gson.toJsonTree(edgeFormDataList));
                 serverEdgeForm.addProperty("formGuid", UUID.randomUUID().toString());
-            }else{
+            } else {
                 String formDefJson = serverEdgeForm.get("formDef").toString();
                 formDefJson = formDefJson.replaceAll("\\\\", "");
                 List<EdgeFormData> formDataList = getEdgeFormData(formDefJson);
@@ -163,8 +163,22 @@ public class EdgeService {
         String relacedDateId = PropertiesReader.getProperties().getProperty("edge.slv.replacedid");
         System.out.println("synctoslv :" + syncToSlvId);
         System.out.println("errorDetailid :" + errorDetailid);
-        updateFormValue(edgeFormDataList, Integer.parseInt(syncToSlvId), slvData.getSyncToSlvStatus());
-        updateFormValue(edgeFormDataList, Integer.parseInt(errorDetailid), slvData.getErrorDetails());
+        try {
+            for(EdgeFormData edgeFormData: edgeFormDataList){
+                if(edgeFormData.getId()==115 && edgeFormData.getLabel().equals("Fixture QR Scan")){
+                    edgeFormData.setId(20);
+                    break;
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        try {
+            updateFormValue(edgeFormDataList, Integer.parseInt(errorDetailid), slvData.getErrorDetails());
+            updateFormValue(edgeFormDataList, Integer.parseInt(syncToSlvId), slvData.getSyncToSlvStatus());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
         updateFormValue(edgeFormDataList, Integer.parseInt(processTimeId), formatDate(Long.valueOf(slvData.getProcessedTime())));
         if (slvData.getInstalledDate() > 0) {
             updateFormValue(edgeFormDataList, Integer.parseInt(installedDateId), formatDate(slvData.getInstalledDate()));

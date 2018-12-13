@@ -71,6 +71,19 @@ public abstract class AbstractProcessor {
         throw new NoValueException(id + " is not found.");
     }
 
+    protected String valueFixtureValueById(List<EdgeFormData> edgeFormDatas, int id) {
+        for (EdgeFormData edgeFormData : edgeFormDatas) {
+            if (edgeFormData.getId() == id) {
+                String value = edgeFormData.getValue();
+                if (value == null || value.trim().isEmpty()||value.contains("null")) {
+                   return null;
+                }
+                return value;
+            }
+        }
+
+        return null;
+    }
 
     /**
      * Load Mac address and corresponding IdOnController from SLV Server

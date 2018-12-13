@@ -103,6 +103,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
     }
 
     public void processNewAction(EdgeNote edgeNote, InstallMaintenanceLogModel installMaintenanceLogModel, boolean isReSync, String utilLocId) {
+        logger.info("processNewAction");
         List<FormData> formDatas = edgeNote.getFormData();
 
         String nightRideKey = properties.getProperty("amerescousa.night.ride.key_for_slv");
@@ -110,17 +111,20 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
         ;
         boolean isInstallForm = false;
         for (FormData formData : formDatas) {
+            logger.info("Processing Form :"+formData.getFormTemplateGuid() );
             if (formData.getFormTemplateGuid().equals(INSTATALLATION_AND_MAINTENANCE_GUID) || formData.getFormTemplateGuid().equals("fa47c708-fb82-4877-938c-992e870ae2a4") || formData.getFormTemplateGuid().equals("c8acc150-6228-4a27-bc7e-0fabea0e2b93")) {
                 isInstallForm = true;
+                logger.info("Install  Form  is present.");
                 installMaintenanceLogModel.setInstallFormPresent(true);
                 LoggingModel existingFixtureInfo = getExistingIdOnContoller(edgeNote);
                 List<EdgeFormData> edgeFormDatas = formData.getFormDef();
                 try {
-
+                    logger.info("before Action Val");
                     String value = value(edgeFormDatas, "Action");
-                    logger.info("Action Val" + value);
+                    logger.info("Action Val is:" + value);
                     switch (value) {
                         case "New":
+                            logger.info("new option selected");
                             processNewGroup(edgeFormDatas, edgeNote, installMaintenanceLogModel, isReSync, existingFixtureInfo, utilLocId, nightRideKey, formatedValueNR);
                             installMaintenanceLogModel.setInstalledDate(edgeNote.getCreatedDateTime());
                             break;
@@ -333,9 +337,15 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
             // Get Fixer QR Scan value
             String fixerQrScanValue = null;
             try {
-                fixerQrScanValue = valueById(edgeFormDatas, 20);
+                fixerQrScanValue = valueFixtureValueById(edgeFormDatas, 20);
                 logger.info("Fixture QR Scan Val" + fixerQrScanValue);
+                if(fixerQrScanValue==null || fixerQrScanValue.contains("null") || fixerQrScanValue.trim().isEmpty()){
+                    fixerQrScanValue = valueById(edgeFormDatas, 115);
+                    logger.info("Fixture QR Scan Val - 115" + fixerQrScanValue);
+                }
             } catch (NoValueException e) {
+
+                logger.info("Fixture QR Scan Val" + fixerQrScanValue);
                 logger.error("Error in while getting MAC Fixture QR Scan", e);
                 /*loggingModel.setErrorDetails(MessageConstants.FIXTURE_CODE_NOT_AVAILABLE);
                 loggingModel.setStatus(MessageConstants.ERROR);*/

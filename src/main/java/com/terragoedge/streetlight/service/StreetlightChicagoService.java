@@ -125,13 +125,14 @@ public class StreetlightChicagoService extends AbstractProcessor {
 
 
     private void reSync(String noteGuid, String accessToken, boolean isResync, String utilLocId) {
+        logger.info("resync method called ");
         // Get Edge Server Url from properties
         String url = PropertiesReader.getProperties().getProperty("streetlight.edge.url.main");
 
         url = url + PropertiesReader.getProperties().getProperty("streetlight.edge.url.notes.get");
 
         url = url + "/" + noteGuid;
-
+        logger.info("Given url is :" + url);
         // Get NoteList from edgeserver
         ResponseEntity<String> responseEntity = restService.getRequest(url, false, accessToken);
 
@@ -139,28 +140,28 @@ public class StreetlightChicagoService extends AbstractProcessor {
         if (responseEntity.getStatusCode().is2xxSuccessful()) {
             // Get Response String
             String notesData = responseEntity.getBody();
-
+            logger.info("rest service data:" + notesData);
             EdgeNote edgeNote = gson.fromJson(notesData, EdgeNote.class);
-         //   if(!edgeNote.getCreatedBy().contains("admin")){
-                InstallMaintenanceLogModel installMaintenanceLogModel = new InstallMaintenanceLogModel();
-                installMaintenanceLogModel.setLastSyncTime(edgeNote.getSyncTime());
-                installMaintenanceLogModel.setProcessedNoteId(edgeNote.getNoteGuid());
-                installMaintenanceLogModel.setNoteName(edgeNote.getTitle());
-                installMaintenanceLogModel.setCreatedDatetime(String.valueOf(edgeNote.getCreatedDateTime()));
-                loadDefaultVal(edgeNote, installMaintenanceLogModel);
-
-                installationMaintenanceProcessor.processNewAction(edgeNote, installMaintenanceLogModel, isResync, utilLocId);
-                updateSlvStatusToEdge(installMaintenanceLogModel,edgeNote);
-                LoggingModel loggingModel = installMaintenanceLogModel;
-                streetlightDao.insertProcessedNotes(loggingModel, installMaintenanceLogModel);
-          //  }
+            //   if(!edgeNote.getCreatedBy().contains("admin")){
+            InstallMaintenanceLogModel installMaintenanceLogModel = new InstallMaintenanceLogModel();
+            installMaintenanceLogModel.setLastSyncTime(edgeNote.getSyncTime());
+            installMaintenanceLogModel.setProcessedNoteId(edgeNote.getNoteGuid());
+            installMaintenanceLogModel.setNoteName(edgeNote.getTitle());
+            installMaintenanceLogModel.setCreatedDatetime(String.valueOf(edgeNote.getCreatedDateTime()));
+            loadDefaultVal(edgeNote, installMaintenanceLogModel);
+            logger.info("going to call processnew action");
+            installationMaintenanceProcessor.processNewAction(edgeNote, installMaintenanceLogModel, isResync, utilLocId);
+            updateSlvStatusToEdge(installMaintenanceLogModel, edgeNote);
+            LoggingModel loggingModel = installMaintenanceLogModel;
+            streetlightDao.insertProcessedNotes(loggingModel, installMaintenanceLogModel);
+            //  }
         }
 
 
     }
 
 
-    private void updateSlvStatusToEdge(InstallMaintenanceLogModel installMaintenanceLogModel,EdgeNote edgeNote){
+    private void updateSlvStatusToEdge(InstallMaintenanceLogModel installMaintenanceLogModel, EdgeNote edgeNote) {
         try {
             SlvData slvData = new SlvData();
             slvData.setNoteGuid(edgeNote.getNoteGuid());
@@ -172,8 +173,8 @@ public class StreetlightChicagoService extends AbstractProcessor {
             slvData.setReplacedDate(installMaintenanceLogModel.getReplacedDate());
             slvData.setFixtureOnly(installMaintenanceLogModel.isFixtureOnly());
             slvToEdgeService.run(slvData);
-        }catch (Exception e){
-            logger.error("Error in updateSlvStatusToEdge",e);
+        } catch (Exception e) {
+            logger.error("Error in updateSlvStatusToEdge", e);
         }
 
     }
@@ -198,7 +199,7 @@ public class StreetlightChicagoService extends AbstractProcessor {
         }
 
 
-        if( contextListHashMap.isEmpty()){
+        if (contextListHashMap.isEmpty()) {
             logger.error("Proposed context data are not loaded.");
             return;
         }
@@ -215,7 +216,7 @@ public class StreetlightChicagoService extends AbstractProcessor {
         if (systemDate == null || systemDate.equals("false")) {
             String yesterday = getYesterdayDate();
             //  url = url + "modifiedAfter=" + yesterday;
-            if(lastSynctime == -1){
+            if (lastSynctime == -1) {
                 lastSynctime = System.currentTimeMillis() - (3600000 * 2);
             }
             url = url + "lastSyncTime=" + lastSynctime;
@@ -241,7 +242,7 @@ public class StreetlightChicagoService extends AbstractProcessor {
             for (EdgeNote edgeNote : edgeNoteList) {
                 try {
                     if (!noteGuids.contains(edgeNote.getNoteGuid())) {
-                        if(!edgeNote.getCreatedBy().contains("admin") && !edgeNote.getCreatedBy().contains("slvinterface")){
+                        if (!edgeNote.getCreatedBy().contains("admin") && !edgeNote.getCreatedBy().contains("slvinterface")) {
                             InstallMaintenanceLogModel installMaintenanceLogModel = new InstallMaintenanceLogModel();
 
                             installMaintenanceLogModel.setProcessedNoteId(edgeNote.getNoteGuid());
@@ -250,7 +251,7 @@ public class StreetlightChicagoService extends AbstractProcessor {
                             installMaintenanceLogModel.setCreatedDatetime(String.valueOf(edgeNote.getCreatedDateTime()));
                             loadDefaultVal(edgeNote, installMaintenanceLogModel);
                             installationMaintenanceProcessor.processNewAction(edgeNote, installMaintenanceLogModel, false, null);
-                            updateSlvStatusToEdge(installMaintenanceLogModel,edgeNote);
+                            updateSlvStatusToEdge(installMaintenanceLogModel, edgeNote);
                             LoggingModel loggingModel = installMaintenanceLogModel;
                             streetlightDao.insertProcessedNotes(loggingModel, installMaintenanceLogModel);
                         }
@@ -415,7 +416,7 @@ public class StreetlightChicagoService extends AbstractProcessor {
                 if (macAddress != null) {
                     loggingModel.setMacAddress(macAddress);
 
-                  //  addOtherParams(edgeNote, paramsList, idOnController, utilLocId, true);
+                    //  addOtherParams(edgeNote, paramsList, idOnController, utilLocId, true);
 
 
                     // DimmingGroupName

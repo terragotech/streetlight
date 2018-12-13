@@ -1,9 +1,9 @@
 package com.terragoedge.streetlight.logging;
 
-public class InstallMaintenanceLogModel extends  LoggingModel {
+public class InstallMaintenanceLogModel extends LoggingModel {
 
     private boolean isInstallFormPresent;
-private boolean isFixtureOnly;
+    private boolean isFixtureOnly;
 
     public boolean isInstallFormPresent() {
         return isInstallFormPresent;
