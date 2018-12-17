@@ -10,14 +10,15 @@ public class StreetlightApp {
 
 
 	public static void main(String[] args) {
-        while (true){
-            try{
-                StreetlightChicagoService streetlightChicagoService = new StreetlightChicagoService();
-                streetlightChicagoService.run();
-                Thread.sleep(50000);
-            }catch (Exception e){
-                e.printStackTrace();
-            }
+        StreetlightChicagoService streetlightChicagoService = null;
+        try{
+            streetlightChicagoService = new StreetlightChicagoService();
+            streetlightChicagoService.loadDevices();
+            streetlightChicagoService.run();
+        }catch (Exception e){
+            e.printStackTrace();
+        }finally {
+           // streetlightChicagoService.closeConnection();
         }
 	}
 

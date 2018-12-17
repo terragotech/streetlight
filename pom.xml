@@ -60,9 +60,16 @@
 
 
         <dependency>
-            <groupId>javax.mail</groupId>
-            <artifactId>mail</artifactId>
-            <version>1.4.7</version>
+            <groupId>com.j256.ormlite</groupId>
+            <artifactId>ormlite-jdbc</artifactId>
+            <version>5.1</version>
+        </dependency>
+
+        <!-- https://mvnrepository.com/artifact/com.j256.ormlite/ormlite-core -->
+        <dependency>
+            <groupId>com.j256.ormlite</groupId>
+            <artifactId>ormlite-core</artifactId>
+            <version>5.1</version>
         </dependency>
 
 
@@ -90,7 +97,7 @@
                             <goal>single</goal>
                         </goals>
                         <configuration>
-                            <finalName>ameresco_usa_streetlight_v60</finalName>
+                            <finalName>ameresco_usa_streetlight_load_data</finalName>
 
                             <archive>
                                 <manifest>

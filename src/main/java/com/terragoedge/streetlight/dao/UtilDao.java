@@ -9,11 +9,15 @@ import com.terragoedge.streetlight.StreetlightDaoConnection;
 
 public abstract class UtilDao {
 	
-	Connection connection = null; 
+	Connection connection = null;
+
+	ConnectionDAO connectionDAO = null;
 	
 	
 	public UtilDao(){
 		connection = StreetlightDaoConnection.getInstance().getConnection();
+		connectionDAO = ConnectionDAO.INSTANCE;
+		connectionDAO.reConnect();
 	}
 
 	

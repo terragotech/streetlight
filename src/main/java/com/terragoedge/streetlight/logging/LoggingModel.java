@@ -29,6 +29,36 @@ public class LoggingModel {
     private long installedDate;
     private long replacedDate;
 
+    private boolean isMacAddressUsed;
+    private boolean isFixtureQRSame;
+
+    private String repairsOption;
+
+
+    public String getRepairsOption() {
+        return repairsOption;
+    }
+
+    public void setRepairsOption(String repairsOption) {
+        this.repairsOption = repairsOption;
+    }
+
+    public boolean isFixtureQRSame() {
+        return isFixtureQRSame;
+    }
+
+    public void setFixtureQRSame(boolean fixtureQRSame) {
+        isFixtureQRSame = fixtureQRSame;
+    }
+
+    public boolean isMacAddressUsed() {
+        return isMacAddressUsed;
+    }
+
+    public void setMacAddressUsed(boolean macAddressUsed) {
+        isMacAddressUsed = macAddressUsed;
+    }
+
     public String getControllerSrtId() {
         return controllerSrtId;
     }

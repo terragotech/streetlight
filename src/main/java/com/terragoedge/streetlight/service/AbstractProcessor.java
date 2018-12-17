@@ -6,14 +6,20 @@ import com.terragoedge.edgeserver.EdgeFormData;
 import com.terragoedge.edgeserver.EdgeNote;
 import com.terragoedge.edgeserver.Value;
 import com.terragoedge.streetlight.PropertiesReader;
+import com.terragoedge.streetlight.dao.ConnectionDAO;
 import com.terragoedge.streetlight.dao.StreetlightDao;
+import com.terragoedge.streetlight.enumeration.ProcessType;
 import com.terragoedge.streetlight.exception.*;
+import com.terragoedge.streetlight.json.model.ContextList;
+import com.terragoedge.streetlight.json.model.SlvServerData;
+import com.terragoedge.streetlight.json.model.SlvServerDataColumnPos;
 import com.terragoedge.streetlight.logging.InstallMaintenanceLogModel;
 import com.terragoedge.streetlight.logging.LoggingModel;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 import org.springframework.http.ResponseEntity;
 
+import java.sql.SQLException;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
@@ -26,7 +32,6 @@ public abstract class AbstractProcessor {
     Properties properties = null;
     Gson gson = null;
     JsonParser jsonParser = null;
-    EdgeMailService edgeMailService = null;
 
     WeakHashMap<String, String> contextListHashMap = new WeakHashMap<>();
 
@@ -35,7 +40,6 @@ public abstract class AbstractProcessor {
         this.restService = new RestService();
         this.properties = PropertiesReader.getProperties();
         this.gson = new Gson();
-        this.edgeMailService = new EdgeMailService();
         this.jsonParser = new JsonParser();
     }
 
@@ -90,7 +94,7 @@ public abstract class AbstractProcessor {
      *
      * @throws Exception
      */
-    public boolean checkMacAddressExists(String macAddress, String idOnController, String nightRideKey, String nightRideValue)
+    public boolean checkMacAddressExists(String macAddress, String idOnController, String nightRideKey, String nightRideValue,LoggingModel loggingModel)
             throws QRCodeAlreadyUsedException, Exception {
         logger.info("Getting Mac Address from SLV.");
         String mainUrl = properties.getProperty("streetlight.slv.url.main");
@@ -114,16 +118,18 @@ public abstract class AbstractProcessor {
             List<Value> values = deviceMacAddress.getValue();
             StringBuilder stringBuilder = new StringBuilder();
             if (values == null || values.size() == 0) {
+                loggingModel.setMacAddressUsed(false);
                 return false;
             } else {
                 for (Value value : values) {
-                    if (value.getIdOnController().equals(idOnController)) {
+                    if (value.getIdOnController().equals(idOnController) && nightRideKey != null) {
                         sendNightRideToSLV(value.getIdOnController(), nightRideKey, nightRideValue);
                     }
                     stringBuilder.append(value.getIdOnController());
                     stringBuilder.append("\n");
                 }
             }
+            loggingModel.setMacAddressUsed(true);
             throw new QRCodeAlreadyUsedException(stringBuilder.toString(), macAddress);
         } else {
             throw new Exception(response.getBody());
@@ -135,21 +141,18 @@ public abstract class AbstractProcessor {
     protected void addOtherParams(EdgeNote edgeNote, List<Object> paramsList, String idOnContoller, String utilLocId, boolean isNew, String fixerQrScanValue) {
         // luminaire.installdate - 2017-09-07 09:47:35
         addStreetLightData("install.date", dateFormat(edgeNote.getCreatedDateTime()), paramsList);
-        /*// controller.installdate - 2017/10/10
-        addStreetLightData("luminaire.installdate", dateFormat(edgeNote.getCreatedDateTime()), paramsList);*/
 
+        String installStatus = null;
         if (isNew) {
-            addStreetLightData("cslp.node.install.date", dateFormat(edgeNote.getCreatedDateTime()), paramsList);
             if (fixerQrScanValue != null && fixerQrScanValue.trim().length() > 0) {
                 logger.info("Fixture QR scan not empty and set luminare installdate" + dateFormat(edgeNote.getCreatedDateTime()));
                 logger.info("Fixture QR scan not empty and set cslp.lum.install.date" + dateFormat(edgeNote.getCreatedDateTime()));
                 addStreetLightData("cslp.lum.install.date", dateFormat(edgeNote.getCreatedDateTime()), paramsList);
-                addStreetLightData("installStatus", "Installed", paramsList);
+                installStatus = "Installed";
                 // controller.installdate - 2017/10/10
                 addStreetLightData("luminaire.installdate", dateFormat(edgeNote.getCreatedDateTime()), paramsList);
             }else {
-               // addStreetLightData("installStatus", "Verified", paramsList);
-                addStreetLightData("installStatus", "Installed", paramsList);
+                installStatus = "Installed";
             }
         }
 
@@ -177,7 +180,8 @@ public abstract class AbstractProcessor {
                 edgeNotebookName = edgeNotebookName + " Acorns";
             }
             if(dimmingGroupName.contains("Node Only") && isNew){
-                addStreetLightData("installStatus", "Verified", paramsList);
+                installStatus = "Verified";
+
             }
         }
 
@@ -186,6 +190,9 @@ public abstract class AbstractProcessor {
        /* if (dimmingGroupName != null && dimmingGroupName.trim().toLowerCase().contains("acorns")) {
             edgeNotebookName = edgeNotebookName +" Acorns";
         }*/
+       if(installStatus != null){
+           addStreetLightData("installStatus", installStatus, paramsList);
+       }
 
 
         addStreetLightData("DimmingGroupName", edgeNotebookName, paramsList);
@@ -212,7 +219,7 @@ public abstract class AbstractProcessor {
     // RFM0455, 07/24/17, 54W, 120/277V, 4000K, 8140 Lm, R2M, Gray, Advance,
     // 442100083510, DMG
 
-    public void buildFixtureStreetLightData(String data, List<Object> paramsList, EdgeNote edgeNote)
+    public void buildFixtureStreetLightData(String data, List<Object> paramsList, EdgeNote edgeNote,SlvServerData  slvServerData)
             throws InValidBarCodeException {
         String[] fixtureInfo = data.split(",");
         logger.info("Fixture QR Scan Val lenght" + fixtureInfo.length);
@@ -230,8 +237,11 @@ public abstract class AbstractProcessor {
                 partNumber = fixtureInfo[2].trim();
             }
             addStreetLightData("device.luminaire.partnumber", partNumber, paramsList);
+            slvServerData.setLuminairePartNumber(partNumber);
             addStreetLightData("luminaire.model", model, paramsList);
+            slvServerData.setLuminaireModel(model);
             addStreetLightData("device.luminaire.manufacturedate", fixtureInfo[3], paramsList);
+            slvServerData.setLuminaireManufacturedate(fixtureInfo[3]);
             String powerVal = fixtureInfo[4];
             if (powerVal != null && !powerVal.isEmpty()) {
                 powerVal = powerVal.replaceAll("W", "");
@@ -240,18 +250,26 @@ public abstract class AbstractProcessor {
 
             addStreetLightData("power", powerVal, paramsList);
             addStreetLightData("comed.litetype", fixtureInfo[5], paramsList);
+
             // dailyReportCSV.setFixtureType(fixtureInfo[5]);
             addStreetLightData("device.luminaire.colortemp", fixtureInfo[6], paramsList);
+            slvServerData.setLuminaireColorTemp(fixtureInfo[6]);
             addStreetLightData("device.luminaire.lumenoutput", fixtureInfo[7], paramsList);
+            slvServerData.setLumenOutput(fixtureInfo[7]);
             addStreetLightData("luminaire.DistributionType", fixtureInfo[8], paramsList);
+            slvServerData.setDistributionType(fixtureInfo[8]);
             addStreetLightData("luminaire.colorcode", fixtureInfo[9], paramsList);
+            slvServerData.setColorCode(fixtureInfo[9]);
             addStreetLightData("device.luminaire.drivermanufacturer", fixtureInfo[10], paramsList);
+            slvServerData.setDriverManufacturer(fixtureInfo[10]);
             addStreetLightData("device.luminaire.driverpartnumber", fixtureInfo[11], paramsList);
+            slvServerData.setDriverPartNumber(fixtureInfo[11]);
             addStreetLightData("ballast.dimmingtype", fixtureInfo[12], paramsList);
+            slvServerData.setDimmingType(fixtureInfo[12]);
 
         } else {
-            /*throw new InValidBarCodeException(
-                    "Fixture MAC address is not valid (" + edgeNote.getTitle() + "). Value is:" + data);*/
+            throw new InValidBarCodeException(
+                    "Fixture MAC address is not valid (" + edgeNote.getTitle() + "). Value is:" + data);
         }
     }
 
@@ -494,5 +512,156 @@ public abstract class AbstractProcessor {
                 logger.info(MessageConstants.SUCCESS);
             }
         }
+    }
+
+
+
+    public void loadDevices() throws DeviceLoadException, SQLException {
+        logger.info("load Devices Called.");
+        System.out.println("load Devices Called.");
+        String geoZoneDevices = properties.getProperty("streetlight.slv.url.getgeozone.devices");
+        String mainUrl = properties.getProperty("streetlight.url.main");
+        String url = mainUrl + geoZoneDevices;
+        List<Object> paramsList = new ArrayList<Object>();
+        paramsList.add("valueNames=idOnController");
+        paramsList.add("valueNames=MacAddress");
+        paramsList.add("valueNames=device.luminaire.partnumber");
+        paramsList.add("valueNames=luminaire.model");
+        paramsList.add("valueNames=device.luminaire.manufacturedate");
+        paramsList.add("valueNames=device.luminaire.colortemp");
+        paramsList.add("valueNames=device.luminaire.lumenoutput");
+        paramsList.add("valueNames=luminaire.DistributionType");
+        paramsList.add("valueNames=luminaire.colorcode");
+        paramsList.add("valueNames=device.luminaire.drivermanufacturer");
+        paramsList.add("valueNames=device.luminaire.driverpartnumber");
+        paramsList.add("valueNames=ballast.dimmingtype");
+        paramsList.add("ser=json");
+        String params = StringUtils.join(paramsList, "&");
+        url = url + "&" + params;
+        logger.info(url);
+        System.out.println(url);
+        SlvServerDataColumnPos slvServerDataColumnPos = null;
+        ResponseEntity<String> response = restService.getContextPostRequest(url, null);
+        if (response.getStatusCode().is2xxSuccessful()) {
+            System.out.println("Got Response.");
+            String responseString = response.getBody();
+            if (responseString != null) {
+                ContextList contextList = gson.fromJson(responseString, ContextList.class);
+                int pos = 0;
+                slvServerDataColumnPos = new SlvServerDataColumnPos();
+                for (String columnName : contextList.getColumns()) {
+                    loadColumnPos(columnName,slvServerDataColumnPos,pos);
+                    pos += 1;
+                }
+
+                List<List<String>> valuesList =  contextList.getValues();
+                for(List<String> valueList : valuesList) {
+                    String idOnController =  valueList.get(slvServerDataColumnPos.getIdOnController());
+                    SlvServerData dbSlvServerData = streetlightDao.getSlvServerData(idOnController);
+                    if(dbSlvServerData == null) {
+                        dbSlvServerData = new SlvServerData();
+                        loadSlvServerData(dbSlvServerData,valueList,slvServerDataColumnPos);
+                        if(dbSlvServerData.isValPresent()){
+                            dbSlvServerData.setCreateDateTime(System.currentTimeMillis());
+                            dbSlvServerData.setLastUpdateDateTime(System.currentTimeMillis());
+                            dbSlvServerData.setProcessType(ProcessType.SLV);
+                            streetlightDao.saveSlvServerData(dbSlvServerData);
+                        }
+
+                    }else{
+                        SlvServerData slvServerData = new SlvServerData();
+                        loadSlvServerData(slvServerData,valueList,slvServerDataColumnPos);
+                        boolean res = dbSlvServerData.equals(slvServerData);
+                        if(!res){
+                            loadSlvServerData(dbSlvServerData,valueList,slvServerDataColumnPos);
+                            dbSlvServerData.setLastUpdateDateTime(System.currentTimeMillis());
+                            dbSlvServerData.setProcessType(ProcessType.SLV);
+                            streetlightDao.updateSlvServerData(dbSlvServerData);
+                        }
+
+                }
+            }
+        }
+
+        } else {
+            throw new DeviceLoadException("Unable to load device from SLV Interface");
+        }
+    }
+
+    private void loadColumnPos(String columnName,SlvServerDataColumnPos slvServerDataColumnPos,int pos){
+        switch (columnName) {
+            case "idOnController":
+                slvServerDataColumnPos.setIdOnController(pos);
+                break;
+            case "MacAddress":
+                slvServerDataColumnPos.setMacAddress(pos);
+                break;
+            case "device.luminaire.partnumber":
+                slvServerDataColumnPos.setLuminairePartNumber(pos);
+                break;
+            case "luminaire.model":
+                slvServerDataColumnPos.setLuminaireModel(pos);
+                break;
+            case "device.luminaire.manufacturedate":
+                slvServerDataColumnPos.setLuminaireManufacturedate(pos);
+                break;
+            case "device.luminaire.colortemp":
+                slvServerDataColumnPos.setLuminaireColorTemp(pos);
+                break;
+            case "device.luminaire.lumenoutput":
+                slvServerDataColumnPos.setLumenOutput(pos);
+                break;
+            case "luminaire.DistributionType":
+                slvServerDataColumnPos.setDistributionType(pos);
+                break;
+            case "luminaire.colorcode":
+                slvServerDataColumnPos.setColorCode(pos);
+                break;
+            case "device.luminaire.drivermanufacturer":
+                slvServerDataColumnPos.setDriverManufacturer(pos);
+                break;
+            case "device.luminaire.driverpartnumber":
+                slvServerDataColumnPos.setDriverPartNumber(pos);
+                break;
+            case "ballast.dimmingtype":
+                slvServerDataColumnPos.setDimmingType(pos);
+                break;
+
+        }
+    }
+
+
+    private void loadSlvServerData(SlvServerData slvServerData,List<String> valueList,SlvServerDataColumnPos slvServerDataColumnPos){
+        slvServerData.setIdOnController(getData(valueList,slvServerDataColumnPos.getIdOnController()));
+        slvServerData.setMacAddress(getData(valueList,slvServerDataColumnPos.getMacAddress()));
+        slvServerData.setLuminairePartNumber(getData(valueList,slvServerDataColumnPos.getLuminairePartNumber()));
+        slvServerData.setLuminaireModel(getData(valueList,slvServerDataColumnPos.getLuminaireModel()));
+        slvServerData.setLuminaireManufacturedate(getData(valueList,slvServerDataColumnPos.getLuminaireManufacturedate()));
+        slvServerData.setLuminaireColorTemp(getData(valueList,slvServerDataColumnPos.getLuminaireColorTemp()));
+        slvServerData.setLumenOutput(getData(valueList,slvServerDataColumnPos.getLumenOutput()));
+        slvServerData.setDistributionType(getData(valueList,slvServerDataColumnPos.getDistributionType()));
+        slvServerData.setColorCode(getData(valueList,slvServerDataColumnPos.getColorCode()));
+        slvServerData.setDriverManufacturer(getData(valueList,slvServerDataColumnPos.getDriverManufacturer()));
+        slvServerData.setDriverPartNumber(getData(valueList,slvServerDataColumnPos.getDriverPartNumber()));
+        slvServerData.setDimmingType(getData(valueList,slvServerDataColumnPos.getDimmingType()));
+    }
+
+
+    private String getData(List<String> valueList,int id) {
+        try {
+            String value = valueList.get(id);
+
+            if (value != null && !value.trim().isEmpty() && !value.contains("null")) {
+                return value;
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+
+    public void closeConnection(){
+        streetlightDao.closeConnection();
     }
 }

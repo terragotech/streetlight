@@ -1,19 +1,18 @@
 package com.terragoedge.streetlight.dao;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.Statement;
+import java.sql.*;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Random;
 
 import com.google.gson.JsonObject;
+import com.j256.ormlite.dao.Dao;
 import com.terragoedge.edgeserver.EdgeNotebook;
 import com.terragoedge.edgeserver.FullEdgeNotebook;
 import com.terragoedge.edgeserver.SlvData;
 import com.terragoedge.edgeserver.SlvDataDub;
+import com.terragoedge.streetlight.json.model.SlvServerData;
 import com.terragoedge.streetlight.logging.InstallMaintenanceLogModel;
 import org.apache.log4j.Logger;
 
@@ -615,5 +614,27 @@ public class StreetlightDao extends UtilDao {
             closeStatement(preparedStatement);
         }
     }
+
+    public SlvServerData getSlvServerData(String idOnController)throws SQLException {
+        Dao<SlvServerData, String> slvDeviceDao =  connectionDAO.getSlvDeviceDao();
+       return  slvDeviceDao.queryBuilder().where().eq(SlvServerData.ID_ON_CONTROLLER,idOnController).queryForFirst();
+    }
+
+
+    public void saveSlvServerData(SlvServerData slvServerData)throws SQLException{
+        Dao<SlvServerData, String> slvDeviceDao =  connectionDAO.getSlvDeviceDao();
+        slvDeviceDao.create(slvServerData);
+    }
+
+
+    public void updateSlvServerData(SlvServerData slvServerData)throws SQLException{
+        Dao<SlvServerData, String> slvDeviceDao =  connectionDAO.getSlvDeviceDao();
+        slvDeviceDao.update(slvServerData);
+    }
+
+    public void closeConnection(){
+        connectionDAO.closeConnection();
+    }
+
 
 }
