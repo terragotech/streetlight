@@ -42,6 +42,10 @@ public class SlvServerData {
     @DatabaseField(columnName = "dimming_type")
     private String dimmingType;
 
+
+    @DatabaseField(columnName = "serial_number")
+    private String  serialNumber;
+
     @DatabaseField(columnName = "createdatedtime")
     private long createDateTime;
 
@@ -50,6 +54,14 @@ public class SlvServerData {
 
     @DatabaseField(columnName = "process_type",dataType = DataType.ENUM_STRING)
     private ProcessType processType;
+
+    public String getSerialNumber() {
+        return serialNumber;
+    }
+
+    public void setSerialNumber(String serialNumber) {
+        this.serialNumber = serialNumber;
+    }
 
     public int getId() {
         return id;

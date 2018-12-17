@@ -535,6 +535,8 @@ public abstract class AbstractProcessor {
         paramsList.add("valueNames=device.luminaire.drivermanufacturer");
         paramsList.add("valueNames=device.luminaire.driverpartnumber");
         paramsList.add("valueNames=ballast.dimmingtype");
+        paramsList.add("valueNames=luminaire.serialnumber");
+
         paramsList.add("ser=json");
         String params = StringUtils.join(paramsList, "&");
         url = url + "&" + params;
@@ -625,6 +627,10 @@ public abstract class AbstractProcessor {
                 break;
             case "ballast.dimmingtype":
                 slvServerDataColumnPos.setDimmingType(pos);
+                break;
+
+            case "luminaire.serialnumber":
+                slvServerDataColumnPos.setSerialNumber(pos);
                 break;
 
         }

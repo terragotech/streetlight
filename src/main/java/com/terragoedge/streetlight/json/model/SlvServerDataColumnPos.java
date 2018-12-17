@@ -17,6 +17,16 @@ public class SlvServerDataColumnPos {
     private int driverPartNumber;
     private int dimmingType;
 
+    private int serialNumber;
+
+    public int getSerialNumber() {
+        return serialNumber;
+    }
+
+    public void setSerialNumber(int serialNumber) {
+        this.serialNumber = serialNumber;
+    }
+
     public int getIdOnController() {
         return idOnController;
     }

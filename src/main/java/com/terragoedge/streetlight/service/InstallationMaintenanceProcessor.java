@@ -122,11 +122,10 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
                 List<EdgeFormData> edgeFormDatas = formData.getFormDef();
                 try {
                     logger.info("before Action Val");
-                    String value = value(edgeFormDatas, "Action");
+                    String value = getAction(edgeFormDatas,edgeNote.getTitle(),installMaintenanceLogModel,edgeNote);
                     logger.info("Action Val is:" + value);
                     switch (value) {
                         case "New":
-                            logger.info("new option selected");
                             processNewGroup(edgeFormDatas, edgeNote, installMaintenanceLogModel, isReSync, existingFixtureInfo, utilLocId, nightRideKey, formatedValueNR);
                             installMaintenanceLogModel.setInstalledDate(edgeNote.getCreatedDateTime());
                             break;
@@ -138,7 +137,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
                             // processOtherTask(edgeFormDatas, edgeNote, installMaintenanceLogModel, nightRideKey, formatedValueNR);
                             break;
                     }
-                } catch (NoValueException e) {
+                } catch (AlreadyUsedException e) {
                     logger.error("error in processNewAction method", e);
                     installMaintenanceLogModel.setErrorDetails(MessageConstants.ACTION_NO_VAL);
                     installMaintenanceLogModel.setStatus(MessageConstants.ERROR);
@@ -154,6 +153,32 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
 
 
     private String getAction(List<EdgeFormData> edgeFormDatas,String idOnController,LoggingModel loggingModel,EdgeNote edgeNote)throws AlreadyUsedException{
+        try{
+            String value = value(edgeFormDatas, "Action");
+            if(value.equals("Repairs & Outages")){
+                String repairsOutagesValue = null;
+                try {
+                    repairsOutagesValue = valueById(edgeFormDatas, 24);
+                    if(repairsOutagesValue.equals("Power Issue")){
+                        loggingModel.setRepairsOption("Power Issue");
+                    }else if(repairsOutagesValue.equals("Unable to Repair(CDOT Issue)")){
+                        loggingModel.setRepairsOption("Unable to Repair(CDOT Issue)");
+                    }
+
+
+                } catch (NoValueException e) {
+                    loggingModel.setStatus(MessageConstants.ERROR);
+                    loggingModel.setErrorDetails("Repairs & Outages options are not selected.");
+                }
+                return  "Repairs & Outages";
+            }
+        }catch (NoValueException e){
+            e.printStackTrace();
+        }
+
+
+
+
         // Replace Fixture Only
         String  newFixtureQrScanValue = null;
         try{
@@ -217,13 +242,13 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
 
         }
 
-
+        return null;
 
 
     }
 
 
-    private String validateValue(List<EdgeFormData> edgeFormDatas,String idOnController,LoggingModel loggingModel,EdgeNote edgeNote,int macAddressId,int qrScanId)throws AlreadyUsedException,NoValueException{
+    private void validateValue(List<EdgeFormData> edgeFormDatas,String idOnController,LoggingModel loggingModel,EdgeNote edgeNote,int macAddressId,int qrScanId)throws AlreadyUsedException,NoValueException{
         //Replace Node and Fixture
         String newNodeMacAddress = null;
         try{
@@ -326,7 +351,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
             SlvServerData  slvServerData = new SlvServerData();
             addOtherParams(edgeNote, paramsList, idOnController, utilLocId, isNew, fixerQrScanValue);
             if (fixerQrScanValue != null) {
-                buildFixtureStreetLightData(fixerQrScanValue, paramsList, edgeNote);//update fixer qrscan value
+                buildFixtureStreetLightData(fixerQrScanValue, paramsList, edgeNote,slvServerData);//update fixer qrscan value
             }
 
             if (comment != null) {
@@ -563,14 +588,14 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
 
     public void repairAndOutage(List<EdgeFormData> edgeFormDatas, EdgeNote edgeNote, InstallMaintenanceLogModel loggingModel, LoggingModel existingFixtureInfo, String utilLocId, String nightRideKey, String nightRideValue, String formatedValueNR) {
 
-        String repairsOutagesValue = null;
-        try {
+        String repairsOutagesValue = loggingModel.getRepairsOption();
+        /*try {
             repairsOutagesValue = valueById(edgeFormDatas, 24);
         } catch (NoValueException e) {
             loggingModel.setStatus(MessageConstants.ERROR);
             loggingModel.setErrorDetails("Repairs & Outages options are not selected.");
             return;
-        }
+        }*/
 
 
         switch (repairsOutagesValue) {
@@ -581,9 +606,20 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
                 replaceNodeOnly(edgeFormDatas, edgeNote, loggingModel, existingFixtureInfo, utilLocId, nightRideKey, nightRideValue);
                 break;
             case "Replace Fixture only":
-                loggingModel.setStatus(MessageConstants.ERROR);
-                loggingModel.setErrorDetails("SLV Interface Doest not support this(Replace Fixture only option is selected).");
-                break;
+
+                String fixerQrScanValue = null;
+                try {
+                    fixerQrScanValue = valueById(edgeFormDatas, 38);
+                    String idOnController = loggingModel.getIdOnController();
+                    String controllerStrIdValue = loggingModel.getControllerSrtId();
+                    sync2Slv(null, fixerQrScanValue, edgeNote, loggingModel, idOnController, controllerStrIdValue, "", utilLocId, false, nightRideKey, nightRideValue);
+                    break;
+                } catch (NoValueException e) {
+                    loggingModel.setStatus(MessageConstants.ERROR);
+                    loggingModel.setErrorDetails("Fixture QR Scan value is empty");
+                }
+
+
             case "Power Issue":
                 loggingModel.setStatus(MessageConstants.ERROR);
                 loggingModel.setErrorDetails("SLV Interface Doest not support this(Power Issue option is selected).");
