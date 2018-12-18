@@ -104,7 +104,7 @@ public class SlvServerData {
     }
 
     public String getMacAddress() {
-        return macAddress;
+        return macAddress != null ? macAddress : "";
     }
 
     public void setMacAddress(String macAddress) {
@@ -112,7 +112,7 @@ public class SlvServerData {
     }
 
     public String getLuminairePartNumber() {
-        return luminairePartNumber;
+        return luminairePartNumber != null ? luminairePartNumber : "";
     }
 
     public void setLuminairePartNumber(String luminairePartNumber) {
@@ -120,7 +120,7 @@ public class SlvServerData {
     }
 
     public String getLuminaireModel() {
-        return luminaireModel;
+        return luminaireModel != null ? luminaireModel : "";
     }
 
     public void setLuminaireModel(String luminaireModel) {
@@ -128,7 +128,7 @@ public class SlvServerData {
     }
 
     public String getLuminaireManufacturedate() {
-        return luminaireManufacturedate;
+       return nullCheck(luminaireManufacturedate);
     }
 
     public void setLuminaireManufacturedate(String luminaireManufacturedate) {
@@ -136,7 +136,7 @@ public class SlvServerData {
     }
 
     public String getLuminaireColorTemp() {
-        return luminaireColorTemp;
+        return nullCheck(luminaireColorTemp);
     }
 
     public void setLuminaireColorTemp(String luminaireColorTemp) {
@@ -144,7 +144,7 @@ public class SlvServerData {
     }
 
     public String getLumenOutput() {
-        return lumenOutput;
+        return nullCheck(lumenOutput);
     }
 
     public void setLumenOutput(String lumenOutput) {
@@ -152,7 +152,7 @@ public class SlvServerData {
     }
 
     public String getDistributionType() {
-        return distributionType;
+        return nullCheck(distributionType);
     }
 
     public void setDistributionType(String distributionType) {
@@ -160,7 +160,7 @@ public class SlvServerData {
     }
 
     public String getColorCode() {
-        return colorCode;
+        return nullCheck(colorCode);
     }
 
     public void setColorCode(String colorCode) {
@@ -168,7 +168,7 @@ public class SlvServerData {
     }
 
     public String getDriverManufacturer() {
-        return driverManufacturer;
+        return nullCheck(driverManufacturer);
     }
 
     public void setDriverManufacturer(String driverManufacturer) {
@@ -176,7 +176,7 @@ public class SlvServerData {
     }
 
     public String getDriverPartNumber() {
-        return driverPartNumber;
+        return nullCheck(driverPartNumber);
     }
 
     public void setDriverPartNumber(String driverPartNumber) {
@@ -184,7 +184,7 @@ public class SlvServerData {
     }
 
     public String getDimmingType() {
-        return dimmingType;
+        return nullCheck(dimmingType);
     }
 
     public void setDimmingType(String dimmingType) {
@@ -216,17 +216,17 @@ public class SlvServerData {
         if (o == null || getClass() != o.getClass()) return false;
         SlvServerData that = (SlvServerData) o;
         return idOnController.equals(that.idOnController) &&
-                macAddress.equals(that.macAddress) &&
-                luminairePartNumber.equals(that.luminairePartNumber) &&
-                luminaireModel.equals(that.luminaireModel) &&
-                luminaireManufacturedate.equals(that.luminaireManufacturedate) &&
-                luminaireColorTemp.equals(that.luminaireColorTemp) &&
-                lumenOutput.equals(that.lumenOutput) &&
-                distributionType.equals(that.distributionType) &&
-                colorCode.equals(that.colorCode) &&
-                driverManufacturer.equals(that.driverManufacturer) &&
-                driverPartNumber.equals(that.driverPartNumber) &&
-                dimmingType.equals(that.dimmingType);
+                getMacAddress().equals(that.getMacAddress()) &&
+                getLuminairePartNumber().equals(that.getLuminairePartNumber()) &&
+                getLuminaireModel().equals(that.getLuminaireModel()) &&
+                getLuminaireManufacturedate().equals(that.getLuminaireManufacturedate()) &&
+                getLuminaireColorTemp().equals(that. getLuminaireColorTemp()) &&
+                getLumenOutput().equals(that.getLumenOutput()) &&
+                getDistributionType().equals(that.getDistributionType()) &&
+                getColorCode().equals(that.getColorCode()) &&
+                getDriverManufacturer().equals(that.getDriverManufacturer()) &&
+                getDriverPartNumber().equals(that.getDriverPartNumber()) &&
+                getDimmingType().equals(that.getDimmingType());
     }
 
     @Override
@@ -237,6 +237,11 @@ public class SlvServerData {
 
     public boolean isValPresent(){
       return   this.macAddress != null || (this.luminaireModel != null && this.luminairePartNumber != null);
+    }
+
+
+    private String nullCheck(String data){
+        return data != null ? data : "";
     }
 
 

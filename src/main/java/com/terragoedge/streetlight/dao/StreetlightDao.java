@@ -66,7 +66,7 @@ public class StreetlightDao extends UtilDao {
     private void createStreetLightSyncTable() {
 
         String sql = "CREATE TABLE IF NOT EXISTS notesyncdetails (streetlightsyncid integer NOT NULL,"
-                + " processednoteid text, status text, errordetails text,singleformerrordetails text, singleformstatus text,createddatetime bigint, notename text,existingnodemacaddress text,newnodemacaddress text,isReplaceNode text,isQuickNote text,idOnController text,macAddress text, CONSTRAINT notesyncdetails_pkey PRIMARY KEY (streetlightsyncid));";
+                + " processednoteid text, status text, errordetails text,singleformerrordetails text, singleformstatus text, synctime bigint,createddatetime bigint, notename text,existingnodemacaddress text,newnodemacaddress text,isReplaceNode text,isQuickNote text,idOnController text,macAddress text, CONSTRAINT notesyncdetails_pkey PRIMARY KEY (streetlightsyncid));";
         executeStatement(sql);
 
         //sql = "CREATE TABLE IF NOT EXISTS lastsyncstatus (lastsyncstatusid integer not null, lastsynctime text, CONSTRAINT lastsyncstatus_pkey PRIMARY KEY (lastsyncstatusid))";

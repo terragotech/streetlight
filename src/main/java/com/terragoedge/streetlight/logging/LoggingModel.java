@@ -31,9 +31,17 @@ public class LoggingModel {
 
     private boolean isMacAddressUsed;
     private boolean isFixtureQRSame;
+    private boolean isNigthRideSame;
 
     private String repairsOption;
 
+    public boolean isNigthRideSame() {
+        return isNigthRideSame;
+    }
+
+    public void setNigthRideSame(boolean nigthRideSame) {
+        isNigthRideSame = nigthRideSame;
+    }
 
     public String getRepairsOption() {
         return repairsOption;
@@ -262,8 +270,12 @@ public class LoggingModel {
                 ", talqAddress='" + talqAddress + '\'' +
                 ", lastSyncTime=" + lastSyncTime +
                 ", layerType='" + layerType + '\'' +
-                ", installedDate='" + installedDate + '\'' +
-                ", replacedDate='" + replacedDate + '\'' +
+                ", installedDate=" + installedDate +
+                ", replacedDate=" + replacedDate +
+                ", isMacAddressUsed=" + isMacAddressUsed +
+                ", isFixtureQRSame=" + isFixtureQRSame +
+                ", isNigthRideSame=" + isNigthRideSame +
+                ", repairsOption='" + repairsOption + '\'' +
                 '}';
     }
 }

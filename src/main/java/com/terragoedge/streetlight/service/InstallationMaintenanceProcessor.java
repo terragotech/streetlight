@@ -42,7 +42,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
     }
 
 
-    private String getNightRideFormVal(List<FormData> formDataList, EdgeNote edgeNote) {
+    private String getNightRideFormVal(List<FormData> formDataList, EdgeNote edgeNote,LoggingModel loggingModel) {
         String nightRideTemplateGuid = properties.getProperty("amerescousa.night.ride.formtemplateGuid");
         int pos = formDataList.indexOf(nightRideTemplateGuid);
         if (pos != -1) {
@@ -50,6 +50,25 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
             List<EdgeFormData> edgeFormDatas = formData.getFormDef();
             try {
                 String nightRideValue = valueById(edgeFormDatas, 1);
+                try{
+                    SlvServerData dbSlvServerData = streetlightDao.getSlvServerData(edgeNote.getTitle());
+                    if(dbSlvServerData != null && dbSlvServerData.getSerialNumber() != null){
+                        List<String> nightRideList = new ArrayList<>();
+                        String serialNumber = dbSlvServerData.getSerialNumber();
+                        String[] nightRideValues = serialNumber.split(",");
+                        for(String nightRideVal : nightRideValues){
+                            String[] nightRideValArray = nightRideVal.split(":");
+                            if(nightRideValArray.length > 1){
+                                nightRideList.add(nightRideValArray[1]);
+                            }
+                        }
+                       boolean res = nightRideList.contains(nightRideValue);
+                        loggingModel.setNigthRideSame(res);
+                    }
+                }catch (Exception e){
+                    e.printStackTrace();
+                }
+
                 return dateFormat(edgeNote.getCreatedDateTime()) + " :" + nightRideValue;
 
             } catch (NoValueException e) {
@@ -68,7 +87,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
                 int pos = formDataList.indexOf(nightRideTemplateGuid);
                 if (pos != -1) {
                     List<Object> paramsList = new ArrayList<>();
-                    String nightRideValue = getNightRideFormVal(formDataList, edgeNote);
+                    String nightRideValue = getNightRideFormVal(formDataList, edgeNote,installMaintenanceLogModel);
                     if (nightRideValue != null) {
                         String idOnController = installMaintenanceLogModel.getIdOnController();
                         paramsList.add("idOnController=" + idOnController);
@@ -109,8 +128,8 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
         List<FormData> formDatas = edgeNote.getFormData();
 
         String nightRideKey = properties.getProperty("amerescousa.night.ride.key_for_slv");
-        String formatedValueNR = getNightRideFormVal(formDatas, edgeNote);
-        ;
+        String formatedValueNR = getNightRideFormVal(formDatas, edgeNote,installMaintenanceLogModel);
+
         boolean isInstallForm = false;
         for (FormData formData : formDatas) {
             logger.info("Processing Form :"+formData.getFormTemplateGuid() );
@@ -122,22 +141,34 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
                 List<EdgeFormData> edgeFormDatas = formData.getFormDef();
                 try {
                     logger.info("before Action Val");
-                    String value = getAction(edgeFormDatas,edgeNote.getTitle(),installMaintenanceLogModel,edgeNote);
-                    logger.info("Action Val is:" + value);
-                    switch (value) {
-                        case "New":
-                            processNewGroup(edgeFormDatas, edgeNote, installMaintenanceLogModel, isReSync, existingFixtureInfo, utilLocId, nightRideKey, formatedValueNR);
-                            installMaintenanceLogModel.setInstalledDate(edgeNote.getCreatedDateTime());
-                            break;
-                        case "Repairs & Outages":
-                            repairAndOutage(edgeFormDatas, edgeNote, installMaintenanceLogModel, existingFixtureInfo, utilLocId, nightRideKey, formatedValueNR, formatedValueNR);
-                            installMaintenanceLogModel.setReplacedDate(edgeNote.getCreatedDateTime());
-                            break;
-                        case "Other Task":
-                            // processOtherTask(edgeFormDatas, edgeNote, installMaintenanceLogModel, nightRideKey, formatedValueNR);
-                            break;
+                    String value = null;
+                    try{
+                        value = getAction(edgeFormDatas,edgeNote.getTitle(),installMaintenanceLogModel,edgeNote);
+                    }catch (AlreadyUsedException w){
+                        if(installMaintenanceLogModel.isNigthRideSame()){
+                            installMaintenanceLogModel.setStatus(MessageConstants.ERROR);
+                            continue;
+                        }
                     }
-                } catch (AlreadyUsedException e) {
+
+                    logger.info("Action Val is:" + value);
+                    if(value != null){
+                        switch (value) {
+                            case "New":
+                                processNewGroup(edgeFormDatas, edgeNote, installMaintenanceLogModel, isReSync, existingFixtureInfo, utilLocId, nightRideKey, formatedValueNR);
+                                installMaintenanceLogModel.setInstalledDate(edgeNote.getCreatedDateTime());
+                                break;
+                            case "Repairs & Outages":
+                                repairAndOutage(edgeFormDatas, edgeNote, installMaintenanceLogModel, existingFixtureInfo, utilLocId, nightRideKey, formatedValueNR, formatedValueNR);
+                                installMaintenanceLogModel.setReplacedDate(edgeNote.getCreatedDateTime());
+                                break;
+                            case "Other Task":
+                                // processOtherTask(edgeFormDatas, edgeNote, installMaintenanceLogModel, nightRideKey, formatedValueNR);
+                                break;
+                        }
+                    }
+
+                } catch (Exception e) {
                     logger.error("error in processNewAction method", e);
                     installMaintenanceLogModel.setErrorDetails(MessageConstants.ACTION_NO_VAL);
                     installMaintenanceLogModel.setStatus(MessageConstants.ERROR);
