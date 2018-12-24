@@ -215,6 +215,8 @@ public class SlvServerData {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         SlvServerData that = (SlvServerData) o;
+        System.out.println("IdOnController : "+that.getIdOnController());
+        System.out.println("idOnController is : "+idOnController);
         return idOnController.equals(that.idOnController) &&
                 getMacAddress().equals(that.getMacAddress()) &&
                 getLuminairePartNumber().equals(that.getLuminairePartNumber()) &&

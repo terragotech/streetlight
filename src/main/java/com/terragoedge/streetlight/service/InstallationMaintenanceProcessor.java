@@ -213,7 +213,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
         // Replace Fixture Only
         String  newFixtureQrScanValue = null;
         try{
-            newFixtureQrScanValue = valueById(edgeFormDatas, 38);
+            newFixtureQrScanValue = valueById(edgeFormDatas, 39);
             checkFixtureQrScan(newFixtureQrScanValue,edgeNote,loggingModel);
         }catch (NoValueException e){
 
@@ -345,6 +345,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
         SlvServerData  slvServerData = new SlvServerData();
         try{
             buildFixtureStreetLightData(fixtureQrScan,paramsList,edgeNote,slvServerData);
+            slvServerData.setIdOnController(edgeNote.getTitle());
             SlvServerData dbSlvServerData = streetlightDao.getSlvServerData(edgeNote.getTitle());
             if(slvServerData.equals(dbSlvServerData)){
                 loggingModel.setFixtureQRSame(true);
@@ -640,7 +641,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
 
                 String fixerQrScanValue = null;
                 try {
-                    fixerQrScanValue = valueById(edgeFormDatas, 38);
+                    fixerQrScanValue = valueById(edgeFormDatas, 39);
                     String idOnController = loggingModel.getIdOnController();
                     String controllerStrIdValue = loggingModel.getControllerSrtId();
                     sync2Slv(null, fixerQrScanValue, edgeNote, loggingModel, idOnController, controllerStrIdValue, "", utilLocId, false, nightRideKey, nightRideValue);
@@ -803,10 +804,8 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
             if (existingNodeMacAddress != null && !existingNodeMacAddress.trim().isEmpty()) {
                 try {
                     comment = validateMacAddress(existingNodeMacAddress, idOnController, controllerStrIdValue);
-                } catch (QRCodeNotMatchedException e1) {
-                    loggingModel.setStatus(MessageConstants.ERROR);
-                    loggingModel.setErrorDetails(MessageConstants.REPLACE_MAC_NOT_MATCH);
-                    return;
+                } catch (Exception e1) {
+
                 }
             }
 
@@ -817,6 +816,11 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
                 logger.error("MacAddress (" + e1.getMacAddress()
                         + ")  - Already in use. So this pole is not synced with SLV. Note Title :[" + edgeNote.getTitle()
                         + " ]");
+                loggingModel.setStatus(MessageConstants.ERROR);
+                loggingModel.setErrorDetails("MacAddress (" + e1.getMacAddress()
+                        + ")  - Already in use. So this pole is not synced with SLV. Note Title :[" + edgeNote.getTitle()
+                        + " ]");
+                return;
             }
 
 
