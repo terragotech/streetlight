@@ -523,6 +523,7 @@ public abstract class AbstractProcessor {
         String mainUrl = properties.getProperty("streetlight.url.main");
         String url = mainUrl + geoZoneDevices;
         List<Object> paramsList = new ArrayList<Object>();
+        paramsList.add("valueNames=id");
         paramsList.add("valueNames=idOnController");
         paramsList.add("valueNames=MacAddress");
         paramsList.add("valueNames=device.luminaire.partnumber");

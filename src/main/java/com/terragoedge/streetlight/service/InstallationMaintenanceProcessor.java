@@ -42,7 +42,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
     }
 
 
-    private String getNightRideFormVal(List<FormData> formDataList, EdgeNote edgeNote,LoggingModel loggingModel) {
+    private String getNightRideFormVal(List<FormData> formDataList, EdgeNote edgeNote, LoggingModel loggingModel) {
         String nightRideTemplateGuid = properties.getProperty("amerescousa.night.ride.formtemplateGuid");
         int pos = formDataList.indexOf(nightRideTemplateGuid);
         if (pos != -1) {
@@ -50,22 +50,22 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
             List<EdgeFormData> edgeFormDatas = formData.getFormDef();
             try {
                 String nightRideValue = valueById(edgeFormDatas, 1);
-                try{
+                try {
                     SlvServerData dbSlvServerData = streetlightDao.getSlvServerData(edgeNote.getTitle());
-                    if(dbSlvServerData != null && dbSlvServerData.getSerialNumber() != null){
+                    if (dbSlvServerData != null && dbSlvServerData.getSerialNumber() != null) {
                         List<String> nightRideList = new ArrayList<>();
                         String serialNumber = dbSlvServerData.getSerialNumber();
                         String[] nightRideValues = serialNumber.split(",");
-                        for(String nightRideVal : nightRideValues){
+                        for (String nightRideVal : nightRideValues) {
                             String[] nightRideValArray = nightRideVal.split(":");
-                            if(nightRideValArray.length > 1){
+                            if (nightRideValArray.length > 1) {
                                 nightRideList.add(nightRideValArray[1]);
                             }
                         }
-                       boolean res = nightRideList.contains(nightRideValue);
+                        boolean res = nightRideList.contains(nightRideValue);
                         loggingModel.setNigthRideSame(res);
                     }
-                }catch (Exception e){
+                } catch (Exception e) {
                     e.printStackTrace();
                 }
 
@@ -87,7 +87,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
                 int pos = formDataList.indexOf(nightRideTemplateGuid);
                 if (pos != -1) {
                     List<Object> paramsList = new ArrayList<>();
-                    String nightRideValue = getNightRideFormVal(formDataList, edgeNote,installMaintenanceLogModel);
+                    String nightRideValue = getNightRideFormVal(formDataList, edgeNote, installMaintenanceLogModel);
                     if (nightRideValue != null) {
                         String idOnController = installMaintenanceLogModel.getIdOnController();
                         paramsList.add("idOnController=" + idOnController);
@@ -128,11 +128,11 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
         List<FormData> formDatas = edgeNote.getFormData();
 
         String nightRideKey = properties.getProperty("amerescousa.night.ride.key_for_slv");
-        String formatedValueNR = getNightRideFormVal(formDatas, edgeNote,installMaintenanceLogModel);
+        String formatedValueNR = getNightRideFormVal(formDatas, edgeNote, installMaintenanceLogModel);
 
         boolean isInstallForm = false;
         for (FormData formData : formDatas) {
-            logger.info("Processing Form :"+formData.getFormTemplateGuid() );
+            logger.info("Processing Form :" + formData.getFormTemplateGuid());
             if (formData.getFormTemplateGuid().equals(INSTATALLATION_AND_MAINTENANCE_GUID) || formData.getFormTemplateGuid().equals("fa47c708-fb82-4877-938c-992e870ae2a4") || formData.getFormTemplateGuid().equals("c8acc150-6228-4a27-bc7e-0fabea0e2b93")) {
                 isInstallForm = true;
                 logger.info("Install  Form  is present.");
@@ -142,17 +142,17 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
                 try {
                     logger.info("before Action Val");
                     String value = null;
-                    try{
-                        value = getAction(edgeFormDatas,edgeNote.getTitle(),installMaintenanceLogModel,edgeNote);
-                    }catch (AlreadyUsedException w){
-                        if(installMaintenanceLogModel.isNigthRideSame()){
+                    try {
+                        value = getAction(edgeFormDatas, edgeNote.getTitle(), installMaintenanceLogModel, edgeNote);
+                    } catch (AlreadyUsedException w) {
+                        if (installMaintenanceLogModel.isNigthRideSame()) {
                             installMaintenanceLogModel.setStatus(MessageConstants.ERROR);
                             continue;
                         }
                     }
 
                     logger.info("Action Val is:" + value);
-                    if(value != null){
+                    if (value != null) {
                         switch (value) {
                             case "New":
                                 processNewGroup(edgeFormDatas, edgeNote, installMaintenanceLogModel, isReSync, existingFixtureInfo, utilLocId, nightRideKey, formatedValueNR);
@@ -182,17 +182,16 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
     }
 
 
-
-    private String getAction(List<EdgeFormData> edgeFormDatas,String idOnController,LoggingModel loggingModel,EdgeNote edgeNote)throws AlreadyUsedException{
-        try{
+    private String getAction(List<EdgeFormData> edgeFormDatas, String idOnController, LoggingModel loggingModel, EdgeNote edgeNote) throws AlreadyUsedException {
+        try {
             String value = value(edgeFormDatas, "Action");
-            if(value.equals("Repairs & Outages")){
+            if (value.equals("Repairs & Outages")) {
                 String repairsOutagesValue = null;
                 try {
                     repairsOutagesValue = valueById(edgeFormDatas, 24);
-                    if(repairsOutagesValue.equals("Power Issue")){
+                    if (repairsOutagesValue.equals("Power Issue")) {
                         loggingModel.setRepairsOption("Power Issue");
-                    }else if(repairsOutagesValue.equals("Unable to Repair(CDOT Issue)")){
+                    } else if (repairsOutagesValue.equals("Unable to Repair(CDOT Issue)")) {
                         loggingModel.setRepairsOption("Unable to Repair(CDOT Issue)");
                     }
 
@@ -201,46 +200,45 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
                     loggingModel.setStatus(MessageConstants.ERROR);
                     loggingModel.setErrorDetails("Repairs & Outages options are not selected.");
                 }
-                return  "Repairs & Outages";
+                loggingModel.setRepairsOption(repairsOutagesValue);
+                return "Repairs & Outages";
             }
-        }catch (NoValueException e){
+        } catch (NoValueException e) {
             e.printStackTrace();
         }
 
 
-
-
         // Replace Fixture Only
-        String  newFixtureQrScanValue = null;
-        try{
+        String newFixtureQrScanValue = null;
+        try {
             newFixtureQrScanValue = valueById(edgeFormDatas, 39);
-            checkFixtureQrScan(newFixtureQrScanValue,edgeNote,loggingModel);
-        }catch (NoValueException e){
+            checkFixtureQrScan(newFixtureQrScanValue, edgeNote, loggingModel);
+        } catch (NoValueException e) {
 
-        }catch (InValidBarCodeException e){
+        } catch (InValidBarCodeException e) {
             // Replace Fixture Only, If QR Code is invalid, then no need to process.
             loggingModel.setFixtureQRSame(true);
             // No need to worry, crew may be node replaced.
         }
 
         //Check Replace Node only option
-        try{
+        try {
             String newNodeMacAddress = valueById(edgeFormDatas, 30);
-            checkMacAddressExists(newNodeMacAddress,idOnController,null,null,loggingModel);
+            checkMacAddressExists(newNodeMacAddress, idOnController, null, null, loggingModel);
             loggingModel.setRepairsOption("Replace Node only");
             return "Repairs & Outages";
-        }catch (NoValueException e){
+        } catch (NoValueException e) {
             // Crew may be replaced Fixture QR value.
-            if(newFixtureQrScanValue != null){
-                if(loggingModel.isFixtureQRSame()){
+            if (newFixtureQrScanValue != null) {
+                if (loggingModel.isFixtureQRSame()) {
                     throw new AlreadyUsedException("QR Scan Already Used");
                 }
                 loggingModel.setRepairsOption("Replace Fixture only");
                 return "Repairs & Outages";
             }
-        }catch (Exception e){
-            if(newFixtureQrScanValue != null){
-                if(loggingModel.isFixtureQRSame()){
+        } catch (Exception e) {
+            if (newFixtureQrScanValue != null) {
+                if (loggingModel.isFixtureQRSame()) {
                     throw new AlreadyUsedException("QR Scan Already Used");
                 }
                 loggingModel.setRepairsOption("Replace Fixture only");
@@ -253,23 +251,23 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
         loggingModel.setMacAddressUsed(false);
         loggingModel.setFixtureQRSame(false);
 
-        try{
-            validateValue(edgeFormDatas,idOnController,loggingModel,edgeNote,26,38);
+        try {
+            validateValue(edgeFormDatas, idOnController, loggingModel, edgeNote, 26, 38);
             loggingModel.setRepairsOption("Replace Node and Fixture");
             return "Repairs & Outages";
-        }catch (AlreadyUsedException e){
+        } catch (AlreadyUsedException e) {
             throw new AlreadyUsedException(e.getMessage());
-        }catch (NoValueException e){
+        } catch (NoValueException e) {
 
         }
 
 
-        try{
-            validateValue(edgeFormDatas,idOnController,loggingModel,edgeNote,19,20);
+        try {
+            validateValue(edgeFormDatas, idOnController, loggingModel, edgeNote, 19, 20);
             return "New";
-        }catch (AlreadyUsedException e){
+        } catch (AlreadyUsedException e) {
             throw new AlreadyUsedException(e.getMessage());
-        }catch (NoValueException e){
+        } catch (NoValueException e) {
 
         }
 
@@ -279,24 +277,24 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
     }
 
 
-    private void validateValue(List<EdgeFormData> edgeFormDatas,String idOnController,LoggingModel loggingModel,EdgeNote edgeNote,int macAddressId,int qrScanId)throws AlreadyUsedException,NoValueException{
+    private void validateValue(List<EdgeFormData> edgeFormDatas, String idOnController, LoggingModel loggingModel, EdgeNote edgeNote, int macAddressId, int qrScanId) throws AlreadyUsedException, NoValueException {
         //Replace Node and Fixture
         String newNodeMacAddress = null;
-        try{
+        try {
             newNodeMacAddress = valueById(edgeFormDatas, macAddressId);
-        }catch (NoValueException e){
+        } catch (NoValueException e) {
             loggingModel.setMacAddressUsed(true);
         }
 
 
-        String  fixerQrScanValue = null;
-        try{
+        String fixerQrScanValue = null;
+        try {
             fixerQrScanValue = valueById(edgeFormDatas, qrScanId);
-        }catch (NoValueException e){
+        } catch (NoValueException e) {
             loggingModel.setFixtureQRSame(true);
         }
 
-        if(newNodeMacAddress == null && fixerQrScanValue == null){
+        if (newNodeMacAddress == null && fixerQrScanValue == null) {
             loggingModel.setMacAddressUsed(false);
             loggingModel.setFixtureQRSame(false);
             throw new NoValueException("MAC Address and Fixture QR Scan value is Empty");
@@ -308,51 +306,49 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
             fixerQrScanValue = temp;
         }
 
-        if(newNodeMacAddress != null){
-            try{
-                checkMacAddressExists(newNodeMacAddress,idOnController,null,null,loggingModel);
-            }catch (QRCodeAlreadyUsedException e){
+        if (newNodeMacAddress != null) {
+            try {
+                checkMacAddressExists(newNodeMacAddress, idOnController, null, null, loggingModel);
+            } catch (QRCodeAlreadyUsedException e) {
                 // No need to worry, Fixture QR Scan may be differ. So let's continue.
-            }catch (Exception e){
+            } catch (Exception e) {
                 // No need to worry, Fixture QR Scan may be differ. So let's continue.
             }
 
         }
 
-        if(fixerQrScanValue != null){
+        if (fixerQrScanValue != null) {
             try {
-                checkFixtureQrScan(fixerQrScanValue,edgeNote,loggingModel);
-            }catch (InValidBarCodeException e){
+                checkFixtureQrScan(fixerQrScanValue, edgeNote, loggingModel);
+            } catch (InValidBarCodeException e) {
                 // No need to process,bcs its invalid.
-                if(loggingModel.isMacAddressUsed()){
+                if (loggingModel.isMacAddressUsed()) {
                     throw new AlreadyUsedException(e.getMessage());
                 }
             }
         }
 
-        if(loggingModel.isMacAddressUsed() && loggingModel.isFixtureQRSame()){
+        if (loggingModel.isMacAddressUsed() && loggingModel.isFixtureQRSame()) {
             throw new AlreadyUsedException("MAC Address and QR Scan Already Used.");
         }
-
 
 
     }
 
 
-
-    private void checkFixtureQrScan(String fixtureQrScan,EdgeNote edgeNote,LoggingModel loggingModel)throws InValidBarCodeException{
+    private void checkFixtureQrScan(String fixtureQrScan, EdgeNote edgeNote, LoggingModel loggingModel) throws InValidBarCodeException {
         List<Object> paramsList = new ArrayList<>();
-        SlvServerData  slvServerData = new SlvServerData();
-        try{
-            buildFixtureStreetLightData(fixtureQrScan,paramsList,edgeNote,slvServerData);
+        SlvServerData slvServerData = new SlvServerData();
+        try {
+            buildFixtureStreetLightData(fixtureQrScan, paramsList, edgeNote, slvServerData);
             slvServerData.setIdOnController(edgeNote.getTitle());
             SlvServerData dbSlvServerData = streetlightDao.getSlvServerData(edgeNote.getTitle());
-            if(slvServerData.equals(dbSlvServerData)){
+            if (slvServerData.equals(dbSlvServerData)) {
                 loggingModel.setFixtureQRSame(true);
             }
-        }catch (InValidBarCodeException e){
+        } catch (InValidBarCodeException e) {
             throw new InValidBarCodeException(e.getMessage());
-        }catch (SQLException e){
+        } catch (SQLException e) {
             e.printStackTrace();
         }
 
@@ -380,10 +376,10 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
 
             paramsList.add("idOnController=" + idOnController);
             paramsList.add("controllerStrId=" + controllerStrIdValue);
-            SlvServerData  slvServerData = new SlvServerData();
+            SlvServerData slvServerData = new SlvServerData();
             addOtherParams(edgeNote, paramsList, idOnController, utilLocId, isNew, fixerQrScanValue);
             if (fixerQrScanValue != null) {
-                buildFixtureStreetLightData(fixerQrScanValue, paramsList, edgeNote,slvServerData);//update fixer qrscan value
+                buildFixtureStreetLightData(fixerQrScanValue, paramsList, edgeNote, slvServerData);//update fixer qrscan value
             }
 
             if (comment != null) {
@@ -394,7 +390,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
                 addStreetLightData(nightRideKey, nightRideValue, paramsList);
             }
             if (macAddress != null && !macAddress.trim().isEmpty() && !loggingModel.isMacAddressUsed()) {
-                if(isNew){
+                if (isNew) {
                     addStreetLightData("cslp.node.install.date", dateFormat(edgeNote.getCreatedDateTime()), paramsList);
                 }
                 addStreetLightData("MacAddress", macAddress, paramsList);
@@ -410,11 +406,13 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
             } else {
                 logger.info("Replace OLC called");
                 // replace OlC
+                System.out.println("New :" + isNew + " \nmacAddress :" + macAddress);
+                logger.info("New :" + isNew + " \nmacAddress :" + macAddress);
                 if (isNew && macAddress == null || macAddress.isEmpty()) {
                     loggingModel.setStatus(MessageConstants.SUCCESS);
                     return;
                 } else {
-                    if(!loggingModel.isMacAddressUsed()){
+                    if (!loggingModel.isMacAddressUsed()) {
                         replaceOLC(controllerStrIdValue, idOnController, macAddress);// insert mac address
                     }
 
@@ -555,7 +553,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
             try {
                 fixerQrScanValue = valueFixtureValueById(edgeFormDatas, 20);
                 logger.info("Fixture QR Scan Val" + fixerQrScanValue);
-                if(fixerQrScanValue==null || fixerQrScanValue.contains("null") || fixerQrScanValue.trim().isEmpty()){
+                if (fixerQrScanValue == null || fixerQrScanValue.contains("null") || fixerQrScanValue.trim().isEmpty()) {
                     fixerQrScanValue = valueById(edgeFormDatas, 115);
                     logger.info("Fixture QR Scan Val - 115" + fixerQrScanValue);
                 }
@@ -596,7 +594,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
             // Check Whether MAC Address is already assigned to other fixtures or not.
             try {
                 if (nodeMacValue != null)
-                    checkMacAddressExists(nodeMacValue, loggingModel.getIdOnController(), nightRideKey, nightRideValue,loggingModel);
+                    checkMacAddressExists(nodeMacValue, loggingModel.getIdOnController(), nightRideKey, nightRideValue, loggingModel);
             } catch (QRCodeAlreadyUsedException e1) {
                 logger.error("MacAddress (" + e1.getMacAddress()
                         + ")  - Already in use. So this pole is not synced with SLV. Note Title :[" + edgeNote.getTitle()
@@ -629,7 +627,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
             return;
         }*/
 
-
+        System.out.println(repairsOutagesValue);
         switch (repairsOutagesValue) {
             case "Replace Node and Fixture":
                 replaceNodeFixture(edgeFormDatas, edgeNote, loggingModel, existingFixtureInfo, utilLocId, nightRideKey, nightRideValue);
@@ -731,7 +729,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
 
 
             try {
-                checkMacAddressExists(newNodeMacAddress, idOnController, nightRideKey, nightRideValue,loggingModel);
+                checkMacAddressExists(newNodeMacAddress, idOnController, nightRideKey, nightRideValue, loggingModel);
             } catch (QRCodeAlreadyUsedException e1) {
                 logger.error("MacAddress (" + e1.getMacAddress()
                         + ")  - Already in use. So this pole is not synced with SLV. Note Title :[" + edgeNote.getTitle()
@@ -743,7 +741,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
             StringBuffer statusDescription = new StringBuffer();
             // Call Empty ReplaceOLC
             try {
-                if(!loggingModel.isMacAddressUsed()){
+                if (!loggingModel.isMacAddressUsed()) {
                     replaceOLC(controllerStrIdValue, idOnController, "");
                     statusDescription.append(MessageConstants.EMPTY_REPLACE_OLC_SUCCESS);
                 }
@@ -811,7 +809,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
 
 
             try {
-                checkMacAddressExists(newNodeMacAddress, idOnController, nightRideKey, nightRideValue,loggingModel);
+                checkMacAddressExists(newNodeMacAddress, idOnController, nightRideKey, nightRideValue, loggingModel);
             } catch (QRCodeAlreadyUsedException e1) {
                 logger.error("MacAddress (" + e1.getMacAddress()
                         + ")  - Already in use. So this pole is not synced with SLV. Note Title :[" + edgeNote.getTitle()
@@ -826,7 +824,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
 
             // Call Empty ReplaceOLC
             try {
-                if(!loggingModel.isMacAddressUsed()){
+                if (!loggingModel.isMacAddressUsed()) {
                     replaceOLC(controllerStrIdValue, idOnController, "");
                 }
 
