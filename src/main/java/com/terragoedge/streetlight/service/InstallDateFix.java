@@ -20,7 +20,7 @@ public class InstallDateFix extends AbstractProcessor {
                  try{
                      List<Object> paramsList = new ArrayList<>();
                      String[] res = data.split(",");
-                     System.out.println("IdonController : "+res[0]);
+                     System.out.println(" IdonController : "+res[0]);
                      paramsList.add("idOnController=" + res[0]);
                      paramsList.add("controllerStrId=TalqBridge@TB1009802308");
                      addStreetLightData("cslp.lum.install.date", "", paramsList);

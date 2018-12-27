@@ -191,8 +191,10 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
                     repairsOutagesValue = valueById(edgeFormDatas, 24);
                     if (repairsOutagesValue.equals("Power Issue")) {
                         loggingModel.setRepairsOption("Power Issue");
+                        return "Repairs & Outages";
                     } else if (repairsOutagesValue.equals("Unable to Repair(CDOT Issue)")) {
                         loggingModel.setRepairsOption("Unable to Repair(CDOT Issue)");
+                        return "Repairs & Outages";
                     }
 
 
@@ -200,8 +202,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
                     loggingModel.setStatus(MessageConstants.ERROR);
                     loggingModel.setErrorDetails("Repairs & Outages options are not selected.");
                 }
-                loggingModel.setRepairsOption(repairsOutagesValue);
-                return "Repairs & Outages";
+
             }
         } catch (NoValueException e) {
             e.printStackTrace();
@@ -268,12 +269,8 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
         } catch (AlreadyUsedException e) {
             throw new AlreadyUsedException(e.getMessage());
         } catch (NoValueException e) {
-
+            return "New";
         }
-
-        return null;
-
-
     }
 
 
@@ -600,7 +597,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
                         + ")  - Already in use. So this pole is not synced with SLV. Note Title :[" + edgeNote.getTitle()
                         + " ]");
             }
-
+            loggingModel.setMacAddress(nodeMacValue);
             sync2Slv(nodeMacValue, fixerQrScanValue, edgeNote, loggingModel, loggingModel.getIdOnController(), loggingModel.getControllerSrtId(), null, utilLocId, true, nightRideKey, nightRideValue);
         } catch (NoValueException e) {
             logger.error("Error no value", e);
@@ -676,7 +673,6 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
             } catch (NoValueException e) {
                 loggingModel.setErrorDetails(MessageConstants.NEW_MAC_ADDRESS_NOT_AVAILABLE);
                 loggingModel.setStatus(MessageConstants.ERROR);
-                return;
             }
 
             // Get Existing Node MAC Address value
@@ -703,7 +699,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
             }
 
 
-            if (!newNodeMacAddress.startsWith("00") && (fixerQrScanValue != null && fixerQrScanValue.startsWith("00"))) {
+            if (newNodeMacAddress!=null && !newNodeMacAddress.startsWith("00") && (fixerQrScanValue != null && fixerQrScanValue.startsWith("00"))) {
                 String temp = newNodeMacAddress;
                 newNodeMacAddress = fixerQrScanValue;
                 fixerQrScanValue = temp;
@@ -723,19 +719,19 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
                 } catch (QRCodeNotMatchedException e1) {
                     loggingModel.setStatus(MessageConstants.ERROR);
                     loggingModel.setErrorDetails(MessageConstants.REPLACE_MAC_NOT_MATCH);
-                    return;
+                    //    return;
                 }
             }
 
-
-            try {
-                checkMacAddressExists(newNodeMacAddress, idOnController, nightRideKey, nightRideValue, loggingModel);
-            } catch (QRCodeAlreadyUsedException e1) {
-                logger.error("MacAddress (" + e1.getMacAddress()
-                        + ")  - Already in use. So this pole is not synced with SLV. Note Title :[" + edgeNote.getTitle()
-                        + " ]");
+            if (newNodeMacAddress != null && !newNodeMacAddress.isEmpty()) {
+                try {
+                    checkMacAddressExists(newNodeMacAddress, idOnController, nightRideKey, nightRideValue, loggingModel);
+                } catch (QRCodeAlreadyUsedException e1) {
+                    logger.error("MacAddress (" + e1.getMacAddress()
+                            + ")  - Already in use. So this pole is not synced with SLV. Note Title :[" + edgeNote.getTitle()
+                            + " ]");
+                }
             }
-
 
             boolean isError = false;
             StringBuffer statusDescription = new StringBuffer();

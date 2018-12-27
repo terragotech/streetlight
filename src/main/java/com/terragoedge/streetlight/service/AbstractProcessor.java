@@ -466,8 +466,12 @@ public abstract class AbstractProcessor {
                 JsonArray deviceValues = deviceValuesAsArray.get(i).getAsJsonArray();
                 if (deviceValues.get(0).getAsString().equals(idOnController)) {
                     if (deviceValues.get(2).getAsString().equals(existingNodeMacAddress)) {
-                        String comment = deviceValues.get(1).getAsString();
-                        return comment;
+                        try {
+                            String comment = deviceValues.get(1).getAsString();
+                            return comment;
+                        }catch (Exception e){
+                            return null;
+                        }
                     }
                 }
             }

@@ -215,10 +215,9 @@ public class SlvServerData {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         SlvServerData that = (SlvServerData) o;
-        System.out.println("IdOnController : "+that.getIdOnController());
-        System.out.println("idOnController is : "+idOnController);
+       // System.out.println("IdOnController : "+that.getIdOnController());
+       // System.out.println("idOnController is : "+idOnController);
         return idOnController.equals(that.idOnController) &&
-                getMacAddress().equals(that.getMacAddress()) &&
                 getLuminairePartNumber().equals(that.getLuminairePartNumber()) &&
                 getLuminaireModel().equals(that.getLuminaireModel()) &&
                 getLuminaireManufacturedate().equals(that.getLuminaireManufacturedate()) &&
@@ -243,7 +242,7 @@ public class SlvServerData {
 
 
     private String nullCheck(String data){
-        return data != null ? data : "";
+        return data != null ? data.trim() : "";
     }
 
 

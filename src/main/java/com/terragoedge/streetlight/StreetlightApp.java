@@ -16,7 +16,7 @@ public class StreetlightApp {
                 streetlightChicagoService = new StreetlightChicagoService();
                 streetlightChicagoService.loadDevices();
                 streetlightChicagoService.run();
-                Thread.sleep(60000);
+                Thread.sleep(30000);
             }catch (Exception e){
                 e.printStackTrace();
             }finally {
