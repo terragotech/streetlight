@@ -14,6 +14,7 @@ import com.terragoedge.slvinterface.exception.*;
 import com.terragoedge.slvinterface.json.slvInterface.Action;
 import com.terragoedge.slvinterface.json.slvInterface.ConfigurationJson;
 import com.terragoedge.slvinterface.json.slvInterface.Id;
+import com.terragoedge.slvinterface.model.CanadaFormModel;
 import com.terragoedge.slvinterface.model.EdgeFormData;
 import com.terragoedge.slvinterface.model.EdgeNote;
 import com.terragoedge.slvinterface.model.FormData;
@@ -147,6 +148,7 @@ public abstract class SlvInterfaceService extends AbstractSlvService {
             // Check whether this note is already processed or not.
             if (!noteGuids.contains(edgeNote.getNoteGuid())) {
                 SlvSyncDetails slvSyncDetailsError = new SlvSyncDetails();
+                List<FormData> formDataList = new ArrayList<>();
                 try {
                     slvSyncDetailsError.setNoteGuid(edgeNote.getNoteGuid());
                     slvSyncDetailsError.setNoteName(edgeNote.getTitle());
@@ -160,10 +162,16 @@ public abstract class SlvInterfaceService extends AbstractSlvService {
                         formDataMaps.put(formData.getFormTemplateGuid(), formData);
                         if (formData.getFormTemplateGuid().equals(formTemplateGuid)) {
                             isFormTemplatePresent = true;
+                            formDataList.add(formData);
                         }
                     }
+
                     // Check Note has correct form template or not. If not present no need to process.
                     if (isFormTemplatePresent) {
+                        CanadaFormModel canadaFormModel = processDuplicateForm(formDatasList);
+                        if(canadaFormModel!=null){
+                            //TODO
+                        }
                         System.out.println("Field Activity Present");
                         processSingleForm(formDataMaps.get(formTemplateGuid), edgeNote, slvSyncDetailsError, paramsList, configurationJsonList, geozoneId, controllerStrid);
                     } else {
@@ -181,6 +189,7 @@ public abstract class SlvInterfaceService extends AbstractSlvService {
             e.printStackTrace();
         }
     }
+
 
     /**
      * Based on configuration corresponding process going to take place.
@@ -303,6 +312,10 @@ public abstract class SlvInterfaceService extends AbstractSlvService {
         slvDevice.setDeviceName(title);
         slvDevice.setProcessedDateTime(new Date().getTime());
         connectionDAO.saveSlvDevices(slvDevice);
+    }
+
+    public CanadaFormModel processDuplicateForm(List<FormData> formDataList) {
+        return null;
     }
 
     public void processReplaceDevice(FormData formData, ConfigurationJson configurationJson, EdgeNote edgeNote, List<Object> paramsList, SlvSyncDetails slvSyncDetails, String controllerStrIdValue, String geozoneId) throws NoValueException, QRCodeAlreadyUsedException, ReplaceOLCFailedException, DeviceUpdationFailedException, MacAddressProcessedException, QRCodeNotMatchedException {

@@ -14,8 +14,10 @@ import com.terragoedge.slvinterface.exception.NoValueException;
 import com.terragoedge.slvinterface.json.slvInterface.ConfigurationJson;
 import com.terragoedge.slvinterface.kingcity.DefaultData;
 import com.terragoedge.slvinterface.kingcity.GeoZoneDetails;
+import com.terragoedge.slvinterface.model.CanadaFormModel;
 import com.terragoedge.slvinterface.model.EdgeFormData;
 import com.terragoedge.slvinterface.model.EdgeNote;
+import com.terragoedge.slvinterface.model.FormData;
 import com.terragoedge.slvinterface.utils.ResourceDetails;
 import com.terragoedge.slvinterface.utils.Utils;
 import org.apache.commons.io.IOUtils;
@@ -85,7 +87,7 @@ public class CanadaEdgeInterface extends SlvInterfaceService {
     public void addOtherParams(EdgeNote edgeNote, List<Object> paramsList) {
         addStreetLightData("install.date", Utils.dateFormat(edgeNote.getCreatedDateTime()), paramsList);
         addStreetLightData("installStatus", "Installed", paramsList);
-        addStreetLightData("location.utillocationid", edgeNote.getTitle()+".Lamp", paramsList);
+        addStreetLightData("location.utillocationid", edgeNote.getTitle() + ".Lamp", paramsList);
     }
 
     @Override
@@ -94,18 +96,16 @@ public class CanadaEdgeInterface extends SlvInterfaceService {
         addStreetLightData("idOnController", edgeNote.getTitle(), paramsList);
         paramsList.add("controllerStrId=" + controllerStrIdValue);
         addOtherParams(edgeNote, paramsList);
-        updateDeviceValues(paramsList, edgeNote,edgeFormDataList);
+        updateDeviceValues(paramsList, edgeNote, edgeFormDataList);
         setDeviceValues(paramsList, slvSyncDetails);
     }
 
 
-
     public void updateDeviceValues(List<Object> paramsList, EdgeNote edgeNote,
-                                   List<EdgeFormData> edgeFormValuesList) throws NoValueException{
+                                   List<EdgeFormData> edgeFormValuesList) throws NoValueException {
         String comment = "";
         int power2Watt = 0;
         int lWatt = 0;
-
 
 
         for (EdgeFormData formValues : edgeFormValuesList) {
@@ -129,7 +129,7 @@ public class CanadaEdgeInterface extends SlvInterfaceService {
                 }
 
 
-                if(!key.equals("comment") && !key.equals("MacAddress") && !key.toLowerCase().equals("power")){
+                if (!key.equals("comment") && !key.equals("MacAddress") && !key.toLowerCase().equals("power")) {
                     addStreetLightData(key, value, paramsList);
                 }
 
@@ -146,7 +146,7 @@ public class CanadaEdgeInterface extends SlvInterfaceService {
 
                 if (key.equalsIgnoreCase("comment")) {
                     comment = comment + " " + formValues.getLabel() + ":" + value;
-                }else {
+                } else {
                     if (key.equalsIgnoreCase("power")) {
                         if (value != null && !(value.trim().isEmpty())
                                 && !(value.trim().equalsIgnoreCase("(null)"))) {
@@ -174,7 +174,7 @@ public class CanadaEdgeInterface extends SlvInterfaceService {
         addStreetLightData("powerCorrection", watt + "", paramsList);
 
 
-        addStreetLightData("location.utillocationid",  edgeNote.getTitle()+ ".Lamp", paramsList);
+        addStreetLightData("location.utillocationid", edgeNote.getTitle() + ".Lamp", paramsList);
         String nodeTypeStrId = properties.getProperty("streetlight.slv.equipment.type");
         addStreetLightData("modelFunctionId", nodeTypeStrId, paramsList);
 
@@ -187,31 +187,115 @@ public class CanadaEdgeInterface extends SlvInterfaceService {
         DefaultData defaultData = new DefaultData();
         defaultData.setIdOnController(edgeNote.getTitle());
         int pos = defaultDataHashMap.indexOf(defaultData);
-        if(pos != -1){
+        if (pos != -1) {
             defaultData = defaultDataHashMap.get(pos);
             addStreetLightData("DimmingGroupName", defaultData.getDimmingGroupValue(), paramsList);
         }
 
+    }
+
+    @Override
+    public CanadaFormModel processDuplicateForm(List<FormData> formDataList) {
+        CanadaFormModel canadaFormModel = new CanadaFormModel();
+        for (FormData formData : formDataList) {
+            List<EdgeFormData> edgeFormDataList = formData.getFormDef();
+            for (EdgeFormData edgeFormData : edgeFormDataList) {
+                if (edgeFormData != null) {
+                    switch (edgeFormData.getLabel()) {
+                        case "SL":
+                            if (nullCheck(edgeFormData.getValue()))
+                                canadaFormModel.setSl(edgeFormData.getValue());
+                            break;
+                        case "Street_name":
+                            if (nullCheck(edgeFormData.getValue()))
+                                canadaFormModel.setStreet_name(edgeFormData.getValue());
+                            break;
+                        case "Pole_Type":
+                            if (nullCheck(edgeFormData.getValue()))
+                                canadaFormModel.setPole_Type(edgeFormData.getValue());
+                            break;
+                        case "Arm_Length":
+                            if (nullCheck(edgeFormData.getValue()))
+                                canadaFormModel.setArm_Length(edgeFormData.getValue());
+                            break;
+                        case "Lum_Ht":
+                            if (nullCheck(edgeFormData.getValue()))
+                                canadaFormModel.setLum_Ht(edgeFormData.getValue());
+                            break;
+                        case "Pole_Colour":
+                            if (nullCheck(edgeFormData.getValue()))
+                                canadaFormModel.setPole_Colour(edgeFormData.getValue());
+                            break;
+                        case "Luminaire_Per_Pole":
+                            if (nullCheck(edgeFormData.getValue()))
+                                canadaFormModel.setLuminaire_Per_Pole(edgeFormData.getValue());
+                            break;
+                        case "SELC QR Code":
+                            if (nullCheck(edgeFormData.getValue()))
+                                canadaFormModel.setMacAddress(edgeFormData.getValue());
+                            break;
+                        case "Pole Tag Present":
+                            if (nullCheck(edgeFormData.getValue()))
+                                canadaFormModel.setPole_Tag_Present(edgeFormData.getValue());
+                            break;
+                        case "Utility Pole":
+                            if (nullCheck(edgeFormData.getValue()))
+                                canadaFormModel.setUtility_Pole(edgeFormData.getValue());
+                            break;
+                        case "Arm Type":
+                            if (nullCheck(edgeFormData.getValue()))
+                                canadaFormModel.setArmType(edgeFormData.getValue());
+                            break;
+                        case "Vegetation Obstruction":
+                            if (nullCheck(edgeFormData.getValue()))
+                                canadaFormModel.setVegetation_Obstruction(edgeFormData.getValue());
+                            break;
+                        case "New Luminare Code":
+                            if (nullCheck(edgeFormData.getValue()))
+                                canadaFormModel.setNew_Luminare_Code(edgeFormData.getValue());
+                            break;
+                        case "Watt":
+                            if (nullCheck(edgeFormData.getValue()))
+                                canadaFormModel.setWatt(edgeFormData.getValue());
+                            break;
+                        case "Pole Length (m)":
+                            if (nullCheck(edgeFormData.getValue()))
+                                canadaFormModel.setPole_Length(edgeFormData.getValue());
+                            break;
+                        case "Pole Condition":
+                            if (nullCheck(edgeFormData.getValue()))
+                                canadaFormModel.setPole_Condition(edgeFormData.getValue());
+                            break;
+                        case "Pole Manufacturer":
+                            if (nullCheck(edgeFormData.getValue()))
+                                canadaFormModel.setPole_manufacturer(edgeFormData.getValue());
+                            break;
+                        case "Fuse":
+                            if (nullCheck(edgeFormData.getValue()))
+                                canadaFormModel.setFuse(edgeFormData.getValue());
+                            break;
+                    }
+                }
+            }
         }
+        return canadaFormModel;
+    }
 
 
-
-
-
-    private void loadMappingVal(){
+    private void loadMappingVal() {
         FileInputStream fis = null;
-        try{
+        try {
             fis = new FileInputStream(ResourceDetails.MAPPING_PATH);
-            String data =  IOUtils.toString(fis);
+            String data = IOUtils.toString(fis);
             JsonParser jsonParser = new JsonParser();
             mappingJson = (JsonObject) jsonParser.parse(data);
-        }catch (Exception e){
+        } catch (Exception e) {
             e.printStackTrace();
-        }finally {
-            if(fis != null){
-                try{
+        } finally {
+            if (fis != null) {
+                try {
                     fis.close();
-                }catch (Exception e){
+                } catch (Exception e) {
                     e.printStackTrace();
                 }
 
@@ -236,11 +320,11 @@ public class CanadaEdgeInterface extends SlvInterfaceService {
     }
 
 
-    public String getGeoZoneValue(String title){
+    public String getGeoZoneValue(String title) {
         GeoZoneDetails geoZoneDetails = new GeoZoneDetails();
         geoZoneDetails.setName(title);
-        int pos =  geoZoneDetailsList.indexOf(geoZoneDetails);
-        if(pos != -1){
+        int pos = geoZoneDetailsList.indexOf(geoZoneDetails);
+        if (pos != -1) {
             geoZoneDetails = geoZoneDetailsList.get(pos);
             return geoZoneDetails.getId();
         }
@@ -248,7 +332,7 @@ public class CanadaEdgeInterface extends SlvInterfaceService {
     }
 
 
-    private void loadGeoZoneVal(){
+    private void loadGeoZoneVal() {
 
         String mainUrl = properties.getProperty("streetlight.slv.url.main");
         String updateDeviceValues = properties.getProperty("streetlight.slv.geozone");
@@ -264,23 +348,26 @@ public class CanadaEdgeInterface extends SlvInterfaceService {
 
 
     @Override
-    public void createDevice(EdgeNote edgeNote, SlvSyncDetails slvSyncDetails, String geoZoneId,List<EdgeFormData> edgeFormDataList) throws DeviceCreationFailedException {
-        try{
-           // String blockName = valueById(edgeFormDataList,34);
-            String blockName = valueById(edgeFormDataList,32);
-            logger.info("Block Name:"+blockName);
+    public void createDevice(EdgeNote edgeNote, SlvSyncDetails slvSyncDetails, String geoZoneId, List<EdgeFormData> edgeFormDataList) throws DeviceCreationFailedException {
+        try {
+            // String blockName = valueById(edgeFormDataList,34);
+            String blockName = valueById(edgeFormDataList, 32);
+            logger.info("Block Name:" + blockName);
             geoZoneId = getGeoZoneValue(blockName);
-            if(geoZoneId == null){
+            if (geoZoneId == null) {
                 logger.error("No GeoZone");
                 slvSyncDetails.setErrorDetails("No GeoZone");
                 throw new DeviceCreationFailedException("Unable to find GeoZone");
             }
 
-            super.createDevice(edgeNote,slvSyncDetails,geoZoneId,edgeFormDataList);
-        }catch (NoValueException e){
+            super.createDevice(edgeNote, slvSyncDetails, geoZoneId, edgeFormDataList);
+        } catch (NoValueException e) {
             throw new DeviceCreationFailedException("Unable to get block Name");
         }
 
     }
 
+    private boolean nullCheck(String data) {
+        return (data != null && data.length() > 0 && !data.contains("null")) ? true : false;
+    }
 }
