@@ -387,9 +387,8 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
                 addStreetLightData(nightRideKey, nightRideValue, paramsList);
             }
             if (macAddress != null && !macAddress.trim().isEmpty() && !loggingModel.isMacAddressUsed()) {
-                if (isNew) {
-                    addStreetLightData("cslp.node.install.date", dateFormat(edgeNote.getCreatedDateTime()), paramsList);
-                }
+                addStreetLightData("cslp.node.install.date", dateFormat(edgeNote.getCreatedDateTime()), paramsList);
+                addStreetLightData("install.date", dateFormat(edgeNote.getCreatedDateTime()), paramsList);
                 addStreetLightData("MacAddress", macAddress, paramsList);
             }
 

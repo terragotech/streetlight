@@ -140,20 +140,16 @@ public abstract class AbstractProcessor {
 
     protected void addOtherParams(EdgeNote edgeNote, List<Object> paramsList, String idOnContoller, String utilLocId, boolean isNew, String fixerQrScanValue) {
         // luminaire.installdate - 2017-09-07 09:47:35
-        addStreetLightData("install.date", dateFormat(edgeNote.getCreatedDateTime()), paramsList);
-
         String installStatus = null;
-        if (isNew) {
-            if (fixerQrScanValue != null && fixerQrScanValue.trim().length() > 0) {
-                logger.info("Fixture QR scan not empty and set luminare installdate" + dateFormat(edgeNote.getCreatedDateTime()));
-                logger.info("Fixture QR scan not empty and set cslp.lum.install.date" + dateFormat(edgeNote.getCreatedDateTime()));
-                addStreetLightData("cslp.lum.install.date", dateFormat(edgeNote.getCreatedDateTime()), paramsList);
-                installStatus = "Installed";
-                // controller.installdate - 2017/10/10
-                addStreetLightData("luminaire.installdate", dateFormat(edgeNote.getCreatedDateTime()), paramsList);
-            }else {
-                installStatus = "Installed";
-            }
+        if (fixerQrScanValue != null && fixerQrScanValue.trim().length() > 0) {
+            logger.info("Fixture QR scan not empty and set luminare installdate" + dateFormat(edgeNote.getCreatedDateTime()));
+            logger.info("Fixture QR scan not empty and set cslp.lum.install.date" + dateFormat(edgeNote.getCreatedDateTime()));
+            addStreetLightData("cslp.lum.install.date", dateFormat(edgeNote.getCreatedDateTime()), paramsList);
+            installStatus = "Fixture Only";
+            // controller.installdate - 2017/10/10
+            addStreetLightData("luminaire.installdate", dateFormat(edgeNote.getCreatedDateTime()), paramsList);
+        }else {
+            installStatus = "Installed";
         }
 
 
