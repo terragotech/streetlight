@@ -138,17 +138,24 @@ public abstract class AbstractProcessor {
     }
 
 
-    protected void addOtherParams(EdgeNote edgeNote, List<Object> paramsList, String idOnContoller, String utilLocId, boolean isNew, String fixerQrScanValue) {
+    protected void addOtherParams(EdgeNote edgeNote, List<Object> paramsList, String idOnContoller, String utilLocId, boolean isNew, String fixerQrScanValue,String macAddress) {
         // luminaire.installdate - 2017-09-07 09:47:35
         String installStatus = null;
         if (fixerQrScanValue != null && fixerQrScanValue.trim().length() > 0) {
             logger.info("Fixture QR scan not empty and set luminare installdate" + dateFormat(edgeNote.getCreatedDateTime()));
             logger.info("Fixture QR scan not empty and set cslp.lum.install.date" + dateFormat(edgeNote.getCreatedDateTime()));
-            addStreetLightData("cslp.lum.install.date", dateFormat(edgeNote.getCreatedDateTime()), paramsList);
-            installStatus = "Fixture Only";
-            // controller.installdate - 2017/10/10
-            addStreetLightData("luminaire.installdate", dateFormat(edgeNote.getCreatedDateTime()), paramsList);
-        }else {
+            if(isNew){
+                addStreetLightData("cslp.lum.install.date", dateFormat(edgeNote.getCreatedDateTime()), paramsList);
+                addStreetLightData("luminaire.installdate", dateFormat(edgeNote.getCreatedDateTime()), paramsList);
+            }
+            if(macAddress == null || macAddress.trim().isEmpty()){
+                installStatus = "Fixture Only";
+            }else{
+                installStatus = "Installed";
+            }
+
+
+        }else if(macAddress != null && macAddress.trim().length() > 0){
             installStatus = "Installed";
         }
 
@@ -175,7 +182,7 @@ public abstract class AbstractProcessor {
             if (dimmingGroupName.startsWith("4") || dimmingGroupName.startsWith("13")) {
                 edgeNotebookName = edgeNotebookName + " Acorns";
             }
-            if(dimmingGroupName.contains("Node Only") && isNew){
+            if(dimmingGroupName.contains("Node Only") && installStatus != null){
                 installStatus = "Verified";
 
             }
@@ -245,7 +252,8 @@ public abstract class AbstractProcessor {
             }
 
             addStreetLightData("power", powerVal, paramsList);
-            addStreetLightData("comed.litetype", fixtureInfo[5], paramsList);
+            // As per Ryan Request we have changes to luminaire.type - Jan 04 2019
+            addStreetLightData("luminaire.type", fixtureInfo[5], paramsList);
 
             // dailyReportCSV.setFixtureType(fixtureInfo[5]);
             addStreetLightData("device.luminaire.colortemp", fixtureInfo[6], paramsList);

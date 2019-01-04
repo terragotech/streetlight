@@ -374,7 +374,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
             paramsList.add("idOnController=" + idOnController);
             paramsList.add("controllerStrId=" + controllerStrIdValue);
             SlvServerData slvServerData = new SlvServerData();
-            addOtherParams(edgeNote, paramsList, idOnController, utilLocId, isNew, fixerQrScanValue);
+            addOtherParams(edgeNote, paramsList, idOnController, utilLocId, isNew, fixerQrScanValue,macAddress);
             if (fixerQrScanValue != null) {
                 buildFixtureStreetLightData(fixerQrScanValue, paramsList, edgeNote, slvServerData);//update fixer qrscan value
             }
@@ -387,7 +387,9 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
                 addStreetLightData(nightRideKey, nightRideValue, paramsList);
             }
             if (macAddress != null && !macAddress.trim().isEmpty() && !loggingModel.isMacAddressUsed()) {
-                addStreetLightData("cslp.node.install.date", dateFormat(edgeNote.getCreatedDateTime()), paramsList);
+                if(isNew){
+                    addStreetLightData("cslp.node.install.date", dateFormat(edgeNote.getCreatedDateTime()), paramsList);
+                }
                 addStreetLightData("install.date", dateFormat(edgeNote.getCreatedDateTime()), paramsList);
                 addStreetLightData("MacAddress", macAddress, paramsList);
             }
