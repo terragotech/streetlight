@@ -97,7 +97,7 @@
                             <goal>single</goal>
                         </goals>
                         <configuration>
-                            <finalName>ameresco_usa_streetlight_load_data</finalName>
+                            <finalName>ameresco_usa_streetlight_v89</finalName>
 
                             <archive>
                                 <manifest>
