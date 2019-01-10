@@ -9,6 +9,7 @@ import com.terragoedge.edgeserver.EdgeFormData;
 import com.terragoedge.edgeserver.EdgeNote;
 import com.terragoedge.streetlight.PropertiesReader;
 import com.terragoedge.streetlight.exception.NoValueException;
+import com.terragoedge.streetlight.json.model.Dictionary;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.log4j.Logger;
 import org.springframework.http.HttpEntity;
@@ -105,6 +106,7 @@ public class EdgeService {
 
     public JsonObject processEdgeForms(EdgeNote edgeNote, List<EdgeFormData> edgeFormDataList, String errorFormTemplateGuid, SlvData slvData) {
         String edgenoteJson = gson.toJson(edgeNote);
+        String layerGuid = PropertiesReader.getProperties().getProperty("milhouse.layerguid");
         JsonObject edgeJsonObject = (JsonObject) jsonParser.parse(edgenoteJson);
         JsonArray serverEdgeFormJsonArray = edgeJsonObject.get("formData").getAsJsonArray();
         int size = serverEdgeFormJsonArray.size();
@@ -141,6 +143,22 @@ public class EdgeService {
         edgeJsonObject.add("formData", serverEdgeFormJsonArray);
         edgeJsonObject.addProperty("createdDateTime", System.currentTimeMillis());
         edgeJsonObject.addProperty("noteGuid", UUID.randomUUID().toString());
+
+        List<Dictionary> dictionaryList = edgeNote.getDictionary();
+        boolean isDictionaryExist = false;
+        for (Dictionary dictionary : dictionaryList) {
+            if (dictionary.getKey().equals("groupGuid") && !dictionary.getValue().equals(layerGuid)) {
+                isDictionaryExist = true;
+                dictionary.setValue(layerGuid);
+            }
+        }
+        if (isDictionaryExist && dictionaryList == null || dictionaryList.size() == 0) {
+            Dictionary dictionary = new Dictionary();
+            dictionary.setKey("groupGuid");
+            dictionary.setValue(layerGuid);
+            dictionaryList.add(dictionary);
+        }
+        edgeJsonObject.add("dictionary", gson.toJsonTree(dictionaryList));
         return edgeJsonObject;
     }
 
