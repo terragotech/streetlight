@@ -135,7 +135,6 @@ public abstract class SlvInterfaceService extends AbstractSlvService {
             } catch (Exception e) {
                 logger.error("Error", e);
             }
-
         }
         // Get data from server.
         logger.info("Process End :");
@@ -168,12 +167,19 @@ public abstract class SlvInterfaceService extends AbstractSlvService {
 
                     // Check Note has correct form template or not. If not present no need to process.
                     if (isFormTemplatePresent) {
+                        FormData formData = formDataMaps.get(formTemplateGuid);
+                        List<EdgeFormData> edgeFormDataList = formData.getFormDef();
                         CanadaFormModel canadaFormModel = processDuplicateForm(formDatasList);
-                        if(canadaFormModel!=null){
-                            //TODO
+                        if (canadaFormModel != null) {
+                            logger.info("-----------------processedformTemplate---------");
+                            updateFormTemplateValues(edgeFormDataList, canadaFormModel);
+                            logger.info(gson.toJson(edgeFormDataList));
+                            logger.info("-----------------processedform end---------");
+                          //  processSingleForm(edgeFormDataList, edgeNote, slvSyncDetailsError, paramsList, configurationJsonList, geozoneId, controllerStrid);
                         }
                         System.out.println("Field Activity Present");
-                        processSingleForm(formDataMaps.get(formTemplateGuid), edgeNote, slvSyncDetailsError, paramsList, configurationJsonList, geozoneId, controllerStrid);
+
+                        processSingleForm(edgeFormDataList, edgeNote, slvSyncDetailsError, paramsList, configurationJsonList, geozoneId, controllerStrid);
                     } else {
                         System.out.println("wrong formtemplate");
                         slvSyncDetailsError.setErrorDetails("Form Template [" + formTemplateGuid + "] is not present in this note.");
@@ -194,15 +200,14 @@ public abstract class SlvInterfaceService extends AbstractSlvService {
     /**
      * Based on configuration corresponding process going to take place.
      *
-     * @param formData
+     * @param edgeFormDataList
      * @param edgeNote
      * @param slvSyncDetail
      * @param paramsList
      * @param configurationJsonList
      */
-    public void processSingleForm(FormData formData, EdgeNote edgeNote, SlvSyncDetails slvSyncDetail, List<Object> paramsList, List<ConfigurationJson> configurationJsonList, String geozoneId, String controllerStrIdValue) {
+    public void processSingleForm(List<EdgeFormData> edgeFormDataList, EdgeNote edgeNote, SlvSyncDetails slvSyncDetail, List<Object> paramsList, List<ConfigurationJson> configurationJsonList, String geozoneId, String controllerStrIdValue) {
         try {
-            List<EdgeFormData> edgeFormDataList = formData.getFormDef();
             for (ConfigurationJson configurationJson : configurationJsonList) {
                 List<Action> actionList = configurationJson.getAction();
                 try {
@@ -214,7 +219,7 @@ public abstract class SlvInterfaceService extends AbstractSlvService {
                     switch (configurationJson.getType()) {
                         case NEW_DEVICE:
                             logger.info("User New Device option is seleted.");
-                            String macAddress = validateMACAddress(configurationJson, formData.getFormDef(), edgeNote, paramsList);
+                            String macAddress = validateMACAddress(configurationJson, edgeFormDataList, edgeNote, paramsList);
                             slvSyncDetail.setMacAddress(macAddress);
                             slvSyncDetail.setSelectedAction(SLVProcess.NEW_DEVICE.toString());
                             boolean isDeviceExist = isAvailableDevice(edgeNote.getTitle());
@@ -241,7 +246,7 @@ public abstract class SlvInterfaceService extends AbstractSlvService {
                             System.out.println("REPLACE_DEVICE");
                             logger.info(edgeNote.getTitle() + " is going to Remove.");
                             slvSyncDetail.setSelectedAction(SLVProcess.REPLACE_DEVICE.toString());
-                            processReplaceDevice(formData, configurationJson, edgeNote, paramsList, slvSyncDetail, controllerStrIdValue, geozoneId);
+                            processReplaceDevice(edgeFormDataList, configurationJson, edgeNote, paramsList, slvSyncDetail, controllerStrIdValue, geozoneId);
                             slvSyncDetail.setStatus("Success");
                             break;
                         case REMOVE:
@@ -249,7 +254,6 @@ public abstract class SlvInterfaceService extends AbstractSlvService {
                             replaceOLC(controllerStrIdValue, edgeNote.getTitle(), "");
                             slvSyncDetail.setStatus("Success");
                             break;
-
                     }
                 } else {
                     System.out.println("Wrong action value");
@@ -318,8 +322,11 @@ public abstract class SlvInterfaceService extends AbstractSlvService {
         return null;
     }
 
-    public void processReplaceDevice(FormData formData, ConfigurationJson configurationJson, EdgeNote edgeNote, List<Object> paramsList, SlvSyncDetails slvSyncDetails, String controllerStrIdValue, String geozoneId) throws NoValueException, QRCodeAlreadyUsedException, ReplaceOLCFailedException, DeviceUpdationFailedException, MacAddressProcessedException, QRCodeNotMatchedException {
-        List<EdgeFormData> edgeFormDatas = formData.getFormDef();
+    public void updateFormTemplateValues(List<EdgeFormData> edgeFormDataList, CanadaFormModel canadaFormModel) {
+
+    }
+
+    public void processReplaceDevice(List<EdgeFormData> edgeFormDatas, ConfigurationJson configurationJson, EdgeNote edgeNote, List<Object> paramsList, SlvSyncDetails slvSyncDetails, String controllerStrIdValue, String geozoneId) throws NoValueException, QRCodeAlreadyUsedException, ReplaceOLCFailedException, DeviceUpdationFailedException, MacAddressProcessedException, QRCodeNotMatchedException {
         String macAddress = validateMACAddress(configurationJson, edgeFormDatas, edgeNote, paramsList);
         slvSyncDetails.setMacAddress(macAddress);
         System.out.println("newMac :" + macAddress);
@@ -544,6 +551,7 @@ public abstract class SlvInterfaceService extends AbstractSlvService {
             //  List<EdgeNote> edgeNoteList = gson.fromJson(notesData, listType);
             for (EdgeNote edgenote : edgeNoteList) {
                 logger.info("ProcessNoteTitle is :" + edgenote.getTitle());
+                geozoneId = getGeoZoneValue(edgenote.getTitle());
                 System.out.print("geozoneId :" + geozoneId);
                 processEdgeNote(edgenote, noteGuids, formTemplateGuid, geozoneId, controllerStrIdValue);
             }

@@ -7,6 +7,7 @@ public class CanadaFormModel {
     private String Pole_Type;
     private String Arm_Length;
     private String Lum_Ht;
+    private String geozoneId;
     private String Pole_Colour;
     private String Luminaire_Per_Pole;
     private String macAddress;
@@ -33,6 +34,32 @@ public class CanadaFormModel {
     private String pole_Condition;
     private String pole_manufacturer;
     private String fuse;
+    private String attribute;
+    private String action;
+
+    public String getGeozoneId() {
+        return geozoneId;
+    }
+
+    public void setGeozoneId(String geozoneId) {
+        this.geozoneId = geozoneId;
+    }
+
+    public String getAttribute() {
+        return attribute;
+    }
+
+    public void setAttribute(String attribute) {
+        this.attribute = attribute;
+    }
+
+    public String getAction() {
+        return action;
+    }
+
+    public void setAction(String action) {
+        this.action = action;
+    }
 
     public String getSl() {
         return sl;
@@ -289,7 +316,9 @@ public class CanadaFormModel {
     public void setFuse(String fuse) {
         this.fuse = fuse;
     }
-    private String nullCheck(String data){
-        return data!=null? data:"";
+
+    private String nullCheck(String data) {
+        return data != null ? data : "";
     }
+
 }

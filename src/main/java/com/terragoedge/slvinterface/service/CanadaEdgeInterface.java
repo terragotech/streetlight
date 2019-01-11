@@ -39,9 +39,9 @@ public class CanadaEdgeInterface extends SlvInterfaceService {
 
     public CanadaEdgeInterface() {
         super();
-        loadDefaultValue();
-        loadGeoZoneVal();
-        loadMappingVal();
+         loadDefaultValue();
+         loadGeoZoneVal();
+         loadMappingVal();
     }
 
     static {
@@ -193,6 +193,55 @@ public class CanadaEdgeInterface extends SlvInterfaceService {
         }
 
     }
+    @Override
+    public void updateFormTemplateValues(List<EdgeFormData> edgeFormDataList,CanadaFormModel canadaFormModel) {
+        // new streetlights 26
+        Utils.updateFormValue(edgeFormDataList,26,canadaFormModel.getAttribute());
+        // action 1
+        Utils.updateFormValue(edgeFormDataList,1,canadaFormModel.getAction());
+        //SL 31
+        Utils.updateFormValue(edgeFormDataList,31,canadaFormModel.getSl());
+        // streetname 35
+        Utils.updateFormValue(edgeFormDataList,35,canadaFormModel.getStreet_name());
+        //geozone 32
+        Utils.updateFormValue(edgeFormDataList,32,canadaFormModel.getGeozoneId());
+        //block 34
+        Utils.updateFormValue(edgeFormDataList,34,canadaFormModel.getBlock());
+        //Pole_Type 38
+        Utils.updateFormValue(edgeFormDataList,38,canadaFormModel.getPole_Type());
+        //Arm_Length 39
+        Utils.updateFormValue(edgeFormDataList,39,canadaFormModel.getArm_Length());
+        //Lum_Ht 40
+        Utils.updateFormValue(edgeFormDataList,40,canadaFormModel.getLum_Ht());
+        //Pole_Colour 42
+        Utils.updateFormValue(edgeFormDataList,42,canadaFormModel.getPole_Colour());
+        // Luminaire_Per_Pole 43
+        Utils.updateFormValue(edgeFormDataList,43,canadaFormModel.getLuminaire_Per_Pole());
+        //SELC QR Code 22
+        Utils.updateFormValue(edgeFormDataList,22,canadaFormModel.getMacAddress());
+        // Pole Tag Present 45
+        Utils.updateFormValue(edgeFormDataList,45,canadaFormModel.getPole_Tag_Present());
+        // Utility Pole 46
+        Utils.updateFormValue(edgeFormDataList,46,canadaFormModel.getUtility_Pole());
+        // Arm Type 47
+        Utils.updateFormValue(edgeFormDataList,47,canadaFormModel.getArmType());
+        //Vegetation Obstruction 48
+        Utils.updateFormValue(edgeFormDataList,48,canadaFormModel.getVegetation_Obstruction());
+        // New Luminare Code 49
+        Utils.updateFormValue(edgeFormDataList,49,canadaFormModel.getNew_Luminare_Code());
+        // L1 Watt 50
+        Utils.updateFormValue(edgeFormDataList,50,canadaFormModel.getL1_Watt());
+        // Watt 37
+        Utils.updateFormValue(edgeFormDataList,37,canadaFormModel.getWatt());
+        // Pole Length (m) 64
+        Utils.updateFormValue(edgeFormDataList,64,canadaFormModel.getPole_Length());
+        // Pole Condition 65
+        Utils.updateFormValue(edgeFormDataList,65,canadaFormModel.getPole_Condition());
+        // Pole Manufacturer 66
+        Utils.updateFormValue(edgeFormDataList,66,canadaFormModel.getPole_manufacturer());
+        //Fuse 67
+        Utils.updateFormValue(edgeFormDataList,67,canadaFormModel.getFuse());
+    }
 
     @Override
     public CanadaFormModel processDuplicateForm(List<FormData> formDataList) {
@@ -274,6 +323,26 @@ public class CanadaEdgeInterface extends SlvInterfaceService {
                             if (nullCheck(edgeFormData.getValue()))
                                 canadaFormModel.setFuse(edgeFormData.getValue());
                             break;
+                        case "Block":
+                            if (nullCheck(edgeFormData.getValue()))
+                                canadaFormModel.setBlock(edgeFormData.getValue());
+                            break;
+                        case "Facility name":
+                            if (nullCheck(edgeFormData.getValue()))
+                                canadaFormModel.setStreet_name(edgeFormData.getValue());
+                            break;
+                        case "Geozone ID":
+                            if (nullCheck(edgeFormData.getValue()))
+                                canadaFormModel.setGeozoneId(edgeFormData.getValue());
+                            break;
+                        case "Attributes":
+                            if (nullCheck(edgeFormData.getValue()))
+                                canadaFormModel.setAttribute(edgeFormData.getValue());
+                            break;
+                        case "Action":
+                            if (nullCheck(edgeFormData.getValue()))
+                                canadaFormModel.setAction(edgeFormData.getValue());
+                            break;
                     }
                 }
             }
@@ -324,10 +393,14 @@ public class CanadaEdgeInterface extends SlvInterfaceService {
         GeoZoneDetails geoZoneDetails = new GeoZoneDetails();
         geoZoneDetails.setName(title);
         int pos = geoZoneDetailsList.indexOf(geoZoneDetails);
+        System.out.println("idOnController position :"+pos);
         if (pos != -1) {
             geoZoneDetails = geoZoneDetailsList.get(pos);
+            logger.info("given idoncontroller geozoneid is :"+ geoZoneDetails.getId());
+            System.out.println("geozoneid is :"+ geoZoneDetails.getId());
             return geoZoneDetails.getId();
         }
+        logger.info("given idoncontroller geozoneid is null");
         return null;
     }
 
