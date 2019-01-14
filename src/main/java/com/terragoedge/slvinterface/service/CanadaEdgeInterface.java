@@ -283,6 +283,11 @@ public class CanadaEdgeInterface extends SlvInterfaceService {
                             if (nullCheck(edgeFormData.getValue()))
                                 canadaFormModel.setMacAddress(edgeFormData.getValue());
                             break;
+                        case "Luminaire Scan":
+                            if (nullCheck(edgeFormData.getValue()))
+                                if(edgeFormData.getValue()!=null && edgeFormData.getValue().startsWith("00135"))
+                                canadaFormModel.setMacAddress(edgeFormData.getValue());
+                            break;
                         case "Pole Tag Present":
                             if (nullCheck(edgeFormData.getValue()))
                                 canadaFormModel.setPole_Tag_Present(edgeFormData.getValue());
