@@ -215,14 +215,14 @@ public class EdgeMailService {
 				multipart.addBodyPart(messageBodyPart);
 			}
 
-			if(inspectionNoteFile != null){
+			/*if(inspectionNoteFile != null){
 				messageBodyPart = new MimeBodyPart();
 				source = new FileDataSource("./report/" + inspectionNoteFile);
 				//source = new FileDataSource( quickNoteFile);
 				messageBodyPart.setDataHandler(new DataHandler(source));
 				messageBodyPart.setFileName(inspectionNoteFile);
 				multipart.addBodyPart(messageBodyPart);
-			}
+			}*/
 
 			if(notCompleteFileName != null){
 				messageBodyPart = new MimeBodyPart();
