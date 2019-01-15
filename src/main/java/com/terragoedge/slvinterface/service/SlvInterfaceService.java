@@ -128,7 +128,7 @@ public abstract class SlvInterfaceService extends AbstractSlvService {
                         for (EdgeNote edgenote : edgeNoteList) {
                             logger.info("ProcessNoteTitle is :" + edgenote.getTitle());
                             String geozoneId = getGeoZoneValue(edgenote.getTitle());
-                            processEdgeNote(edgenote, noteGuids, formTemplateGuid, geozoneId, controllerStrIdValue);
+                            processEdgeNote(edgenote, noteGuids, formTemplateGuid, geozoneId, controllerStrIdValue,false);
                         }
                     }
                 }
@@ -141,7 +141,7 @@ public abstract class SlvInterfaceService extends AbstractSlvService {
 
     }
 
-    private void processEdgeNote(EdgeNote edgeNote, List<String> noteGuids, String formTemplateGuid, String geozoneId, String controllerStrid) {
+    private void processEdgeNote(EdgeNote edgeNote, List<String> noteGuids, String formTemplateGuid, String geozoneId, String controllerStrid,boolean isResync) {
         System.out.println("processEdgeNote :" + edgeNote.getTitle());
         try {
             // Check whether this note is already processed or not.
@@ -179,7 +179,7 @@ public abstract class SlvInterfaceService extends AbstractSlvService {
                         }
                         System.out.println("Field Activity Present");
 
-                        processSingleForm(edgeFormDataList, edgeNote, slvSyncDetailsError, paramsList, configurationJsonList, geozoneId, controllerStrid);
+                        processSingleForm(edgeFormDataList, edgeNote, slvSyncDetailsError, paramsList, configurationJsonList, geozoneId, controllerStrid,isResync);
                     } else {
                         System.out.println("wrong formtemplate");
                         slvSyncDetailsError.setErrorDetails("Form Template [" + formTemplateGuid + "] is not present in this note.");
@@ -206,7 +206,7 @@ public abstract class SlvInterfaceService extends AbstractSlvService {
      * @param paramsList
      * @param configurationJsonList
      */
-    public void processSingleForm(List<EdgeFormData> edgeFormDataList, EdgeNote edgeNote, SlvSyncDetails slvSyncDetail, List<Object> paramsList, List<ConfigurationJson> configurationJsonList, String geozoneId, String controllerStrIdValue) {
+    public void processSingleForm(List<EdgeFormData> edgeFormDataList, EdgeNote edgeNote, SlvSyncDetails slvSyncDetail, List<Object> paramsList, List<ConfigurationJson> configurationJsonList, String geozoneId, String controllerStrIdValue,boolean isReSync) {
         try {
             for (ConfigurationJson configurationJson : configurationJsonList) {
                 List<Action> actionList = configurationJson.getAction();
@@ -229,6 +229,9 @@ public abstract class SlvInterfaceService extends AbstractSlvService {
                                 System.out.println("Device going to create");
                                 createDevice(edgeNote, slvSyncDetail, geozoneId, edgeFormDataList);
                                 System.out.println("Device created");
+                            }
+                            if(isReSync){
+                                replaceOLC(controllerStrIdValue, edgeNote.getTitle(), "");
                             }
                             processSetDevice(edgeFormDataList, configurationJson, edgeNote, paramsList, slvSyncDetail, controllerStrIdValue);
                             replaceOLC(controllerStrIdValue, edgeNote.getTitle(), slvSyncDetail.getMacAddress());
@@ -553,7 +556,7 @@ public abstract class SlvInterfaceService extends AbstractSlvService {
                 logger.info("ProcessNoteTitle is :" + edgenote.getTitle());
                 geozoneId = getGeoZoneValue(edgenote.getTitle());
                 System.out.print("geozoneId :" + geozoneId);
-                processEdgeNote(edgenote, noteGuids, formTemplateGuid, geozoneId, controllerStrIdValue);
+                processEdgeNote(edgenote, noteGuids, formTemplateGuid, geozoneId, controllerStrIdValue,isResync);
             }
         }
     }

@@ -355,7 +355,7 @@ public abstract class AbstractSlvService extends EdgeService {
                 String value = replaceOlcResponse.get("value").getAsString();
                 throw new ReplaceOLCFailedException(value);
             } else {
-                if (macAddress != null)
+                if (macAddress != null && !macAddress.trim().isEmpty())
                     clearAndUpdateDeviceData(idOnController, controllerStrId);
             }
 

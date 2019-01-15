@@ -134,7 +134,7 @@
                             <goal>single</goal>
                         </goals>
                         <configuration>
-                            <finalName>canada_slv_interface-v9</finalName>
+                            <finalName>canada_slv_interface-v18</finalName>
                             <archive>
                                 <manifest>
                                     <mainClass>
