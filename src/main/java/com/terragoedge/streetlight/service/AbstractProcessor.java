@@ -221,11 +221,22 @@ public abstract class AbstractProcessor {
     // Philips RoadFocus, RFS-54W16LED3K-T-R2M-UNIV-DMG-PH9-RCD-SP2-GY3,
     // RFM0455, 07/24/17, 54W, 120/277V, 4000K, 8140 Lm, R2M, Gray, Advance,
     // 442100083510, DMG
-
-    public void buildFixtureStreetLightData(String data, List<Object> paramsList, EdgeNote edgeNote,SlvServerData  slvServerData)
+    public static String replaceCharAt(String s, int pos, char c) {
+        return s.substring(0,pos) + c + s.substring(pos+1).trim();
+    }
+    public void buildFixtureStreetLightData(String data, List<Object> paramsList, EdgeNote edgeNote,SlvServerData slvServerData)
             throws InValidBarCodeException {
         String[] fixtureInfo = data.split(",");
-        logger.info("Fixture QR Scan Val lenght" + fixtureInfo.length);
+        logger.info("Fixture QR Scan Val length" + fixtureInfo.length);
+        // The highlighted sections are where it look like Philips replaced a “-“ with a “,” causing a single field to become 2 fields. I can have Dan contact the manufacturer but we won’t be able to change any of the QR codes on the fixtures already delivered.
+        if (fixtureInfo.length >= 15) {
+            if (fixtureInfo[1].trim().equals("RFM1315G2")) {
+                int index = StringUtils.ordinalIndexOf(data , ",", 3);
+                fixtureInfo = replaceCharAt(data,index,'-').split(",");
+                logger.info("Fixture QR Scan Val " + fixtureInfo);
+                logger.info("Fixture QR Scan Val length" + fixtureInfo.length);
+            }
+        }
         if (fixtureInfo.length >= 13) {
             addStreetLightData("luminaire.brand", fixtureInfo[0], paramsList);
             /**
@@ -252,10 +263,10 @@ public abstract class AbstractProcessor {
             }
 
             addStreetLightData("power", powerVal, paramsList);
-            // As per Ryan Request we have changes to luminaire.type - Jan 04 2019
-            addStreetLightData("luminaire.type", fixtureInfo[5], paramsList);
-
+            addStreetLightData("comed.litetype", fixtureInfo[5], paramsList);
             // dailyReportCSV.setFixtureType(fixtureInfo[5]);
+
+
             addStreetLightData("device.luminaire.colortemp", fixtureInfo[6], paramsList);
             slvServerData.setLuminaireColorTemp(fixtureInfo[6]);
             addStreetLightData("device.luminaire.lumenoutput", fixtureInfo[7], paramsList);
@@ -272,10 +283,12 @@ public abstract class AbstractProcessor {
             slvServerData.setDimmingType(fixtureInfo[12]);
 
         } else {
-            throw new InValidBarCodeException(
-                    "Fixture MAC address is not valid (" + edgeNote.getTitle() + "). Value is:" + data);
+            /*throw new InValidBarCodeException(
+                    "Fixture MAC address is not valid (" + edgeNote.getTitle() + "). Value is:" + data);*/
         }
     }
+
+
 
 
     protected int setDeviceValues(List<Object> paramsList) {
