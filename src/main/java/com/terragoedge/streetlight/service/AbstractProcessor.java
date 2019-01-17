@@ -360,46 +360,7 @@ public abstract class AbstractProcessor {
 
 
     public void clearAndUpdateDeviceData(String idOnController, String controllerStrId) {
-        try {
-            String mainUrl = properties.getProperty("streetlight.slv.url.main");
-            String updateDeviceValues = properties.getProperty("streetlight.slv.url.updatedevice");
-            String url = mainUrl + updateDeviceValues;
 
-            List<Object> paramsList = new ArrayList<Object>();
-            paramsList.add("controllerStrId=" + controllerStrId);
-            paramsList.add("idOnController=" + idOnController);
-            addStreetLightData("device.node.serialnumber", "", paramsList);
-            addStreetLightData("device.node.hwversion", "", paramsList);
-            addStreetLightData("device.node.swversion", "", paramsList);
-            addStreetLightData("device.nic.serialnumber", "", paramsList);
-            addStreetLightData("device.nic.swversion", "", paramsList);
-            addStreetLightData("device.nic.hwversion", "", paramsList);
-            addStreetLightData("device.nic.currentnode", "", paramsList);
-            addStreetLightData("device.nic.fallbackmode", "", paramsList);
-            addStreetLightData("device.node.manufdate", "", paramsList);
-            addStreetLightData("device.node.name", "", paramsList);
-            addStreetLightData("device.node.manufacturer", "", paramsList);
-            addStreetLightData("device.uiqid", "", paramsList);
-            addStreetLightData("SoftwareVersion", "", paramsList);
-            addStreetLightData("device.meter.programid", "", paramsList);
-            addStreetLightData("device.nic.catalog", "", paramsList);
-
-            paramsList.add("doLog=true");
-            paramsList.add("ser=json");
-            String params = StringUtils.join(paramsList, "&");
-            url = url + "&" + params;
-            ResponseEntity<String> response = restService.getPostRequest(url, null);
-            String responseString = response.getBody();
-            JsonObject replaceOlcResponse = (JsonObject) jsonParser.parse(responseString);
-            int errorCode = replaceOlcResponse.get("errorCode").getAsInt();
-            if (errorCode == 0) {
-                // success
-            } else {
-                // failure
-            }
-        } catch (Exception e) {
-            logger.error("Error in clearAndUpdateDeviceData", e);
-        }
 
     }
 
