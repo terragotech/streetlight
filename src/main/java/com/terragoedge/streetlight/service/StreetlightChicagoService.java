@@ -205,11 +205,12 @@ public class StreetlightChicagoService extends AbstractProcessor {
             return;
         }
 
-        String edgeSlvUrl = "https://amerescousa.terragoedge.com/noteguids";
+        String edgeSlvUrl = "https://amerescousa.terragoedge.com/edgeSlvServer/notesGuid?lastSyncTime=";
 
-        long lastSynctime = 0L;
-        lastSynctime = streetlightDao.getLastSyncTime();
-
+        long lastSynctime = streetlightDao.getLastSyncTime();
+        if(lastSynctime > 0){
+            edgeSlvUrl = edgeSlvUrl + lastSynctime;
+        }
 
 
 
