@@ -205,68 +205,73 @@ public class StreetlightChicagoService extends AbstractProcessor {
             return;
         }
 
+        String edgeSlvUrl = "https://amerescousa.terragoedge.com/noteguids";
 
-        // Get Edge Server Url from properties
-        String url = PropertiesReader.getProperties().getProperty("streetlight.edge.url.main");
-
-        url = url + PropertiesReader.getProperties().getProperty("streetlight.edge.url.notes.get");
-
-        String systemDate = PropertiesReader.getProperties().getProperty("streetlight.edge.customdate");
         long lastSynctime = 0L;
         lastSynctime = streetlightDao.getLastSyncTime();
-        if (systemDate == null || systemDate.equals("false")) {
-            String yesterday = getYesterdayDate();
-            //  url = url + "modifiedAfter=" + yesterday;
-            if (lastSynctime == -1) {
-                lastSynctime = System.currentTimeMillis() - (3600000 * 2);
-            }
-            url = url + "lastSyncTime=" + lastSynctime;
 
-        }
+
+
 
         // Get NoteList from edgeserver
-        ResponseEntity<String> responseEntity = restService.getRequest(url, false, accessToken);
+        ResponseEntity<String> edgeSlvServerResponse = restService.getRequest(edgeSlvUrl, false, accessToken);
 
         // Process only response code as success
-        if (responseEntity.getStatusCode().is2xxSuccessful()) {
+        if (edgeSlvServerResponse.getStatusCode().is2xxSuccessful()) {
 
             // Get Response String
-            String notesData = responseEntity.getBody();
-            System.out.println(notesData);
+            String notesGuids = edgeSlvServerResponse.getBody();
+            System.out.println(notesGuids);
 
-            // Convert notes Json to List of notes object
-            Type listType = new TypeToken<ArrayList<EdgeNote>>() {
-            }.getType();
-            List<EdgeNote> edgeNoteList = gson.fromJson(notesData, listType);
+           JsonArray noteGuidsJsonArray = (JsonArray)jsonParser.parse(notesGuids);
 
-            // Iterate each note
-            for (EdgeNote edgeNote : edgeNoteList) {
-                try {
-                    if (!noteGuids.contains(edgeNote.getNoteGuid())) {
-                        if (!edgeNote.getCreatedBy().contains("admin") && !edgeNote.getCreatedBy().contains("slvinterface")) {
-                            InstallMaintenanceLogModel installMaintenanceLogModel = new InstallMaintenanceLogModel();
+           if(noteGuidsJsonArray != null &&  !noteGuidsJsonArray.isJsonNull()){
+               for(JsonElement noteGuidJson : noteGuidsJsonArray){
+                   String noteGuid = noteGuidJson.getAsString();
+                   if(!noteGuids.contains(noteGuid)){
+                       String url = PropertiesReader.getProperties().getProperty("streetlight.edge.url.main");
 
-                            installMaintenanceLogModel.setProcessedNoteId(edgeNote.getNoteGuid());
-                            installMaintenanceLogModel.setNoteName(edgeNote.getTitle());
-                            installMaintenanceLogModel.setLastSyncTime(edgeNote.getSyncTime());
-                            installMaintenanceLogModel.setCreatedDatetime(String.valueOf(edgeNote.getCreatedDateTime()));
-                            loadDefaultVal(edgeNote, installMaintenanceLogModel);
-                            installationMaintenanceProcessor.processNewAction(edgeNote, installMaintenanceLogModel, false, null);
-                            updateSlvStatusToEdge(installMaintenanceLogModel, edgeNote);
-                            LoggingModel loggingModel = installMaintenanceLogModel;
-                            streetlightDao.insertProcessedNotes(loggingModel, installMaintenanceLogModel);
-                        }
+                       url = url + PropertiesReader.getProperties().getProperty("streetlight.edge.url.notes.get");
 
-                    }
+                       url = url + "/" +noteGuid;
+                               logger.info("Given url is :" + url);
 
-                } catch (Exception e) {
-                    logger.error("Error while processing edge note. NoteGuid :" + edgeNote.getNoteGuid(), e);
-                }
+                       // Get NoteList from edgeserver
+                       ResponseEntity<String> responseEntity = restService.getRequest(url, false, accessToken);
+
+                       // Process only response code as success
+                       if (responseEntity.getStatusCode().is2xxSuccessful()) {
+                           try{
+                               String notesData = responseEntity.getBody();
+                               logger.info("rest service data:" + notesData);
+                               EdgeNote edgeNote = gson.fromJson(notesData, EdgeNote.class);
+                               if (!edgeNote.getCreatedBy().contains("admin") && !edgeNote.getCreatedBy().contains("slvinterface")) {
+                                   InstallMaintenanceLogModel installMaintenanceLogModel = new InstallMaintenanceLogModel();
+
+                                   installMaintenanceLogModel.setProcessedNoteId(edgeNote.getNoteGuid());
+                                   installMaintenanceLogModel.setNoteName(edgeNote.getTitle());
+                                   installMaintenanceLogModel.setLastSyncTime(edgeNote.getSyncTime());
+                                   installMaintenanceLogModel.setCreatedDatetime(String.valueOf(edgeNote.getCreatedDateTime()));
+                                   loadDefaultVal(edgeNote, installMaintenanceLogModel);
+                                   installationMaintenanceProcessor.processNewAction(edgeNote, installMaintenanceLogModel, false, null);
+                                   updateSlvStatusToEdge(installMaintenanceLogModel, edgeNote);
+                                   LoggingModel loggingModel = installMaintenanceLogModel;
+                                   streetlightDao.insertProcessedNotes(loggingModel, installMaintenanceLogModel);
+                               }
+                           }catch (Exception e){
+
+                           }
+                           // Get Response String
+
+                       }
+                   }
+
+               }
+           }
 
 
-            }
         } else {
-            logger.error("Unable to get message from EdgeServer. Response Code is :" + responseEntity.getStatusCode());
+            logger.error("Unable to get message from EdgeServer. Response Code is :" + edgeSlvServerResponse.getStatusCode());
         }
     }
 
