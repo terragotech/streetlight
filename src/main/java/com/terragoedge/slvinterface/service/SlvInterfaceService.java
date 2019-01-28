@@ -412,6 +412,7 @@ public abstract class SlvInterfaceService extends AbstractSlvService {
         if (pos != -1) {
             EdgeFormData edgeFormData = edgeFormDatas.get(pos);
             String value = edgeFormData.getValue();
+            logger.info("edgeFormData value:"+value);
             if (value == null || value.trim().isEmpty()) {
                 return "";
                 //throw new NoValueException("Value is Empty or null." + value);
@@ -554,7 +555,8 @@ public abstract class SlvInterfaceService extends AbstractSlvService {
             //  List<EdgeNote> edgeNoteList = gson.fromJson(notesData, listType);
             for (EdgeNote edgenote : edgeNoteList) {
                 logger.info("ProcessNoteTitle is :" + edgenote.getTitle());
-                geozoneId = getGeoZoneValue(edgenote.getTitle());
+               // geozoneId = getGeoZoneValue(edgenote.getTitle());
+                geozoneId=null;
                 System.out.print("geozoneId :" + geozoneId);
                 processEdgeNote(edgenote, noteGuids, formTemplateGuid, geozoneId, controllerStrIdValue,isResync);
             }
