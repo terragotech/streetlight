@@ -7,7 +7,9 @@ import com.terragoedge.streetlight.exception.*;
 import com.terragoedge.streetlight.json.model.SlvServerData;
 import com.terragoedge.streetlight.logging.InstallMaintenanceLogModel;
 import com.terragoedge.streetlight.logging.LoggingModel;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
+import org.springframework.http.ResponseEntity;
 
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -332,6 +334,50 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
 
     }
 
+    fsjkfsfsn
+
+    private void checkFixtureQRScanExist(String fixtureQrScan, EdgeNote edgeNote, LoggingModel loggingModel) throws InValidBarCodeException {
+        String[] fixtureInfo = fixtureQrScan.split(",");
+        if (fixtureInfo.length >= 15) {
+            if (fixtureInfo[1].trim().equals("RFM1315G2")) {
+                int index = StringUtils.ordinalIndexOf(fixtureQrScan, ",", 3);
+                fixtureInfo = replaceCharAt(fixtureQrScan, index, '-').split(",");
+                logger.info("15 separated value Fixture QR Scan Val " + fixtureInfo);
+                logger.info(" 15 separated value Fixture QR Scan Val length" + fixtureInfo.length);
+            }
+        }
+        if (fixtureInfo.length >= 13) {
+
+        }
+        String partNumber = fixtureInfo[1].trim();
+        String model = fixtureInfo[2].trim();
+        if (fixtureInfo[1].trim().length() <= fixtureInfo[2].trim().length()) {
+            model = fixtureInfo[1].trim();
+            partNumber = fixtureInfo[2].trim();
+        }
+        String mainUrl = properties.getProperty("streetlight.slv.url.main");
+        String updateDeviceValues = properties.getProperty("streetlight.slv.url.search.device");
+        String url = mainUrl + updateDeviceValues;
+        List<Object> paramsList = new ArrayList<>();
+        paramsList.add("attribute=idOnController");
+        paramsList.add("value=" + edgeNote.getTitle().trim());
+        addFixtureQrScanData("device.luminaire.partnumber", partNumber, paramsList);
+        addFixtureQrScanData("luminaire.model", model, paramsList);
+        addFixtureQrScanData("luminaire.brand", fixtureInfo[0], paramsList);
+        addFixtureQrScanData("device.luminaire.manufacturedate", fixtureInfo[3], paramsList);
+        addFixtureQrScanData("device.luminaire.driverpartnumber", fixtureInfo[11], paramsList);
+        addFixtureQrScanData("luminaire.colorcode", fixtureInfo[9], paramsList);
+        paramsList.add("operator=eq-i");
+        paramsList.add("recurse=true");
+        paramsList.add("ser=json");
+        String params = StringUtils.join(paramsList, "&");
+        url = url + "?" + params;
+        ResponseEntity<String> response = restService.getRequest(url, true, null);
+        if (response.getStatusCode().is2xxSuccessful()) {
+            String deviceDetails = response.getBody();
+        }
+
+    }
 
     private void checkFixtureQrScan(String fixtureQrScan, EdgeNote edgeNote, LoggingModel loggingModel) throws InValidBarCodeException {
         List<Object> paramsList = new ArrayList<>();
@@ -374,7 +420,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
             paramsList.add("idOnController=" + idOnController);
             paramsList.add("controllerStrId=" + controllerStrIdValue);
             SlvServerData slvServerData = new SlvServerData();
-            addOtherParams(edgeNote, paramsList, idOnController, utilLocId, isNew, fixerQrScanValue,macAddress);
+            addOtherParams(edgeNote, paramsList, idOnController, utilLocId, isNew, fixerQrScanValue, macAddress);
             if (fixerQrScanValue != null) {
                 buildFixtureStreetLightData(fixerQrScanValue, paramsList, edgeNote, slvServerData);//update fixer qrscan value
             }
@@ -387,7 +433,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
                 addStreetLightData(nightRideKey, nightRideValue, paramsList);
             }
             if (macAddress != null && !macAddress.trim().isEmpty() && !loggingModel.isMacAddressUsed()) {
-                if(isNew){
+                if (isNew) {
                     addStreetLightData("cslp.node.install.date", dateFormat(edgeNote.getCreatedDateTime()), paramsList);
                 }
                 addStreetLightData("install.date", dateFormat(edgeNote.getCreatedDateTime()), paramsList);
@@ -700,7 +746,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
             }
 
 
-            if (newNodeMacAddress!=null && !newNodeMacAddress.startsWith("00") && (fixerQrScanValue != null && fixerQrScanValue.startsWith("00"))) {
+            if (newNodeMacAddress != null && !newNodeMacAddress.startsWith("00") && (fixerQrScanValue != null && fixerQrScanValue.startsWith("00"))) {
                 String temp = newNodeMacAddress;
                 newNodeMacAddress = fixerQrScanValue;
                 fixerQrScanValue = temp;

@@ -88,7 +88,7 @@ public abstract class AbstractProcessor {
 
         return null;
     }
-
+m,nm,m,.m
     /**
      * Load Mac address and corresponding IdOnController from SLV Server
      *
@@ -202,7 +202,10 @@ public abstract class AbstractProcessor {
         // addStreetLightData("DimmingGroupName", "Group Calendar 1", paramsList);
     }
 
-
+    protected void addFixtureQrScanData(String key, String value, List<Object> paramsList) {
+        paramsList.add("attribute=" + key.trim());
+        paramsList.add("value=" + value.trim());
+    }
     protected void addStreetLightData(String key, String value, List<Object> paramsList) {
         paramsList.add("valueName=" + key.trim());
         paramsList.add("value=" + value.trim());
