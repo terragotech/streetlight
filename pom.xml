@@ -90,7 +90,7 @@
                             <goal>single</goal>
                         </goals>
                         <configuration>
-                            <finalName>ameresco_usa_failure_form_v18</finalName>
+                            <finalName>ameresco_usa_failure_form_v20</finalName>
                             <archive>
                                 <manifest>
                                     <mainClass>
