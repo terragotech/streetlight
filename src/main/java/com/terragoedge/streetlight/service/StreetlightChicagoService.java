@@ -45,7 +45,7 @@ public class StreetlightChicagoService extends AbstractProcessor {
 
     public StreetlightChicagoService() {
         super();
-        loadContextList();
+       // loadContextList();
         installationMaintenanceProcessor = new InstallationMaintenanceProcessor(contextListHashMap);
         slvToEdgeService = new SlvToEdgeService();
         System.out.println("Object Created.");
@@ -152,9 +152,9 @@ public class StreetlightChicagoService extends AbstractProcessor {
             loadDefaultVal(edgeNote, installMaintenanceLogModel);
             logger.info("going to call processnew action");
             installationMaintenanceProcessor.processNewAction(edgeNote, installMaintenanceLogModel, isResync, utilLocId);
-            updateSlvStatusToEdge(installMaintenanceLogModel, edgeNote);
+            //updateSlvStatusToEdge(installMaintenanceLogModel, edgeNote);
             LoggingModel loggingModel = installMaintenanceLogModel;
-            streetlightDao.insertProcessedNotes(loggingModel, installMaintenanceLogModel);
+            //streetlightDao.insertProcessedNotes(loggingModel, installMaintenanceLogModel);
             //  }
         }
 

@@ -1,8 +1,6 @@
 package com.terragoedge.streetlight.service;
 
-import com.terragoedge.edgeserver.EdgeFormData;
-import com.terragoedge.edgeserver.EdgeNote;
-import com.terragoedge.edgeserver.FormData;
+import com.terragoedge.edgeserver.*;
 import com.terragoedge.streetlight.exception.*;
 import com.terragoedge.streetlight.json.model.SlvServerData;
 import com.terragoedge.streetlight.logging.InstallMaintenanceLogModel;
@@ -146,13 +144,14 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
                     String value = null;
                     try {
                         value = getAction(edgeFormDatas, edgeNote.getTitle(), installMaintenanceLogModel, edgeNote);
+                        logger.info("After Action Val");
                     } catch (AlreadyUsedException w) {
                         if (installMaintenanceLogModel.isNigthRideSame()) {
                             installMaintenanceLogModel.setStatus(MessageConstants.ERROR);
                             continue;
                         }
                     }
-
+/*
                     logger.info("Action Val is:" + value);
                     if (value != null) {
                         switch (value) {
@@ -169,7 +168,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
                                 break;
                         }
                     }
-
+*/
                 } catch (Exception e) {
                     logger.error("error in processNewAction method", e);
                     installMaintenanceLogModel.setErrorDetails(MessageConstants.ACTION_NO_VAL);
@@ -334,52 +333,67 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
 
     }
 
-    fsjkfsfsn
 
-    private void checkFixtureQRScanExist(String fixtureQrScan, EdgeNote edgeNote, LoggingModel loggingModel) throws InValidBarCodeException {
-        String[] fixtureInfo = fixtureQrScan.split(",");
-        if (fixtureInfo.length >= 15) {
-            if (fixtureInfo[1].trim().equals("RFM1315G2")) {
-                int index = StringUtils.ordinalIndexOf(fixtureQrScan, ",", 3);
-                fixtureInfo = replaceCharAt(fixtureQrScan, index, '-').split(",");
-                logger.info("15 separated value Fixture QR Scan Val " + fixtureInfo);
-                logger.info(" 15 separated value Fixture QR Scan Val length" + fixtureInfo.length);
-            }
-        }
-        if (fixtureInfo.length >= 13) {
 
-        }
-        String partNumber = fixtureInfo[1].trim();
-        String model = fixtureInfo[2].trim();
-        if (fixtureInfo[1].trim().length() <= fixtureInfo[2].trim().length()) {
-            model = fixtureInfo[1].trim();
-            partNumber = fixtureInfo[2].trim();
-        }
-        String mainUrl = properties.getProperty("streetlight.slv.url.main");
-        String updateDeviceValues = properties.getProperty("streetlight.slv.url.search.device");
-        String url = mainUrl + updateDeviceValues;
+
+
+    private void checkFixtureQrScan(String fixtureQrScan, EdgeNote edgeNote, LoggingModel loggingModel) throws InValidBarCodeException {
         List<Object> paramsList = new ArrayList<>();
-        paramsList.add("attribute=idOnController");
-        paramsList.add("value=" + edgeNote.getTitle().trim());
-        addFixtureQrScanData("device.luminaire.partnumber", partNumber, paramsList);
-        addFixtureQrScanData("luminaire.model", model, paramsList);
-        addFixtureQrScanData("luminaire.brand", fixtureInfo[0], paramsList);
-        addFixtureQrScanData("device.luminaire.manufacturedate", fixtureInfo[3], paramsList);
-        addFixtureQrScanData("device.luminaire.driverpartnumber", fixtureInfo[11], paramsList);
-        addFixtureQrScanData("luminaire.colorcode", fixtureInfo[9], paramsList);
-        paramsList.add("operator=eq-i");
-        paramsList.add("recurse=true");
-        paramsList.add("ser=json");
-        String params = StringUtils.join(paramsList, "&");
-        url = url + "?" + params;
-        ResponseEntity<String> response = restService.getRequest(url, true, null);
-        if (response.getStatusCode().is2xxSuccessful()) {
-            String deviceDetails = response.getBody();
+        SlvServerData slvServerData = new SlvServerData();
+        try {
+            logger.info("Fixture QR Scan Validation Starts.");
+            buildFixtureStreetLightData(fixtureQrScan, paramsList, edgeNote, slvServerData);
+            slvServerData.setIdOnController(edgeNote.getTitle());
+
+            String mainUrl = properties.getProperty("streetlight.slv.url.main");
+            String updateDeviceValues = properties.getProperty("streetlight.slv.url.search.device");
+            String url = mainUrl + updateDeviceValues;
+            paramsList.add("attribute=idOnController");
+            paramsList.add("value=" + edgeNote.getTitle().trim());
+
+            addFixtureQrScanData("luminaire.brand", slvServerData.getLuminaireBrand(), paramsList);
+            addFixtureQrScanData("device.luminaire.partnumber", slvServerData.getLuminairePartNumber(), paramsList);
+            addFixtureQrScanData("luminaire.model", slvServerData.getLuminaireModel(), paramsList);
+            addFixtureQrScanData("device.luminaire.manufacturedate", slvServerData.getLuminaireManufacturedate(), paramsList);
+            addFixtureQrScanData("device.luminaire.driverpartnumber", slvServerData.getDriverPartNumber(), paramsList);
+            addFixtureQrScanData("luminaire.colorcode", slvServerData.getColorCode(), paramsList);
+            paramsList.add("operator=eq-i");
+            paramsList.add("recurse=true");
+            paramsList.add("ser=json");
+            String params = StringUtils.join(paramsList, "&");
+            url = url + "?" + params;
+            ResponseEntity<String> response = restService.getRequest(url, true, null);
+            if (response.getStatusCode().is2xxSuccessful()) {
+                String responseString = response.getBody();
+                logger.info("-------QR Address Check Address----------");
+                logger.info(responseString);
+                logger.info("-------QR Address Check End----------");
+
+                DeviceMacAddress deviceMacAddress = gson.fromJson(responseString, DeviceMacAddress.class);
+                List<Value> values = deviceMacAddress.getValue();
+                StringBuilder stringBuilder = new StringBuilder();
+                if (values == null || values.size() == 0) {
+                    loggingModel.setFixtureQRSame(false);
+                } else {
+                    loggingModel.setFixtureQRSame(true);
+                }
+            }
+
+
+            SlvServerData dbSlvServerData = streetlightDao.getSlvServerData(edgeNote.getTitle());
+            if (slvServerData.equals(dbSlvServerData)) {
+                loggingModel.setFixtureQRSame(true);
+            }
+            logger.info("Fixture QR Scan Validation End.");
+        } catch (InValidBarCodeException e) {
+            throw new InValidBarCodeException(e.getMessage());
+        } catch (SQLException e) {
+            e.printStackTrace();
         }
 
     }
 
-    private void checkFixtureQrScan(String fixtureQrScan, EdgeNote edgeNote, LoggingModel loggingModel) throws InValidBarCodeException {
+    /*private void checkFixtureQrScan(String fixtureQrScan, EdgeNote edgeNote, LoggingModel loggingModel) throws InValidBarCodeException {
         List<Object> paramsList = new ArrayList<>();
         SlvServerData slvServerData = new SlvServerData();
         try {
@@ -395,7 +409,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
             e.printStackTrace();
         }
 
-    }
+    }*/
 
 
     private int sync2SlvInstallStatus(String idOnController, String controllerStrIdValue, InstallMaintenanceLogModel loggingModel, String nightRideKey, String nightRideValue) {

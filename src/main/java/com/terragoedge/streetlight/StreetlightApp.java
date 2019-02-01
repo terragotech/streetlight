@@ -9,12 +9,19 @@ import com.terragoedge.streetlight.service.TalkAddressService;
 public class StreetlightApp {
 
 
-	public static void main(String[] args) {
+
+    public static void  main(String[] rr){
+        StreetlightChicagoService streetlightChicagoService = new StreetlightChicagoService();
+        streetlightChicagoService.run();
+    }
+
+
+	public static void main_1(String[] args) {
 	    while (true){
             StreetlightChicagoService streetlightChicagoService = null;
             try{
                 streetlightChicagoService = new StreetlightChicagoService();
-                streetlightChicagoService.loadDevices();
+                //streetlightChicagoService.loadDevices();
                 streetlightChicagoService.run();
                 Thread.sleep(30000);
             }catch (Exception e){

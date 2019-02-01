@@ -18,6 +18,8 @@ public class SlvServerData {
     private String idOnController;
     @DatabaseField(columnName = "macaddress")
     private String macAddress;
+    @DatabaseField(columnName = "luminairebrand")
+    private String luminaireBrand;
     //device.luminaire.partnumber
     @DatabaseField(columnName = "luminaire_part_number")
     private String luminairePartNumber;
@@ -54,6 +56,14 @@ public class SlvServerData {
 
     @DatabaseField(columnName = "process_type",dataType = DataType.ENUM_STRING)
     private ProcessType processType;
+
+    public String getLuminaireBrand() {
+        return luminaireBrand;
+    }
+
+    public void setLuminaireBrand(String luminaireBrand) {
+        this.luminaireBrand = luminaireBrand;
+    }
 
     public String getSerialNumber() {
         return serialNumber;
