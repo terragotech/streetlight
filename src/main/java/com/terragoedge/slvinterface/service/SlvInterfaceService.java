@@ -444,11 +444,16 @@ public abstract class SlvInterfaceService extends AbstractSlvService {
                 String newNodeMacAddress = valueById(edgeFormDataList, macID.getId());
                 if (newNodeMacAddress == null || newNodeMacAddress.isEmpty()) {
                     System.out.println("process validation method interchange mac as fixture");
-                    String fixture = valueById(edgeFormDataList, 23);
-                    if (fixture != null && fixture.startsWith("00")) {
-                        newNodeMacAddress = fixture;
-                        System.out.println("Given fixture mac as fixture : " + newNodeMacAddress);
+                    Id fixureID = getIDByType(idList, EdgeComponentType.FIXTURE.toString());
+                    if(fixureID != null){
+                        String fixture = valueById(edgeFormDataList, fixureID.getId());
+                        if (fixture != null && fixture.startsWith("00")) {
+                            newNodeMacAddress = fixture;
+                            System.out.println("Given fixture mac as fixture : " + newNodeMacAddress);
+                        }
                     }
+
+
                 }
                 logger.info("newNodeMacAddress:" + newNodeMacAddress);
                 if (newNodeMacAddress.contains("null") || newNodeMacAddress.equals("null")) {

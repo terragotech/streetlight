@@ -43,7 +43,7 @@ public class SlvInterfaceServiceImpl extends SlvInterfaceService {
                 powerVal = powerVal.replaceAll("w", "");
             }
 
-            addStreetLightData("lampType", "Manufacturer/LampTechno/Power/BallastType", paramsList);
+            addStreetLightData("lampType", powerVal, paramsList);
             addStreetLightData("luminaire.brand", fixtureInfo[5], paramsList);
             // dailyReportCSV.setFixtureType(fixtureInfo[5]);
             addStreetLightData("device.luminaire.colortemp", fixtureInfo[6], paramsList);

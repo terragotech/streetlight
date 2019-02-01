@@ -39,7 +39,7 @@ public enum ConnectionDAO {
                 TableUtils.createTable(connectionSource, SlvSyncDetails.class);
                 TableUtils.createTable(connectionSource, SlvDevice.class);
             }catch (Exception e){
-                e.printStackTrace();
+              //  e.printStackTrace();
             }
             slvSyncDetailsDao = DaoManager.createDao(connectionSource, SlvSyncDetails.class);
             slvDeviceDao = DaoManager.createDao(connectionSource, SlvDevice.class);
@@ -90,7 +90,7 @@ public enum ConnectionDAO {
 
     public List<String> getEdgeNoteGuid(String formTemplateGuid) {
         try {
-            List<String> noteGuids = slvSyncDetailsDao.queryRaw("select noteguid from edgenote, edgeform where edgenote.isdeleted = false  and edgenote.iscurrent = true  and  edgenote.noteid =  edgeform.edgenoteentity_noteid and edgenote.createddatetime >1542367668749 and edgeform.formtemplateguid = '" + formTemplateGuid + "';", new RawRowMapper<String>() {
+            List<String> noteGuids = slvSyncDetailsDao.queryRaw("select noteguid from edgenote, edgeform where edgenote.isdeleted = false  and edgenote.iscurrent = true  and  edgenote.noteid =  edgeform.edgenoteentity_noteid and edgenote.createddatetime >1548762347887 and edgeform.formtemplateguid = '" + formTemplateGuid + "';", new RawRowMapper<String>() {
                 @Override
                 public String mapRow(String[] columnNames, String[] resultColumns) throws SQLException {
                     return resultColumns[0];

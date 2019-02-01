@@ -3,14 +3,18 @@
     "type": "NEW_DEVICE",
     "ids": [
       {
-        "id": 121,
+        "id": 85,
         "type": "MAC"
+      },
+      {
+        "id": 84,
+        "type": "FIXTURE"
       }
     ],
     "action": [
       {
-        "id": 1,
-        "value": "Install node"
+        "id": 75,
+        "value": "Install"
       }
     ]
   },
@@ -18,27 +22,22 @@
     "type": "REPLACE_DEVICE",
     "ids": [
       {
-        "id": 12,
+        "id": 130,
         "type": "EXISTING_MAC"
       },
       {
-        "id": 27,
+        "id": 132,
         "type": "MAC"
+      },
+      {
+        "id": 131,
+        "type": "FIXTURE"
       }
     ],
     "action": [
       {
-        "id": 1,
-        "value": "Replace node"
-      }
-    ]
-  },
-  {
-    "type": "REMOVE",
-    "action": [
-      {
-        "id": 1,
-        "value": "Remove node"
+        "id": 75,
+        "value": "Replace"
       }
     ]
   }

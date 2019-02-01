@@ -329,7 +329,7 @@ public abstract class AbstractSlvService extends EdgeService {
 
     public void replaceOLC(String controllerStrIdValue, String idOnController, String macAddress)
             throws ReplaceOLCFailedException {
-        try {
+        /*try {
             // Get Url detail from properties
             String mainUrl = properties.getProperty("streetlight.slv.url.main");
             String dataUrl = properties.getProperty("streetlight.url.replaceolc");
@@ -354,16 +354,13 @@ public abstract class AbstractSlvService extends EdgeService {
             if (errorStatus.equals("ERROR")) {
                 String value = replaceOlcResponse.get("value").getAsString();
                 throw new ReplaceOLCFailedException(value);
-            } else {
-                if (macAddress != null && !macAddress.trim().isEmpty())
-                    clearAndUpdateDeviceData(idOnController, controllerStrId);
             }
 
         } catch (Exception e) {
             logger.error("Error in replaceOLC", e);
             throw new ReplaceOLCFailedException(e.getMessage());
         }
-
+*/
     }
 
 
