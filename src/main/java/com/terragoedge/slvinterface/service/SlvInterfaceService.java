@@ -210,11 +210,7 @@ public abstract class SlvInterfaceService extends AbstractSlvService {
         try {
             for (ConfigurationJson configurationJson : configurationJsonList) {
                 List<Action> actionList = configurationJson.getAction();
-                try {
-                    Thread.sleep(10000);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
+
                 if (checkActionType(edgeFormDataList, actionList)) {
                     switch (configurationJson.getType()) {
                         case NEW_DEVICE:
@@ -266,7 +262,7 @@ public abstract class SlvInterfaceService extends AbstractSlvService {
         } catch (ReplaceOLCFailedException | NoValueException | QRCodeAlreadyUsedException e) {
             slvSyncDetail.setErrorDetails(e.getMessage());
             slvSyncDetail.setStatus(Status.Failure.toString());
-        } catch (DeviceUpdationFailedException | DeviceCreationFailedException e) {
+        } catch (DeviceUpdationFailedException | DeviceCreationFailedException  e) {
             slvSyncDetail.setStatus(Status.Failure.toString());
         } catch (MacAddressProcessedException macException) {
             slvSyncDetail.setErrorDetails(macException.getMessage());
@@ -281,8 +277,9 @@ public abstract class SlvInterfaceService extends AbstractSlvService {
     }
 
     public boolean isAvailableDevice(String idOnController) {
-        SlvDevice slvDevice = connectionDAO.getSlvDevices(idOnController);
-        return slvDevice != null;
+       // SlvDevice slvDevice = connectionDAO.getSlvDevices(idOnController);
+       // return slvDevice != null;
+        return true;
     }
 
     public void createDevice(EdgeNote edgeNote, SlvSyncDetails slvSyncDetails, String geoZoneId, List<EdgeFormData> edgeFormDataList) throws DeviceCreationFailedException {

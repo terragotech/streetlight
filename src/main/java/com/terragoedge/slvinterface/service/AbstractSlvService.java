@@ -292,7 +292,7 @@ public abstract class AbstractSlvService extends EdgeService {
         // controller.installdate - 2017/10/10
 
         addStreetLightData("installStatus", "Installed", paramsList);
-        addStreetLightData("location.utillocationid", edgeNote.getTitle() + ".Lamp", paramsList);
+        addStreetLightData("location.utillocationid",  "Lamp", paramsList);
         addStreetLightData("location.locationtype", "LOCATION_TYPE_PREMISE", paramsList);
         String nodeTypeStrId = properties.getProperty("streetlight.slv.equipment.type");
         System.out.println(nodeTypeStrId);

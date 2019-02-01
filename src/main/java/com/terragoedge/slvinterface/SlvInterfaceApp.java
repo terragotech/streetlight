@@ -21,8 +21,8 @@ public class SlvInterfaceApp {
 
       while (true) {
             try {
-                SlvInterfaceService slvInterfaceService = new SlvInterfaceServiceImpl();
-                slvInterfaceService.loadDevices();
+                SlvInterfaceService slvInterfaceService = new UrbanControlServiceImpl();
+               // slvInterfaceService.loadDevices();
                 while (true) {
                     slvInterfaceService.start();
                     Thread.sleep(60000);
