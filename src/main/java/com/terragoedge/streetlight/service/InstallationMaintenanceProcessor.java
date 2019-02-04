@@ -151,7 +151,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
                             continue;
                         }
                     }
-/*
+
                     logger.info("Action Val is:" + value);
                     if (value != null) {
                         switch (value) {
@@ -168,7 +168,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
                                 break;
                         }
                     }
-*/
+
                 } catch (Exception e) {
                     logger.error("error in processNewAction method", e);
                     installMaintenanceLogModel.setErrorDetails(MessageConstants.ACTION_NO_VAL);
@@ -181,6 +181,9 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
             syncNightRideFormAlone(formDatas, installMaintenanceLogModel, edgeNote);
         }
     }
+
+
+
 
 
     private String getAction(List<EdgeFormData> edgeFormDatas, String idOnController, LoggingModel loggingModel, EdgeNote edgeNote) throws AlreadyUsedException {
@@ -343,6 +346,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
         try {
             logger.info("Fixture QR Scan Validation Starts.");
             buildFixtureStreetLightData(fixtureQrScan, paramsList, edgeNote, slvServerData);
+            paramsList.clear();
             slvServerData.setIdOnController(edgeNote.getTitle());
 
             String mainUrl = properties.getProperty("streetlight.slv.url.main");
@@ -373,22 +377,19 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
                 List<Value> values = deviceMacAddress.getValue();
                 StringBuilder stringBuilder = new StringBuilder();
                 if (values == null || values.size() == 0) {
+                    logger.info("Fixture QR Not present.");
                     loggingModel.setFixtureQRSame(false);
                 } else {
+                    logger.info("Fixture QR is present.");
                     loggingModel.setFixtureQRSame(true);
                 }
             }
 
 
-            SlvServerData dbSlvServerData = streetlightDao.getSlvServerData(edgeNote.getTitle());
-            if (slvServerData.equals(dbSlvServerData)) {
-                loggingModel.setFixtureQRSame(true);
-            }
+
             logger.info("Fixture QR Scan Validation End.");
         } catch (InValidBarCodeException e) {
             throw new InValidBarCodeException(e.getMessage());
-        } catch (SQLException e) {
-            e.printStackTrace();
         }
 
     }
@@ -434,8 +435,10 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
             paramsList.add("idOnController=" + idOnController);
             paramsList.add("controllerStrId=" + controllerStrIdValue);
             SlvServerData slvServerData = new SlvServerData();
-            addOtherParams(edgeNote, paramsList, idOnController, utilLocId, isNew, fixerQrScanValue, macAddress);
-            if (fixerQrScanValue != null) {
+
+            addOtherParams(edgeNote, paramsList, idOnController, utilLocId, isNew, fixerQrScanValue, macAddress,loggingModel);
+
+            if (fixerQrScanValue != null && !loggingModel.isFixtureQRSame()) {
                 buildFixtureStreetLightData(fixerQrScanValue, paramsList, edgeNote, slvServerData);//update fixer qrscan value
             }
 

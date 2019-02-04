@@ -255,7 +255,7 @@ public class StreetlightChicagoService extends AbstractProcessor {
                                    installMaintenanceLogModel.setCreatedDatetime(String.valueOf(edgeNote.getCreatedDateTime()));
                                    loadDefaultVal(edgeNote, installMaintenanceLogModel);
                                    installationMaintenanceProcessor.processNewAction(edgeNote, installMaintenanceLogModel, false, null);
-                                   updateSlvStatusToEdge(installMaintenanceLogModel, edgeNote);
+                                   //updateSlvStatusToEdge(installMaintenanceLogModel, edgeNote);
                                    LoggingModel loggingModel = installMaintenanceLogModel;
                                    streetlightDao.insertProcessedNotes(loggingModel, installMaintenanceLogModel);
                                }

@@ -138,10 +138,10 @@ public abstract class AbstractProcessor {
     }
 
 
-    protected void addOtherParams(EdgeNote edgeNote, List<Object> paramsList, String idOnContoller, String utilLocId, boolean isNew, String fixerQrScanValue,String macAddress) {
+    protected void addOtherParams(EdgeNote edgeNote, List<Object> paramsList, String idOnContoller, String utilLocId, boolean isNew, String fixerQrScanValue,String macAddress,InstallMaintenanceLogModel loggingModel) {
         // luminaire.installdate - 2017-09-07 09:47:35
         String installStatus = null;
-        if (fixerQrScanValue != null && fixerQrScanValue.trim().length() > 0) {
+        if (fixerQrScanValue != null && fixerQrScanValue.trim().length() > 0 && !loggingModel.isFixtureQRSame()) {
             logger.info("Fixture QR scan not empty and set luminare installdate" + dateFormat(edgeNote.getCreatedDateTime()));
             logger.info("Fixture QR scan not empty and set cslp.lum.install.date" + dateFormat(edgeNote.getCreatedDateTime()));
             if(isNew){
@@ -242,6 +242,7 @@ public abstract class AbstractProcessor {
         }
         if (fixtureInfo.length >= 13) {
             addStreetLightData("luminaire.brand", fixtureInfo[0], paramsList);
+            slvServerData.setLuminaireBrand(fixtureInfo[0]);
             /**
              * As per Mail conversion, In the older data, the luminaire model was the
              * shorter version of the fixture, so for the General Electric fixtures it was
