@@ -11,6 +11,7 @@ import com.terragoedge.streetlight.dao.StreetlightDao;
 import com.terragoedge.streetlight.enumeration.ProcessType;
 import com.terragoedge.streetlight.exception.*;
 import com.terragoedge.streetlight.json.model.ContextList;
+import com.terragoedge.streetlight.json.model.CslpDate;
 import com.terragoedge.streetlight.json.model.SlvServerData;
 import com.terragoedge.streetlight.json.model.SlvServerDataColumnPos;
 import com.terragoedge.streetlight.logging.InstallMaintenanceLogModel;
@@ -34,6 +35,7 @@ public abstract class AbstractProcessor {
     JsonParser jsonParser = null;
 
     WeakHashMap<String, String> contextListHashMap = new WeakHashMap<>();
+    HashMap<String,CslpDate> cslpDateHashMap = new HashMap<>();
 
     public AbstractProcessor() {
         this.streetlightDao = new StreetlightDao();
@@ -137,6 +139,26 @@ public abstract class AbstractProcessor {
 
     }
 
+    private boolean isLumDatePresent(String idOnContoller){
+        logger.info("IdOnController:"+idOnContoller);
+        logger.info("cslpDateHashMap:"+cslpDateHashMap.size());
+        CslpDate  cslpDate = cslpDateHashMap.get(idOnContoller);
+        logger.info("CslpDate:"+cslpDate);
+        if(cslpDate != null){
+           String val = cslpDate.getCslpLumDate();
+           if(val != null){
+               return true;
+           }
+        }
+        return false;
+    }
+
+
+    public boolean isNodeDatePresent(String idOnContoller){
+        CslpDate  cslpDate = cslpDateHashMap.get(idOnContoller);
+        return cslpDate != null && cslpDate.getCslpNodeDate() != null;
+    }
+
 
     protected void addOtherParams(EdgeNote edgeNote, List<Object> paramsList, String idOnContoller, String utilLocId, boolean isNew, String fixerQrScanValue,String macAddress,InstallMaintenanceLogModel loggingModel) {
         // luminaire.installdate - 2017-09-07 09:47:35
@@ -144,10 +166,12 @@ public abstract class AbstractProcessor {
         if (fixerQrScanValue != null && fixerQrScanValue.trim().length() > 0 && !loggingModel.isFixtureQRSame()) {
             logger.info("Fixture QR scan not empty and set luminare installdate" + dateFormat(edgeNote.getCreatedDateTime()));
             logger.info("Fixture QR scan not empty and set cslp.lum.install.date" + dateFormat(edgeNote.getCreatedDateTime()));
-            if(isNew){
-                addStreetLightData("cslp.lum.install.date", dateFormat(edgeNote.getCreatedDateTime()), paramsList);
+               boolean isLumDate = isLumDatePresent(idOnContoller);
+               if(!isLumDate){
+                   addStreetLightData("cslp.lum.install.date", dateFormat(edgeNote.getCreatedDateTime()), paramsList);
+               }
+
                 addStreetLightData("luminaire.installdate", dateFormat(edgeNote.getCreatedDateTime()), paramsList);
-            }
             if(macAddress == null || macAddress.trim().isEmpty()){
                 installStatus = "Fixture Only";
             }else{

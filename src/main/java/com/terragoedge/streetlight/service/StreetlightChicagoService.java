@@ -10,6 +10,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import com.terragoedge.streetlight.edgeinterface.SlvData;
 import com.terragoedge.streetlight.edgeinterface.SlvToEdgeService;
 import com.terragoedge.streetlight.json.model.ContextList;
+import com.terragoedge.streetlight.json.model.CslpDate;
 import com.terragoedge.streetlight.logging.InstallMaintenanceLogModel;
 import com.terragoedge.streetlight.logging.LoggingModel;
 import org.apache.commons.lang3.StringUtils;
@@ -46,10 +47,12 @@ public class StreetlightChicagoService extends AbstractProcessor {
     public StreetlightChicagoService() {
         super();
         loadContextList();
-        installationMaintenanceProcessor = new InstallationMaintenanceProcessor(contextListHashMap);
+        installationMaintenanceProcessor = new InstallationMaintenanceProcessor(contextListHashMap,cslpDateHashMap);
         slvToEdgeService = new SlvToEdgeService();
         System.out.println("Object Created.");
     }
+
+
 
 
     protected void loadContextList() {
@@ -63,6 +66,8 @@ public class StreetlightChicagoService extends AbstractProcessor {
             ContextList contextList = gson.fromJson(responseString, ContextList.class);
             int idOnControllerPos = -1;
             int fixtureCodePos = -1;
+            int cslpNodeDate = -1;
+            int cslpLumDate = -1;
             int pos = 0;
             for (String columnName : contextList.getColumns()) {
                 switch (columnName) {
@@ -72,13 +77,49 @@ public class StreetlightChicagoService extends AbstractProcessor {
                     case "location.proposedcontext":
                         fixtureCodePos = pos;
                         break;
+                    case "cslp.lum.install.date":
+                        cslpLumDate = pos;
+                        break;
+                    case "cslp.node.install.date":
+                        cslpNodeDate = pos;
+                        break;
                 }
                 pos = pos + 1;
             }
 
+            logger.info("idOnControllerPos:"+idOnControllerPos);
+            logger.info("cslpNodeDate:"+cslpNodeDate);
+            logger.info("cslpLumDate:"+cslpLumDate);
+
             for (List<String> values : contextList.getValues()) {
                 contextListHashMap.put(values.get(idOnControllerPos), values.get(fixtureCodePos));
+                String cslpLumDateValue = values.get(cslpLumDate);
+                String cslpNodeDateValue =  values.get(cslpNodeDate);
+                CslpDate cslpDate  = new CslpDate();
+                boolean flag = false;
+                if(cslpLumDateValue != null && !cslpLumDateValue.toLowerCase().trim().isEmpty() && !cslpLumDateValue.toLowerCase().contains("null")){
+                    cslpDate.setCslpLumDate(cslpLumDateValue);
+                    flag = true;
+                }
+                if(cslpNodeDateValue != null && !cslpNodeDateValue.toLowerCase().trim().isEmpty() &&!cslpNodeDateValue.toLowerCase().contains("null")){
+                    cslpDate.setCslpNodeDate(cslpNodeDateValue);
+                    flag = true;
+                }
+                if(values.get(idOnControllerPos).contains("8574")){
+                    logger.info("Current id:"+values.get(idOnControllerPos));
+                    logger.info("cslpLumDateValue:"+cslpLumDateValue);
+                    logger.info("cslpNodeDateValue:"+cslpLumDateValue);
+                }
+
+                if(flag){
+                    cslpDateHashMap.put(values.get(idOnControllerPos),cslpDate);
+                }
+
             }
+
+            logger.info("Total Size:"+cslpDateHashMap.size());
+            logger.info("Total Size:"+cslpDateHashMap.keySet().toString());
+            logger.info("Total Size:"+cslpDateHashMap);
         }
 
     }
@@ -190,6 +231,16 @@ public class StreetlightChicagoService extends AbstractProcessor {
             return;
         }
 
+        if (contextListHashMap.isEmpty()) {
+            logger.error("Proposed context data are not loaded.");
+            return;
+        }
+
+        if(cslpDateHashMap.isEmpty()){
+            logger.error("CSLP data are not loaded.");
+            return;
+        }
+
         String dataReSync = PropertiesReader.getProperties().getProperty("streetlight.edge.data.resync");
         if (dataReSync != null && dataReSync.trim().equals("true")) {
             logger.info("ReSync Process Starts.");
@@ -200,16 +251,17 @@ public class StreetlightChicagoService extends AbstractProcessor {
         }
 
 
-        if (contextListHashMap.isEmpty()) {
-            logger.error("Proposed context data are not loaded.");
-            return;
-        }
+
 
         String edgeSlvUrl = "https://amerescousa.terragoedge.com/edgeSlvServer/notesGuid?lastSyncTime=";
 
         long lastSynctime = streetlightDao.getLastSyncTime();
         if(lastSynctime > 0){
             edgeSlvUrl = edgeSlvUrl + lastSynctime;
+
+        }else{
+            logger.error("Last Sync not loaded.");
+            return;
         }
 
 

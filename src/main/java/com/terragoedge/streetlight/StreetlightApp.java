@@ -10,8 +10,10 @@ public class StreetlightApp {
             StreetlightChicagoService streetlightChicagoService = null;
             try{
                 streetlightChicagoService = new StreetlightChicagoService();
-                //streetlightChicagoService.loadDevices();
                 streetlightChicagoService.run();
+
+                //streetlightChicagoService.loadDevices();
+
                 Thread.sleep(30000);
             }catch (Exception e){
                 e.printStackTrace();

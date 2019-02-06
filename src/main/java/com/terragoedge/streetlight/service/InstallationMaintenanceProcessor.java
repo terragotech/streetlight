@@ -2,6 +2,7 @@ package com.terragoedge.streetlight.service;
 
 import com.terragoedge.edgeserver.*;
 import com.terragoedge.streetlight.exception.*;
+import com.terragoedge.streetlight.json.model.CslpDate;
 import com.terragoedge.streetlight.json.model.SlvServerData;
 import com.terragoedge.streetlight.logging.InstallMaintenanceLogModel;
 import com.terragoedge.streetlight.logging.LoggingModel;
@@ -11,14 +12,16 @@ import org.springframework.http.ResponseEntity;
 
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.WeakHashMap;
 
 public class InstallationMaintenanceProcessor extends AbstractProcessor {
 
-    public InstallationMaintenanceProcessor(WeakHashMap<String, String> contextListHashMap) {
+    public InstallationMaintenanceProcessor(WeakHashMap<String, String> contextListHashMap, HashMap<String,CslpDate> cslpDateHashMap) {
         super();
         this.contextListHashMap = contextListHashMap;
+        this.cslpDateHashMap = cslpDateHashMap;
     }
 
     private static final String INSTATALLATION_AND_MAINTENANCE_GUID = "8b722347-c3a7-41f4-a8a9-c35dece6f98b";
@@ -450,7 +453,8 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
                 addStreetLightData(nightRideKey, nightRideValue, paramsList);
             }
             if (macAddress != null && !macAddress.trim().isEmpty() && !loggingModel.isMacAddressUsed()) {
-                if (isNew) {
+               boolean isNodeDatePresent = isNodeDatePresent(idOnController);
+                if (!isNodeDatePresent) {
                     addStreetLightData("cslp.node.install.date", dateFormat(edgeNote.getCreatedDateTime()), paramsList);
                 }
                 addStreetLightData("install.date", dateFormat(edgeNote.getCreatedDateTime()), paramsList);
