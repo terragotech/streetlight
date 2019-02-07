@@ -118,8 +118,6 @@ public class StreetlightChicagoService extends AbstractProcessor {
             }
 
             logger.info("Total Size:"+cslpDateHashMap.size());
-            logger.info("Total Size:"+cslpDateHashMap.keySet().toString());
-            logger.info("Total Size:"+cslpDateHashMap);
         }
 
     }
