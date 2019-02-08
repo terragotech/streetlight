@@ -37,8 +37,8 @@ public class EdgeService {
 
     protected String getNoteDetails(String noteGuid) {
         try {
-            String urlNew = baseUrl + "/rest/notes/notesdata/" + noteGuid;
-            //String urlNew = baseUrl + "/rest/notes/" + noteGuid;
+           // String urlNew = baseUrl + "/rest/notes/notesdata/" + noteGuid;
+            String urlNew = baseUrl + "/rest/notes/" + noteGuid;
             logger.info("Url to get Note Details:" + urlNew);
             ResponseEntity<String> responseEntity = serverCall(urlNew, HttpMethod.GET, null);
             if (responseEntity.getStatusCode().is2xxSuccessful()) {
@@ -104,7 +104,7 @@ public class EdgeService {
     }
 
     public JsonObject processEdgeForms(EdgeNote edgeNote, List<EdgeFormData> edgeFormDataList, String errorFormTemplateGuid, SlvData slvData) {
-        updateInstallationForm(edgeFormDataList, slvData,edgeNote);
+       // updateInstallationForm(edgeFormDataList, slvData, edgeNote);
         String edgenoteJson = gson.toJson(edgeNote);
         JsonObject edgeJsonObject = (JsonObject) jsonParser.parse(edgenoteJson);
         JsonArray serverEdgeFormJsonArray = edgeJsonObject.get("formData").getAsJsonArray();
@@ -113,14 +113,20 @@ public class EdgeService {
             JsonObject serverEdgeForm = serverEdgeFormJsonArray.get(i).getAsJsonObject();
             String currentFormTemplateGuid = serverEdgeForm.get("formTemplateGuid").getAsString();
             if (currentFormTemplateGuid.equals(errorFormTemplateGuid)) {
-                serverEdgeForm.add("formDef", gson.toJsonTree(edgeFormDataList));
+                String formDefJson = serverEdgeForm.get("formDef").toString();
+                formDefJson = formDefJson.replaceAll("\\\\", "");
+                List<EdgeFormData> formDataList = getEdgeFormData(formDefJson);
+                updateInstallationForm(formDataList, slvData,edgeNote);
+                serverEdgeForm.addProperty("formGuid", UUID.randomUUID().toString());
+                serverEdgeForm.add("formDef", gson.toJsonTree(formDataList));
+            } else {
+                String formDefJson = serverEdgeForm.get("formDef").toString();
+                formDefJson = formDefJson.replaceAll("\\\\", "");
+                List<EdgeFormData> formDataList = getEdgeFormData(formDefJson);
+                serverEdgeForm.add("formDef", gson.toJsonTree(formDataList));
                 serverEdgeForm.addProperty("formGuid", UUID.randomUUID().toString());
             }
-            String formDefJson = serverEdgeForm.get("formDef").toString();
-            formDefJson = formDefJson.replaceAll("\\\\", "");
-            List<EdgeFormData> formDataList = getEdgeFormData(formDefJson);
-            serverEdgeForm.add("formDef", gson.toJsonTree(formDataList));
-            serverEdgeForm.addProperty("formGuid", UUID.randomUUID().toString());
+
         }
         edgeJsonObject.add("formData", serverEdgeFormJsonArray);
         edgeJsonObject.addProperty("createdDateTime", System.currentTimeMillis());
@@ -134,99 +140,23 @@ public class EdgeService {
         return serverCall(urlNew, HttpMethod.PUT, noteDetails);
     }
 
-    public void updateInstallationForm(List<EdgeFormData> edgeFormDataList, SlvData slvData,EdgeNote edgeNote) {
+    public void updateInstallationForm(List<EdgeFormData> edgeFormDataList, SlvData slvData, EdgeNote edgeNote) {
         try {
-            String existingFixtureStyle = null;
-            try{
-                existingFixtureStyle = valueById(edgeFormDataList, 110);
-                existingFixtureStyle = existingFixtureStyle.trim();
-
-            }catch (Exception e){
-                e.printStackTrace();
-            }
-            String existingFixtureType = null;
-            try{
-                 existingFixtureType = valueById(edgeFormDataList, 111);
-                existingFixtureType = existingFixtureType.trim();
-            }catch (Exception e){
-                e.printStackTrace();
-            }
-
-            if(existingFixtureStyle != null && existingFixtureType != null){
-                // Swap two formtemplate values
-                updateFormValue(edgeFormDataList, 111, existingFixtureStyle);
-                updateFormValue(edgeFormDataList, 110, existingFixtureType);
-            }
-
-            if(slvData.getMunicipality() != null){
+            if (slvData.getMacAddress() != null) {
                 //set municipality values from csv
-                String municipality = slvData.getMunicipality().trim();
-                updateFormValue(edgeFormDataList, 53, municipality);
-
-            }else{
-                String municipality = null;
-                try{
-                     municipality = valueById(edgeFormDataList, 53);
-                }catch (Exception e){
-                    e.printStackTrace();
-                }
-
-                if(municipality != null){
-                    municipality = municipality.replace("_"," ");
-                    updateFormValue(edgeFormDataList, 53, municipality);
+                String macAddress = slvData.getMacAddress().trim();
+                if (macAddress != null)
+                    updateFormValue(edgeFormDataList, 19, macAddress);
+            }
+            if (slvData.getFixtureQRScan() != null) {
+                String fixtureQrScan = slvData.getFixtureQRScan().trim();
+                if (fixtureQrScan != null) {
+                    updateFormValue(edgeFormDataList, 20, fixtureQrScan);
                 }
             }
-            //Update dispersionType
-            String despersionStr = valueById(edgeFormDataList, 68);
-            if(despersionStr != null){
-                String type="";
-                if(despersionStr.startsWith("Type")){
-                    despersionStr = despersionStr.toUpperCase();
-                    type = despersionStr;
-                    updateFormValue(edgeFormDataList, 68, despersionStr);
-                }else {
-                    String numberOnly= despersionStr.replaceAll("[^0-9]", "");
-                    int dispersionType = Integer.parseInt(numberOnly.trim());
-
-                    switch (dispersionType) {
-                        case 1:
-                            updateFormValue(edgeFormDataList, 68, "TYPE 1");
-                            type="TYPE 1";
-                            break;
-                        case 2:
-                            updateFormValue(edgeFormDataList, 68, "TYPE 2");
-                            type="TYPE 2";
-                            break;
-                        case 3:
-                            updateFormValue(edgeFormDataList, 68, "TYPE 3");
-                            type="TYPE 3";
-                            break;
-                        case 4:
-                            updateFormValue(edgeFormDataList, 68, "TYPE 4");
-                            type="TYPE 4";
-                            break;
-                        case 5:
-                            updateFormValue(edgeFormDataList, 68, "TYPE 5");
-                            type="TYPE 5";
-                            break;
-                    }
-                }
-                String locationDescription=edgeNote.getLocationDescription();
-                if(locationDescription!=null) {
-                    String locationValues[] = locationDescription.split("\\|");
-                    if(locationValues.length>=1){
-                        edgeNote.setLocationDescription(locationValues[0]+" | "+type);
-                    }
-                }
-            }
-
-
-
         } catch (NumberFormatException e) {
             e.printStackTrace();
-        } catch (NoValueException e) {
-            return;
-        }catch (Exception e){
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }

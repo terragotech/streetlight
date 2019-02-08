@@ -9,6 +9,10 @@ public class SlvData extends CsvToBean {
     private String noteTitle;
     @CsvBindByName(column = "Note Guid")
     private String noteGuid;
+    @CsvBindByName(column = "macAddress")
+    private String macAddress;
+    @CsvBindByName(column = "FixtureQrScan")
+    private String fixtureQRScan;
 
     private String componentId;
     @CsvBindByName(column = "Component Value")
@@ -105,6 +109,22 @@ public class SlvData extends CsvToBean {
 
     public void setExistingMunicipality(String existingMunicipality) {
         this.existingMunicipality = existingMunicipality;
+    }
+
+    public String getMacAddress() {
+        return macAddress;
+    }
+
+    public void setMacAddress(String macAddress) {
+        this.macAddress = macAddress;
+    }
+
+    public String getFixtureQRScan() {
+        return fixtureQRScan;
+    }
+
+    public void setFixtureQRScan(String fixtureQRScan) {
+        this.fixtureQRScan = fixtureQRScan;
     }
 
     @Override
