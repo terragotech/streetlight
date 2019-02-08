@@ -46,7 +46,7 @@ public class StreetlightChicagoService extends AbstractProcessor {
 
     public StreetlightChicagoService() {
         super();
-        loadContextList();
+       // loadContextList();
         installationMaintenanceProcessor = new InstallationMaintenanceProcessor(contextListHashMap,cslpDateHashMap);
         slvToEdgeService = new SlvToEdgeService();
         System.out.println("Object Created.");
@@ -189,6 +189,7 @@ public class StreetlightChicagoService extends AbstractProcessor {
             installMaintenanceLogModel.setNoteName(edgeNote.getTitle());
             installMaintenanceLogModel.setCreatedDatetime(String.valueOf(edgeNote.getCreatedDateTime()));
             loadDefaultVal(edgeNote, installMaintenanceLogModel);
+            loadDeviceValues(installMaintenanceLogModel.getIdOnController());
             logger.info("going to call processnew action");
             installationMaintenanceProcessor.processNewAction(edgeNote, installMaintenanceLogModel, isResync, utilLocId);
             //updateSlvStatusToEdge(installMaintenanceLogModel, edgeNote);
@@ -304,6 +305,7 @@ public class StreetlightChicagoService extends AbstractProcessor {
                                    installMaintenanceLogModel.setLastSyncTime(edgeNote.getSyncTime());
                                    installMaintenanceLogModel.setCreatedDatetime(String.valueOf(edgeNote.getCreatedDateTime()));
                                    loadDefaultVal(edgeNote, installMaintenanceLogModel);
+                                   loadDeviceValues(edgeNote.getTitle());
                                    installationMaintenanceProcessor.processNewAction(edgeNote, installMaintenanceLogModel, false, null);
                                    //updateSlvStatusToEdge(installMaintenanceLogModel, edgeNote);
                                    LoggingModel loggingModel = installMaintenanceLogModel;

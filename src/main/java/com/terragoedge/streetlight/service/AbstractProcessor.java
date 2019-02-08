@@ -35,7 +35,7 @@ public abstract class AbstractProcessor {
     JsonParser jsonParser = null;
 
     WeakHashMap<String, String> contextListHashMap = new WeakHashMap<>();
-    HashMap<String,CslpDate> cslpDateHashMap = new HashMap<>();
+    HashMap<String, CslpDate> cslpDateHashMap = new HashMap<>();
 
     public AbstractProcessor() {
         this.streetlightDao = new StreetlightDao();
@@ -67,7 +67,7 @@ public abstract class AbstractProcessor {
         for (EdgeFormData edgeFormData : edgeFormDatas) {
             if (edgeFormData.getId() == id) {
                 String value = edgeFormData.getValue();
-                if (value == null || value.trim().isEmpty()||value.contains("null")) {
+                if (value == null || value.trim().isEmpty() || value.contains("null")) {
                     throw new NoValueException("Value is Empty or null." + value);
                 }
                 return value;
@@ -81,8 +81,8 @@ public abstract class AbstractProcessor {
         for (EdgeFormData edgeFormData : edgeFormDatas) {
             if (edgeFormData.getId() == id) {
                 String value = edgeFormData.getValue();
-                if (value == null || value.trim().isEmpty()||value.contains("null")) {
-                   return null;
+                if (value == null || value.trim().isEmpty() || value.contains("null")) {
+                    return null;
                 }
                 return value;
             }
@@ -91,12 +91,122 @@ public abstract class AbstractProcessor {
         return null;
     }
 
+    public int processDeviceJson(String deviceJson) {
+        JsonObject jsonObject = new JsonParser().parse(deviceJson).getAsJsonObject();
+        logger.info("Device request json:" + gson.toJson(jsonObject));
+        JsonArray arr = jsonObject.getAsJsonArray("value");
+        for (int i = 0; i < arr.size(); i++) {
+            int id = arr.get(i).getAsJsonObject().get("id").getAsInt();
+            logger.info("Device id value :" + id);
+            System.out.println(id);
+            return id;
+        }
+        return 0;
+    }
+
+    public void processDeviceValuesJson(String deviceValuesjson, String idOnController) {
+        logger.info("processDeviceValuesJson called start");
+        String proposedContextKey = properties.getProperty("streetlight.location.proposedcontext");
+        String cslInstallDateKey = properties.getProperty("streetlight.csl.installdate");
+        String cslLuminaireDateKey = properties.getProperty("streetlight.csl.luminairedate");
+        logger.info("contextKey :" + proposedContextKey);
+        logger.info("cslInstallDate :" + cslInstallDateKey);
+        logger.info("cslLuminaireDate :" + cslLuminaireDateKey);
+        JsonObject jsonObject = new JsonParser().parse(deviceValuesjson).getAsJsonObject();
+        logger.info("Device request json:" + gson.toJson(jsonObject));
+        JsonArray arr = jsonObject.getAsJsonArray("properties");
+        contextListHashMap.clear();
+        cslpDateHashMap.clear();
+        CslpDate cslpDate = new CslpDate();
+        String nodeInstall = null;
+        String luminaireDate = null;
+        for (int i = 0; i < arr.size(); i++) {
+            JsonObject jsonObject1 = arr.get(i).getAsJsonObject();
+            String keyValue = jsonObject1.get("key").getAsString();
+            if (keyValue != null && keyValue.equals(proposedContextKey)) {
+                String proposedContext = jsonObject1.get("value").getAsString();
+                contextListHashMap.put(idOnController, proposedContext);
+            }
+            if (keyValue != null && keyValue.equals(cslInstallDateKey)) {
+                nodeInstall = jsonObject1.get("value").getAsString();
+            }
+            if (keyValue != null && keyValue.equals(cslLuminaireDateKey)) {
+                luminaireDate = jsonObject1.get("value").getAsString();
+            }
+        }
+        if (nodeInstall != null) {
+            cslpDate.setCslpNodeDate(nodeInstall);
+        }
+        if (luminaireDate != null) {
+            cslpDate.setCslpLumDate(luminaireDate);
+        }
+        logger.info("cslpDate :" + gson.toJson(cslpDate));
+        cslpDateHashMap.put(idOnController, cslpDate);
+        logger.info("processDeviceValuesJson End");
+    }
+
+    public void loadDeviceValues(String idOnController) {
+        try {
+            logger.info("loadDeviceValues called.");
+            String mainUrl = properties.getProperty("streetlight.slv.url.main");
+            String deviceUrl = properties.getProperty("streetlight.slv.url.search.device");
+            String getDeviceUrl = properties.getProperty("streetlight.slv.url.getdevice.device");
+            String url = mainUrl + deviceUrl;
+            List<String> paramsList = new ArrayList<>();
+            paramsList.add("attributeName=idOnController");
+            paramsList.add("attributeValue=" + idOnController);
+            paramsList.add("recurse=true");
+            paramsList.add("returnedInfo=lightDevicesList");
+            paramsList.add("attributeOperator=eq-i");
+            paramsList.add("maxResults=1");
+            paramsList.add("ser=json");
+            String params = StringUtils.join(paramsList, "&");
+            url = url + "?" + params;
+            logger.info("Load Device url :" + url);
+            ResponseEntity<String> response = restService.getRequest(url, true, null);
+            if (response.getStatusCodeValue() == 200) {
+                logger.info("LoadDevice Respose :"+response.getBody());
+                String responseString = response.getBody();
+                int id = processDeviceJson(responseString);
+                logger.info("LoadDevice Id :"+id);
+                if (id == 0) {
+                    logger.info("csl and context hashmap are cleared");
+                    cslpDateHashMap.clear();
+                    contextListHashMap.clear();
+                } else {
+                    String subDeviceUrl = getDeviceUrl(id);
+                    logger.info("subDevice url:" + subDeviceUrl);
+                    ResponseEntity<String> responseEntity = restService.getRequest(subDeviceUrl, true, null);
+                    if (response.getStatusCodeValue() == 200) {
+                        String deviceResponse = responseEntity.getBody();
+                        processDeviceValuesJson(deviceResponse, idOnController);
+                    }
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    public String getDeviceUrl(int id) {
+        logger.info("getDeviceUrl url called");
+        String mainUrl = properties.getProperty("streetlight.slv.url.main");
+        String getDeviceUrl = properties.getProperty("streetlight.slv.url.getdevice.device");
+        String deviceMainUrl = mainUrl + getDeviceUrl;
+        List<String> paramsList = new ArrayList<>();
+        paramsList.add("deviceId=" + id);
+        paramsList.add("ser=json");
+        String params = StringUtils.join(paramsList, "&");
+        deviceMainUrl = deviceMainUrl + "?" + params;
+        return deviceMainUrl;
+    }
+
     /**
      * Load Mac address and corresponding IdOnController from SLV Server
      *
      * @throws Exception
      */
-    public boolean checkMacAddressExists(String macAddress, String idOnController, String nightRideKey, String nightRideValue,LoggingModel loggingModel)
+    public boolean checkMacAddressExists(String macAddress, String idOnController, String nightRideKey, String nightRideValue, LoggingModel loggingModel)
             throws QRCodeAlreadyUsedException, Exception {
         logger.info("Getting Mac Address from SLV.");
         String mainUrl = properties.getProperty("streetlight.slv.url.main");
@@ -139,47 +249,48 @@ public abstract class AbstractProcessor {
 
     }
 
-    private boolean isLumDatePresent(String idOnContoller){
-        logger.info("IdOnController:"+idOnContoller);
-        logger.info("cslpDateHashMap:"+cslpDateHashMap.size());
-        CslpDate  cslpDate = cslpDateHashMap.get(idOnContoller);
-        logger.info("CslpDate:"+cslpDate);
-        if(cslpDate != null){
-           String val = cslpDate.getCslpLumDate();
-           if(val != null){
-               return true;
-           }
+    private boolean isLumDatePresent(String idOnContoller) {
+        logger.info("IdOnController:" + idOnContoller);
+        logger.info("cslpDateHashMap:" + cslpDateHashMap.size());
+        CslpDate cslpDate = cslpDateHashMap.get(idOnContoller);
+        logger.info("CslpDate:" + cslpDate);
+        if (cslpDate != null) {
+            String val = cslpDate.getCslpLumDate();
+            if (val != null) {
+                return true;
+            }
         }
         return false;
     }
 
 
-    public boolean isNodeDatePresent(String idOnContoller){
-        CslpDate  cslpDate = cslpDateHashMap.get(idOnContoller);
+    public boolean isNodeDatePresent(String idOnContoller) {
+        logger.info("isNodePresent Json:"+gson.toJson(cslpDateHashMap));
+        CslpDate cslpDate = cslpDateHashMap.get(idOnContoller);
         return cslpDate != null && cslpDate.getCslpNodeDate() != null;
     }
 
 
-    protected void addOtherParams(EdgeNote edgeNote, List<Object> paramsList, String idOnContoller, String utilLocId, boolean isNew, String fixerQrScanValue,String macAddress,InstallMaintenanceLogModel loggingModel) {
+    protected void addOtherParams(EdgeNote edgeNote, List<Object> paramsList, String idOnContoller, String utilLocId, boolean isNew, String fixerQrScanValue, String macAddress, InstallMaintenanceLogModel loggingModel) {
         // luminaire.installdate - 2017-09-07 09:47:35
         String installStatus = null;
         if (fixerQrScanValue != null && fixerQrScanValue.trim().length() > 0 && !loggingModel.isFixtureQRSame()) {
             logger.info("Fixture QR scan not empty and set luminare installdate" + dateFormat(edgeNote.getCreatedDateTime()));
             logger.info("Fixture QR scan not empty and set cslp.lum.install.date" + dateFormat(edgeNote.getCreatedDateTime()));
-               boolean isLumDate = isLumDatePresent(idOnContoller);
-               if(!isLumDate){
-                   addStreetLightData("cslp.lum.install.date", dateFormat(edgeNote.getCreatedDateTime()), paramsList);
-               }
+            boolean isLumDate = isLumDatePresent(idOnContoller);
+            if (!isLumDate) {
+                addStreetLightData("cslp.lum.install.date", dateFormat(edgeNote.getCreatedDateTime()), paramsList);
+            }
 
-                addStreetLightData("luminaire.installdate", dateFormat(edgeNote.getCreatedDateTime()), paramsList);
-            if(macAddress == null || macAddress.trim().isEmpty()){
+            addStreetLightData("luminaire.installdate", dateFormat(edgeNote.getCreatedDateTime()), paramsList);
+            if (macAddress == null || macAddress.trim().isEmpty()) {
                 installStatus = "Fixture Only";
-            }else{
+            } else {
                 installStatus = "Installed";
             }
 
 
-        }else if(macAddress != null && macAddress.trim().length() > 0){
+        } else if (macAddress != null && macAddress.trim().length() > 0) {
             installStatus = "Installed";
         }
 
@@ -206,7 +317,7 @@ public abstract class AbstractProcessor {
             if (dimmingGroupName.startsWith("4") || dimmingGroupName.startsWith("13")) {
                 edgeNotebookName = edgeNotebookName + " Acorns";
             }
-            if(dimmingGroupName.contains("Node Only") && installStatus != null){
+            if (dimmingGroupName.contains("Node Only") && installStatus != null) {
                 installStatus = "Verified";
 
             }
@@ -217,9 +328,9 @@ public abstract class AbstractProcessor {
        /* if (dimmingGroupName != null && dimmingGroupName.trim().toLowerCase().contains("acorns")) {
             edgeNotebookName = edgeNotebookName +" Acorns";
         }*/
-       if(installStatus != null){
-           addStreetLightData("installStatus", installStatus, paramsList);
-       }
+        if (installStatus != null) {
+            addStreetLightData("installStatus", installStatus, paramsList);
+        }
 
 
         addStreetLightData("DimmingGroupName", edgeNotebookName, paramsList);
@@ -230,6 +341,7 @@ public abstract class AbstractProcessor {
         paramsList.add("attribute=" + key.trim());
         paramsList.add("value=" + value.trim());
     }
+
     protected void addStreetLightData(String key, String value, List<Object> paramsList) {
         paramsList.add("valueName=" + key.trim());
         paramsList.add("value=" + value.trim());
@@ -249,17 +361,18 @@ public abstract class AbstractProcessor {
     // RFM0455, 07/24/17, 54W, 120/277V, 4000K, 8140 Lm, R2M, Gray, Advance,
     // 442100083510, DMG
     public static String replaceCharAt(String s, int pos, char c) {
-        return s.substring(0,pos) + c + s.substring(pos+1).trim();
+        return s.substring(0, pos) + c + s.substring(pos + 1).trim();
     }
-    public void buildFixtureStreetLightData(String data, List<Object> paramsList, EdgeNote edgeNote,SlvServerData slvServerData)
+
+    public void buildFixtureStreetLightData(String data, List<Object> paramsList, EdgeNote edgeNote, SlvServerData slvServerData)
             throws InValidBarCodeException {
         String[] fixtureInfo = data.split(",");
         logger.info("Fixture QR Scan Val length" + fixtureInfo.length);
         // The highlighted sections are where it look like Philips replaced a “-“ with a “,” causing a single field to become 2 fields. I can have Dan contact the manufacturer but we won’t be able to change any of the QR codes on the fixtures already delivered.
         if (fixtureInfo.length >= 15) {
             if (fixtureInfo[1].trim().equals("RFM1315G2")) {
-                int index = StringUtils.ordinalIndexOf(data , ",", 3);
-                fixtureInfo = replaceCharAt(data,index,'-').split(",");
+                int index = StringUtils.ordinalIndexOf(data, ",", 3);
+                fixtureInfo = replaceCharAt(data, index, '-').split(",");
                 logger.info("Fixture QR Scan Val " + fixtureInfo);
                 logger.info("Fixture QR Scan Val length" + fixtureInfo.length);
             }
@@ -317,8 +430,6 @@ public abstract class AbstractProcessor {
     }
 
 
-
-
     protected int setDeviceValues(List<Object> paramsList) {
         String mainUrl = properties.getProperty("streetlight.slv.url.main");
         String updateDeviceValues = properties.getProperty("streetlight.slv.url.updatedevice");
@@ -327,11 +438,14 @@ public abstract class AbstractProcessor {
         paramsList.add("ser=json");
         String params = StringUtils.join(paramsList, "&");
         url = url + "&" + params;
-        ResponseEntity<String> response = restService.getPostRequest(url, null);
+        logger.info("SetDevice method called");
+        logger.info("SetDevice url:"+url);
+       /* ResponseEntity<String> response = restService.getPostRequest(url, null);
         String responseString = response.getBody();
         JsonObject replaceOlcResponse = (JsonObject) jsonParser.parse(responseString);
         int errorCode = replaceOlcResponse.get("errorCode").getAsInt();
-        return errorCode;
+        return errorCode;*/
+       return 0;
     }
 
 
@@ -342,7 +456,7 @@ public abstract class AbstractProcessor {
      */
     public void replaceOLC(String controllerStrIdValue, String idOnController, String macAddress)
             throws ReplaceOLCFailedException {
-       /* try {
+        /*try {
             // String newNetworkId = slvSyncDataEntity.getMacAddress();
             String newNetworkId = macAddress;
 
@@ -475,7 +589,7 @@ public abstract class AbstractProcessor {
                         try {
                             String comment = deviceValues.get(1).getAsString();
                             return comment;
-                        }catch (Exception e){
+                        } catch (Exception e) {
                             return null;
                         }
                     }
@@ -525,7 +639,6 @@ public abstract class AbstractProcessor {
     }
 
 
-
     public void loadDevices() throws DeviceLoadException, SQLException {
         logger.info("load Devices Called.");
         System.out.println("load Devices Called.");
@@ -563,45 +676,45 @@ public abstract class AbstractProcessor {
                 int pos = 0;
                 slvServerDataColumnPos = new SlvServerDataColumnPos();
                 for (String columnName : contextList.getColumns()) {
-                    loadColumnPos(columnName,slvServerDataColumnPos,pos);
+                    loadColumnPos(columnName, slvServerDataColumnPos, pos);
                     pos += 1;
                 }
 
-                List<List<String>> valuesList =  contextList.getValues();
-                for(List<String> valueList : valuesList) {
-                    String idOnController =  valueList.get(slvServerDataColumnPos.getIdOnController());
+                List<List<String>> valuesList = contextList.getValues();
+                for (List<String> valueList : valuesList) {
+                    String idOnController = valueList.get(slvServerDataColumnPos.getIdOnController());
                     SlvServerData dbSlvServerData = streetlightDao.getSlvServerData(idOnController);
-                    if(dbSlvServerData == null) {
+                    if (dbSlvServerData == null) {
                         dbSlvServerData = new SlvServerData();
-                        loadSlvServerData(dbSlvServerData,valueList,slvServerDataColumnPos);
-                        if(dbSlvServerData.isValPresent()){
+                        loadSlvServerData(dbSlvServerData, valueList, slvServerDataColumnPos);
+                        if (dbSlvServerData.isValPresent()) {
                             dbSlvServerData.setCreateDateTime(System.currentTimeMillis());
                             dbSlvServerData.setLastUpdateDateTime(System.currentTimeMillis());
                             dbSlvServerData.setProcessType(ProcessType.SLV);
                             streetlightDao.saveSlvServerData(dbSlvServerData);
                         }
 
-                    }else{
+                    } else {
                         SlvServerData slvServerData = new SlvServerData();
-                        loadSlvServerData(slvServerData,valueList,slvServerDataColumnPos);
+                        loadSlvServerData(slvServerData, valueList, slvServerDataColumnPos);
                         boolean res = dbSlvServerData.equals(slvServerData);
-                        if(!res){
-                            loadSlvServerData(dbSlvServerData,valueList,slvServerDataColumnPos);
+                        if (!res) {
+                            loadSlvServerData(dbSlvServerData, valueList, slvServerDataColumnPos);
                             dbSlvServerData.setLastUpdateDateTime(System.currentTimeMillis());
                             dbSlvServerData.setProcessType(ProcessType.SLV);
                             streetlightDao.updateSlvServerData(dbSlvServerData);
                         }
 
+                    }
                 }
             }
-        }
 
         } else {
             throw new DeviceLoadException("Unable to load device from SLV Interface");
         }
     }
 
-    private void loadColumnPos(String columnName,SlvServerDataColumnPos slvServerDataColumnPos,int pos){
+    private void loadColumnPos(String columnName, SlvServerDataColumnPos slvServerDataColumnPos, int pos) {
         switch (columnName) {
             case "idOnController":
                 slvServerDataColumnPos.setIdOnController(pos);
@@ -648,23 +761,23 @@ public abstract class AbstractProcessor {
     }
 
 
-    private void loadSlvServerData(SlvServerData slvServerData,List<String> valueList,SlvServerDataColumnPos slvServerDataColumnPos){
-        slvServerData.setIdOnController(getData(valueList,slvServerDataColumnPos.getIdOnController()));
-        slvServerData.setMacAddress(getData(valueList,slvServerDataColumnPos.getMacAddress()));
-        slvServerData.setLuminairePartNumber(getData(valueList,slvServerDataColumnPos.getLuminairePartNumber()));
-        slvServerData.setLuminaireModel(getData(valueList,slvServerDataColumnPos.getLuminaireModel()));
-        slvServerData.setLuminaireManufacturedate(getData(valueList,slvServerDataColumnPos.getLuminaireManufacturedate()));
-        slvServerData.setLuminaireColorTemp(getData(valueList,slvServerDataColumnPos.getLuminaireColorTemp()));
-        slvServerData.setLumenOutput(getData(valueList,slvServerDataColumnPos.getLumenOutput()));
-        slvServerData.setDistributionType(getData(valueList,slvServerDataColumnPos.getDistributionType()));
-        slvServerData.setColorCode(getData(valueList,slvServerDataColumnPos.getColorCode()));
-        slvServerData.setDriverManufacturer(getData(valueList,slvServerDataColumnPos.getDriverManufacturer()));
-        slvServerData.setDriverPartNumber(getData(valueList,slvServerDataColumnPos.getDriverPartNumber()));
-        slvServerData.setDimmingType(getData(valueList,slvServerDataColumnPos.getDimmingType()));
+    private void loadSlvServerData(SlvServerData slvServerData, List<String> valueList, SlvServerDataColumnPos slvServerDataColumnPos) {
+        slvServerData.setIdOnController(getData(valueList, slvServerDataColumnPos.getIdOnController()));
+        slvServerData.setMacAddress(getData(valueList, slvServerDataColumnPos.getMacAddress()));
+        slvServerData.setLuminairePartNumber(getData(valueList, slvServerDataColumnPos.getLuminairePartNumber()));
+        slvServerData.setLuminaireModel(getData(valueList, slvServerDataColumnPos.getLuminaireModel()));
+        slvServerData.setLuminaireManufacturedate(getData(valueList, slvServerDataColumnPos.getLuminaireManufacturedate()));
+        slvServerData.setLuminaireColorTemp(getData(valueList, slvServerDataColumnPos.getLuminaireColorTemp()));
+        slvServerData.setLumenOutput(getData(valueList, slvServerDataColumnPos.getLumenOutput()));
+        slvServerData.setDistributionType(getData(valueList, slvServerDataColumnPos.getDistributionType()));
+        slvServerData.setColorCode(getData(valueList, slvServerDataColumnPos.getColorCode()));
+        slvServerData.setDriverManufacturer(getData(valueList, slvServerDataColumnPos.getDriverManufacturer()));
+        slvServerData.setDriverPartNumber(getData(valueList, slvServerDataColumnPos.getDriverPartNumber()));
+        slvServerData.setDimmingType(getData(valueList, slvServerDataColumnPos.getDimmingType()));
     }
 
 
-    private String getData(List<String> valueList,int id) {
+    private String getData(List<String> valueList, int id) {
         try {
             String value = valueList.get(id);
 
@@ -678,7 +791,7 @@ public abstract class AbstractProcessor {
     }
 
 
-    public void closeConnection(){
+    public void closeConnection() {
         streetlightDao.closeConnection();
     }
 }

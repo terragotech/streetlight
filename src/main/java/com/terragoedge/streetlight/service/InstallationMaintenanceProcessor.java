@@ -18,7 +18,7 @@ import java.util.WeakHashMap;
 
 public class InstallationMaintenanceProcessor extends AbstractProcessor {
 
-    public InstallationMaintenanceProcessor(WeakHashMap<String, String> contextListHashMap, HashMap<String,CslpDate> cslpDateHashMap) {
+    public InstallationMaintenanceProcessor(WeakHashMap<String, String> contextListHashMap, HashMap<String, CslpDate> cslpDateHashMap) {
         super();
         this.contextListHashMap = contextListHashMap;
         this.cslpDateHashMap = cslpDateHashMap;
@@ -186,9 +186,6 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
     }
 
 
-
-
-
     private String getAction(List<EdgeFormData> edgeFormDatas, String idOnController, LoggingModel loggingModel, EdgeNote edgeNote) throws AlreadyUsedException {
         try {
             String value = value(edgeFormDatas, "Action");
@@ -340,9 +337,6 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
     }
 
 
-
-
-
     private void checkFixtureQrScan(String fixtureQrScan, EdgeNote edgeNote, LoggingModel loggingModel) throws InValidBarCodeException {
         List<Object> paramsList = new ArrayList<>();
         SlvServerData slvServerData = new SlvServerData();
@@ -387,7 +381,6 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
                     loggingModel.setFixtureQRSame(true);
                 }
             }
-
 
 
             logger.info("Fixture QR Scan Validation End.");
@@ -439,7 +432,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
             paramsList.add("controllerStrId=" + controllerStrIdValue);
             SlvServerData slvServerData = new SlvServerData();
 
-            addOtherParams(edgeNote, paramsList, idOnController, utilLocId, isNew, fixerQrScanValue, macAddress,loggingModel);
+            addOtherParams(edgeNote, paramsList, idOnController, utilLocId, isNew, fixerQrScanValue, macAddress, loggingModel);
 
             if (fixerQrScanValue != null && !loggingModel.isFixtureQRSame()) {
                 buildFixtureStreetLightData(fixerQrScanValue, paramsList, edgeNote, slvServerData);//update fixer qrscan value
@@ -452,14 +445,14 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
             if (nightRideValue != null) {
                 addStreetLightData(nightRideKey, nightRideValue, paramsList);
             }
-           /* if (macAddress != null && !macAddress.trim().isEmpty() && !loggingModel.isMacAddressUsed()) {
-               boolean isNodeDatePresent = isNodeDatePresent(idOnController);
+            if (macAddress != null && !macAddress.trim().isEmpty() && !loggingModel.isMacAddressUsed()) {
+                boolean isNodeDatePresent = isNodeDatePresent(idOnController);
                 if (!isNodeDatePresent) {
                     addStreetLightData("cslp.node.install.date", dateFormat(edgeNote.getCreatedDateTime()), paramsList);
                 }
                 addStreetLightData("install.date", dateFormat(edgeNote.getCreatedDateTime()), paramsList);
                 addStreetLightData("MacAddress", macAddress, paramsList);
-            }*/
+            }
 
 
             int errorCode = setDeviceValues(paramsList);
