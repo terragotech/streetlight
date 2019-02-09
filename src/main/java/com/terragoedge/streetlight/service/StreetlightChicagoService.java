@@ -230,15 +230,7 @@ public class StreetlightChicagoService extends AbstractProcessor {
             return;
         }
 
-        if (contextListHashMap.isEmpty()) {
-            logger.error("Proposed context data are not loaded.");
-            return;
-        }
 
-        if(cslpDateHashMap.isEmpty()){
-            logger.error("CSLP data are not loaded.");
-            return;
-        }
 
         String dataReSync = PropertiesReader.getProperties().getProperty("streetlight.edge.data.resync");
         if (dataReSync != null && dataReSync.trim().equals("true")) {
