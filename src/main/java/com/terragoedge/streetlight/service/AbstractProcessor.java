@@ -456,7 +456,7 @@ public abstract class AbstractProcessor {
      */
     public void replaceOLC(String controllerStrIdValue, String idOnController, String macAddress)
             throws ReplaceOLCFailedException {
-        /*try {
+        try {
             // String newNetworkId = slvSyncDataEntity.getMacAddress();
             String newNetworkId = macAddress;
 
@@ -496,7 +496,7 @@ public abstract class AbstractProcessor {
         } catch (Exception e) {
             logger.error("Error in replaceOLC", e);
             throw new ReplaceOLCFailedException(e.getMessage());
-        }*/
+        }
 
     }
 
