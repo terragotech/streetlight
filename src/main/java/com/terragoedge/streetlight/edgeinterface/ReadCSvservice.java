@@ -80,8 +80,6 @@ public class ReadCSvservice {
                 SlvData slvData = new SlvData();
                 slvData.setNoteTitle(values[0]);
                 slvData.setNoteGuid(values[1]);
-                slvData.setMacAddress(values[2]);
-                slvData.setFixtureQRScan(values[3]);
                 slvDataList.add(slvData);
             }
             System.out.println("Successfully");

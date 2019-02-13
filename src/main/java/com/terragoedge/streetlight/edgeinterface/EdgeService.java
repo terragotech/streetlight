@@ -37,7 +37,7 @@ public class EdgeService {
 
     protected String getNoteDetails(String noteGuid) {
         try {
-           // String urlNew = baseUrl + "/rest/notes/notesdata/" + noteGuid;
+            // String urlNew = baseUrl + "/rest/notes/notesdata/" + noteGuid;
             String urlNew = baseUrl + "/rest/notes/" + noteGuid;
             logger.info("Url to get Note Details:" + urlNew);
             ResponseEntity<String> responseEntity = serverCall(urlNew, HttpMethod.GET, null);
@@ -104,6 +104,27 @@ public class EdgeService {
     }
 
     public JsonObject processEdgeForms(EdgeNote edgeNote, List<EdgeFormData> edgeFormDataList, String errorFormTemplateGuid, SlvData slvData) {
+        // updateInstallationForm(edgeFormDataList, slvData, edgeNote);
+        String edgenoteJson = gson.toJson(edgeNote);
+        JsonObject edgeJsonObject = (JsonObject) jsonParser.parse(edgenoteJson);
+        JsonArray serverEdgeFormJsonArray = edgeJsonObject.get("formData").getAsJsonArray();
+        int size = serverEdgeFormJsonArray.size();
+        for (int i = 0; i < size; i++) {
+            JsonObject serverEdgeForm = serverEdgeFormJsonArray.get(i).getAsJsonObject();
+            String formDefJson = serverEdgeForm.get("formDef").toString();
+            formDefJson = formDefJson.replaceAll("\\\\", "");
+            List<EdgeFormData> formDataList = getEdgeFormData(formDefJson);
+            serverEdgeForm.add("formDef", gson.toJsonTree(formDataList));
+            serverEdgeForm.addProperty("formGuid", UUID.randomUUID().toString());
+        }
+        edgeJsonObject.add("formData", serverEdgeFormJsonArray);
+        edgeJsonObject.addProperty("noteGuid", UUID.randomUUID().toString());
+        return edgeJsonObject;
+    }
+/*
+
+
+    public JsonObject processEdgeForms(EdgeNote edgeNote, List<EdgeFormData> edgeFormDataList, String errorFormTemplateGuid, SlvData slvData) {
        // updateInstallationForm(edgeFormDataList, slvData, edgeNote);
         String edgenoteJson = gson.toJson(edgeNote);
         JsonObject edgeJsonObject = (JsonObject) jsonParser.parse(edgenoteJson);
@@ -133,6 +154,7 @@ public class EdgeService {
         edgeJsonObject.addProperty("noteGuid", UUID.randomUUID().toString());
         return edgeJsonObject;
     }
+*/
 
     public ResponseEntity<String> updateNoteDetails(String noteDetails, String noteGuid, String notebookGuid) {
         String baseUrl = PropertiesReader.getProperties().getProperty("streetlight.edge.url.main");
