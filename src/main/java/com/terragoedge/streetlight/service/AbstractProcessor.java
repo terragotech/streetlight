@@ -440,12 +440,11 @@ public abstract class AbstractProcessor {
         url = url + "&" + params;
         logger.info("SetDevice method called");
         logger.info("SetDevice url:"+url);
-       /* ResponseEntity<String> response = restService.getPostRequest(url, null);
+        ResponseEntity<String> response = restService.getPostRequest(url, null);
         String responseString = response.getBody();
         JsonObject replaceOlcResponse = (JsonObject) jsonParser.parse(responseString);
         int errorCode = replaceOlcResponse.get("errorCode").getAsInt();
-        return errorCode;*/
-       return 0;
+        return errorCode;
     }
 
 
@@ -456,7 +455,7 @@ public abstract class AbstractProcessor {
      */
     public void replaceOLC(String controllerStrIdValue, String idOnController, String macAddress)
             throws ReplaceOLCFailedException {
-        try {
+       try {
             // String newNetworkId = slvSyncDataEntity.getMacAddress();
             String newNetworkId = macAddress;
 
