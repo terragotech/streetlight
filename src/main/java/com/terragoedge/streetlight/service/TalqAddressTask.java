@@ -101,11 +101,12 @@ public class TalqAddressTask extends AbstractService implements Runnable {
        */
         jsonObject.addProperty("createdDateTime", System.currentTimeMillis());
         jsonObject.addProperty("noteGuid", UUID.randomUUID().toString());
+        jsonObject.addProperty("createdBy","slvinterface");
         jsonObject.remove("dictionary");
         if (loggingModel != null) {
             if (loggingModel.getLayerType().equals("No data ever received")) {
                 setGroupValue(dictionaryList,talqAddressGuid, jsonObject);
-            } else if (loggingModel.getLayerType().equals("complete")) {
+            } else if (loggingModel.getLayerType().equals("Complete")) {
                 setGroupValue(dictionaryList,completeLayerGuid, jsonObject);
             }
         }
@@ -114,16 +115,20 @@ public class TalqAddressTask extends AbstractService implements Runnable {
     }
 
     public void setGroupValue(List<Dictionary> dictionaryList, String value, JsonObject notesJson) {
-        for (Dictionary dictionary : dictionaryList) {
-            if (dictionary.getKey().equals("groupGuid") && !dictionary.getValue().equals(value)) {
-                dictionary.setValue(value);
-            }
+        if(dictionaryList == null){
+            dictionaryList = new ArrayList<>();
         }
         if (dictionaryList == null || dictionaryList.size() == 0) {
             Dictionary dictionary = new Dictionary();
             dictionary.setKey("groupGuid");
             dictionary.setValue(value);
             dictionaryList.add(dictionary);
+        }else{
+            for (Dictionary dictionary : dictionaryList) {
+                if (dictionary.getKey().equals("groupGuid") && !dictionary.getValue().equals(value)) {
+                    dictionary.setValue(value);
+                }
+            }
         }
         notesJson.add("dictionary", gson.toJsonTree(dictionaryList));
     }

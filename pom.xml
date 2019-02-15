@@ -97,7 +97,7 @@
                             <goal>single</goal>
                         </goals>
                         <configuration>
-                            <finalName>ameresco_street_testing</finalName>
+                            <finalName>no_data_ever_received</finalName>
 
                             <archive>
                                 <manifest>

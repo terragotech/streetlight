@@ -146,11 +146,12 @@ public class TalkAddressService extends AbstractService implements Runnable {
 
     public List<LoggingModel> getUnsyncedTalqAddress() {
         List<LoggingModel> loggingModelList = new ArrayList<>();
+        BufferedReader fis = null;
         try {
             String data = null;
             System.out.println("Started");
 
-            BufferedReader fis = new BufferedReader(new FileReader("./data/emptytalq.txt"));
+            fis = new BufferedReader(new FileReader("./data/emptytalq.txt"));
             while ((data = fis.readLine()) != null) {
                 LoggingModel loggingModel = new LoggingModel();
                 try {
@@ -171,6 +172,14 @@ public class TalkAddressService extends AbstractService implements Runnable {
             }
         } catch (Exception e) {
             e.printStackTrace();
+        }finally {
+            if(fis != null){
+                try{
+                    fis.close();
+                }catch (Exception e){
+                    e.printStackTrace();
+                }
+            }
         }
         return loggingModelList;
     }
