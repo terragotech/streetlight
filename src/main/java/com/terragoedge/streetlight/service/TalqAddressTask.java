@@ -10,6 +10,7 @@ import com.terragoedge.streetlight.exception.NotesNotFoundException;
 import com.terragoedge.streetlight.logging.LoggingModel;
 import org.apache.log4j.Logger;
 import org.springframework.http.ResponseEntity;
+import com.terragoedge.streetlight.json.model.Dictionary;
 
 import java.lang.reflect.Type;
 import java.util.*;
@@ -57,11 +58,11 @@ public class TalqAddressTask extends AbstractService implements Runnable {
                 String locationDesc = edgeNote.getLocationDescription();
                 System.out.println("locationDescription is : " + locationDesc);
                 if (locationDesc != null && !locationDesc.contains(locationDescKeyword)) {
-                    logger.info("Current Location Description :"+locationDesc);
+                    logger.info("Current Location Description :" + locationDesc);
                     String oldNoteGuid = edgeNote.getNoteGuid();
                     String notebookGuid = edgeNote.getEdgeNotebook().getNotebookGuid();
                     JsonObject jsonObject = processEdgeForms(gson.toJson(edgeNote));
-                    boolean isProcess = isProcessNoteLayer(jsonObject, emptyTalqAddressGuid,completeLayerGuid,loggingModel);
+                    boolean isProcess = isProcessNoteLayer(edgeNote, jsonObject, emptyTalqAddressGuid, completeLayerGuid, loggingModel);
                     if (isProcess) {
                         logger.info("-------------------request json--------------- ");
                         logger.info(jsonObject.toString());
@@ -73,8 +74,8 @@ public class TalqAddressTask extends AbstractService implements Runnable {
                         streetlightDao.insertTalqSync(loggingModel);
                         logger.info("edgenote update to server: " + responseEntity.getBody());
                     }
-                }else{
-                    logger.info("There is no valid location description, its not processed:"+locationDesc);
+                } else {
+                    logger.info("There is no valid location description, its not processed:" + locationDesc);
                 }
             }
         } catch (Exception e) {
@@ -84,7 +85,8 @@ public class TalqAddressTask extends AbstractService implements Runnable {
 
     }
 
-    public boolean isProcessNoteLayer(JsonObject jsonObject, String talqAddressGuid,String completeLayerGuid,LoggingModel loggingModel) {
+    public boolean isProcessNoteLayer(EdgeNote edgeNote, JsonObject jsonObject, String talqAddressGuid, String completeLayerGuid, LoggingModel loggingModel) {
+        List<Dictionary> dictionaryList = edgeNote.getDictionary();
         JsonArray jsonDictionary = jsonObject.get("dictionary").getAsJsonArray();
         /*if (jsonDictionary.size() > 0) {
             for (JsonElement jsonElement : jsonDictionary) {
@@ -100,24 +102,30 @@ public class TalqAddressTask extends AbstractService implements Runnable {
         jsonObject.addProperty("createdDateTime", System.currentTimeMillis());
         jsonObject.addProperty("noteGuid", UUID.randomUUID().toString());
         jsonObject.remove("dictionary");
-        if(loggingModel!=null){
-            if(loggingModel.getLayerType().equals("No data ever received")){
-                setGroupValue(talqAddressGuid,jsonObject);
-            }else if(loggingModel.getLayerType().equals("complete")){
-                setGroupValue(completeLayerGuid,jsonObject);
+        if (loggingModel != null) {
+            if (loggingModel.getLayerType().equals("No data ever received")) {
+                setGroupValue(dictionaryList,talqAddressGuid, jsonObject);
+            } else if (loggingModel.getLayerType().equals("complete")) {
+                setGroupValue(dictionaryList,completeLayerGuid, jsonObject);
             }
         }
 
         return true;
     }
 
-    public void setGroupValue(String value,JsonObject notesJson) {
-        JsonObject jsonObject = new JsonObject();
-        jsonObject.addProperty("key", "groupGuid");
-        jsonObject.addProperty("value", value);
-        JsonArray jsonArray = new JsonArray();
-        jsonArray.add(jsonObject);
-        notesJson.add("dictionary", jsonArray);
+    public void setGroupValue(List<Dictionary> dictionaryList, String value, JsonObject notesJson) {
+        for (Dictionary dictionary : dictionaryList) {
+            if (dictionary.getKey().equals("groupGuid") && !dictionary.getValue().equals(value)) {
+                dictionary.setValue(value);
+            }
+        }
+        if (dictionaryList == null || dictionaryList.size() == 0) {
+            Dictionary dictionary = new Dictionary();
+            dictionary.setKey("groupGuid");
+            dictionary.setValue(value);
+            dictionaryList.add(dictionary);
+        }
+        notesJson.add("dictionary", gson.toJsonTree(dictionaryList));
     }
 
     public long getYesterdayDate() {
