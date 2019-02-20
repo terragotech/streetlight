@@ -322,6 +322,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
             try {
                 checkFixtureQrScan(fixerQrScanValue, edgeNote, loggingModel);
             } catch (InValidBarCodeException e) {
+                loggingModel.setFixtureQRSame(true);
                 // No need to process,bcs its invalid.
                 if (loggingModel.isMacAddressUsed()) {
                     throw new AlreadyUsedException(e.getMessage());
@@ -385,7 +386,12 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
 
             logger.info("Fixture QR Scan Validation End.");
         } catch (InValidBarCodeException e) {
+            loggingModel.setFixtureQRSame(true);
             throw new InValidBarCodeException(e.getMessage());
+        }catch (Exception e){
+            loggingModel.setFixtureQRSame(true);
+            throw new InValidBarCodeException(e.getMessage());
+
         }
 
     }
