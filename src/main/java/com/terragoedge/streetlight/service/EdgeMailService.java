@@ -206,6 +206,7 @@ public class EdgeMailService {
 				multipart.addBodyPart(messageBodyPart);
 			}
 			
+			/*
 			if(quickNoteFile != null){
 				messageBodyPart = new MimeBodyPart();
 				source = new FileDataSource("./report/" + quickNoteFile);
@@ -213,7 +214,7 @@ public class EdgeMailService {
 				messageBodyPart.setDataHandler(new DataHandler(source));
 				messageBodyPart.setFileName(quickNoteFile);
 				multipart.addBodyPart(messageBodyPart);
-			}
+			}*/
 
 			/*if(inspectionNoteFile != null){
 				messageBodyPart = new MimeBodyPart();
