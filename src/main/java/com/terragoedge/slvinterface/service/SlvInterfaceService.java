@@ -3,9 +3,7 @@ package com.terragoedge.slvinterface.service;
 import com.google.gson.JsonParser;
 import com.google.gson.reflect.TypeToken;
 import com.terragoedge.slvinterface.dao.tables.SlvDevice;
-import com.terragoedge.slvinterface.dao.tables.SlvSyncDetails;
 import com.terragoedge.slvinterface.enumeration.EdgeComponentType;
-import com.terragoedge.slvinterface.enumeration.SLVProcess;
 import com.terragoedge.slvinterface.enumeration.Status;
 import com.terragoedge.slvinterface.exception.*;
 import com.terragoedge.slvinterface.model.*;
@@ -21,7 +19,7 @@ import java.util.*;
 
 import static com.terragoedge.slvinterface.utils.Utils.dateFormat;
 
-public abstract class SlvInterfaceService extends AbstractSlvService {
+public class SlvInterfaceService extends AbstractSlvService {
     Properties properties = null;
     final Logger logger = Logger.getLogger(SlvInterfaceService.class);
 
@@ -51,7 +49,8 @@ public abstract class SlvInterfaceService extends AbstractSlvService {
             return;
         }
         // Already Processed NoteGuids
-        List<String> noteGuids = slvInterfaceDAO.getNoteGuids();
+        List<String> noteGuids =connectionDAO.getProcessedItems();
+      //  List<String> noteGuids = slvInterfaceDAO.getNoteGuids();
         if (noteGuids == null) {
             logger.error("Error while getting already process note list.");
             return;
@@ -87,7 +86,6 @@ public abstract class SlvInterfaceService extends AbstractSlvService {
             }
         }
         logger.info("Process End :");
-
     }
 
     private void processEdgeNote(EdgeNote edgeNote, List<String> noteGuids, String formTemplateGuid, boolean isResync) {
@@ -113,7 +111,7 @@ public abstract class SlvInterfaceService extends AbstractSlvService {
                         FormData formData = formDataMaps.get(formTemplateGuid);
                         List<EdgeFormData> edgeFormDataList = formData.getFormDef();
                         JPSWorkflowModel jpsWorkflowModel = processWorkFlowForm(formDatasList);
-                        processSingleForm(jpsWorkflowModel,edgeFormDataList, edgeNote, paramsList, configurationJsonList, geozoneId, controllerStrid, isResync);
+                        processSingleForm(jpsWorkflowModel,edgeFormDataList,edgeNote, paramsList, configurationJsonList, geozoneId, controllerStrid, isResync);
                     } else {
                         System.out.println("Wrong formtemplate");
                         logger.info("Wrong formtemplates Present");

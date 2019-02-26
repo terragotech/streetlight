@@ -8,7 +8,7 @@ public class SlvInterfaceApp {
 
       while (true) {
             try {
-                SlvInterfaceService slvInterfaceService = new SlvInterfaceServiceImpl();
+                SlvInterfaceService slvInterfaceService = new SlvInterfaceService();
                 while (true) {
                     slvInterfaceService.start();
                     Thread.sleep(60000);

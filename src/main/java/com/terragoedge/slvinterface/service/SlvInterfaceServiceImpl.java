@@ -1,6 +1,5 @@
 package com.terragoedge.slvinterface.service;
 
-import com.terragoedge.slvinterface.dao.tables.SlvSyncDetails;
 import com.terragoedge.slvinterface.enumeration.EdgeComponentType;
 import com.terragoedge.slvinterface.exception.DeviceUpdationFailedException;
 import com.terragoedge.slvinterface.exception.InValidBarCodeException;

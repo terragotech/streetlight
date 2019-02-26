@@ -403,5 +403,4 @@ public abstract class AbstractSlvService extends EdgeService {
         }
     }
 
-    public abstract void processSetDevice(List<EdgeFormData> edgeFormDataList, ConfigurationJson configurationJson, EdgeNote edgeNote, List<Object> paramsList, SlvSyncDetails slvSyncDetails, String controllerStrIdValue) throws NoValueException, DeviceUpdationFailedException;
 }

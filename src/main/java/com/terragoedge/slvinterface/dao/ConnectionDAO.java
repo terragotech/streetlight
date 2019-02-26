@@ -125,9 +125,20 @@ public enum ConnectionDAO {
         }
     }
 
-    public List<SlvSyncDetail> getProcessedItems(){
+    public List<String> getProcessedItems(){
         try{
-            return slvSyncDetailsDao.queryBuilder().selectColumns("noteguid").query();
+            try {
+                List<String> noteGuids = slvSyncDetailsDao.queryRaw("select noteguid from slvsyncdetails;", new RawRowMapper<String>() {
+                    @Override
+                    public String mapRow(String[] columnNames, String[] resultColumns) throws SQLException {
+                        return resultColumns[0];
+                    }
+                }).getResults();
+                return noteGuids;
+            }catch (Exception e){
+                logger.error("Error in getNoteGuids",e);
+            }
+
         }catch (Exception e){
             e.printStackTrace();
         }
