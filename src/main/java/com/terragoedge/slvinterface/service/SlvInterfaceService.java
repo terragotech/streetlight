@@ -1,11 +1,8 @@
 package com.terragoedge.slvinterface.service;
 
-import com.google.gson.Gson;
 import com.google.gson.JsonParser;
 import com.google.gson.reflect.TypeToken;
-import com.terragoedge.slvinterface.dao.ConnectionDAO;
 import com.terragoedge.slvinterface.dao.tables.SlvDevice;
-import com.terragoedge.slvinterface.dao.SLVInterfaceDAO;
 import com.terragoedge.slvinterface.dao.tables.SlvSyncDetails;
 import com.terragoedge.slvinterface.enumeration.EdgeComponentType;
 import com.terragoedge.slvinterface.enumeration.SLVProcess;
@@ -14,19 +11,14 @@ import com.terragoedge.slvinterface.exception.*;
 import com.terragoedge.slvinterface.json.slvInterface.Action;
 import com.terragoedge.slvinterface.json.slvInterface.ConfigurationJson;
 import com.terragoedge.slvinterface.json.slvInterface.Id;
-import com.terragoedge.slvinterface.model.CanadaFormModel;
-import com.terragoedge.slvinterface.model.EdgeFormData;
-import com.terragoedge.slvinterface.model.EdgeNote;
-import com.terragoedge.slvinterface.model.FormData;
+import com.terragoedge.slvinterface.model.*;
 import com.terragoedge.slvinterface.utils.PropertiesReader;
 import com.terragoedge.slvinterface.utils.ResourceDetails;
 import org.apache.log4j.Logger;
 import org.springframework.http.ResponseEntity;
 
 import java.io.BufferedReader;
-import java.io.FileNotFoundException;
 import java.io.FileReader;
-import java.io.IOException;
 import java.lang.reflect.Type;
 import java.util.*;
 
@@ -68,15 +60,6 @@ public abstract class SlvInterfaceService extends AbstractSlvService {
             logger.error("Unable to load Configuration file.", e);
             return;
         }
-
-        // Load Devices from SLV
-        /*try {
-            loadDevices();
-        } catch (Exception e) {
-            logger.error("Unable to get device from SLV.", e);
-            return;
-        }*/
-
         // Get Edge Server Access Token
         String accessToken = getEdgeToken();
         System.out.println("AccessToken is :" + accessToken);
@@ -169,7 +152,7 @@ public abstract class SlvInterfaceService extends AbstractSlvService {
                     if (isFormTemplatePresent) {
                         FormData formData = formDataMaps.get(formTemplateGuid);
                         List<EdgeFormData> edgeFormDataList = formData.getFormDef();
-                        CanadaFormModel canadaFormModel = processDuplicateForm(formDatasList);
+                        CanadaFormModel canadaFormModel = processWorkFlowForm(formDatasList);
                         if (canadaFormModel != null) {
                             logger.info("-----------------processedformTemplate---------");
                             updateFormTemplateValues(edgeFormDataList, canadaFormModel);
@@ -248,11 +231,6 @@ public abstract class SlvInterfaceService extends AbstractSlvService {
                             processReplaceDevice(edgeFormDataList, configurationJson, edgeNote, paramsList, slvSyncDetail, controllerStrIdValue, geozoneId);
                             slvSyncDetail.setStatus("Success");
                             break;
-                        case REMOVE:
-                            System.out.println("REMOVE");
-                            replaceOLC(controllerStrIdValue, edgeNote.getTitle(), "");
-                            slvSyncDetail.setStatus("Success");
-                            break;
                     }
                 } else {
                     System.out.println("Wrong action value");
@@ -318,9 +296,116 @@ public abstract class SlvInterfaceService extends AbstractSlvService {
         connectionDAO.saveSlvDevices(slvDevice);
     }
 
-    public CanadaFormModel processDuplicateForm(List<FormData> formDataList) {
-        return null;
-    }
+    public JPSWorkflowModel processWorkFlowForm(List<FormData> formDataList) {
+        JPSWorkflowModel jpsWorkflowModel = new JPSWorkflowModel();
+            for (FormData formData : formDataList) {
+                List<EdgeFormData> edgeFormDataList = formData.getFormDef();
+                for (EdgeFormData edgeFormData : edgeFormDataList) {
+                    if (edgeFormData != null) {
+                        switch (edgeFormData.getLabel()) {
+                            case "feedername":
+                                if (nullCheck(edgeFormData.getValue()))
+                                    jpsWorkflowModel.setStreetdescription(edgeFormData.getValue());
+                                break;
+                            case "Street Name":
+                                if (nullCheck(edgeFormData.getValue()))
+                                    jpsWorkflowModel.setAddress1(edgeFormData.getValue());
+                                break;
+                            case "PARISH":
+                                if (nullCheck(edgeFormData.getValue()))
+                                    jpsWorkflowModel.setCity(edgeFormData.getValue());
+                                break;
+                            case "New Pole Number":
+                                if (nullCheck(edgeFormData.getValue()))
+                                    jpsWorkflowModel.setIdOnController(edgeFormData.getValue());
+                                break;
+                            case "Lum_Ht":
+                                if (nullCheck(edgeFormData.getValue()))
+                                    canadaFormModel.setLum_Ht(edgeFormData.getValue());
+                                break;
+                            case "Pole_Colour":
+                                if (nullCheck(edgeFormData.getValue()))
+                                    canadaFormModel.setPole_Colour(edgeFormData.getValue());
+                                break;
+                            case "Luminaire_Per_Pole":
+                                if (nullCheck(edgeFormData.getValue()))
+                                    canadaFormModel.setLuminaire_Per_Pole(edgeFormData.getValue());
+                                break;
+                            case "SELC QR Code":
+                                if (nullCheck(edgeFormData.getValue()))
+                                    canadaFormModel.setMacAddress(edgeFormData.getValue());
+                                break;
+                            case "Luminaire Scan":
+                                if (nullCheck(edgeFormData.getValue()))
+                                    if (edgeFormData.getValue() != null && edgeFormData.getValue().startsWith("00135"))
+                                        canadaFormModel.setMacAddress(edgeFormData.getValue());
+                                break;
+                            case "Pole Tag Present":
+                                if (nullCheck(edgeFormData.getValue()))
+                                    canadaFormModel.setPole_Tag_Present(edgeFormData.getValue());
+                                break;
+                            case "Utility Pole":
+                                if (nullCheck(edgeFormData.getValue()))
+                                    canadaFormModel.setUtility_Pole(edgeFormData.getValue());
+                                break;
+                            case "Arm Type":
+                                if (nullCheck(edgeFormData.getValue()))
+                                    canadaFormModel.setArmType(edgeFormData.getValue());
+                                break;
+                            case "Vegetation Obstruction":
+                                if (nullCheck(edgeFormData.getValue()))
+                                    canadaFormModel.setVegetation_Obstruction(edgeFormData.getValue());
+                                break;
+                            case "New Luminare Code":
+                                if (nullCheck(edgeFormData.getValue()))
+                                    canadaFormModel.setNew_Luminare_Code(edgeFormData.getValue());
+                                break;
+                            case "Watt":
+                                if (nullCheck(edgeFormData.getValue()))
+                                    canadaFormModel.setWatt(edgeFormData.getValue());
+                                break;
+                            case "Pole Length (m)":
+                                if (nullCheck(edgeFormData.getValue()))
+                                    canadaFormModel.setPole_Length(edgeFormData.getValue());
+                                break;
+                            case "Pole Condition":
+                                if (nullCheck(edgeFormData.getValue()))
+                                    canadaFormModel.setPole_Condition(edgeFormData.getValue());
+                                break;
+                            case "Pole Manufacturer":
+                                if (nullCheck(edgeFormData.getValue()))
+                                    canadaFormModel.setPole_manufacturer(edgeFormData.getValue());
+                                break;
+                            case "Fuse":
+                                if (nullCheck(edgeFormData.getValue()))
+                                    canadaFormModel.setFuse(edgeFormData.getValue());
+                                break;
+                            case "Block":
+                                if (nullCheck(edgeFormData.getValue()))
+                                    canadaFormModel.setBlock(edgeFormData.getValue());
+                                break;
+                            case "Facility name":
+                                if (nullCheck(edgeFormData.getValue()))
+                                    canadaFormModel.setStreet_name(edgeFormData.getValue());
+                                break;
+                            case "Geozone ID":
+                                if (nullCheck(edgeFormData.getValue()))
+                                    canadaFormModel.setGeozoneId(edgeFormData.getValue());
+                                break;
+                            case "Attributes":
+                                if (nullCheck(edgeFormData.getValue()))
+                                    canadaFormModel.setAttribute(edgeFormData.getValue());
+                                break;
+                            case "Action":
+                                if (nullCheck(edgeFormData.getValue()))
+                                    canadaFormModel.setAction(edgeFormData.getValue());
+                                break;
+                        }
+                    }
+                }
+            }
+            return canadaFormModel;
+        }
 
     public void updateFormTemplateValues(List<EdgeFormData> edgeFormDataList, CanadaFormModel canadaFormModel) {
 
@@ -563,6 +648,11 @@ public abstract class SlvInterfaceService extends AbstractSlvService {
                 processEdgeNote(edgenote, noteGuids, formTemplateGuid, geozoneId, controllerStrIdValue,isResync);
             }
         }
+    }
+
+
+    private boolean nullCheck(String data) {
+        return (data != null && data.length() > 0 && !data.contains("null")) ? true : false;
     }
 
 
