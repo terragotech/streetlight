@@ -100,6 +100,14 @@ public enum ConnectionDAO {
         }
     }
 
+    public SlvSyncDetail getSlvSyncDetail(String poleNumber){
+        try {
+            return slvSyncDetailsDao.queryBuilder().where().eq("pole_number",poleNumber).queryForFirst();
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+        return null;
+    }
     public List<DuplicateMacAddress> getDuplicateEntities(){
         try {
             return duplicateMacaddressDao.queryForAll();
@@ -151,6 +159,14 @@ public enum ConnectionDAO {
         }catch (Exception e){
             e.printStackTrace();
         }
+    }
+    public SlvDevice getSlvDevice(String poleNumber){
+        try {
+            return slvDeviceDao.queryBuilder().where().eq("pole_number",poleNumber).queryForFirst();
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+        return null;
     }
     public void updateSlvDevice(SlvDevice slvDevice){
         try {

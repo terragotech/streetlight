@@ -294,4 +294,8 @@ public class JPSWorkflowModel {
     public void setGeozoneId(String geozoneId) {
         this.geozoneId = geozoneId;
     }
+
+    public int getLowvoltagethreshold() {
+        return lowvoltagethreshold;
+    }
 }

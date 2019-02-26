@@ -4,15 +4,13 @@ import com.google.gson.*;
 import com.terragoedge.slvinterface.dao.ConnectionDAO;
 import com.terragoedge.slvinterface.dao.SLVInterfaceDAO;
 import com.terragoedge.slvinterface.dao.tables.SlvDevice;
+import com.terragoedge.slvinterface.dao.tables.SlvSyncDetail;
 import com.terragoedge.slvinterface.dao.tables.SlvSyncDetails;
 import com.terragoedge.slvinterface.enumeration.Status;
 import com.terragoedge.slvinterface.exception.*;
 import com.terragoedge.slvinterface.json.slvInterface.ConfigurationJson;
 import com.terragoedge.slvinterface.json.slvInterface.Id;
-import com.terragoedge.slvinterface.model.DeviceMacAddress;
-import com.terragoedge.slvinterface.model.EdgeFormData;
-import com.terragoedge.slvinterface.model.EdgeNote;
-import com.terragoedge.slvinterface.model.Value;
+import com.terragoedge.slvinterface.model.*;
 import com.terragoedge.slvinterface.utils.PropertiesReader;
 import com.terragoedge.slvinterface.utils.Utils;
 import com.vividsolutions.jts.geom.Geometry;
@@ -90,7 +88,7 @@ public abstract class AbstractSlvService extends EdgeService {
 
 
     public ResponseEntity<String> createDevice(EdgeNote edgenote,
-                                               String geoZoneId) {
+                                               JPSWorkflowModel jpsWorkflowModel) {
 
         Feature feature = (Feature) GeoJSONFactory.create(edgenote.getGeometry());
 
@@ -103,15 +101,15 @@ public abstract class AbstractSlvService extends EdgeService {
         String serveletApiUrl = properties.getProperty("streetlight.slv.url.device.create");
         String url = mainUrl + serveletApiUrl;
         String methodName = properties.getProperty("streetlight.slv.device.create.methodName");
-        String categoryStrId = properties.getProperty("streetlight.categorystr.id");
-        String controllerStrId = properties.getProperty("streetlight.controller.str.id");
+        String categoryStrId = jpsWorkflowModel.getCategoryStrId();
+        String controllerStrId = jpsWorkflowModel.getControllerStrId();
         String nodeTypeStrId = properties.getProperty("streetlight.slv.equipment.type");
         Map<String, String> streetLightDataParams = new HashMap<String, String>();
         streetLightDataParams.put("methodName", methodName);
         streetLightDataParams.put("categoryStrId", categoryStrId);
         streetLightDataParams.put("controllerStrId", controllerStrId);
         streetLightDataParams.put("idOnController", edgenote.getTitle());
-        streetLightDataParams.put("geoZoneId", geoZoneId);
+        streetLightDataParams.put("geoZoneId", jpsWorkflowModel.getGeozoneId());
         streetLightDataParams.put("lng", String.valueOf(geom.getCoordinate().x));
         streetLightDataParams.put("lat", String.valueOf(geom.getCoordinate().y));
         streetLightDataParams.put("nodeTypeStrId", nodeTypeStrId);
@@ -217,7 +215,7 @@ public abstract class AbstractSlvService extends EdgeService {
 
     }
 
-    public void setDeviceValues(List<Object> paramsList, SlvSyncDetails slvSyncDetails) throws DeviceUpdationFailedException {
+    public ResponseEntity<String> setDeviceValues(List<Object> paramsList) {
         String mainUrl = properties.getProperty("streetlight.slv.url.main");
         String updateDeviceValues = properties.getProperty("streetlight.slv.url.updatedevice");
         String url = mainUrl + updateDeviceValues;
@@ -228,14 +226,8 @@ public abstract class AbstractSlvService extends EdgeService {
         System.out.println("SetDevice Called");
         System.out.println("URL : " + url);
         ResponseEntity<String> response = slvRestService.getPostRequest(url, null);
-        String responseString = response.getBody();
-        JsonObject replaceOlcResponse = (JsonObject) jsonParser.parse(responseString);
-        int errorCode = replaceOlcResponse.get("errorCode").getAsInt();
-        if (errorCode != 0) {
-            slvSyncDetails.setErrorDetails(gson.toJson(replaceOlcResponse));
-            slvSyncDetails.setStatus(Status.Failure.toString());
-            throw new DeviceUpdationFailedException(gson.toJson(replaceOlcResponse));
-        }
+        return response;
+
     }
 
     public abstract void buildFixtureStreetLightData(String data, List<Object> paramsList, EdgeNote edgeNote)
