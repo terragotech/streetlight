@@ -394,5 +394,44 @@ public abstract class AbstractSlvService extends EdgeService {
             throw new DeviceLoadException("Unable to load device from SLV Interface");
         }
     }
+    public boolean checkDeviceExist(String idOnController) {
+        try {
+            logger.info("loadDeviceValues called.");
+            String mainUrl = properties.getProperty("streetlight.slv.url.main");
+            String deviceUrl = properties.getProperty("streetlight.slv.url.search.device");
+            String url = mainUrl + deviceUrl;
+            List<String> paramsList = new ArrayList<>();
+            paramsList.add("attributeName=idOnController");
+            paramsList.add("attributeValue=" + idOnController);
+            paramsList.add("recurse=true");
+            paramsList.add("returnedInfo=lightDevicesList");
+            paramsList.add("attributeOperator=eq-i");
+            paramsList.add("maxResults=1");
+            paramsList.add("ser=json");
+            String params = StringUtils.join(paramsList, "&");
+            url = url + "?" + params;
+            logger.info("Load Device url :" + url);
+            ResponseEntity<String> response = slvRestService.getRequest(url, true, null);
+            if (response.getStatusCodeValue() == 200) {
+                logger.info("LoadDevice Respose :"+response.getBody());
+                String responseString = response.getBody();
+                JsonObject jsonObject = new JsonParser().parse(responseString).getAsJsonObject();
+                logger.info("Device request json:" + gson.toJson(jsonObject));
+                JsonArray deviceArray = jsonObject.getAsJsonArray("value");
+                if(deviceArray==null || deviceArray.size()==0){
+                    return true;
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+    public int processDeviceJson(String deviceJson) {
+        JsonObject jsonObject = new JsonParser().parse(deviceJson).getAsJsonObject();
+        logger.info("Device request json:" + gson.toJson(jsonObject));
+        JsonArray arr = jsonObject.getAsJsonArray("value");
 
+        return 0;
+    }
 }

@@ -26,7 +26,6 @@ public class SlvInterfaceService extends AbstractSlvService {
     public SlvInterfaceService() {
         super();
         this.properties = PropertiesReader.getProperties();
-
     }
 
     public void start() {
