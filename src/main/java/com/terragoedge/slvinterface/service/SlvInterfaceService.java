@@ -8,9 +8,6 @@ import com.terragoedge.slvinterface.enumeration.EdgeComponentType;
 import com.terragoedge.slvinterface.enumeration.SLVProcess;
 import com.terragoedge.slvinterface.enumeration.Status;
 import com.terragoedge.slvinterface.exception.*;
-import com.terragoedge.slvinterface.json.slvInterface.Action;
-import com.terragoedge.slvinterface.json.slvInterface.ConfigurationJson;
-import com.terragoedge.slvinterface.json.slvInterface.Id;
 import com.terragoedge.slvinterface.model.*;
 import com.terragoedge.slvinterface.utils.PropertiesReader;
 import com.terragoedge.slvinterface.utils.ResourceDetails;
@@ -27,7 +24,6 @@ import static com.terragoedge.slvinterface.utils.Utils.dateFormat;
 public abstract class SlvInterfaceService extends AbstractSlvService {
     Properties properties = null;
     final Logger logger = Logger.getLogger(SlvInterfaceService.class);
-    private List<ConfigurationJson> configurationJsonList = null;
 
     public SlvInterfaceService() {
         super();
@@ -35,32 +31,8 @@ public abstract class SlvInterfaceService extends AbstractSlvService {
 
     }
 
-
-    public void test() {
-        String formTemplateGuid = properties.getProperty("streetlight.edge.formtemplateguid");
-        List<String> noteGuidsList = connectionDAO.getEdgeNoteGuid(formTemplateGuid);
-        List<String> noteGuids = slvInterfaceDAO.getNoteGuids();
-        for (String edgenoteGuid : noteGuidsList) {
-            if (!noteGuids.contains(edgenoteGuid)) {
-                SlvSyncDetails slvSyncDetails = new SlvSyncDetails();
-                slvSyncDetails.setStatus(Status.Failure.toString());
-                slvSyncDetails.setNoteGuid(edgenoteGuid);
-                connectionDAO.saveSlvSyncDetails(slvSyncDetails);
-            }
-        }
-    }
-
-
     public void start() {
         System.out.println("Start method called");
-        // Get Configuration JSON
-        try {
-            configurationJsonList = getConfigJson();
-        } catch (Exception e) {
-            logger.error("Unable to load Configuration file.", e);
-            return;
-        }
-        // Get Edge Server Access Token
         String accessToken = getEdgeToken();
         System.out.println("AccessToken is :" + accessToken);
         logger.info("AccessToken is :" + accessToken);
@@ -103,7 +75,6 @@ public abstract class SlvInterfaceService extends AbstractSlvService {
                     ResponseEntity<String> responseEntity = slvRestService.getRequest(restUrl, false, accessToken);
                     if (responseEntity.getStatusCode().is2xxSuccessful()) {
                         String notesData = responseEntity.getBody();
-
                         List<EdgeNote> edgeNoteList = new ArrayList<>();
                         EdgeNote edgeNote = gson.fromJson(notesData, EdgeNote.class);
                         edgeNoteList.add(edgeNote);
@@ -111,7 +82,7 @@ public abstract class SlvInterfaceService extends AbstractSlvService {
                         for (EdgeNote edgenote : edgeNoteList) {
                             logger.info("ProcessNoteTitle is :" + edgenote.getTitle());
                             String geozoneId = getGeoZoneValue(edgenote.getTitle());
-                            processEdgeNote(edgenote, noteGuids, formTemplateGuid, geozoneId, controllerStrIdValue,false);
+                            processEdgeNote(edgenote, noteGuids, formTemplateGuid, geozoneId, controllerStrIdValue, false);
                         }
                     }
                 }
@@ -124,7 +95,7 @@ public abstract class SlvInterfaceService extends AbstractSlvService {
 
     }
 
-    private void processEdgeNote(EdgeNote edgeNote, List<String> noteGuids, String formTemplateGuid, String geozoneId, String controllerStrid,boolean isResync) {
+    private void processEdgeNote(EdgeNote edgeNote, List<String> noteGuids, String formTemplateGuid, String geozoneId, String controllerStrid, boolean isResync) {
         System.out.println("processEdgeNote :" + edgeNote.getTitle());
         try {
             // Check whether this note is already processed or not.
@@ -152,17 +123,8 @@ public abstract class SlvInterfaceService extends AbstractSlvService {
                     if (isFormTemplatePresent) {
                         FormData formData = formDataMaps.get(formTemplateGuid);
                         List<EdgeFormData> edgeFormDataList = formData.getFormDef();
-                        CanadaFormModel canadaFormModel = processWorkFlowForm(formDatasList);
-                        if (canadaFormModel != null) {
-                            logger.info("-----------------processedformTemplate---------");
-                            updateFormTemplateValues(edgeFormDataList, canadaFormModel);
-                            logger.info(gson.toJson(edgeFormDataList));
-                            logger.info("-----------------processedform end---------");
-                          //  processSingleForm(edgeFormDataList, edgeNote, slvSyncDetailsError, paramsList, configurationJsonList, geozoneId, controllerStrid);
-                        }
-                        System.out.println("Field Activity Present");
-
-                        processSingleForm(edgeFormDataList, edgeNote, slvSyncDetailsError, paramsList, configurationJsonList, geozoneId, controllerStrid,isResync);
+                        JPSWorkflowModel jpsWorkflowModel = processWorkFlowForm(formDatasList);
+                        processSingleForm(edgeFormDataList, edgeNote, slvSyncDetailsError, paramsList, configurationJsonList, geozoneId, controllerStrid, isResync);
                     } else {
                         System.out.println("wrong formtemplate");
                         slvSyncDetailsError.setErrorDetails("Form Template [" + formTemplateGuid + "] is not present in this note.");
@@ -189,58 +151,17 @@ public abstract class SlvInterfaceService extends AbstractSlvService {
      * @param paramsList
      * @param configurationJsonList
      */
-    public void processSingleForm(List<EdgeFormData> edgeFormDataList, EdgeNote edgeNote, SlvSyncDetails slvSyncDetail, List<Object> paramsList, List<ConfigurationJson> configurationJsonList, String geozoneId, String controllerStrIdValue,boolean isReSync) {
+    public void processSingleForm(List<EdgeFormData> edgeFormDataList, EdgeNote edgeNote, SlvSyncDetails slvSyncDetail, List<Object> paramsList, List<ConfigurationJson> configurationJsonList, String geozoneId, String controllerStrIdValue, boolean isReSync) {
         try {
-            for (ConfigurationJson configurationJson : configurationJsonList) {
-                List<Action> actionList = configurationJson.getAction();
-
-                if (checkActionType(edgeFormDataList, actionList)) {
-                    switch (configurationJson.getType()) {
-                        case NEW_DEVICE:
-                            logger.info("User New Device option is seleted.");
-                            String macAddress = validateMACAddress(configurationJson, edgeFormDataList, edgeNote, paramsList);
-                            slvSyncDetail.setMacAddress(macAddress);
-                            slvSyncDetail.setSelectedAction(SLVProcess.NEW_DEVICE.toString());
-                            boolean isDeviceExist = isAvailableDevice(edgeNote.getTitle());
-                            if (!isDeviceExist) {
-                                //Added only for parking templates
-                                logger.info(edgeNote.getTitle() + " is going to Create.");
-                                System.out.println("Device going to create");
-                                createDevice(edgeNote, slvSyncDetail, geozoneId, edgeFormDataList);
-                                System.out.println("Device created");
-                            }
-                            if(isReSync){
-                                replaceOLC(controllerStrIdValue, edgeNote.getTitle(), "");
-                            }
-                            processSetDevice(edgeFormDataList, configurationJson, edgeNote, paramsList, slvSyncDetail, controllerStrIdValue);
-                            replaceOLC(controllerStrIdValue, edgeNote.getTitle(), slvSyncDetail.getMacAddress());
-                            slvSyncDetail.setStatus("Success");
-                            System.out.println("new device end");
-                            break;
-                        case UPDATE_DEVICE:
-                            System.out.println("UPDATE_DEVICE called");
-                            logger.info(edgeNote.getTitle() + " is going to Replace.");
-                            slvSyncDetail.setSelectedAction(SLVProcess.UPDATE_DEVICE.toString());
-                            processSetDevice(edgeFormDataList, configurationJson, edgeNote, paramsList, slvSyncDetail, controllerStrIdValue);
-                            slvSyncDetail.setStatus("Success");
-                            break;
-                        case REPLACE_DEVICE:
-                            System.out.println("REPLACE_DEVICE");
-                            logger.info(edgeNote.getTitle() + " is going to Remove.");
-                            slvSyncDetail.setSelectedAction(SLVProcess.REPLACE_DEVICE.toString());
-                            processReplaceDevice(edgeFormDataList, configurationJson, edgeNote, paramsList, slvSyncDetail, controllerStrIdValue, geozoneId);
-                            slvSyncDetail.setStatus("Success");
-                            break;
-                    }
-                } else {
-                    System.out.println("Wrong action value");
-                }
-            }
-
+            System.out.println("REPLACE_DEVICE");
+            logger.info(edgeNote.getTitle() + " is going to Remove.");
+            slvSyncDetail.setSelectedAction(REPLACE_DEVICE.toString());
+            processReplaceDevice(edgeFormDataList, null, edgeNote, paramsList, slvSyncDetail, controllerStrIdValue, geozoneId);
+            slvSyncDetail.setStatus("Success");
         } catch (ReplaceOLCFailedException | NoValueException | QRCodeAlreadyUsedException e) {
             slvSyncDetail.setErrorDetails(e.getMessage());
             slvSyncDetail.setStatus(Status.Failure.toString());
-        } catch (DeviceUpdationFailedException | DeviceCreationFailedException  e) {
+        } catch (DeviceUpdationFailedException | DeviceCreationFailedException e) {
             slvSyncDetail.setStatus(Status.Failure.toString());
         } catch (MacAddressProcessedException macException) {
             slvSyncDetail.setErrorDetails(macException.getMessage());
@@ -255,8 +176,8 @@ public abstract class SlvInterfaceService extends AbstractSlvService {
     }
 
     public boolean isAvailableDevice(String idOnController) {
-       // SlvDevice slvDevice = connectionDAO.getSlvDevices(idOnController);
-       // return slvDevice != null;
+        // SlvDevice slvDevice = connectionDAO.getSlvDevices(idOnController);
+        // return slvDevice != null;
         return true;
     }
 
@@ -298,120 +219,90 @@ public abstract class SlvInterfaceService extends AbstractSlvService {
 
     public JPSWorkflowModel processWorkFlowForm(List<FormData> formDataList) {
         JPSWorkflowModel jpsWorkflowModel = new JPSWorkflowModel();
-            for (FormData formData : formDataList) {
-                List<EdgeFormData> edgeFormDataList = formData.getFormDef();
-                for (EdgeFormData edgeFormData : edgeFormDataList) {
-                    if (edgeFormData != null) {
-                        switch (edgeFormData.getLabel()) {
-                            case "feedername":
-                                if (nullCheck(edgeFormData.getValue()))
-                                    jpsWorkflowModel.setStreetdescription(edgeFormData.getValue());
-                                break;
-                            case "Street Name":
-                                if (nullCheck(edgeFormData.getValue()))
-                                    jpsWorkflowModel.setAddress1(edgeFormData.getValue());
-                                break;
-                            case "PARISH":
-                                if (nullCheck(edgeFormData.getValue()))
-                                    jpsWorkflowModel.setCity(edgeFormData.getValue());
-                                break;
-                            case "New Pole Number":
-                                if (nullCheck(edgeFormData.getValue()))
-                                    jpsWorkflowModel.setIdOnController(edgeFormData.getValue());
-                                break;
-                            case "Lum_Ht":
-                                if (nullCheck(edgeFormData.getValue()))
-                                    canadaFormModel.setLum_Ht(edgeFormData.getValue());
-                                break;
-                            case "Pole_Colour":
-                                if (nullCheck(edgeFormData.getValue()))
-                                    canadaFormModel.setPole_Colour(edgeFormData.getValue());
-                                break;
-                            case "Luminaire_Per_Pole":
-                                if (nullCheck(edgeFormData.getValue()))
-                                    canadaFormModel.setLuminaire_Per_Pole(edgeFormData.getValue());
-                                break;
-                            case "SELC QR Code":
-                                if (nullCheck(edgeFormData.getValue()))
-                                    canadaFormModel.setMacAddress(edgeFormData.getValue());
-                                break;
-                            case "Luminaire Scan":
-                                if (nullCheck(edgeFormData.getValue()))
-                                    if (edgeFormData.getValue() != null && edgeFormData.getValue().startsWith("00135"))
-                                        canadaFormModel.setMacAddress(edgeFormData.getValue());
-                                break;
-                            case "Pole Tag Present":
-                                if (nullCheck(edgeFormData.getValue()))
-                                    canadaFormModel.setPole_Tag_Present(edgeFormData.getValue());
-                                break;
-                            case "Utility Pole":
-                                if (nullCheck(edgeFormData.getValue()))
-                                    canadaFormModel.setUtility_Pole(edgeFormData.getValue());
-                                break;
-                            case "Arm Type":
-                                if (nullCheck(edgeFormData.getValue()))
-                                    canadaFormModel.setArmType(edgeFormData.getValue());
-                                break;
-                            case "Vegetation Obstruction":
-                                if (nullCheck(edgeFormData.getValue()))
-                                    canadaFormModel.setVegetation_Obstruction(edgeFormData.getValue());
-                                break;
-                            case "New Luminare Code":
-                                if (nullCheck(edgeFormData.getValue()))
-                                    canadaFormModel.setNew_Luminare_Code(edgeFormData.getValue());
-                                break;
-                            case "Watt":
-                                if (nullCheck(edgeFormData.getValue()))
-                                    canadaFormModel.setWatt(edgeFormData.getValue());
-                                break;
-                            case "Pole Length (m)":
-                                if (nullCheck(edgeFormData.getValue()))
-                                    canadaFormModel.setPole_Length(edgeFormData.getValue());
-                                break;
-                            case "Pole Condition":
-                                if (nullCheck(edgeFormData.getValue()))
-                                    canadaFormModel.setPole_Condition(edgeFormData.getValue());
-                                break;
-                            case "Pole Manufacturer":
-                                if (nullCheck(edgeFormData.getValue()))
-                                    canadaFormModel.setPole_manufacturer(edgeFormData.getValue());
-                                break;
-                            case "Fuse":
-                                if (nullCheck(edgeFormData.getValue()))
-                                    canadaFormModel.setFuse(edgeFormData.getValue());
-                                break;
-                            case "Block":
-                                if (nullCheck(edgeFormData.getValue()))
-                                    canadaFormModel.setBlock(edgeFormData.getValue());
-                                break;
-                            case "Facility name":
-                                if (nullCheck(edgeFormData.getValue()))
-                                    canadaFormModel.setStreet_name(edgeFormData.getValue());
-                                break;
-                            case "Geozone ID":
-                                if (nullCheck(edgeFormData.getValue()))
-                                    canadaFormModel.setGeozoneId(edgeFormData.getValue());
-                                break;
-                            case "Attributes":
-                                if (nullCheck(edgeFormData.getValue()))
-                                    canadaFormModel.setAttribute(edgeFormData.getValue());
-                                break;
-                            case "Action":
-                                if (nullCheck(edgeFormData.getValue()))
-                                    canadaFormModel.setAction(edgeFormData.getValue());
-                                break;
-                        }
+        for (FormData formData : formDataList) {
+            List<EdgeFormData> edgeFormDataList = formData.getFormDef();
+            for (EdgeFormData edgeFormData : edgeFormDataList) {
+                if (edgeFormData != null) {
+                    switch (edgeFormData.getLabel()) {
+                        case "feedername":
+                            if (nullCheck(edgeFormData.getValue()))
+                                jpsWorkflowModel.setStreetdescription(edgeFormData.getValue());
+                            break;
+                        case "Street Name":
+                            if (nullCheck(edgeFormData.getValue()))
+                                jpsWorkflowModel.setAddress1(edgeFormData.getValue());
+                            break;
+                        case "PARISH":
+                            if (nullCheck(edgeFormData.getValue()))
+                                jpsWorkflowModel.setCity(edgeFormData.getValue());
+                            break;
+                        case "New Pole Number":
+                            if (nullCheck(edgeFormData.getValue())) {
+                                jpsWorkflowModel.setIdOnController(edgeFormData.getValue());
+                                jpsWorkflowModel.setName(edgeFormData.getValue());
+                            }
+                            break;
+                        case "Retrofit Status":
+                            if (nullCheck(edgeFormData.getValue()))
+                                jpsWorkflowModel.setInstallStatus(edgeFormData.getValue());
+                            break;
+                        case "lamptype":
+                            if (nullCheck(edgeFormData.getValue()))
+                                jpsWorkflowModel.setLampType(edgeFormData.getValue());
+                            break;
+                        case "Old Pole Number":
+                            if (nullCheck(edgeFormData.getValue()))
+                                jpsWorkflowModel.setOldPoleNumber(edgeFormData.getValue());
+                            break;
+                        case "Pole Type":
+                            if (nullCheck(edgeFormData.getValue()))
+                                jpsWorkflowModel.setPole_type(edgeFormData.getValue());
+                            break;
+                        case "MAC Address":
+                            if (nullCheck(edgeFormData.getValue()))
+                                if (edgeFormData.getValue() != null && edgeFormData.getValue().startsWith("00135"))
+                                    jpsWorkflowModel.setMacAddress(edgeFormData.getValue());
+                            break;
+                        case "Observed Mast Arm Length":
+                            if (nullCheck(edgeFormData.getValue()))
+                                jpsWorkflowModel.setFixing_type(edgeFormData.getValue());
+                            break;
+                        case "Conversion Date":
+                            if (nullCheck(edgeFormData.getValue()))
+                                jpsWorkflowModel.setInstall_date(edgeFormData.getValue());
+                            break;
+                        case "Feed":
+                            if (nullCheck(edgeFormData.getValue()))
+                                jpsWorkflowModel.setNetwork_type(edgeFormData.getValue());
+                            break;
+                        case "Pole Shape":
+                            if (nullCheck(edgeFormData.getValue()))
+                                jpsWorkflowModel.setPole_shape(edgeFormData.getValue());
+                            break;
+                        case "Condition":
+                            if (nullCheck(edgeFormData.getValue()))
+                                jpsWorkflowModel.setPole_type(edgeFormData.getValue());
+                            break;
+                        case "facilityID":
+                            if (nullCheck(edgeFormData.getValue()))
+                                jpsWorkflowModel.setLocation_zipcode(edgeFormData.getValue());
+                            break;
+                        case "Mast Arm Length - Other":
+                            if (nullCheck(edgeFormData.getValue()))
+                                jpsWorkflowModel.setOtherFixtureType(edgeFormData.getValue());
+                            break;
                     }
                 }
             }
-            return canadaFormModel;
         }
+        return jpsWorkflowModel;
+    }
 
     public void updateFormTemplateValues(List<EdgeFormData> edgeFormDataList, CanadaFormModel canadaFormModel) {
 
     }
 
-    public void processReplaceDevice(List<EdgeFormData> edgeFormDatas, ConfigurationJson configurationJson, EdgeNote edgeNote, List<Object> paramsList, SlvSyncDetails slvSyncDetails, String controllerStrIdValue, String geozoneId) throws NoValueException, QRCodeAlreadyUsedException, ReplaceOLCFailedException, DeviceUpdationFailedException, MacAddressProcessedException, QRCodeNotMatchedException {
+    public void processReplaceDevice(List<EdgeFormData> edgeFormDatas, EdgeNote edgeNote, List<Object> paramsList, SlvSyncDetails slvSyncDetails, String controllerStrIdValue, String geozoneId) throws NoValueException, QRCodeAlreadyUsedException, ReplaceOLCFailedException, DeviceUpdationFailedException, MacAddressProcessedException, QRCodeNotMatchedException {
         String macAddress = validateMACAddress(configurationJson, edgeFormDatas, edgeNote, paramsList);
         slvSyncDetails.setMacAddress(macAddress);
         System.out.println("newMac :" + macAddress);
@@ -494,7 +385,7 @@ public abstract class SlvInterfaceService extends AbstractSlvService {
         if (pos != -1) {
             EdgeFormData edgeFormData = edgeFormDatas.get(pos);
             String value = edgeFormData.getValue();
-            logger.info("edgeFormData value:"+value);
+            logger.info("edgeFormData value:" + value);
             if (value == null || value.trim().isEmpty()) {
                 return "";
                 //throw new NoValueException("Value is Empty or null." + value);
@@ -527,7 +418,7 @@ public abstract class SlvInterfaceService extends AbstractSlvService {
                 if (newNodeMacAddress == null || newNodeMacAddress.isEmpty()) {
                     System.out.println("process validation method interchange mac as fixture");
                     Id fixureID = getIDByType(idList, EdgeComponentType.FIXTURE.toString());
-                    if(fixureID != null){
+                    if (fixureID != null) {
                         String fixture = valueById(edgeFormDataList, fixureID.getId());
                         if (fixture != null && fixture.startsWith("00")) {
                             newNodeMacAddress = fixture;
@@ -642,10 +533,10 @@ public abstract class SlvInterfaceService extends AbstractSlvService {
             //  List<EdgeNote> edgeNoteList = gson.fromJson(notesData, listType);
             for (EdgeNote edgenote : edgeNoteList) {
                 logger.info("ProcessNoteTitle is :" + edgenote.getTitle());
-               // geozoneId = getGeoZoneValue(edgenote.getTitle());
-                geozoneId=null;
+                // geozoneId = getGeoZoneValue(edgenote.getTitle());
+                geozoneId = null;
                 System.out.print("geozoneId :" + geozoneId);
-                processEdgeNote(edgenote, noteGuids, formTemplateGuid, geozoneId, controllerStrIdValue,isResync);
+                processEdgeNote(edgenote, noteGuids, formTemplateGuid, geozoneId, controllerStrIdValue, isResync);
             }
         }
     }

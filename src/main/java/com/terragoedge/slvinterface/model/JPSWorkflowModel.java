@@ -18,16 +18,27 @@ public class JPSWorkflowModel {
     String locationtype;
     String type;
     String model;
+    String pole_type;
     String lowvoltagethreshold;
     String macAddress;
     String utillocationid;
     String fixing_type;
-    String date;
+    String install_date;
     String network_type;
     String pole_shape;
     String pole_status;
     String serialnumber;
     String location_zipcode;
+    String oldPoleNumber;
+    String otherFixtureType;
+
+    public String getOtherFixtureType() {
+        return otherFixtureType;
+    }
+
+    public void setOtherFixtureType(String otherFixtureType) {
+        this.otherFixtureType = otherFixtureType;
+    }
 
     public String getAddress1() {
         return address1;
@@ -189,12 +200,12 @@ public class JPSWorkflowModel {
         this.fixing_type = fixing_type;
     }
 
-    public String getDate() {
-        return date;
+    public String getInstall_date() {
+        return install_date;
     }
 
-    public void setDate(String date) {
-        this.date = date;
+    public void setInstall_date(String install_date) {
+        this.install_date = install_date;
     }
 
     public String getNetwork_type() {
@@ -243,5 +254,21 @@ public class JPSWorkflowModel {
 
     public void setCity(String city) {
         this.city = city;
+    }
+
+    public String getOldPoleNumber() {
+        return oldPoleNumber;
+    }
+
+    public void setOldPoleNumber(String oldPoleNumber) {
+        this.oldPoleNumber = oldPoleNumber;
+    }
+
+    public String getPole_type() {
+        return pole_type;
+    }
+
+    public void setPole_type(String pole_type) {
+        this.pole_type = pole_type;
     }
 }
