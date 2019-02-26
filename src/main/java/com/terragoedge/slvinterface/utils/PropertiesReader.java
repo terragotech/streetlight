@@ -19,7 +19,7 @@ public class PropertiesReader {
 
 
             // load the file handle for main.properties
-            file = new FileInputStream(ResourceDetails.PROPS_PATH);
+            file = new FileInputStream("./resources/main.properties");
 
             // load all the properties from this file
             mainProperties.load(file);

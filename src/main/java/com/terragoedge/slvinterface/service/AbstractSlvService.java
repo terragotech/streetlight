@@ -2,21 +2,15 @@ package com.terragoedge.slvinterface.service;
 
 import com.google.gson.*;
 import com.terragoedge.slvinterface.dao.ConnectionDAO;
-import com.terragoedge.slvinterface.dao.SLVInterfaceDAO;
-import com.terragoedge.slvinterface.dao.tables.SlvDevice;
 import com.terragoedge.slvinterface.dao.tables.SlvSyncDetail;
-import com.terragoedge.slvinterface.dao.tables.SlvSyncDetails;
 import com.terragoedge.slvinterface.enumeration.Status;
 import com.terragoedge.slvinterface.exception.*;
-import com.terragoedge.slvinterface.json.slvInterface.ConfigurationJson;
-import com.terragoedge.slvinterface.json.slvInterface.Id;
 import com.terragoedge.slvinterface.model.*;
 import com.terragoedge.slvinterface.utils.PropertiesReader;
 import com.terragoedge.slvinterface.utils.Utils;
 import com.vividsolutions.jts.geom.Geometry;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
-import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.wololo.geojson.Feature;
 import org.wololo.geojson.GeoJSONFactory;
@@ -28,7 +22,6 @@ public abstract class AbstractSlvService extends EdgeService {
     private Properties properties = null;
     private JsonParser jsonParser = null;
     SlvRestService slvRestService = null;
-    SLVInterfaceDAO slvInterfaceDAO = null;
     Gson gson = null;
     private static Logger logger = Logger.getLogger(AbstractSlvService.class);
     ConnectionDAO connectionDAO;
@@ -38,7 +31,6 @@ public abstract class AbstractSlvService extends EdgeService {
         jsonParser = new JsonParser();
         properties = PropertiesReader.getProperties();
         slvRestService = new SlvRestService();
-        slvInterfaceDAO = new SLVInterfaceDAO();
         connectionDAO = ConnectionDAO.INSTANCE;
     }
 
@@ -117,17 +109,6 @@ public abstract class AbstractSlvService extends EdgeService {
         // modelFunctionId
         return slvRestService.getRequest(streetLightDataParams, url, true);
     }
-
-    public Id getIDByType(List<Id> idList, String type) {
-        Id id = new Id();
-        id.setType(type);
-        int pos = idList.indexOf(id);
-        if (pos != -1) {
-            return idList.get(pos);
-        }
-        return null;
-    }
-
 
     public String validateMACAddress(String existingNodeMacAddress, String idOnController, String geoZoneId)
             throws QRCodeNotMatchedException {
@@ -277,33 +258,6 @@ public abstract class AbstractSlvService extends EdgeService {
         //  addStreetLightData("DimmingGroupName", "Dimming Evaluation", paramsList);
     }
 
-    public void getTalqAddress() {
-        String slvBaseUrl = properties.getProperty("streetlight.slv.url.main");
-        String talqAddressApi = properties.getProperty("streetlight.slv.url.gettalqaddress");
-        ResponseEntity<String> responseEntity = slvRestService.getRequest(slvBaseUrl + talqAddressApi, true);
-        if (responseEntity.getStatusCode().is2xxSuccessful()) {
-            String response = responseEntity.getBody();
-
-            JsonObject jsonObject = (JsonObject) jsonParser.parse(response);
-            JsonArray deviceValuesAsArray = jsonObject.get("values").getAsJsonArray();
-            for (JsonElement jsonElement : deviceValuesAsArray) {
-                JsonArray slvDetails = jsonElement.getAsJsonArray();
-                if (slvDetails.size() == 2) {
-                    String idOnController = slvDetails.get(0).getAsString();
-                    String talqAddress = slvDetails.get(1).getAsString();
-                    SlvSyncDetails slvSyncDetails = connectionDAO.getSlvSyncDetailWithoutTalq(idOnController);
-                    if (slvSyncDetails != null) {
-                        slvSyncDetails.setTalcAddress(talqAddress);
-                        slvSyncDetails.setTalcAddressDateTime(new Date().getTime());
-                        connectionDAO.saveSlvSyncDetails(slvSyncDetails);
-                    }
-                }
-
-            }
-        }
-
-    }
-
     public void replaceOLC(String controllerStrIdValue, String idOnController, String macAddress,EdgeNote edgeNote,JPSWorkflowModel jpsWorkflowModel)
             throws ReplaceOLCFailedException {
         try {
@@ -362,45 +316,6 @@ public abstract class AbstractSlvService extends EdgeService {
 
     }
 
-
-    public void loadDevices() throws DeviceLoadException {
-        String mainUrl = properties.getProperty("streetlight.slv.url.main");
-        String devicesUrl = properties.getProperty("streetlight.slv.url.getgeozone.devices");
-        String url = mainUrl + devicesUrl;
-        List<Object> paramsList = new ArrayList<Object>();
-        paramsList.add("valueNames=idOnController");
-        paramsList.add("valueNames=MacAddress");
-        paramsList.add("ser=json");
-        String params = StringUtils.join(paramsList, "&");
-        url = url + "&" + params;
-        ResponseEntity<String> response = slvRestService.getPostRequest(url, null);
-        if (response.getStatusCode().is2xxSuccessful()) {
-            String geoZoneDeviceDetails = response.getBody();
-            JsonObject jsonObject = (JsonObject) jsonParser.parse(geoZoneDeviceDetails);
-            JsonArray deviceValuesAsArray = jsonObject.get("values").getAsJsonArray();
-            int totalSize = deviceValuesAsArray.size();
-            for (int i = 0; i < totalSize; i++) {
-                JsonArray deviceValues = deviceValuesAsArray.get(i).getAsJsonArray();
-                SlvDevice slvDevice = new SlvDevice();
-                slvDevice.setDeviceId(deviceValues.get(0).getAsString());
-                slvDevice.setDeviceName(slvDevice.getDeviceId());
-                if (!deviceValues.get(1).isJsonNull()) {
-                    slvDevice.setMacAddress(deviceValues.get(1).getAsString());
-                }
-
-                SlvDevice dbSlvDevice = connectionDAO.getSlvDevices(slvDevice.getDeviceId());
-                if (dbSlvDevice != null) {
-                    dbSlvDevice.setMacAddress(slvDevice.getMacAddress());
-                    connectionDAO.updateSlvDevice(slvDevice.getDeviceId(), slvDevice.getMacAddress());
-                } else {
-                    connectionDAO.saveSlvDevices(slvDevice);
-                }
-            }
-
-        } else {
-            throw new DeviceLoadException("Unable to load device from SLV Interface");
-        }
-    }
     public JsonArray checkDeviceExist(String idOnController) {
         JsonArray deviceArray = null;
         try {
