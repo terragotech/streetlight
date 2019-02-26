@@ -1,12 +1,10 @@
 package com.terragoedge.slvinterface.dao.tables;
 
-import com.j256.ormlite.field.DataType;
 import com.j256.ormlite.field.DatabaseField;
 import com.j256.ormlite.table.DatabaseTable;
-import com.terragoedge.slvinterface.enumeration.Status;
 
-@DatabaseTable(tableName = "slvdevice")
-public class SlvDevice {
+@DatabaseTable(tableName = "slv_duplicate_macaddress")
+public class DuplicateMacAddress {
     @DatabaseField(columnName = "id",generatedId = true)
     private int id;
     @DatabaseField(columnName = "title")
@@ -15,16 +13,12 @@ public class SlvDevice {
     private String noteguid;
     @DatabaseField(columnName = "pole_number")
     private String poleNumber;
-    @DatabaseField(columnName = "old_pole_number")
-    private String oldPoleNumber;
-    @DatabaseField(columnName = "created_date_time")
-    private long createdDateTime;
+    @DatabaseField(columnName = "existing_pole_number")
+    private String existingPoleNumber;
+    @DatabaseField(columnName = "macaddress")
+    private String macAddress;
     @DatabaseField(columnName = "processed_date_time")
     private long processedDateTime;
-    @DatabaseField(columnName = "status",dataType = DataType.ENUM_STRING)
-    private Status status;
-    @DatabaseField(columnName = "slv_reponse")
-    private String slvResponse;
 
     public int getId() {
         return id;
@@ -58,20 +52,20 @@ public class SlvDevice {
         this.poleNumber = poleNumber;
     }
 
-    public String getOldPoleNumber() {
-        return oldPoleNumber;
+    public String getExistingPoleNumber() {
+        return existingPoleNumber;
     }
 
-    public void setOldPoleNumber(String oldPoleNumber) {
-        this.oldPoleNumber = oldPoleNumber;
+    public void setExistingPoleNumber(String existingPoleNumber) {
+        this.existingPoleNumber = existingPoleNumber;
     }
 
-    public long getCreatedDateTime() {
-        return createdDateTime;
+    public String getMacAddress() {
+        return macAddress;
     }
 
-    public void setCreatedDateTime(long createdDateTime) {
-        this.createdDateTime = createdDateTime;
+    public void setMacAddress(String macAddress) {
+        this.macAddress = macAddress;
     }
 
     public long getProcessedDateTime() {
@@ -82,34 +76,16 @@ public class SlvDevice {
         this.processedDateTime = processedDateTime;
     }
 
-    public Status getStatus() {
-        return status;
-    }
-
-    public void setStatus(Status status) {
-        this.status = status;
-    }
-
-    public String getSlvResponse() {
-        return slvResponse;
-    }
-
-    public void setSlvResponse(String slvResponse) {
-        this.slvResponse = slvResponse;
-    }
-
     @Override
     public String toString() {
-        return "SlvDevice{" +
+        return "DuplicateMacAddress{" +
                 "id=" + id +
                 ", title='" + title + '\'' +
                 ", noteguid='" + noteguid + '\'' +
                 ", poleNumber='" + poleNumber + '\'' +
-                ", oldPoleNumber='" + oldPoleNumber + '\'' +
-                ", createdDateTime=" + createdDateTime +
+                ", existingPoleNumber='" + existingPoleNumber + '\'' +
+                ", macAddress='" + macAddress + '\'' +
                 ", processedDateTime=" + processedDateTime +
-                ", status='" + status + '\'' +
-                ", slvResponse='" + slvResponse + '\'' +
                 '}';
     }
 }
