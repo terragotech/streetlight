@@ -5,26 +5,28 @@ import com.j256.ormlite.field.DatabaseField;
 import com.j256.ormlite.table.DatabaseTable;
 import com.terragoedge.slvinterface.enumeration.Status;
 
-@DatabaseTable(tableName = "slvdevice")
-public class SlvDevice {
+@DatabaseTable(tableName = "slvsyncdetails")
+public class SlvSyncDetail {
     @DatabaseField(columnName = "id",generatedId = true)
     private int id;
+    @DatabaseField(columnName = "noteguid", index = true)
+    private String noteGuid;
     @DatabaseField(columnName = "title")
     private String title;
-    @DatabaseField(columnName = "noteguid")
-    private String noteguid;
     @DatabaseField(columnName = "pole_number")
     private String poleNumber;
-    @DatabaseField(columnName = "old_pole_number")
-    private String oldPoleNumber;
+    @DatabaseField(columnName = "device_details")
+    private String deviceDetails;
     @DatabaseField(columnName = "created_date_time")
     private long createdDateTime;
     @DatabaseField(columnName = "processed_date_time")
     private long processedDateTime;
     @DatabaseField(columnName = "status",dataType = DataType.ENUM_STRING)
     private Status status;
-    @DatabaseField(columnName = "slv_reponse")
-    private String slvResponse;
+    @DatabaseField(columnName = "slv_device_detail_reponse")
+    private String slvDeviceDetailsResponse;
+    @DatabaseField(columnName = "slv_replace_ylc_response")
+    private String slvReplaceYLCResponse;
 
     public int getId() {
         return id;
@@ -32,6 +34,14 @@ public class SlvDevice {
 
     public void setId(int id) {
         this.id = id;
+    }
+
+    public String getNoteGuid() {
+        return noteGuid;
+    }
+
+    public void setNoteGuid(String noteGuid) {
+        this.noteGuid = noteGuid;
     }
 
     public String getTitle() {
@@ -42,14 +52,6 @@ public class SlvDevice {
         this.title = title;
     }
 
-    public String getNoteguid() {
-        return noteguid;
-    }
-
-    public void setNoteguid(String noteguid) {
-        this.noteguid = noteguid;
-    }
-
     public String getPoleNumber() {
         return poleNumber;
     }
@@ -58,12 +60,12 @@ public class SlvDevice {
         this.poleNumber = poleNumber;
     }
 
-    public String getOldPoleNumber() {
-        return oldPoleNumber;
+    public String getDeviceDetails() {
+        return deviceDetails;
     }
 
-    public void setOldPoleNumber(String oldPoleNumber) {
-        this.oldPoleNumber = oldPoleNumber;
+    public void setDeviceDetails(String deviceDetails) {
+        this.deviceDetails = deviceDetails;
     }
 
     public long getCreatedDateTime() {
@@ -90,26 +92,35 @@ public class SlvDevice {
         this.status = status;
     }
 
-    public String getSlvResponse() {
-        return slvResponse;
+    public String getSlvDeviceDetailsResponse() {
+        return slvDeviceDetailsResponse;
     }
 
-    public void setSlvResponse(String slvResponse) {
-        this.slvResponse = slvResponse;
+    public void setSlvDeviceDetailsResponse(String slvDeviceDetailsResponse) {
+        this.slvDeviceDetailsResponse = slvDeviceDetailsResponse;
+    }
+
+    public String getSlvReplaceYLCResponse() {
+        return slvReplaceYLCResponse;
+    }
+
+    public void setSlvReplaceYLCResponse(String slvReplaceYLCResponse) {
+        this.slvReplaceYLCResponse = slvReplaceYLCResponse;
     }
 
     @Override
     public String toString() {
-        return "SlvDevice{" +
+        return "SlvSyncDetails{" +
                 "id=" + id +
+                ", noteGuid='" + noteGuid + '\'' +
                 ", title='" + title + '\'' +
-                ", noteguid='" + noteguid + '\'' +
                 ", poleNumber='" + poleNumber + '\'' +
-                ", oldPoleNumber='" + oldPoleNumber + '\'' +
+                ", deviceDetails='" + deviceDetails + '\'' +
                 ", createdDateTime=" + createdDateTime +
                 ", processedDateTime=" + processedDateTime +
                 ", status='" + status + '\'' +
-                ", slvResponse='" + slvResponse + '\'' +
+                ", slvDeviceDetailsResponse='" + slvDeviceDetailsResponse + '\'' +
+                ", slvReplaceYLCResponse='" + slvReplaceYLCResponse + '\'' +
                 '}';
     }
 }
