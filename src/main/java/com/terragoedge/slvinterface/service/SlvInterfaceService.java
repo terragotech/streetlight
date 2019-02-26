@@ -50,8 +50,7 @@ public abstract class SlvInterfaceService extends AbstractSlvService {
             System.exit(0);
             return;
         }
-
-        // Get Processed List
+        // Already Processed NoteGuids
         List<String> noteGuids = slvInterfaceDAO.getNoteGuids();
         if (noteGuids == null) {
             logger.error("Error while getting already process note list.");
@@ -61,8 +60,6 @@ public abstract class SlvInterfaceService extends AbstractSlvService {
         String url = PropertiesReader.getProperties().getProperty("streetlight.edge.url.main");
 
         url = url + PropertiesReader.getProperties().getProperty("streetlight.edge.url.notes.get");
-        String controllerStrIdValue = properties.getProperty("streetlight.controller.str.id");
-
         logger.info("GetNotesUrl :" + url);
         // Get List of noteid
         List<String> noteGuidsList = connectionDAO.getEdgeNoteGuid(formTemplateGuid);
@@ -81,8 +78,7 @@ public abstract class SlvInterfaceService extends AbstractSlvService {
 
                         for (EdgeNote edgenote : edgeNoteList) {
                             logger.info("ProcessNoteTitle is :" + edgenote.getTitle());
-                            String geozoneId = getGeoZoneValue(edgenote.getTitle());
-                            processEdgeNote(edgenote, noteGuids, formTemplateGuid, geozoneId, controllerStrIdValue, false);
+                            processEdgeNote(edgenote, noteGuids, formTemplateGuid, false);
                         }
                     }
                 }
@@ -90,23 +86,17 @@ public abstract class SlvInterfaceService extends AbstractSlvService {
                 logger.error("Error", e);
             }
         }
-        // Get data from server.
         logger.info("Process End :");
 
     }
 
-    private void processEdgeNote(EdgeNote edgeNote, List<String> noteGuids, String formTemplateGuid, String geozoneId, String controllerStrid, boolean isResync) {
+    private void processEdgeNote(EdgeNote edgeNote, List<String> noteGuids, String formTemplateGuid, boolean isResync) {
         System.out.println("processEdgeNote :" + edgeNote.getTitle());
         try {
             // Check whether this note is already processed or not.
             if (!noteGuids.contains(edgeNote.getNoteGuid())) {
-                SlvSyncDetails slvSyncDetailsError = new SlvSyncDetails();
                 List<FormData> formDataList = new ArrayList<>();
                 try {
-                    slvSyncDetailsError.setNoteGuid(edgeNote.getNoteGuid());
-                    slvSyncDetailsError.setNoteName(edgeNote.getTitle());
-                    slvSyncDetailsError.setNoteCreatedBy(edgeNote.getCreatedBy());
-                    slvSyncDetailsError.setNoteCreatedDateTime(edgeNote.getCreatedDateTime());
                     List<Object> paramsList = new ArrayList<Object>();
                     List<FormData> formDatasList = edgeNote.getFormData();
                     Map<String, FormData> formDataMaps = new HashMap<String, FormData>();
@@ -119,22 +109,18 @@ public abstract class SlvInterfaceService extends AbstractSlvService {
                         }
                     }
 
-                    // Check Note has correct form template or not. If not present no need to process.
                     if (isFormTemplatePresent) {
                         FormData formData = formDataMaps.get(formTemplateGuid);
                         List<EdgeFormData> edgeFormDataList = formData.getFormDef();
                         JPSWorkflowModel jpsWorkflowModel = processWorkFlowForm(formDatasList);
-                        processSingleForm(edgeFormDataList, edgeNote, slvSyncDetailsError, paramsList, configurationJsonList, geozoneId, controllerStrid, isResync);
+                        processSingleForm(jpsWorkflowModel,edgeFormDataList, edgeNote, paramsList, configurationJsonList, geozoneId, controllerStrid, isResync);
                     } else {
-                        System.out.println("wrong formtemplate");
-                        slvSyncDetailsError.setErrorDetails("Form Template [" + formTemplateGuid + "] is not present in this note.");
+                        System.out.println("Wrong formtemplate");
+                        logger.info("Wrong formtemplates Present");
                     }
                 } catch (Exception e) {
                     e.printStackTrace();
-                } finally {
-                    connectionDAO.saveSlvSyncDetails(slvSyncDetailsError);
                 }
-
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -151,7 +137,7 @@ public abstract class SlvInterfaceService extends AbstractSlvService {
      * @param paramsList
      * @param configurationJsonList
      */
-    public void processSingleForm(List<EdgeFormData> edgeFormDataList, EdgeNote edgeNote, SlvSyncDetails slvSyncDetail, List<Object> paramsList, List<ConfigurationJson> configurationJsonList, String geozoneId, String controllerStrIdValue, boolean isReSync) {
+    public void processSingleForm(JPSWorkflowModel jpsWorkflowModel,List<EdgeFormData> edgeFormDataList, EdgeNote edgeNote, SlvSyncDetails slvSyncDetail, List<Object> paramsList, List<ConfigurationJson> configurationJsonList, String geozoneId, String controllerStrIdValue, boolean isReSync) {
         try {
             System.out.println("REPLACE_DEVICE");
             logger.info(edgeNote.getTitle() + " is going to Remove.");
@@ -222,6 +208,8 @@ public abstract class SlvInterfaceService extends AbstractSlvService {
         JPSWorkflowModel jpsWorkflowModel = new JPSWorkflowModel();
         String categoryStrId = properties.getProperty("streetlight.categorystr.id");
         String controllerStrId = properties.getProperty("streetlight.controller.str.id");
+        String geozoneId = properties.getProperty("streetlight.slv.geozoneid");
+        jpsWorkflowModel.setGeozoneId(geozoneId);
         jpsWorkflowModel.setControllerStrId(controllerStrId);
         jpsWorkflowModel.setProvider_name("JPS");
         jpsWorkflowModel.setGeozonePath("Jamaica/Parish/Division/Street Name");
@@ -278,6 +266,10 @@ public abstract class SlvInterfaceService extends AbstractSlvService {
                             if (nullCheck(edgeFormData.getValue()))
                                 jpsWorkflowModel.setFixing_type(edgeFormData.getValue());
                             break;
+                        case "Mast Arm Length - Other":
+                            if (nullCheck(edgeFormData.getValue()))
+                                jpsWorkflowModel.setOtherFixtureType(edgeFormData.getValue());
+                            break;
                         case "Conversion Date":
                             if (nullCheck(edgeFormData.getValue()))
                                 jpsWorkflowModel.setInstall_date(edgeFormData.getValue());
@@ -297,10 +289,6 @@ public abstract class SlvInterfaceService extends AbstractSlvService {
                         case "facilityID":
                             if (nullCheck(edgeFormData.getValue()))
                                 jpsWorkflowModel.setLocation_zipcode(edgeFormData.getValue());
-                            break;
-                        case "Mast Arm Length - Other":
-                            if (nullCheck(edgeFormData.getValue()))
-                                jpsWorkflowModel.setOtherFixtureType(edgeFormData.getValue());
                             break;
                     }
                 }

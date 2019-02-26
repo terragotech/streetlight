@@ -33,6 +33,7 @@ public class JPSWorkflowModel {
     String otherFixtureType;
     String provider_name;
     String geozonePath;
+    String geozoneId;
 
     public String getGeozonePath() {
         return geozonePath;
@@ -284,5 +285,13 @@ public class JPSWorkflowModel {
 
     public void setProvider_name(String provider_name) {
         this.provider_name = provider_name;
+    }
+
+    public String getGeozoneId() {
+        return geozoneId;
+    }
+
+    public void setGeozoneId(String geozoneId) {
+        this.geozoneId = geozoneId;
     }
 }

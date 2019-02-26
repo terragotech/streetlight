@@ -5,8 +5,6 @@ import com.terragoedge.slvinterface.enumeration.EdgeComponentType;
 import com.terragoedge.slvinterface.exception.DeviceUpdationFailedException;
 import com.terragoedge.slvinterface.exception.InValidBarCodeException;
 import com.terragoedge.slvinterface.exception.NoValueException;
-import com.terragoedge.slvinterface.json.slvInterface.ConfigurationJson;
-import com.terragoedge.slvinterface.json.slvInterface.Id;
 import com.terragoedge.slvinterface.model.EdgeFormData;
 import com.terragoedge.slvinterface.model.EdgeNote;
 

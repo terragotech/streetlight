@@ -403,12 +403,5 @@ public abstract class AbstractSlvService extends EdgeService {
         }
     }
 
-
-    public String getGeoZoneValue(String title) {
-        String geozoneId = properties.getProperty("streetlight.slv.geozoneid");
-        return geozoneId;
-    }
-
-
     public abstract void processSetDevice(List<EdgeFormData> edgeFormDataList, ConfigurationJson configurationJson, EdgeNote edgeNote, List<Object> paramsList, SlvSyncDetails slvSyncDetails, String controllerStrIdValue) throws NoValueException, DeviceUpdationFailedException;
 }
