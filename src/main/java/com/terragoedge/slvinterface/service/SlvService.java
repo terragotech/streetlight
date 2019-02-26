@@ -5,9 +5,7 @@ import com.terragoedge.slvinterface.dao.ConnectionDAO;
 import com.terragoedge.slvinterface.dao.tables.SlvDevice;
 import com.terragoedge.slvinterface.dao.tables.SlvSyncDetail;
 import com.terragoedge.slvinterface.enumeration.Status;
-import com.terragoedge.slvinterface.exception.DeviceUpdationFailedException;
-import com.terragoedge.slvinterface.exception.InValidBarCodeException;
-import com.terragoedge.slvinterface.exception.NoValueException;
+import com.terragoedge.slvinterface.exception.*;
 import com.terragoedge.slvinterface.model.EdgeFormData;
 import com.terragoedge.slvinterface.model.EdgeNote;
 import com.terragoedge.slvinterface.model.JPSWorkflowModel;
@@ -29,17 +27,21 @@ public class SlvService extends AbstractSlvService {
     public void processSlv(JPSWorkflowModel jpsWorkflowModel, EdgeNote edgeNote) {
         // search idoncontroller on slv - ** rest call
         boolean deviceExist = checkDeviceExist(jpsWorkflowModel.getIdOnController());
-        if (deviceExist) {// device already present in slv
-            processDeviceValues(jpsWorkflowModel, true, edgeNote);
-            processMacAddress(jpsWorkflowModel);
-        } else {// device not present in slv
-            ResponseEntity<String> responseEntity = createDevice(edgeNote, jpsWorkflowModel);// create device in slv
-            if (responseEntity.getStatusCode() == HttpStatus.OK) {
-                processDeviceValues(jpsWorkflowModel, false, edgeNote);
-                processMacAddress(jpsWorkflowModel);
-            }
-            saveDevice(jpsWorkflowModel, edgeNote, responseEntity);// save or update slvdevice in local db
-        }
+       try {
+           if (deviceExist) {// device already present in slv
+               processDeviceValues(jpsWorkflowModel, true, edgeNote);
+               processMacAddress(jpsWorkflowModel);
+           } else {// device not present in slv
+               ResponseEntity<String> responseEntity = createDevice(edgeNote, jpsWorkflowModel);// create device in slv
+               if (responseEntity.getStatusCode() == HttpStatus.OK) {
+                   processDeviceValues(jpsWorkflowModel, false, edgeNote);
+                   processMacAddress(jpsWorkflowModel);
+               }
+               saveDevice(jpsWorkflowModel, edgeNote, responseEntity);// save or update slvdevice in local db
+           }
+       }catch (ReplaceOLCFailedException e){
+       //track error
+       }
     }
 
     private void processDeviceValues(JPSWorkflowModel jpsWorkflowModel, boolean devicePresentInSlv, EdgeNote edgeNote) {
@@ -63,7 +65,7 @@ public class SlvService extends AbstractSlvService {
 
     }
 
-    private void processMacAddress(JPSWorkflowModel jpsWorkflowModel) {
+    private void processMacAddress(JPSWorkflowModel jpsWorkflowModel) throws ReplaceOLCFailedException {
         // check mac address already present  - ** rest call
         if (true) {
             // check assigned pole and current pole are same
@@ -73,10 +75,10 @@ public class SlvService extends AbstractSlvService {
         } else {
             // check device has another mac  - ** rest call
             if (true) {
-                // replace ylc with empty macaddress  - ** rest call
-                // replace ylc with macaddress
+                replaceOLC(jpsWorkflowModel.getControllerStrId(), jpsWorkflowModel.getIdOnController(), "");
+                replaceOLC(jpsWorkflowModel.getControllerStrId(), jpsWorkflowModel.getIdOnController(), jpsWorkflowModel.getMacAddress());
             } else {
-                // replace ylc with macaddress
+                replaceOLC(jpsWorkflowModel.getControllerStrId(), jpsWorkflowModel.getIdOnController(), jpsWorkflowModel.getMacAddress());
             }
         }
     }
