@@ -9,7 +9,7 @@ public class JPSWorkflowModel {
     String dimmingGroupName;
     String name;
     String path;
-    String highvoltagethreshold;
+    int highvoltagethreshold;
     String idOnController;
     String installStatus;
     String lampType;
@@ -19,7 +19,7 @@ public class JPSWorkflowModel {
     String type;
     String model;
     String pole_type;
-    String lowvoltagethreshold;
+    int lowvoltagethreshold;
     String macAddress;
     String utillocationid;
     String fixing_type;
@@ -31,6 +31,16 @@ public class JPSWorkflowModel {
     String location_zipcode;
     String oldPoleNumber;
     String otherFixtureType;
+    String provider_name;
+    String geozonePath;
+
+    public String getGeozonePath() {
+        return geozonePath;
+    }
+
+    public void setGeozonePath(String geozonePath) {
+        this.geozonePath = geozonePath;
+    }
 
     public String getOtherFixtureType() {
         return otherFixtureType;
@@ -96,12 +106,16 @@ public class JPSWorkflowModel {
         this.path = path;
     }
 
-    public String getHighvoltagethreshold() {
+    public int getHighvoltagethreshold() {
         return highvoltagethreshold;
     }
 
-    public void setHighvoltagethreshold(String highvoltagethreshold) {
+    public void setHighvoltagethreshold(int highvoltagethreshold) {
         this.highvoltagethreshold = highvoltagethreshold;
+    }
+
+    public void setLowvoltagethreshold(int lowvoltagethreshold) {
+        this.lowvoltagethreshold = lowvoltagethreshold;
     }
 
     public String getIdOnController() {
@@ -166,14 +180,6 @@ public class JPSWorkflowModel {
 
     public void setModel(String model) {
         this.model = model;
-    }
-
-    public String getLowvoltagethreshold() {
-        return lowvoltagethreshold;
-    }
-
-    public void setLowvoltagethreshold(String lowvoltagethreshold) {
-        this.lowvoltagethreshold = lowvoltagethreshold;
     }
 
     public String getMacAddress() {
@@ -270,5 +276,13 @@ public class JPSWorkflowModel {
 
     public void setPole_type(String pole_type) {
         this.pole_type = pole_type;
+    }
+
+    public String getProvider_name() {
+        return provider_name;
+    }
+
+    public void setProvider_name(String provider_name) {
+        this.provider_name = provider_name;
     }
 }

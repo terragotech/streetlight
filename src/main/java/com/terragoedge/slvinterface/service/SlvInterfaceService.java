@@ -155,7 +155,6 @@ public abstract class SlvInterfaceService extends AbstractSlvService {
         try {
             System.out.println("REPLACE_DEVICE");
             logger.info(edgeNote.getTitle() + " is going to Remove.");
-            slvSyncDetail.setSelectedAction(REPLACE_DEVICE.toString());
             processReplaceDevice(edgeFormDataList, null, edgeNote, paramsList, slvSyncDetail, controllerStrIdValue, geozoneId);
             slvSyncDetail.setStatus("Success");
         } catch (ReplaceOLCFailedException | NoValueException | QRCodeAlreadyUsedException e) {
@@ -217,8 +216,20 @@ public abstract class SlvInterfaceService extends AbstractSlvService {
         connectionDAO.saveSlvDevices(slvDevice);
     }
 
+    //streetlight.controller.str.id
+    //
     public JPSWorkflowModel processWorkFlowForm(List<FormData> formDataList) {
         JPSWorkflowModel jpsWorkflowModel = new JPSWorkflowModel();
+        String categoryStrId = properties.getProperty("streetlight.categorystr.id");
+        String controllerStrId = properties.getProperty("streetlight.controller.str.id");
+        jpsWorkflowModel.setControllerStrId(controllerStrId);
+        jpsWorkflowModel.setProvider_name("JPS");
+        jpsWorkflowModel.setGeozonePath("Jamaica/Parish/Division/Street Name");
+        jpsWorkflowModel.setLowvoltagethreshold(216);
+        jpsWorkflowModel.setHighvoltagethreshold(253);
+        jpsWorkflowModel.setCategoryStrId(categoryStrId);
+        jpsWorkflowModel.setLocationtype("LOCATION_TYPE_PREMISE");
+        jpsWorkflowModel.setModel("TB784561877!lightNode01:lightNodeFunction6");
         for (FormData formData : formDataList) {
             List<EdgeFormData> edgeFormDataList = formData.getFormDef();
             for (EdgeFormData edgeFormData : edgeFormDataList) {
@@ -298,9 +309,6 @@ public abstract class SlvInterfaceService extends AbstractSlvService {
         return jpsWorkflowModel;
     }
 
-    public void updateFormTemplateValues(List<EdgeFormData> edgeFormDataList, CanadaFormModel canadaFormModel) {
-
-    }
 
     public void processReplaceDevice(List<EdgeFormData> edgeFormDatas, EdgeNote edgeNote, List<Object> paramsList, SlvSyncDetails slvSyncDetails, String controllerStrIdValue, String geozoneId) throws NoValueException, QRCodeAlreadyUsedException, ReplaceOLCFailedException, DeviceUpdationFailedException, MacAddressProcessedException, QRCodeNotMatchedException {
         String macAddress = validateMACAddress(configurationJson, edgeFormDatas, edgeNote, paramsList);
