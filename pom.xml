@@ -97,7 +97,7 @@
                             <goal>single</goal>
                         </goals>
                         <configuration>
-                            <finalName>no_data_ever_received</finalName>
+                            <finalName>slv_interface_production_v1</finalName>
 
                             <archive>
                                 <manifest>

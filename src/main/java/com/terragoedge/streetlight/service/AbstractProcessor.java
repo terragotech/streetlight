@@ -364,7 +364,7 @@ public abstract class AbstractProcessor {
         return s.substring(0, pos) + c + s.substring(pos + 1).trim();
     }
 
-    public void buildFixtureStreetLightData(String data, List<Object> paramsList, EdgeNote edgeNote, SlvServerData slvServerData)
+    public void buildFixtureStreetLightData(String data, List<Object> paramsList, EdgeNote edgeNote, SlvServerData slvServerData,InstallMaintenanceLogModel loggingModel)
             throws InValidBarCodeException {
         String[] fixtureInfo = data.split(",");
         logger.info("Fixture QR Scan Val length" + fixtureInfo.length);
@@ -404,7 +404,15 @@ public abstract class AbstractProcessor {
             }
 
             addStreetLightData("power", powerVal, paramsList);
-            addStreetLightData("comed.litetype", fixtureInfo[5], paramsList);
+
+            String dimmingGroupName = contextListHashMap.get(loggingModel.getIdOnController());
+            if(dimmingGroupName != null && (dimmingGroupName.startsWith("3") || dimmingGroupName.startsWith("11") || dimmingGroupName.startsWith("12"))){
+                fixtureInfo[5] = "LED";
+            }
+
+            //luminaire.type
+            addStreetLightData("luminaire.type", fixtureInfo[5], paramsList);
+           // addStreetLightData("comed.litetype", fixtureInfo[5], paramsList);
             // dailyReportCSV.setFixtureType(fixtureInfo[5]);
 
 
