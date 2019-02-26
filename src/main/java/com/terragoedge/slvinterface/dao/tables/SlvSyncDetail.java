@@ -25,8 +25,8 @@ public class SlvSyncDetail {
     private Status status;
     @DatabaseField(columnName = "slv_device_detail_reponse")
     private String slvDeviceDetailsResponse;
-    @DatabaseField(columnName = "slv_replace_ylc_response")
-    private String slvReplaceYLCResponse;
+    @DatabaseField(columnName = "slv_replace_olc_response")
+    private String slvReplaceOLCResponse;
 
     public int getId() {
         return id;
@@ -100,12 +100,12 @@ public class SlvSyncDetail {
         this.slvDeviceDetailsResponse = slvDeviceDetailsResponse;
     }
 
-    public String getSlvReplaceYLCResponse() {
-        return slvReplaceYLCResponse;
+    public String getSlvReplaceOLCResponse() {
+        return slvReplaceOLCResponse;
     }
 
-    public void setSlvReplaceYLCResponse(String slvReplaceYLCResponse) {
-        this.slvReplaceYLCResponse = slvReplaceYLCResponse;
+    public void setSlvReplaceOLCResponse(String slvReplaceOLCResponse) {
+        this.slvReplaceOLCResponse = slvReplaceOLCResponse;
     }
 
     @Override
@@ -120,7 +120,7 @@ public class SlvSyncDetail {
                 ", processedDateTime=" + processedDateTime +
                 ", status='" + status + '\'' +
                 ", slvDeviceDetailsResponse='" + slvDeviceDetailsResponse + '\'' +
-                ", slvReplaceYLCResponse='" + slvReplaceYLCResponse + '\'' +
+                ", slvReplaceOLCResponse='" + slvReplaceOLCResponse + '\'' +
                 '}';
     }
 }

@@ -304,9 +304,9 @@ public abstract class AbstractSlvService extends EdgeService {
 
     }
 
-    public void replaceOLC(String controllerStrIdValue, String idOnController, String macAddress)
+    public void replaceOLC(String controllerStrIdValue, String idOnController, String macAddress,EdgeNote edgeNote,JPSWorkflowModel jpsWorkflowModel)
             throws ReplaceOLCFailedException {
-        /*try {
+        try {
             // Get Url detail from properties
             String mainUrl = properties.getProperty("streetlight.slv.url.main");
             String dataUrl = properties.getProperty("streetlight.url.replaceolc");
@@ -327,17 +327,39 @@ public abstract class AbstractSlvService extends EdgeService {
             String responseString = response.getBody();
             JsonObject replaceOlcResponse = (JsonObject) jsonParser.parse(responseString);
             String errorStatus = replaceOlcResponse.get("status").getAsString();
+            SlvSyncDetail dbSyncDetail = connectionDAO.getSlvSyncDetail(idOnController);
             // As per doc, errorcode is 0 for success. Otherwise, its not success.
+            Status status = Status.Success;
+            String errorValue = "";
             if (errorStatus.equals("ERROR")) {
-                String value = replaceOlcResponse.get("value").getAsString();
-                throw new ReplaceOLCFailedException(value);
+                errorValue = replaceOlcResponse.get("value").getAsString();
+                status = Status.Failure;
             }
-
+            if(dbSyncDetail == null){
+                dbSyncDetail = new SlvSyncDetail();
+                dbSyncDetail.setCreatedDateTime(edgeNote.getCreatedDateTime());
+                dbSyncDetail.setNoteGuid(edgeNote.getNoteGuid());
+                dbSyncDetail.setPoleNumber(jpsWorkflowModel.getIdOnController());
+                dbSyncDetail.setProcessedDateTime(System.currentTimeMillis());
+                dbSyncDetail.setSlvReplaceOLCResponse(response.getBody());
+                dbSyncDetail.setTitle(edgeNote.getTitle());
+                dbSyncDetail.setDeviceDetails(gson.toJson(jpsWorkflowModel));
+                dbSyncDetail.setStatus(status);
+                connectionDAO.saveSlvSyncDetail(dbSyncDetail);
+            }else{
+                dbSyncDetail.setSlvReplaceOLCResponse(response.getBody());
+                dbSyncDetail.setCreatedDateTime(System.currentTimeMillis());
+                dbSyncDetail.setStatus(status);
+                connectionDAO.updateSlvSyncDetail(dbSyncDetail);
+            }
+            if(status == Status.Failure){
+                throw new ReplaceOLCFailedException(errorValue);
+            }
         } catch (Exception e) {
             logger.error("Error in replaceOLC", e);
             throw new ReplaceOLCFailedException(e.getMessage());
         }
-*/
+
     }
 
 
@@ -379,7 +401,8 @@ public abstract class AbstractSlvService extends EdgeService {
             throw new DeviceLoadException("Unable to load device from SLV Interface");
         }
     }
-    public boolean checkDeviceExist(String idOnController) {
+    public JsonArray checkDeviceExist(String idOnController) {
+        JsonArray deviceArray = null;
         try {
             logger.info("loadDeviceValues called.");
             String mainUrl = properties.getProperty("streetlight.slv.url.main");
@@ -402,15 +425,12 @@ public abstract class AbstractSlvService extends EdgeService {
                 String responseString = response.getBody();
                 JsonObject jsonObject = new JsonParser().parse(responseString).getAsJsonObject();
                 logger.info("Device request json:" + gson.toJson(jsonObject));
-                JsonArray deviceArray = jsonObject.getAsJsonArray("value");
-                if(deviceArray==null || deviceArray.size()==0){
-                    return true;
-                }
+                return  jsonObject.getAsJsonArray("value");
             }
         } catch (Exception e) {
             e.printStackTrace();
         }
-        return false;
+        return null;
     }
     public int processDeviceJson(String deviceJson) {
         JsonObject jsonObject = new JsonParser().parse(deviceJson).getAsJsonObject();
@@ -418,5 +438,19 @@ public abstract class AbstractSlvService extends EdgeService {
         JsonArray arr = jsonObject.getAsJsonArray("value");
 
         return 0;
+    }
+    public ResponseEntity<String> getDeviceData(int id) {
+        logger.info("getDeviceUrl url called");
+        String mainUrl = properties.getProperty("streetlight.slv.url.main");
+        String getDeviceUrl = properties.getProperty("streetlight.slv.url.getdevice.device");
+        String deviceMainUrl = mainUrl + getDeviceUrl;
+        List<String> paramsList = new ArrayList<>();
+        paramsList.add("deviceId=" + id);
+        paramsList.add("ser=json");
+        paramsList.add("valueName=MacAddress");
+        String params = StringUtils.join(paramsList, "&");
+        deviceMainUrl = deviceMainUrl + "?" + params;
+        ResponseEntity<String> responseEntity = slvRestService.getRequest(deviceMainUrl, true, null);
+        return responseEntity;
     }
 }
