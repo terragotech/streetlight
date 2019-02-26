@@ -173,8 +173,8 @@ public abstract class AbstractSlvService extends EdgeService {
         return null;
     }
 
-    public boolean checkMacAddressExists(String macAddress, String idOnController)
-            throws QRCodeAlreadyUsedException {
+    public List<Value> checkMacAddressExists(String macAddress) {
+        List<Value> values = new ArrayList<>();
         logger.info("Getting Mac Address from SLV.");
         String mainUrl = properties.getProperty("streetlight.slv.url.main");
         String updateDeviceValues = properties.getProperty("streetlight.slv.url.search.device");
@@ -195,24 +195,9 @@ public abstract class AbstractSlvService extends EdgeService {
             logger.info(responseString);
             logger.info("-------MAC Address End----------");
             DeviceMacAddress deviceMacAddress = gson.fromJson(responseString, DeviceMacAddress.class);
-            List<Value> values = deviceMacAddress.getValue();
-            StringBuilder stringBuilder = new StringBuilder();
-            if (values == null || values.size() == 0) {
-                return false;
-            } else {
-                for (Value value : values) {
-                    if (value.getIdOnController().equals(idOnController)) {
-                       // return false;
-                    }
-                    stringBuilder.append(value.getIdOnController());
-                    stringBuilder.append("\n");
-                }
-            }
-            throw new QRCodeAlreadyUsedException("QR code [" + macAddress + "] is already Used in following devices [" + stringBuilder.toString() + "]", macAddress);
-        } else {
-            throw new QRCodeAlreadyUsedException("Error while getting data from SLV.", macAddress);
+            values = deviceMacAddress.getValue();
         }
-
+        return values;
     }
 
     public ResponseEntity<String> setDeviceValues(List<Object> paramsList) {

@@ -2,6 +2,7 @@ package com.terragoedge.slvinterface.service;
 
 import com.google.gson.Gson;
 import com.terragoedge.slvinterface.dao.ConnectionDAO;
+import com.terragoedge.slvinterface.dao.tables.DuplicateMacAddress;
 import com.terragoedge.slvinterface.dao.tables.SlvDevice;
 import com.terragoedge.slvinterface.dao.tables.SlvSyncDetail;
 import com.terragoedge.slvinterface.enumeration.Status;
@@ -9,6 +10,7 @@ import com.terragoedge.slvinterface.exception.*;
 import com.terragoedge.slvinterface.model.EdgeFormData;
 import com.terragoedge.slvinterface.model.EdgeNote;
 import com.terragoedge.slvinterface.model.JPSWorkflowModel;
+import com.terragoedge.slvinterface.model.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
@@ -26,6 +28,7 @@ public class SlvService extends AbstractSlvService {
 
     public void processSlv(JPSWorkflowModel jpsWorkflowModel, EdgeNote edgeNote) {
         // search idoncontroller on slv - ** rest call
+<<<<<<< Updated upstream
         boolean deviceExist = checkDeviceExist(jpsWorkflowModel.getIdOnController());
        try {
            if (deviceExist) {// device already present in slv
@@ -42,6 +45,19 @@ public class SlvService extends AbstractSlvService {
        }catch (ReplaceOLCFailedException e){
        //track error
        }
+=======
+        if(true){// device already present in slv
+            processDeviceValues(jpsWorkflowModel,true,edgeNote);
+            processMacAddress(jpsWorkflowModel,edgeNote);
+        }else{// device not present in slv
+            ResponseEntity<String> responseEntity = createDevice(edgeNote,jpsWorkflowModel);// create device in slv
+            if(responseEntity.getStatusCode() == HttpStatus.OK){
+                processDeviceValues(jpsWorkflowModel,false,edgeNote);
+                processMacAddress(jpsWorkflowModel,edgeNote);
+            }
+            saveDevice(jpsWorkflowModel,edgeNote,responseEntity);// save or update slvdevice in local db
+        }
+>>>>>>> Stashed changes
     }
 
     private void processDeviceValues(JPSWorkflowModel jpsWorkflowModel, boolean devicePresentInSlv, EdgeNote edgeNote) {
@@ -62,15 +78,37 @@ public class SlvService extends AbstractSlvService {
             SlvSyncDetail slvSyncDetail = (dbSyncDetail == null) ? new SlvSyncDetail() : dbSyncDetail;
             saveSlvSyncDetail(slvSyncDetail, edgeNote, jpsWorkflowModel, responseEntity, (dbSyncDetail == null) ? false : true);// save or update slvSyncDetail in local db
         }
-
     }
 
+<<<<<<< Updated upstream
     private void processMacAddress(JPSWorkflowModel jpsWorkflowModel) throws ReplaceOLCFailedException {
         // check mac address already present  - ** rest call
         if (true) {
             // check assigned pole and current pole are same
             if (false) {
+=======
+    private void processMacAddress(JPSWorkflowModel jpsWorkflowModel,EdgeNote edgeNote){
+        List<Value> values = checkMacAddressExists(jpsWorkflowModel.getMacAddress());// check mac address already present
+        if(values != null && values.size() > 0){
+            String existingPoleNumber = "";
+            boolean isDuplicateMacAddress = false;
+            for(Value value : values){
+                if(!value.getIdOnController().equals(jpsWorkflowModel.getIdOnController())){ // check assigned pole and current pole are same
+                    isDuplicateMacAddress = true;
+                    existingPoleNumber = value.getIdOnController();
+                }
+            }
+            if(isDuplicateMacAddress) {
+>>>>>>> Stashed changes
                 // save duplicate mac address to local db
+                DuplicateMacAddress duplicateMacAddress = new DuplicateMacAddress();
+                duplicateMacAddress.setExistingPoleNumber(existingPoleNumber);
+                duplicateMacAddress.setMacAddress(jpsWorkflowModel.getMacAddress());
+                duplicateMacAddress.setNoteguid(edgeNote.getNoteGuid());
+                duplicateMacAddress.setPoleNumber(jpsWorkflowModel.getIdOnController());
+                duplicateMacAddress.setProcessedDateTime(System.currentTimeMillis());
+                duplicateMacAddress.setTitle(edgeNote.getTitle());
+                connectionDAO.saveDuplicateMacAddress(duplicateMacAddress);
             }
         } else {
             // check device has another mac  - ** rest call
