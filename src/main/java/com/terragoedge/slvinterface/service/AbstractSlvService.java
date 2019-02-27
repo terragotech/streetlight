@@ -83,33 +83,36 @@ public abstract class AbstractSlvService extends EdgeService {
 
     public ResponseEntity<String> createDevice(EdgeNote edgenote,
                                                JPSWorkflowModel jpsWorkflowModel) {
+        if(properties.getProperty("streetlights.create.enable").equals("true")) {
+            Feature feature = (Feature) GeoJSONFactory.create(edgenote.getGeometry());
 
-        Feature feature = (Feature) GeoJSONFactory.create(edgenote.getGeometry());
-
-        // parse Geometry from Feature
-        GeoJSONReader reader = new GeoJSONReader();
-        Geometry geom = reader.read(feature.getGeometry());
+            // parse Geometry from Feature
+            GeoJSONReader reader = new GeoJSONReader();
+            Geometry geom = reader.read(feature.getGeometry());
 
 
-        String mainUrl = properties.getProperty("streetlight.slv.url.main");
-        String serveletApiUrl = properties.getProperty("streetlight.slv.url.device.create");
-        String url = mainUrl + serveletApiUrl;
-        String methodName = properties.getProperty("streetlight.slv.device.create.methodName");
-        String categoryStrId = jpsWorkflowModel.getCategoryStrId();
-        String controllerStrId = jpsWorkflowModel.getControllerStrId();
-        String nodeTypeStrId = properties.getProperty("streetlight.slv.equipment.type");
-        Map<String, String> streetLightDataParams = new HashMap<String, String>();
-        streetLightDataParams.put("methodName", methodName);
-        streetLightDataParams.put("categoryStrId", categoryStrId);
-        streetLightDataParams.put("controllerStrId", controllerStrId);
-        streetLightDataParams.put("idOnController", edgenote.getTitle());
-        streetLightDataParams.put("geoZoneId", String.valueOf(jpsWorkflowModel.getGeozoneId()));
-        streetLightDataParams.put("lng", String.valueOf(geom.getCoordinate().x));
-        streetLightDataParams.put("lat", String.valueOf(geom.getCoordinate().y));
-        streetLightDataParams.put("nodeTypeStrId", nodeTypeStrId);
-        // streetLightDataParams.put("modelFunctionId", nodeTypeStrId);
-        // modelFunctionId
-        return slvRestService.getRequest(streetLightDataParams, url, true);
+            String mainUrl = properties.getProperty("streetlight.slv.url.main");
+            String serveletApiUrl = properties.getProperty("streetlight.slv.url.device.create");
+            String url = mainUrl + serveletApiUrl;
+            String methodName = properties.getProperty("streetlight.slv.device.create.methodName");
+            String categoryStrId = jpsWorkflowModel.getCategoryStrId();
+            String controllerStrId = jpsWorkflowModel.getControllerStrId();
+            String nodeTypeStrId = properties.getProperty("streetlight.slv.equipment.type");
+            Map<String, String> streetLightDataParams = new HashMap<String, String>();
+            streetLightDataParams.put("methodName", methodName);
+            streetLightDataParams.put("categoryStrId", categoryStrId);
+            streetLightDataParams.put("controllerStrId", controllerStrId);
+            streetLightDataParams.put("idOnController", edgenote.getTitle());
+            streetLightDataParams.put("geoZoneId", String.valueOf(jpsWorkflowModel.getGeozoneId()));
+            streetLightDataParams.put("lng", String.valueOf(geom.getCoordinate().x));
+            streetLightDataParams.put("lat", String.valueOf(geom.getCoordinate().y));
+            streetLightDataParams.put("nodeTypeStrId", nodeTypeStrId);
+            // streetLightDataParams.put("modelFunctionId", nodeTypeStrId);
+            // modelFunctionId
+            return slvRestService.getRequest(streetLightDataParams, url, true);
+        }else{
+            return null;
+        }
     }
 
     public String validateMACAddress(String existingNodeMacAddress, String idOnController, String geoZoneId)
