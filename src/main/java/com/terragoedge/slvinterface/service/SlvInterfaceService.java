@@ -130,11 +130,10 @@ public class SlvInterfaceService extends AbstractSlvService {
         JPSWorkflowModel jpsWorkflowModel = new JPSWorkflowModel();
         String categoryStrId = properties.getProperty("streetlight.categorystr.id");
         String controllerStrId = properties.getProperty("streetlight.controller.str.id");
-        String geozoneId = properties.getProperty("streetlight.slv.geozoneid");
-        jpsWorkflowModel.setGeozoneId(geozoneId);
+        String geozonePath = properties.getProperty("streetlight.slv.geozonepath");
         jpsWorkflowModel.setControllerStrId(controllerStrId);
         jpsWorkflowModel.setProvider_name("JPS");
-        jpsWorkflowModel.setGeozonePath("Jamaica/Parish/Division/Street Name");
+        jpsWorkflowModel.setGeozonePath(geozonePath);
         jpsWorkflowModel.setLowvoltagethreshold(216);
         jpsWorkflowModel.setHighvoltagethreshold(253);
         jpsWorkflowModel.setCategoryStrId(categoryStrId);

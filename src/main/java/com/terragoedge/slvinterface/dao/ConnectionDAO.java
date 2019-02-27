@@ -7,6 +7,7 @@ import com.j256.ormlite.jdbc.JdbcConnectionSource;
 import com.j256.ormlite.support.ConnectionSource;
 import com.j256.ormlite.table.TableUtils;
 import com.terragoedge.slvinterface.dao.tables.DuplicateMacAddress;
+import com.terragoedge.slvinterface.dao.tables.GeozoneEntity;
 import com.terragoedge.slvinterface.dao.tables.SlvDevice;
 import com.terragoedge.slvinterface.dao.tables.SlvSyncDetail;
 import org.apache.log4j.Logger;
@@ -27,6 +28,7 @@ public enum ConnectionDAO {
     private Dao<SlvSyncDetail, String> slvSyncDetailsDao;
     public Dao<SlvDevice, String> slvDeviceDao = null;
     public Dao<DuplicateMacAddress, String> duplicateMacaddressDao = null;
+    public Dao<GeozoneEntity, String> geozoneEntitiesDao = null;
     private static final Logger logger = Logger.getLogger(ConnectionDAO.class);
 
     ConnectionDAO() {
@@ -37,12 +39,14 @@ public enum ConnectionDAO {
                 TableUtils.createTable(connectionSource, SlvSyncDetail.class);
                 TableUtils.createTable(connectionSource, SlvDevice.class);
                 TableUtils.createTable(connectionSource, DuplicateMacAddress.class);
-            }catch (Exception e){
-              //  e.printStackTrace();
+                TableUtils.createTable(connectionSource, GeozoneEntity.class);
+            } catch (Exception e) {
+                //  e.printStackTrace();
             }
             slvSyncDetailsDao = DaoManager.createDao(connectionSource, SlvSyncDetail.class);
             slvDeviceDao = DaoManager.createDao(connectionSource, SlvDevice.class);
-            duplicateMacaddressDao = DaoManager.createDao(connectionSource,DuplicateMacAddress.class);
+            duplicateMacaddressDao = DaoManager.createDao(connectionSource, DuplicateMacAddress.class);
+            geozoneEntitiesDao = DaoManager.createDao(connectionSource, GeozoneEntity.class);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -59,9 +63,9 @@ public enum ConnectionDAO {
             }).getResults();
             return noteGuids;
         } catch (Exception e) {
-              logger.error("Error in getNoteGuids",e);
+            logger.error("Error in getNoteGuids", e);
         }
-       return  new ArrayList<>();
+        return new ArrayList<>();
 
     }
 
@@ -92,49 +96,50 @@ public enum ConnectionDAO {
         return noteIds;
     }
 
-    public void saveDuplicateMacAddress(DuplicateMacAddress duplicateMacAddress){
+    public void saveDuplicateMacAddress(DuplicateMacAddress duplicateMacAddress) {
         try {
             duplicateMacaddressDao.create(duplicateMacAddress);
-        }catch (Exception e){
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
-    public SlvSyncDetail getSlvSyncDetail(String poleNumber){
+    public SlvSyncDetail getSlvSyncDetail(String poleNumber) {
         try {
-            return slvSyncDetailsDao.queryBuilder().where().eq("pole_number",poleNumber).queryForFirst();
-        }catch (Exception e){
+            return slvSyncDetailsDao.queryBuilder().where().eq("pole_number", poleNumber).queryForFirst();
+        } catch (Exception e) {
             e.printStackTrace();
         }
         return null;
     }
-    public List<DuplicateMacAddress> getDuplicateEntities(){
+
+    public List<DuplicateMacAddress> getDuplicateEntities() {
         try {
             return duplicateMacaddressDao.queryForAll();
-        }catch (Exception e){
+        } catch (Exception e) {
             e.printStackTrace();
         }
         return new ArrayList<>();
     }
 
-    public void saveSlvSyncDetail(SlvSyncDetail slvSyncDetail){
+    public void saveSlvSyncDetail(SlvSyncDetail slvSyncDetail) {
         try {
             slvSyncDetailsDao.create(slvSyncDetail);
-        }catch (Exception e){
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
-    public void updateSlvSyncDetail(SlvSyncDetail slvSyncDetail){
+    public void updateSlvSyncDetail(SlvSyncDetail slvSyncDetail) {
         try {
             slvSyncDetailsDao.update(slvSyncDetail);
-        }catch (Exception e){
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
-    public List<String> getProcessedItems(){
-        try{
+    public List<String> getProcessedItems() {
+        try {
             try {
                 List<String> noteGuids = slvSyncDetailsDao.queryRaw("select noteguid from slvsyncdetails;", new RawRowMapper<String>() {
                     @Override
@@ -143,47 +148,67 @@ public enum ConnectionDAO {
                     }
                 }).getResults();
                 return noteGuids;
-            }catch (Exception e){
-                logger.error("Error in getNoteGuids",e);
+            } catch (Exception e) {
+                logger.error("Error in getNoteGuids", e);
             }
 
-        }catch (Exception e){
+        } catch (Exception e) {
             e.printStackTrace();
         }
         return new ArrayList<>();
     }
 
-    public void saveSlvDevice(SlvDevice slvDevice){
+    public void saveSlvDevice(SlvDevice slvDevice) {
         try {
             slvDeviceDao.create(slvDevice);
-        }catch (Exception e){
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }
-    public SlvDevice getSlvDevice(String poleNumber){
+
+    public SlvDevice getSlvDevice(String poleNumber) {
         try {
-            return slvDeviceDao.queryBuilder().where().eq("pole_number",poleNumber).queryForFirst();
-        }catch (Exception e){
+            return slvDeviceDao.queryBuilder().where().eq("pole_number", poleNumber).queryForFirst();
+        } catch (Exception e) {
             e.printStackTrace();
         }
         return null;
     }
-    public void updateSlvDevice(SlvDevice slvDevice){
+
+    public void updateSlvDevice(SlvDevice slvDevice) {
         try {
             slvDeviceDao.update(slvDevice);
-        }catch (Exception e){
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
-    public List<SlvDevice> getProcessedSlvDevices(){
+    public List<SlvDevice> getProcessedSlvDevices() {
         try {
             return slvDeviceDao.queryForAll();
-        }catch (Exception e){
+        } catch (Exception e) {
             e.printStackTrace();
         }
         return new ArrayList<>();
     }
+
+    public void createGeozone(GeozoneEntity geozoneEntity) {
+        try {
+            geozoneEntitiesDao.create(geozoneEntity);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    public GeozoneEntity getGeozoneEntity(String notebookName, String streetName) {
+        try {
+            return geozoneEntitiesDao.queryBuilder().where().eq(GeozoneEntity.NOTEBOOKNAME, notebookName).and().eq(GeozoneEntity.STREETNAME, streetName).queryForFirst();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
     public ConnectionSource getConnection() {
         return connectionSource;
     }

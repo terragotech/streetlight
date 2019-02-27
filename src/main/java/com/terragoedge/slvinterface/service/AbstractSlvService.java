@@ -1,7 +1,9 @@
 package com.terragoedge.slvinterface.service;
 
 import com.google.gson.*;
+import com.google.gson.reflect.TypeToken;
 import com.terragoedge.slvinterface.dao.ConnectionDAO;
+import com.terragoedge.slvinterface.dao.tables.GeozoneEntity;
 import com.terragoedge.slvinterface.dao.tables.SlvSyncDetail;
 import com.terragoedge.slvinterface.enumeration.Status;
 import com.terragoedge.slvinterface.exception.*;
@@ -101,7 +103,7 @@ public abstract class AbstractSlvService extends EdgeService {
         streetLightDataParams.put("categoryStrId", categoryStrId);
         streetLightDataParams.put("controllerStrId", controllerStrId);
         streetLightDataParams.put("idOnController", edgenote.getTitle());
-        streetLightDataParams.put("geoZoneId", jpsWorkflowModel.getGeozoneId());
+        streetLightDataParams.put("geoZoneId", String.valueOf(jpsWorkflowModel.getGeozoneId()));
         streetLightDataParams.put("lng", String.valueOf(geom.getCoordinate().x));
         streetLightDataParams.put("lat", String.valueOf(geom.getCoordinate().y));
         streetLightDataParams.put("nodeTypeStrId", nodeTypeStrId);
@@ -168,7 +170,7 @@ public abstract class AbstractSlvService extends EdgeService {
         paramsList.add("ser=json");
         String params = StringUtils.join(paramsList, "&");
         url = url + "?" + params;
-        System.out.println("Url :"+url);
+        System.out.println("Url :" + url);
         ResponseEntity<String> response = slvRestService.getRequest(url, true, null);
         if (response.getStatusCodeValue() == 200) {
             String responseString = response.getBody();
@@ -200,65 +202,7 @@ public abstract class AbstractSlvService extends EdgeService {
             throws InValidBarCodeException;
 
 
-    public void clearAndUpdateDeviceData(String idOnController, String controllerStrId) {
-        String mainUrl = properties.getProperty("streetlight.slv.url.main");
-        String updateDeviceValues = properties.getProperty("streetlight.slv.url.updatedevice");
-        String url = mainUrl + updateDeviceValues;
-
-        List<Object> paramsList = new ArrayList<Object>();
-        paramsList.add("controllerStrId=" + controllerStrId);
-        paramsList.add("idOnController=" + idOnController);
-        addStreetLightData("device.node.serialnumber", "", paramsList);
-        addStreetLightData("device.node.hwversion", "", paramsList);
-        addStreetLightData("device.node.swversion", "", paramsList);
-        addStreetLightData("device.nic.serialnumber", "", paramsList);
-        addStreetLightData("device.nic.swversion", "", paramsList);
-        addStreetLightData("device.nic.hwversion", "", paramsList);
-        addStreetLightData("device.nic.currentnode", "", paramsList);
-        addStreetLightData("device.nic.fallbackmode", "", paramsList);
-        addStreetLightData("device.node.manufdate", "", paramsList);
-        addStreetLightData("device.node.name", "", paramsList);
-        addStreetLightData("device.node.manufacturer", "", paramsList);
-        addStreetLightData("device.uiqid", "", paramsList);
-        addStreetLightData("SoftwareVersion", "", paramsList);
-        addStreetLightData("device.meter.programid", "", paramsList);
-        addStreetLightData("device.nic.catalog", "", paramsList);
-
-        paramsList.add("doLog=true");
-        paramsList.add("ser=json");
-        String params = StringUtils.join(paramsList, "&");
-        url = url + "&" + params;
-        ResponseEntity<String> response = slvRestService.getPostRequest(url, null);
-        String responseString = response.getBody();
-        JsonObject replaceOlcResponse = (JsonObject) jsonParser.parse(responseString);
-        int errorCode = replaceOlcResponse.get("errorCode").getAsInt();
-        if (errorCode == 0) {
-            // success
-        } else {
-            // failure
-        }
-    }
-
-    public void addStreetLightData(String key, String value, List<Object> paramsList) {
-        paramsList.add("valueName=" + key.trim());
-        paramsList.add("value=" + value.trim());
-    }
-
-    public void addOtherParams(EdgeNote edgeNote, List<Object> paramsList) {
-        // luminaire.installdate - 2017-09-07 09:47:35
-        addStreetLightData("install.date", Utils.dateFormat(edgeNote.getCreatedDateTime()), paramsList);
-        // controller.installdate - 2017/10/10
-
-        addStreetLightData("installStatus", "Installed", paramsList);
-        addStreetLightData("location.utillocationid",  "Lamp", paramsList);
-        addStreetLightData("location.locationtype", "LOCATION_TYPE_PREMISE", paramsList);
-        String nodeTypeStrId = properties.getProperty("streetlight.slv.equipment.type");
-        System.out.println(nodeTypeStrId);
-
-        //  addStreetLightData("DimmingGroupName", "Dimming Evaluation", paramsList);
-    }
-
-    public void replaceOLC(String controllerStrIdValue, String idOnController, String macAddress,EdgeNote edgeNote,JPSWorkflowModel jpsWorkflowModel)
+    public void replaceOLC(String controllerStrIdValue, String idOnController, String macAddress, EdgeNote edgeNote, JPSWorkflowModel jpsWorkflowModel)
             throws ReplaceOLCFailedException {
         try {
             // Get Url detail from properties
@@ -289,7 +233,7 @@ public abstract class AbstractSlvService extends EdgeService {
                 errorValue = replaceOlcResponse.get("value").getAsString();
                 status = Status.Failure;
             }
-            if(dbSyncDetail == null){
+            if (dbSyncDetail == null) {
                 dbSyncDetail = new SlvSyncDetail();
                 dbSyncDetail.setCreatedDateTime(edgeNote.getCreatedDateTime());
                 dbSyncDetail.setNoteGuid(edgeNote.getNoteGuid());
@@ -300,13 +244,13 @@ public abstract class AbstractSlvService extends EdgeService {
                 dbSyncDetail.setDeviceDetails(gson.toJson(jpsWorkflowModel));
                 dbSyncDetail.setStatus(status);
                 connectionDAO.saveSlvSyncDetail(dbSyncDetail);
-            }else{
+            } else {
                 dbSyncDetail.setSlvReplaceOLCResponse(response.getBody());
                 dbSyncDetail.setCreatedDateTime(System.currentTimeMillis());
                 dbSyncDetail.setStatus(status);
                 connectionDAO.updateSlvSyncDetail(dbSyncDetail);
             }
-            if(status == Status.Failure){
+            if (status == Status.Failure) {
                 throw new ReplaceOLCFailedException(errorValue);
             }
         } catch (Exception e) {
@@ -336,17 +280,18 @@ public abstract class AbstractSlvService extends EdgeService {
             logger.info("Load Device url :" + url);
             ResponseEntity<String> response = slvRestService.getRequest(url, true, null);
             if (response.getStatusCodeValue() == 200) {
-                logger.info("LoadDevice Respose :"+response.getBody());
+                logger.info("LoadDevice Respose :" + response.getBody());
                 String responseString = response.getBody();
                 JsonObject jsonObject = new JsonParser().parse(responseString).getAsJsonObject();
                 logger.info("Device request json:" + gson.toJson(jsonObject));
-                return  jsonObject.getAsJsonArray("value");
+                return jsonObject.getAsJsonArray("value");
             }
         } catch (Exception e) {
             e.printStackTrace();
         }
         return null;
     }
+
     public int processDeviceJson(String deviceJson) {
         JsonObject jsonObject = new JsonParser().parse(deviceJson).getAsJsonObject();
         logger.info("Device request json:" + gson.toJson(jsonObject));
@@ -354,6 +299,7 @@ public abstract class AbstractSlvService extends EdgeService {
 
         return 0;
     }
+
     public ResponseEntity<String> getDeviceData(int id) {
         logger.info("getDeviceUrl url called");
         String mainUrl = properties.getProperty("streetlight.slv.url.main");
@@ -367,5 +313,83 @@ public abstract class AbstractSlvService extends EdgeService {
         deviceMainUrl = deviceMainUrl + "?" + params;
         ResponseEntity<String> responseEntity = slvRestService.getRequest(deviceMainUrl, true, null);
         return responseEntity;
+    }
+
+    public GeozoneModel getGeozoneIdByName(String notebookName, int parentId) {
+        List<GeozoneModel> geozoneModels = new ArrayList<>();
+        String mainUrl = properties.getProperty("streetlight.slv.url.main");
+        String getDeviceUrl = properties.getProperty("streetlight.slv.url.getgeozone.name");
+        String geozoneUrl = mainUrl + getDeviceUrl;
+        List<String> paramsList = new ArrayList<>();
+        paramsList.add("name=" + notebookName);
+        if (parentId != -1) {
+            paramsList.add("parentId=" + parentId);
+        }
+        paramsList.add("partialMatch=true");
+        paramsList.add("ser=json");
+        String params = StringUtils.join(paramsList, "&");
+        geozoneUrl = geozoneUrl + "?" + params;
+        ResponseEntity<String> responseEntity = slvRestService.getRequest(geozoneUrl, true, null);
+        if (responseEntity.getStatusCodeValue() == 200) {
+            String geozoneResponse = responseEntity.getBody();
+            geozoneModels = gson.fromJson(geozoneResponse, new TypeToken<List<GeozoneModel>>() {
+            }.getType());
+            if (geozoneModels.size() > 0) {
+                return geozoneModels.get(0);
+            }
+        }
+        return null;
+    }
+
+    public GeozoneModel createGeozone(String geoZoneName) {
+        GeozoneModel geozoneModel = null;
+        String mainUrl = properties.getProperty("streetlight.slv.url.main");
+        String createGeozoneUrl = properties.getProperty("streetlight.slv.url.creategeozone");
+        String latitudeMin = properties.getProperty("streetlight.slv.latMin");
+        String geozoneUrl = mainUrl + createGeozoneUrl;
+        List<String> paramsList = new ArrayList<>();
+        paramsList.add("name=" + geoZoneName);
+        paramsList.add("latMin=" + latitudeMin);
+        paramsList.add("latMax=" + geoZoneName);
+        paramsList.add("lngMin=" + geoZoneName);
+        paramsList.add("lngMax=" + geoZoneName);
+        paramsList.add("ser=json");
+        String params = StringUtils.join(paramsList, "&");
+        geozoneUrl = geozoneUrl + "?" + params;
+        ResponseEntity<String> responseEntity = slvRestService.getRequest(geozoneUrl, true, null);
+        if (responseEntity.getStatusCodeValue() == 200) {
+            String geozoneResponse = responseEntity.getBody();
+            geozoneModel = gson.fromJson(geozoneResponse, GeozoneModel.class);
+            return geozoneModel;
+        }
+        return null;
+    }
+
+    public GeozoneEntity getGeozoneEntity(String notebookName, String streetName) {
+        GeozoneEntity geozoneEntity = connectionDAO.getGeozoneEntity(notebookName, streetName);
+        if (geozoneEntity != null) {
+            return geozoneEntity;
+        }
+        geozoneEntity = new GeozoneEntity();
+        geozoneEntity.setGeozoneName(notebookName);
+        geozoneEntity.setGeozoneName(notebookName);
+        geozoneEntity.setChildgeozoneName(streetName);
+        //check parent notebook has exist or not in slv
+        GeozoneModel childGeozone;
+        // Get parent geozone
+        GeozoneModel parentGeozoneModel = getGeozoneIdByName(notebookName, -1);
+        // create parent and child geozone if not exist parent geozone
+        if (parentGeozoneModel == null) {
+            //create parent and child geozone
+            parentGeozoneModel = createGeozone(notebookName);
+            childGeozone = getGeozoneIdByName(streetName, parentGeozoneModel.getParentId());
+        } else {
+            //get child geozone
+
+        }
+        geozoneEntity.setGeozoneId(parentGeozoneModel.getId());
+       // geozoneEntity.setChildgeozoneId(childGeozone.getId());
+        connectionDAO.createGeozone(geozoneEntity);
+        return geozoneEntity;
     }
 }

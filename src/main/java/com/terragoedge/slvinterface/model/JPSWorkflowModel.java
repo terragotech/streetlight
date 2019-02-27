@@ -1,39 +1,48 @@
 package com.terragoedge.slvinterface.model;
 
 public class JPSWorkflowModel {
-    String address1;
-    String streetdescription;
-    String city;
-    String categoryStrId;
-    String controllerStrId;
-    String dimmingGroupName;
-    String name;
-    String path;
-    int highvoltagethreshold;
-    String idOnController;
-    String installStatus;
-    String lampType;
-    String lat;
-    String lng;
-    String locationtype;
-    String type;
-    String model;
-    String pole_type;
-    int lowvoltagethreshold;
-    String macAddress;
-    String utillocationid;
-    String fixing_type;
-    String install_date;
-    String network_type;
-    String pole_shape;
-    String pole_status;
-    String serialnumber;
-    String location_zipcode;
-    String oldPoleNumber;
-    String otherFixtureType;
-    String provider_name;
-    String geozonePath;
-    String geozoneId;
+    private String address1;
+    private String streetdescription;
+    private String city;
+    private String categoryStrId;
+    private String controllerStrId;
+    private String dimmingGroupName;
+    private String name;
+    private String path;
+    private int highvoltagethreshold;
+    private String idOnController;
+    private String installStatus;
+    private String lampType;
+    private String lat;
+    private String lng;
+    private String locationtype;
+    private String type;
+    private String model;
+    private String pole_type;
+    private int lowvoltagethreshold;
+    private String macAddress;
+    private String utillocationid;
+    private String fixing_type;
+    private String install_date;
+    private String network_type;
+    private String pole_shape;
+    private String pole_status;
+    private String serialnumber;
+    private String location_zipcode;
+    private String oldPoleNumber;
+    private String otherFixtureType;
+    private String provider_name;
+    private String geozonePath;
+    private int geozoneId;
+    private String notebookName;
+
+    public String getNotebookName() {
+        return notebookName;
+    }
+
+    public void setNotebookName(String notebookName) {
+        this.notebookName = notebookName;
+    }
 
     public String getGeozonePath() {
         return geozonePath;
@@ -287,11 +296,11 @@ public class JPSWorkflowModel {
         this.provider_name = provider_name;
     }
 
-    public String getGeozoneId() {
+    public int getGeozoneId() {
         return geozoneId;
     }
 
-    public void setGeozoneId(String geozoneId) {
+    public void setGeozoneId(int geozoneId) {
         this.geozoneId = geozoneId;
     }
 
