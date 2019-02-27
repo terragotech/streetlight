@@ -143,13 +143,13 @@ public class SlvInterfaceService extends AbstractSlvService {
         String controllerStrId = properties.getProperty("streetlight.controller.str.id");
         String geozonePath = properties.getProperty("streetlight.slv.geozonepath");
         jpsWorkflowModel.setControllerStrId(controllerStrId);
-        jpsWorkflowModel.setProvider_name("JPS");
+        jpsWorkflowModel.setProvider_name(properties.getProperty("jps.provider.name"));
         jpsWorkflowModel.setGeozonePath(geozonePath);
-        jpsWorkflowModel.setLowvoltagethreshold(216);
-        jpsWorkflowModel.setHighvoltagethreshold(253);
+        jpsWorkflowModel.setLowvoltagethreshold(Integer.valueOf(properties.getProperty("jps.low.voltage.thershold")));
+        jpsWorkflowModel.setHighvoltagethreshold(Integer.valueOf(properties.getProperty("jps.high.voltage.thershold")));
         jpsWorkflowModel.setCategoryStrId(categoryStrId);
-        jpsWorkflowModel.setLocationtype("LOCATION_TYPE_PREMISE");
-        jpsWorkflowModel.setModel("TB784561877!lightNode01:lightNodeFunction6");
+        jpsWorkflowModel.setLocationtype(properties.getProperty("jps.location.type"));
+        jpsWorkflowModel.setModel(properties.getProperty("jps.model"));
         for (FormData formData : formDataList) {
             List<EdgeFormData> edgeFormDataList = formData.getFormDef();
             for (EdgeFormData edgeFormData : edgeFormDataList) {
