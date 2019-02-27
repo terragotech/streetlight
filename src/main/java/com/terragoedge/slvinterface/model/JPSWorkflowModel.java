@@ -35,6 +35,15 @@ public class JPSWorkflowModel {
     private String geozonePath;
     private int geozoneId;
     private String notebookName;
+    private String equipmentType;
+
+    public String getEquipmentType() {
+        return equipmentType;
+    }
+
+    public void setEquipmentType(String equipmentType) {
+        this.equipmentType = equipmentType;
+    }
 
     public String getNotebookName() {
         return notebookName;

@@ -107,6 +107,7 @@ public abstract class AbstractSlvService extends EdgeService {
             streetLightDataParams.put("lng", String.valueOf(geom.getCoordinate().x));
             streetLightDataParams.put("lat", String.valueOf(geom.getCoordinate().y));
             streetLightDataParams.put("nodeTypeStrId", nodeTypeStrId);
+            streetLightDataParams.put("ser","json");
             // streetLightDataParams.put("modelFunctionId", nodeTypeStrId);
             // modelFunctionId
             return slvRestService.getRequest(streetLightDataParams, url, true);

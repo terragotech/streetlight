@@ -52,8 +52,8 @@ public class SlvInterfaceService extends AbstractSlvService {
             return;
         }*/
         // Already Processed NoteGuids
-        List<String> noteGuids =connectionDAO.getProcessedItems();
-      //  List<String> noteGuids = slvInterfaceDAO.getNoteGuids();
+        List<String> noteGuids = connectionDAO.getProcessedItems();
+        //  List<String> noteGuids = slvInterfaceDAO.getNoteGuids();
         if (noteGuids == null) {
             logger.error("Error while getting already process note list.");
             return;
@@ -90,7 +90,7 @@ public class SlvInterfaceService extends AbstractSlvService {
         }
         logger.info("Process End :");
         logger.info("start report process");
-       // slvService.startReport();
+        // slvService.startReport();
         logger.info("report process end");
     }
 
@@ -116,12 +116,12 @@ public class SlvInterfaceService extends AbstractSlvService {
                     if (isFormTemplatePresent) {
                         FormData formData = formDataMaps.get(formTemplateGuid);
                         List<EdgeFormData> edgeFormDataList = formData.getFormDef();
-                        JPSWorkflowModel jpsWorkflowModel = processWorkFlowForm(formDatasList);
-                        if(edgeNote.getEdgeNotebook()!=null){
+                        JPSWorkflowModel jpsWorkflowModel = processWorkFlowForm(formDatasList, edgeNote);
+                        if (edgeNote.getEdgeNotebook() != null) {
                             jpsWorkflowModel.setNotebookName(edgeNote.getEdgeNotebook().getNotebookName());
                             jpsWorkflowModel.setDimmingGroupName(edgeNote.getEdgeNotebook().getNotebookName());
                         }
-                        slvService.processSlv(jpsWorkflowModel,edgeNote);
+                        slvService.processSlv(jpsWorkflowModel, edgeNote);
                     } else {
                         System.out.println("Wrong formtemplate");
                         logger.info("Wrong formtemplates Present");
@@ -137,12 +137,22 @@ public class SlvInterfaceService extends AbstractSlvService {
 
     //streetlight.controller.str.id
     //
-    public JPSWorkflowModel processWorkFlowForm(List<FormData> formDataList) {
+    public JPSWorkflowModel processWorkFlowForm(List<FormData> formDataList, EdgeNote edgeNote) {
         JPSWorkflowModel jpsWorkflowModel = new JPSWorkflowModel();
         String categoryStrId = properties.getProperty("streetlight.categorystr.id");
         String controllerStrId = properties.getProperty("streetlight.controller.str.id");
         String geozonePath = properties.getProperty("streetlight.slv.geozonepath");
+        String nodeTypeStrId = properties.getProperty("streetlight.slv.equipment.type");
+        Feature feature = (Feature) GeoJSONFactory.create(edgeNote.getGeometry());
+        // parse Geometry from Feature
+        GeoJSONReader reader = new GeoJSONReader();
+        Geometry geom = reader.read(feature.getGeometry());
+        if (edgeNote.getGeometry() != null) {
+            jpsWorkflowModel.setLat(String.valueOf(geom.getCoordinate().x));
+            jpsWorkflowModel.setLng(String.valueOf(geom.getCoordinate().y));
+        }
         jpsWorkflowModel.setControllerStrId(controllerStrId);
+        jpsWorkflowModel.setEquipmentType(nodeTypeStrId);
         jpsWorkflowModel.setProvider_name(properties.getProperty("jps.provider.name"));
         jpsWorkflowModel.setGeozonePath(geozonePath);
         jpsWorkflowModel.setLowvoltagethreshold(Integer.valueOf(properties.getProperty("jps.low.voltage.thershold")));

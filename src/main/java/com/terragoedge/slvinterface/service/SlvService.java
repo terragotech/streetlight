@@ -44,14 +44,16 @@ public class SlvService extends AbstractSlvService {
         JsonArray devices = checkDeviceExist(jpsWorkflowModel.getIdOnController());// search idoncontroller on slv - ** rest call
         if (devices != null && devices.size() == 1) {// device already present in slv
             processDeviceValues(jpsWorkflowModel, true, edgeNote);
-            processMacAddress(jpsWorkflowModel, edgeNote, devices);
+            processMacAddress(jpsWorkflowModel, edgeNote, devices.get(0).getAsJsonObject().get("id").getAsInt());
         } else if (devices == null || devices.size() == 0) {// device not present in slv
             ResponseEntity<String> responseEntity = createDevice(edgeNote, jpsWorkflowModel);// create device in slv
             if(responseEntity != null) {
                 saveDevice(jpsWorkflowModel, edgeNote, responseEntity);// save or update slvdevice in local db
                 if (responseEntity.getStatusCode() == HttpStatus.OK) {
+                    JsonObject jsonObject = new JsonParser().parse(responseEntity.getBody()).getAsJsonObject();
+                    int deviceid = jsonObject.get("id").getAsInt();
                     processDeviceValues(jpsWorkflowModel, false, edgeNote);
-                    processMacAddress(jpsWorkflowModel, edgeNote, devices);
+                    processMacAddress(jpsWorkflowModel, edgeNote, deviceid);
                 }
             }
         } else {
@@ -91,7 +93,7 @@ public class SlvService extends AbstractSlvService {
     }
 
 
-    private void processMacAddress(JPSWorkflowModel jpsWorkflowModel, EdgeNote edgeNote, JsonArray devices) throws ReplaceOLCFailedException {
+    private void processMacAddress(JPSWorkflowModel jpsWorkflowModel, EdgeNote edgeNote, int deviceID) throws ReplaceOLCFailedException {
         if(properties.getProperty("streetlights.replaceolc.enable").equals("true")) {
             List<Value> values = checkMacAddressExists(jpsWorkflowModel.getMacAddress());// check mac address already present
             if (values != null && values.size() > 0) {
@@ -115,7 +117,7 @@ public class SlvService extends AbstractSlvService {
                     connectionDAO.saveDuplicateMacAddress(duplicateMacAddress);
                 }// else pole already assigned with correct macaddress
             } else {
-                int deviceID = devices.get(0).getAsJsonObject().get("id").getAsInt();
+
                 ResponseEntity<String> responseEntity = getDeviceData(deviceID);// check device has another mac  - ** rest call
                 if (responseEntity.getStatusCode() == HttpStatus.OK) {
                     JsonObject jsonObject = new JsonParser().parse(responseEntity.getBody()).getAsJsonObject();
@@ -173,11 +175,13 @@ public class SlvService extends AbstractSlvService {
 
     private ResponseEntity<String> callSetDeviceValues(JPSWorkflowModel jpsWorkflowModel) {
         List<Object> paramList = new ArrayList<>();
+        paramList.add("idOnController=" + jpsWorkflowModel.getIdOnController());
+        paramList.add("controllerStrId=" + jpsWorkflowModel.getControllerStrId());
+        paramList.add("nodeTypeStrId=" + jpsWorkflowModel.getEquipmentType());
         paramList.add("address1=" + jpsWorkflowModel.getAddress1());
         paramList.add("location.streetdescription=" + jpsWorkflowModel.getStreetdescription());
         paramList.add("categoryStrId=" + jpsWorkflowModel.getCategoryStrId());
         paramList.add("location.city=" + jpsWorkflowModel.getCity());
-        paramList.add("controllerStrId=" + jpsWorkflowModel.getControllerStrId());
         paramList.add("dimmingGroupName=" + jpsWorkflowModel.getDimmingGroupName());
         paramList.add("provider.name=" + jpsWorkflowModel.getProvider_name());
         paramList.add("geoZone path=" + jpsWorkflowModel.getGeozonePath());
@@ -202,7 +206,6 @@ public class SlvService extends AbstractSlvService {
         paramList.add("device.node.serialnumber=" + jpsWorkflowModel.getSerialnumber());
         paramList.add("location.zipcode=" + jpsWorkflowModel.getLocation_zipcode());
         paramList.add("address1=" + jpsWorkflowModel.getAddress1());
-        paramList.add("address1=" + jpsWorkflowModel.getAddress1());
         ResponseEntity<String> responseEntity = setDeviceValues(paramList);
         return responseEntity;
     }
@@ -212,7 +215,8 @@ public class SlvService extends AbstractSlvService {
         slvSyncDetail.setNoteGuid(edgeNote.getNoteGuid());
         slvSyncDetail.setPoleNumber(jpsWorkflowModel.getIdOnController());
         slvSyncDetail.setProcessedDateTime(System.currentTimeMillis());
-        slvSyncDetail.setSlvDeviceDetailsResponse(responseEntity.getBody());
+        String response = StringUtils.left(responseEntity.getBody(),100);
+        slvSyncDetail.setSlvDeviceDetailsResponse(response);
         slvSyncDetail.setTitle(edgeNote.getTitle());
         slvSyncDetail.setDeviceDetails(gson.toJson(jpsWorkflowModel));
         slvSyncDetail.setStatus((responseEntity.getStatusCode() == HttpStatus.OK) ? Status.Success : Status.Failure);
