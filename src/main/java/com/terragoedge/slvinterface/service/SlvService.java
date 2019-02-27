@@ -192,7 +192,7 @@ public class SlvService extends AbstractSlvService {
         paramList.add("name=" + jpsWorkflowModel.getIdOnController());
         paramList.add("pole.type=" + jpsWorkflowModel.getPole_type());
         paramList.add("model=" + jpsWorkflowModel.getModel());
-        paramList.add("macAddress=" + jpsWorkflowModel.getMacAddress());
+        paramList.add("MacAddress=" + jpsWorkflowModel.getMacAddress());
         paramList.add("location.utillocationid=" + jpsWorkflowModel.getUtillocationid());
         paramList.add("fixing.type=" + jpsWorkflowModel.getFixing_type());
         paramList.add("install.date=" + jpsWorkflowModel.getInstall_date());

@@ -385,7 +385,7 @@ public abstract class AbstractSlvService extends EdgeService {
         if (parentGeozoneModel == null) {
             //create parent and child geozone
             parentGeozoneModel = createGeozone(notebookName, 467);
-            childGeozone = getGeozoneIdByName(streetName, parentGeozoneModel.getId());
+            childGeozone = createGeozone(streetName, parentGeozoneModel.getId());
         } else {
             //get child geozone
             childGeozone = getGeozoneIdByName(streetName, parentGeozoneModel.getId());

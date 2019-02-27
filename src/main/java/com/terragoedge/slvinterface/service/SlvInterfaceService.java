@@ -8,8 +8,12 @@ import com.terragoedge.slvinterface.enumeration.Status;
 import com.terragoedge.slvinterface.exception.*;
 import com.terragoedge.slvinterface.model.*;
 import com.terragoedge.slvinterface.utils.PropertiesReader;
+import com.vividsolutions.jts.geom.Geometry;
 import org.apache.log4j.Logger;
 import org.springframework.http.ResponseEntity;
+import org.wololo.geojson.Feature;
+import org.wololo.geojson.GeoJSONFactory;
+import org.wololo.jts2geojson.GeoJSONReader;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
@@ -86,7 +90,7 @@ public class SlvInterfaceService extends AbstractSlvService {
         }
         logger.info("Process End :");
         logger.info("start report process");
-        slvService.startReport();
+       // slvService.startReport();
         logger.info("report process end");
     }
 
@@ -115,6 +119,7 @@ public class SlvInterfaceService extends AbstractSlvService {
                         JPSWorkflowModel jpsWorkflowModel = processWorkFlowForm(formDatasList);
                         if(edgeNote.getEdgeNotebook()!=null){
                             jpsWorkflowModel.setNotebookName(edgeNote.getEdgeNotebook().getNotebookName());
+                            jpsWorkflowModel.setDimmingGroupName(edgeNote.getEdgeNotebook().getNotebookName());
                         }
                         slvService.processSlv(jpsWorkflowModel,edgeNote);
                     } else {
