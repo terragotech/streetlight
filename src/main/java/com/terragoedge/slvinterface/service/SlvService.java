@@ -47,7 +47,7 @@ public class SlvService extends AbstractSlvService {
             processMacAddress(jpsWorkflowModel, edgeNote, devices.get(0).getAsJsonObject().get("id").getAsInt());
         } else if (devices == null || devices.size() == 0) {// device not present in slv
             ResponseEntity<String> responseEntity = createDevice(edgeNote, jpsWorkflowModel);// create device in slv
-            if(responseEntity != null) {
+            if (responseEntity != null) {
                 saveDevice(jpsWorkflowModel, edgeNote, responseEntity);// save or update slvdevice in local db
                 if (responseEntity.getStatusCode() == HttpStatus.OK) {
                     JsonObject jsonObject = new JsonParser().parse(responseEntity.getBody()).getAsJsonObject();
@@ -62,7 +62,7 @@ public class SlvService extends AbstractSlvService {
     }
 
     private void processDeviceValues(JPSWorkflowModel jpsWorkflowModel, boolean devicePresentInSlv, EdgeNote edgeNote) throws Exception {
-        if(properties.getProperty("streetlights.setdevice.enable").equals("true")) {
+        if (properties.getProperty("streetlights.setdevice.enable").equals("true")) {
             SlvSyncDetail dbSyncDetail = connectionDAO.getSlvSyncDetail(jpsWorkflowModel.getIdOnController());
             if (devicePresentInSlv) { // if false, then no need to check device values are same or not
                 if (dbSyncDetail == null) {// get device values from local dp and check
@@ -94,7 +94,7 @@ public class SlvService extends AbstractSlvService {
 
 
     private void processMacAddress(JPSWorkflowModel jpsWorkflowModel, EdgeNote edgeNote, int deviceID) throws ReplaceOLCFailedException {
-        if(properties.getProperty("streetlights.replaceolc.enable").equals("true")) {
+        if (properties.getProperty("streetlights.replaceolc.enable").equals("true")) {
             List<Value> values = checkMacAddressExists(jpsWorkflowModel.getMacAddress());// check mac address already present
             if (values != null && values.size() > 0) {
                 String existingPoleNumber = "";
@@ -173,39 +173,42 @@ public class SlvService extends AbstractSlvService {
         }
     }
 
+    protected void addStreetLightData(String key, String value, List<Object> paramsList) {
+        paramsList.add("valueName=" + key.trim());
+        paramsList.add("value=" + ((value != null) ? value.trim() : ""));
+    }
+
     private ResponseEntity<String> callSetDeviceValues(JPSWorkflowModel jpsWorkflowModel) {
         List<Object> paramList = new ArrayList<>();
         paramList.add("idOnController=" + jpsWorkflowModel.getIdOnController());
         paramList.add("controllerStrId=" + jpsWorkflowModel.getControllerStrId());
-        paramList.add("nodeTypeStrId=" + jpsWorkflowModel.getEquipmentType());
-        paramList.add("address1=" + jpsWorkflowModel.getAddress1());
-        paramList.add("location.streetdescription=" + jpsWorkflowModel.getStreetdescription());
-        paramList.add("categoryStrId=" + jpsWorkflowModel.getCategoryStrId());
-        paramList.add("location.city=" + jpsWorkflowModel.getCity());
-        paramList.add("dimmingGroupName=" + jpsWorkflowModel.getDimmingGroupName());
-        paramList.add("provider.name=" + jpsWorkflowModel.getProvider_name());
-        paramList.add("geoZone path=" + jpsWorkflowModel.getGeozonePath());
-        paramList.add("network.highvoltagethreshold=" + jpsWorkflowModel.getHighvoltagethreshold());
-        paramList.add("idOnController=" + jpsWorkflowModel.getIdOnController());
-        paramList.add("installStatus=" + jpsWorkflowModel.getInstallStatus());
-        paramList.add("lampType=" + jpsWorkflowModel.getLampType());
-        paramList.add("lat=" + jpsWorkflowModel.getLat());
-        paramList.add("location.locationtype=" + jpsWorkflowModel.getLocationtype());
-        paramList.add("lng=" + jpsWorkflowModel.getLng());
-        paramList.add("network.lowvoltagethreshold=" + jpsWorkflowModel.getLowvoltagethreshold());
-        paramList.add("name=" + jpsWorkflowModel.getIdOnController());
-        paramList.add("pole.type=" + jpsWorkflowModel.getPole_type());
-        paramList.add("model=" + jpsWorkflowModel.getModel());
-        paramList.add("MacAddress=" + jpsWorkflowModel.getMacAddress());
-        paramList.add("location.utillocationid=" + jpsWorkflowModel.getUtillocationid());
-        paramList.add("fixing.type=" + jpsWorkflowModel.getFixing_type());
-        paramList.add("install.date=" + jpsWorkflowModel.getInstall_date());
-        paramList.add("network.type=" + jpsWorkflowModel.getNetwork_type());
-        paramList.add("pole.shape=" + jpsWorkflowModel.getPole_shape());
-        paramList.add("pole.status=" + jpsWorkflowModel.getPole_status());
-        paramList.add("device.node.serialnumber=" + jpsWorkflowModel.getSerialnumber());
-        paramList.add("location.zipcode=" + jpsWorkflowModel.getLocation_zipcode());
-        paramList.add("address1=" + jpsWorkflowModel.getAddress1());
+        addStreetLightData("address1", jpsWorkflowModel.getAddress1(), paramList);
+        addStreetLightData("location.streetdescription", jpsWorkflowModel.getStreetdescription(), paramList);
+        addStreetLightData("categoryStrId", jpsWorkflowModel.getCategoryStrId(), paramList);
+        addStreetLightData("location.city", jpsWorkflowModel.getCity(), paramList);
+        addStreetLightData("dimmingGroupName", jpsWorkflowModel.getDimmingGroupName(), paramList);
+        addStreetLightData("provider.name", jpsWorkflowModel.getProvider_name(), paramList);
+        addStreetLightData("geoZone path", jpsWorkflowModel.getGeozonePath(), paramList);
+        addStreetLightData("network.highvoltagethreshold", String.valueOf(jpsWorkflowModel.getHighvoltagethreshold()), paramList);
+        addStreetLightData("idOnController", jpsWorkflowModel.getIdOnController(), paramList);
+        addStreetLightData("installStatus", jpsWorkflowModel.getInstallStatus(), paramList);
+        addStreetLightData("lampType", jpsWorkflowModel.getLampType(), paramList);
+        addStreetLightData("lat", jpsWorkflowModel.getLat(), paramList);
+        addStreetLightData("location.locationtype", jpsWorkflowModel.getLocationtype(), paramList);
+        addStreetLightData("lng", jpsWorkflowModel.getLng(), paramList);
+        addStreetLightData("network.lowvoltagethreshold", String.valueOf(jpsWorkflowModel.getLowvoltagethreshold()), paramList);
+        addStreetLightData("name", jpsWorkflowModel.getIdOnController(), paramList);
+        addStreetLightData("pole.type", jpsWorkflowModel.getPole_type(), paramList);
+        addStreetLightData("model", jpsWorkflowModel.getModel(), paramList);
+        // addStreetLightData("MacAddress", jpsWorkflowModel.getMacAddress(), paramList);
+        addStreetLightData("location.utillocationid", jpsWorkflowModel.getUtillocationid(), paramList);
+        addStreetLightData("fixing.type", jpsWorkflowModel.getFixing_type(), paramList);
+        addStreetLightData("install.date", jpsWorkflowModel.getInstall_date(), paramList);
+        addStreetLightData("network.type", jpsWorkflowModel.getNetwork_type(), paramList);
+        addStreetLightData("pole.shape", jpsWorkflowModel.getPole_shape(), paramList);
+        addStreetLightData("pole.status", jpsWorkflowModel.getPole_status(), paramList);
+        addStreetLightData("device.node.serialnumber", jpsWorkflowModel.getSerialnumber(), paramList);
+        addStreetLightData("location.zipcode", jpsWorkflowModel.getLocation_zipcode(), paramList);
         ResponseEntity<String> responseEntity = setDeviceValues(paramList);
         return responseEntity;
     }
@@ -215,7 +218,7 @@ public class SlvService extends AbstractSlvService {
         slvSyncDetail.setNoteGuid(edgeNote.getNoteGuid());
         slvSyncDetail.setPoleNumber(jpsWorkflowModel.getIdOnController());
         slvSyncDetail.setProcessedDateTime(System.currentTimeMillis());
-        String response = StringUtils.left(responseEntity.getBody(),100);
+        String response = StringUtils.left(responseEntity.getBody(), 100);
         slvSyncDetail.setSlvDeviceDetailsResponse(response);
         slvSyncDetail.setTitle(edgeNote.getTitle());
         slvSyncDetail.setDeviceDetails(gson.toJson(jpsWorkflowModel));
@@ -227,32 +230,32 @@ public class SlvService extends AbstractSlvService {
         }
     }
 
-    public void startReport(){
+    public void startReport() {
         String prePath = "./output/email/";
         DateTime dateTime = new DateTime();
         long todayMillis = dateTime.withTimeAtStartOfDay().getMillis();
         String folderName = dateTime.toString("yyy_MM_dd_HH_mm");
-        String outputPath = prePath+folderName;
+        String outputPath = prePath + folderName;
         File folder = new File(outputPath);
-        if(!folder.exists()){
+        if (!folder.exists()) {
             folder.mkdirs();
         }
         String date = dateTime.toString("yyy_MM_dd");
-        String slvDeviceCsvPath = outputPath+File.separator+"slv_device_"+folderName+".csv";
-        String duplicateMacCsvPath = outputPath+File.separator+"duplicate_mac_"+folderName+".csv";
-        String slvSyncDetailCsvPath = outputPath+File.separator+"slv_sync_details_"+folderName+".csv";
-        CsvConnectionDao.importCsv("COPY(select title,noteguid,pole_number,old_pole_number,to_timestamp(created_date_time/1000) as createdtime,to_timestamp(processed_date_time/1000) as processedTime, status,slv_reponse from slvdevice where processed_date_time >= "+todayMillis+") TO '"+slvDeviceCsvPath+"' DELIMITER ',' CSV HEADER;");
-        CsvConnectionDao.importCsv("COPY(select title,noteguid,pole_number,existing_pole_number,macaddress,to_timestamp(processed_date_time/1000) as processedTime from slv_duplicate_macaddress where processed_date_time >= "+todayMillis+") TO '"+duplicateMacCsvPath+"' DELIMITER ',' CSV HEADER;");
-        CsvConnectionDao.importCsv("COPY(select title,noteguid,pole_number,to_timestamp(created_date_time/1000) as createdtime,to_timestamp(processed_date_time/1000) as processedTime, status,slv_device_detail_reponse,slv_replace_olc_response from slvsyncdetails where processed_date_time >= "+todayMillis+") TO '"+slvSyncDetailCsvPath+"' DELIMITER ',' CSV HEADER;");
-        String zipFilePath = prePath+"report_"+folderName+".zip";
+        String slvDeviceCsvPath = outputPath + File.separator + "slv_device_" + folderName + ".csv";
+        String duplicateMacCsvPath = outputPath + File.separator + "duplicate_mac_" + folderName + ".csv";
+        String slvSyncDetailCsvPath = outputPath + File.separator + "slv_sync_details_" + folderName + ".csv";
+        CsvConnectionDao.importCsv("COPY(select title,noteguid,pole_number,old_pole_number,to_timestamp(created_date_time/1000) as createdtime,to_timestamp(processed_date_time/1000) as processedTime, status,slv_reponse from slvdevice where processed_date_time >= " + todayMillis + ") TO '" + slvDeviceCsvPath + "' DELIMITER ',' CSV HEADER;");
+        CsvConnectionDao.importCsv("COPY(select title,noteguid,pole_number,existing_pole_number,macaddress,to_timestamp(processed_date_time/1000) as processedTime from slv_duplicate_macaddress where processed_date_time >= " + todayMillis + ") TO '" + duplicateMacCsvPath + "' DELIMITER ',' CSV HEADER;");
+        CsvConnectionDao.importCsv("COPY(select title,noteguid,pole_number,to_timestamp(created_date_time/1000) as createdtime,to_timestamp(processed_date_time/1000) as processedTime, status,slv_device_detail_reponse,slv_replace_olc_response from slvsyncdetails where processed_date_time >= " + todayMillis + ") TO '" + slvSyncDetailCsvPath + "' DELIMITER ',' CSV HEADER;");
+        String zipFilePath = prePath + "report_" + folderName + ".zip";
         try {
             EmailUtils.compressZipfile(outputPath, zipFilePath);
-        }catch (Exception e){
+        } catch (Exception e) {
             e.printStackTrace();
         }
         File file = new File(zipFilePath);
-        if(file.exists()) {
-            EmailUtils.sendEmail(zipFilePath,("JPS-SLV Interface Reports on"+date),"Please Find the attachment","report_"+date+".zip");
+        if (file.exists()) {
+            EmailUtils.sendEmail(zipFilePath, ("JPS-SLV Interface Reports on" + date), "Please Find the attachment", "report_" + date + ".zip");
         }
     }
 

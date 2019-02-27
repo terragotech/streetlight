@@ -102,7 +102,7 @@ public abstract class AbstractSlvService extends EdgeService {
             streetLightDataParams.put("methodName", methodName);
             streetLightDataParams.put("categoryStrId", categoryStrId);
             streetLightDataParams.put("controllerStrId", controllerStrId);
-            streetLightDataParams.put("idOnController", edgenote.getTitle());
+            streetLightDataParams.put("idOnController", jpsWorkflowModel.getIdOnController());
             streetLightDataParams.put("geoZoneId", String.valueOf(jpsWorkflowModel.getGeozoneId()));
             streetLightDataParams.put("lng", String.valueOf(geom.getCoordinate().x));
             streetLightDataParams.put("lat", String.valueOf(geom.getCoordinate().y));
