@@ -263,7 +263,6 @@ public abstract class AbstractSlvService extends EdgeService {
     }
 
     public JsonArray checkDeviceExist(String idOnController) {
-        JsonArray deviceArray = null;
         try {
             logger.info("loadDeviceValues called.");
             String mainUrl = properties.getProperty("streetlight.slv.url.main");
@@ -348,14 +347,17 @@ public abstract class AbstractSlvService extends EdgeService {
         String mainUrl = properties.getProperty("streetlight.slv.url.main");
         String createGeozoneUrl = properties.getProperty("streetlight.slv.url.creategeozone");
         String latitudeMin = properties.getProperty("streetlight.slv.latMin");
+        String latitudeMax = properties.getProperty("streetlight.slv.latMax");
+        String longitudeMin = properties.getProperty("streetlight.slv.lngMin");
+        String longitudeMax = properties.getProperty("streetlight.slv.lngMax");
         String geozoneUrl = mainUrl + createGeozoneUrl;
         List<String> paramsList = new ArrayList<>();
         paramsList.add("name=" + geoZoneName);
         paramsList.add("parentId=" + parentId);
-        paramsList.add("latMin=17.678359");
-        paramsList.add("latMax=18.54099");
-        paramsList.add("lngMin=-78.406047");
-        paramsList.add("lngMax=-76.134630");
+        paramsList.add("latMin="+latitudeMin);
+        paramsList.add("latMax="+latitudeMax);
+        paramsList.add("lngMin="+longitudeMin);
+        paramsList.add("lngMax="+longitudeMax);
         paramsList.add("ser=json");
         String params = StringUtils.join(paramsList, "&");
         geozoneUrl = geozoneUrl + "?" + params;
