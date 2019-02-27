@@ -85,6 +85,9 @@ public class SlvInterfaceService extends AbstractSlvService {
             }
         }
         logger.info("Process End :");
+        logger.info("start report process");
+        slvService.startReport();
+        logger.info("report process end");
     }
 
     private void processEdgeNote(EdgeNote edgeNote, List<String> noteGuids, String formTemplateGuid, boolean isResync) {
