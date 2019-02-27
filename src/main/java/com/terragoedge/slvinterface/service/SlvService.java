@@ -1,9 +1,6 @@
 package com.terragoedge.slvinterface.service;
 
-import com.google.gson.Gson;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
+import com.google.gson.*;
 import com.terragoedge.slvinterface.dao.ConnectionDAO;
 import com.terragoedge.slvinterface.dao.CsvConnectionDao;
 import com.terragoedge.slvinterface.dao.tables.DuplicateMacAddress;
@@ -117,14 +114,22 @@ public class SlvService extends AbstractSlvService {
                     connectionDAO.saveDuplicateMacAddress(duplicateMacAddress);
                 }// else pole already assigned with correct macaddress
             } else {
-
                 ResponseEntity<String> responseEntity = getDeviceData(deviceID);// check device has another mac  - ** rest call
                 if (responseEntity.getStatusCode() == HttpStatus.OK) {
                     JsonObject jsonObject = new JsonParser().parse(responseEntity.getBody()).getAsJsonObject();
                     JsonArray macvalues = jsonObject.get("values").getAsJsonArray();
                     if (macvalues != null && macvalues.size() == 1) {
-                        String mac = macvalues.get(0).getAsString();
-                        if (!mac.equals(jpsWorkflowModel.getMacAddress())) {// slv and edge having different mac address
+                        JsonElement jsonElement = macvalues.get(0);
+                        String mac = null;
+                        if(jsonElement != null){
+                            JsonArray jsonArray = jsonElement.getAsJsonArray();
+                            if(jsonArray.size() == 1){
+                                mac = (jsonArray.get(0).isJsonNull()) ? null : jsonArray.get(0).getAsString();
+                            }
+                        }
+                        if(mac == null){
+                            replaceOLC(jpsWorkflowModel.getControllerStrId(), jpsWorkflowModel.getIdOnController(), jpsWorkflowModel.getMacAddress(), edgeNote, jpsWorkflowModel);
+                        }else if (!mac.equals(jpsWorkflowModel.getMacAddress())) {// slv and edge having different mac address
                             replaceOLC(jpsWorkflowModel.getControllerStrId(), jpsWorkflowModel.getIdOnController(), "", edgeNote, jpsWorkflowModel);
                             replaceOLC(jpsWorkflowModel.getControllerStrId(), jpsWorkflowModel.getIdOnController(), jpsWorkflowModel.getMacAddress(), edgeNote, jpsWorkflowModel);
                         }
@@ -133,7 +138,10 @@ public class SlvService extends AbstractSlvService {
                     } else {
                         logger.error("slv device having more mac address pole: " + jpsWorkflowModel.getIdOnController());
                     }
-                } else {
+                } else if(responseEntity.getStatusCode() == HttpStatus.NOT_FOUND){// device doesn't had mac address
+                    replaceOLC(jpsWorkflowModel.getControllerStrId(), jpsWorkflowModel.getIdOnController(), jpsWorkflowModel.getMacAddress(), edgeNote, jpsWorkflowModel);
+                }
+                else {
                     logger.error("error while fetching device data for this idoncontroller: " + jpsWorkflowModel.getIdOnController());
                     logger.error("error while fetching device data for this device id: " + deviceID);
                 }
@@ -155,7 +163,7 @@ public class SlvService extends AbstractSlvService {
             slvDevice.setNoteguid(edgeNote.getNoteGuid());
             slvDevice.setProcessedDateTime(System.currentTimeMillis());
             slvDevice.setStatus((responseEntity.getStatusCode() == HttpStatus.OK) ? Status.Success : Status.Failure);
-            String response = StringUtils.left(responseEntity.getBody(), 100);
+            String response = responseEntity.getBody();
             slvDevice.setSlvResponse(response);
             slvDevice.setPoleNumber(jpsWorkflowModel.getIdOnController());
             slvDevice.setOldPoleNumber(jpsWorkflowModel.getOldPoleNumber());
@@ -218,7 +226,7 @@ public class SlvService extends AbstractSlvService {
         slvSyncDetail.setNoteGuid(edgeNote.getNoteGuid());
         slvSyncDetail.setPoleNumber(jpsWorkflowModel.getIdOnController());
         slvSyncDetail.setProcessedDateTime(System.currentTimeMillis());
-        String response = StringUtils.left(responseEntity.getBody(), 100);
+        String response = responseEntity.getBody();
         slvSyncDetail.setSlvDeviceDetailsResponse(response);
         slvSyncDetail.setTitle(edgeNote.getTitle());
         slvSyncDetail.setDeviceDetails(gson.toJson(jpsWorkflowModel));

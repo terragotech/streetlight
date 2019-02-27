@@ -42,15 +42,6 @@ public class SlvInterfaceService extends AbstractSlvService {
             logger.error("Edge Invalid UserName and Password.");
             return;
         }
-
-        // Resync
-        /*String dataReSync = PropertiesReader.getProperties().getProperty("streetlight.edge.data.resync");
-        if (dataReSync != null && dataReSync.trim().equals("true")) {
-            logger.info("ReSync Process Starts.");
-            logger.info("ReSync Process Ends.");
-            System.exit(0);
-            return;
-        }*/
         // Already Processed NoteGuids
         List<String> noteGuids = connectionDAO.getProcessedItems();
         //  List<String> noteGuids = slvInterfaceDAO.getNoteGuids();
@@ -90,7 +81,7 @@ public class SlvInterfaceService extends AbstractSlvService {
         }
         logger.info("Process End :");
         logger.info("start report process");
-        // slvService.startReport();
+         slvService.startReport();
         logger.info("report process end");
     }
 
@@ -142,7 +133,7 @@ public class SlvInterfaceService extends AbstractSlvService {
         String categoryStrId = properties.getProperty("streetlight.categorystr.id");
         String controllerStrId = properties.getProperty("streetlight.controller.str.id");
         String geozonePath = properties.getProperty("streetlight.slv.geozonepath");
-        String geozonePaths = "/"+jpsWorkflowModel.getNotebookName()+"/"+jpsWorkflowModel.getAddress1();
+
         String nodeTypeStrId = properties.getProperty("streetlight.slv.equipment.type");
         Feature feature = (Feature) GeoJSONFactory.create(edgeNote.getGeometry());
         // parse Geometry from Feature
@@ -154,7 +145,6 @@ public class SlvInterfaceService extends AbstractSlvService {
         }
         jpsWorkflowModel.setControllerStrId(controllerStrId);
         jpsWorkflowModel.setEquipmentType(nodeTypeStrId);
-        jpsWorkflowModel.setGeozonePath(geozonePaths);
         jpsWorkflowModel.setProvider_name(properties.getProperty("jps.provider.name"));
         jpsWorkflowModel.setLowvoltagethreshold(Integer.valueOf(properties.getProperty("jps.low.voltage.thershold")));
         jpsWorkflowModel.setHighvoltagethreshold(Integer.valueOf(properties.getProperty("jps.high.voltage.thershold")));
@@ -237,6 +227,8 @@ public class SlvInterfaceService extends AbstractSlvService {
                 }
             }
         }
+        String geozonePaths = "/"+jpsWorkflowModel.getNotebookName()+"/"+jpsWorkflowModel.getAddress1();
+        jpsWorkflowModel.setGeozonePath(geozonePaths);
         return jpsWorkflowModel;
     }
 

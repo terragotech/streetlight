@@ -23,7 +23,7 @@ public class SlvDevice {
     private long processedDateTime;
     @DatabaseField(columnName = "status",dataType = DataType.ENUM_STRING)
     private Status status;
-    @DatabaseField(columnName = "slv_reponse")
+    @DatabaseField(columnName = "slv_reponse",dataType = DataType.LONG_STRING)
     private String slvResponse;
 
     public int getId() {

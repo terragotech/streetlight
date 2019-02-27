@@ -5,8 +5,6 @@ import com.terragoedge.slvinterface.service.*;
 public class SlvInterfaceApp {
 
     public static void main(String[] args) {
-
-      while (true) {
             try {
                 SlvInterfaceService slvInterfaceService = new SlvInterfaceService();
                 while (true) {
@@ -16,8 +14,6 @@ public class SlvInterfaceApp {
             } catch (Exception e) {
                 e.printStackTrace();
             }
-        }
-
     }
 
 }

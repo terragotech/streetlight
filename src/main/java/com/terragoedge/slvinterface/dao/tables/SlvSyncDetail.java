@@ -15,7 +15,7 @@ public class SlvSyncDetail {
     private String title;
     @DatabaseField(columnName = "pole_number")
     private String poleNumber;
-    @DatabaseField(columnName = "device_details")
+    @DatabaseField(columnName = "device_details",dataType = DataType.LONG_STRING)
     private String deviceDetails;
     @DatabaseField(columnName = "created_date_time")
     private long createdDateTime;
@@ -23,9 +23,9 @@ public class SlvSyncDetail {
     private long processedDateTime;
     @DatabaseField(columnName = "status",dataType = DataType.ENUM_STRING)
     private Status status;
-    @DatabaseField(columnName = "slv_device_detail_reponse")
+    @DatabaseField(columnName = "slv_device_detail_reponse",dataType = DataType.LONG_STRING)
     private String slvDeviceDetailsResponse;
-    @DatabaseField(columnName = "slv_replace_olc_response")
+    @DatabaseField(columnName = "slv_replace_olc_response",dataType = DataType.LONG_STRING)
     private String slvReplaceOLCResponse;
 
     public int getId() {
