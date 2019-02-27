@@ -22,7 +22,7 @@ public enum ConnectionDAO {
 
     INSTANCE;
 
-    private final static String DATABASE_URL = "jdbc:postgresql://127.0.0.1:5432/terragoedge?user=postgres&password=password";
+    private final static String DATABASE_URL = "jdbc:postgresql://127.0.0.1:5432/jpsedge?user=postgres&password=password";
 
     ConnectionSource connectionSource = null;
     private Dao<SlvSyncDetail, String> slvSyncDetailsDao;
@@ -37,11 +37,20 @@ public enum ConnectionDAO {
             connectionSource = new JdbcConnectionSource(DATABASE_URL);
             try {
                 TableUtils.createTable(connectionSource, SlvSyncDetail.class);
-                TableUtils.createTable(connectionSource, SlvDevice.class);
-                TableUtils.createTable(connectionSource, DuplicateMacAddress.class);
-                TableUtils.createTable(connectionSource, GeozoneEntity.class);
             } catch (Exception e) {
                 //  e.printStackTrace();
+            }
+            try {
+                TableUtils.createTable(connectionSource, GeozoneEntity.class);
+            } catch (Exception e) {
+            }
+            try {
+                TableUtils.createTable(connectionSource, DuplicateMacAddress.class);
+            } catch (Exception e) {
+            }
+            try {
+                TableUtils.createTable(connectionSource, SlvDevice.class);
+            } catch (Exception e) {
             }
             slvSyncDetailsDao = DaoManager.createDao(connectionSource, SlvSyncDetail.class);
             slvDeviceDao = DaoManager.createDao(connectionSource, SlvDevice.class);
@@ -55,7 +64,7 @@ public enum ConnectionDAO {
 
     public List<String> getEdgeNoteGuid(String formTemplateGuid) {
         try {
-            List<String> noteGuids = slvSyncDetailsDao.queryRaw("select noteguid from edgenote, edgeform where edgenote.isdeleted = false  and edgenote.iscurrent = true  and  edgenote.noteid =  edgeform.edgenoteentity_noteid and edgenote.createddatetime > 1549002982362 and edgenote.title = 'LC2B' and edgeform.formtemplateguid = '" + formTemplateGuid + "';", new RawRowMapper<String>() {
+            List<String> noteGuids = slvSyncDetailsDao.queryRaw("select noteguid from edgenote, edgeform where edgenote.isdeleted = false  and edgenote.iscurrent = true  and  edgenote.noteid =  edgeform.edgenoteentity_noteid and edgenote.title = '222-1' and edgeform.formtemplateguid = '" + formTemplateGuid + "';", new RawRowMapper<String>() {
                 @Override
                 public String mapRow(String[] columnNames, String[] resultColumns) throws SQLException {
                     return resultColumns[0];

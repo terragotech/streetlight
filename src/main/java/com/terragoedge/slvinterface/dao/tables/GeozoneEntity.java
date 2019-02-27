@@ -3,7 +3,7 @@ package com.terragoedge.slvinterface.dao.tables;
 import com.j256.ormlite.field.DatabaseField;
 import com.j256.ormlite.table.DatabaseTable;
 
-@DatabaseTable(tableName = "slvdevice")
+@DatabaseTable(tableName = "geozone")
 public class GeozoneEntity {
     public static String NOTEBOOKNAME="geozonename";
     public static String STREETNAME="childgeozonename";

@@ -12,6 +12,7 @@ import com.terragoedge.slvinterface.dao.tables.SlvSyncDetail;
 import com.terragoedge.slvinterface.enumeration.Status;
 import com.terragoedge.slvinterface.exception.*;
 import com.terragoedge.slvinterface.model.*;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -138,7 +139,8 @@ public class SlvService extends AbstractSlvService {
             slvDevice.setNoteguid(edgeNote.getNoteGuid());
             slvDevice.setProcessedDateTime(System.currentTimeMillis());
             slvDevice.setStatus((responseEntity.getStatusCode() == HttpStatus.OK) ? Status.Success : Status.Failure);
-            slvDevice.setSlvResponse(responseEntity.getBody());
+            String response = StringUtils.left(responseEntity.getBody(), 100);
+            slvDevice.setSlvResponse(response);
             slvDevice.setPoleNumber(jpsWorkflowModel.getIdOnController());
             slvDevice.setOldPoleNumber(jpsWorkflowModel.getOldPoleNumber());
             connectionDAO.saveSlvDevice(slvDevice);

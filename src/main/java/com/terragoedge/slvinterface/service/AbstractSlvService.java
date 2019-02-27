@@ -195,7 +195,6 @@ public abstract class AbstractSlvService extends EdgeService {
         System.out.println("URL : " + url);
         ResponseEntity<String> response = slvRestService.getPostRequest(url, null);
         return response;
-
     }
 
     public abstract void buildFixtureStreetLightData(String data, List<Object> paramsList, EdgeNote edgeNote)
@@ -341,7 +340,7 @@ public abstract class AbstractSlvService extends EdgeService {
         return null;
     }
 
-    public GeozoneModel createGeozone(String geoZoneName) {
+    public GeozoneModel createGeozone(String geoZoneName, int parentId) {
         GeozoneModel geozoneModel = null;
         String mainUrl = properties.getProperty("streetlight.slv.url.main");
         String createGeozoneUrl = properties.getProperty("streetlight.slv.url.creategeozone");
@@ -349,16 +348,18 @@ public abstract class AbstractSlvService extends EdgeService {
         String geozoneUrl = mainUrl + createGeozoneUrl;
         List<String> paramsList = new ArrayList<>();
         paramsList.add("name=" + geoZoneName);
-        paramsList.add("latMin=" + latitudeMin);
-        paramsList.add("latMax=" + geoZoneName);
-        paramsList.add("lngMin=" + geoZoneName);
-        paramsList.add("lngMax=" + geoZoneName);
+        paramsList.add("parentId=" + parentId);
+        paramsList.add("latMin=17.678359");
+        paramsList.add("latMax=18.54099");
+        paramsList.add("lngMin=-78.406047");
+        paramsList.add("lngMax=-76.134630");
         paramsList.add("ser=json");
         String params = StringUtils.join(paramsList, "&");
         geozoneUrl = geozoneUrl + "?" + params;
         ResponseEntity<String> responseEntity = slvRestService.getRequest(geozoneUrl, true, null);
         if (responseEntity.getStatusCodeValue() == 200) {
             String geozoneResponse = responseEntity.getBody();
+            System.out.println("Geozone Value: " + geozoneResponse);
             geozoneModel = gson.fromJson(geozoneResponse, GeozoneModel.class);
             return geozoneModel;
         }
@@ -372,7 +373,6 @@ public abstract class AbstractSlvService extends EdgeService {
         }
         geozoneEntity = new GeozoneEntity();
         geozoneEntity.setGeozoneName(notebookName);
-        geozoneEntity.setGeozoneName(notebookName);
         geozoneEntity.setChildgeozoneName(streetName);
         //check parent notebook has exist or not in slv
         GeozoneModel childGeozone;
@@ -381,14 +381,19 @@ public abstract class AbstractSlvService extends EdgeService {
         // create parent and child geozone if not exist parent geozone
         if (parentGeozoneModel == null) {
             //create parent and child geozone
-            parentGeozoneModel = createGeozone(notebookName);
-            childGeozone = getGeozoneIdByName(streetName, parentGeozoneModel.getParentId());
+            parentGeozoneModel = createGeozone(notebookName, 467);
+            childGeozone = getGeozoneIdByName(streetName, parentGeozoneModel.getId());
         } else {
             //get child geozone
-
+            childGeozone = getGeozoneIdByName(streetName, parentGeozoneModel.getId());
+            //check if child geozone under another parentgeozone, create new child geozone based on parent geozone.
+            if (childGeozone == null || !(childGeozone.getParentId() == parentGeozoneModel.getId())) {
+                childGeozone = createGeozone(streetName, parentGeozoneModel.getId());
+                //  childGeozone = getGeozoneIdByName(streetName, parentGeozoneModel.getId());
+            }
         }
         geozoneEntity.setGeozoneId(parentGeozoneModel.getId());
-       // geozoneEntity.setChildgeozoneId(childGeozone.getId());
+        geozoneEntity.setChildgeozoneId(childGeozone.getId());
         connectionDAO.createGeozone(geozoneEntity);
         return geozoneEntity;
     }

@@ -110,6 +110,9 @@ public class SlvInterfaceService extends AbstractSlvService {
                         FormData formData = formDataMaps.get(formTemplateGuid);
                         List<EdgeFormData> edgeFormDataList = formData.getFormDef();
                         JPSWorkflowModel jpsWorkflowModel = processWorkFlowForm(formDatasList);
+                        if(edgeNote.getEdgeNotebook()!=null){
+                            jpsWorkflowModel.setNotebookName(edgeNote.getEdgeNotebook().getNotebookName());
+                        }
                         slvService.processSlv(jpsWorkflowModel,edgeNote);
                     } else {
                         System.out.println("Wrong formtemplate");
