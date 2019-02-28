@@ -23,6 +23,8 @@ import org.springframework.http.ResponseEntity;
 import java.sql.SQLException;
 import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public abstract class AbstractProcessor {
 
@@ -134,10 +136,10 @@ public abstract class AbstractProcessor {
                 luminaireDate = jsonObject1.get("value").getAsString();
             }
         }
-        if (nodeInstall != null) {
+        if (nodeInstall != null && !nodeInstall.trim().isEmpty() && nodeInstall.trim().length() > 7) {
             cslpDate.setCslpNodeDate(nodeInstall);
         }
-        if (luminaireDate != null) {
+        if (luminaireDate != null && !luminaireDate.trim().isEmpty() && luminaireDate.trim().length() > 7) {
             cslpDate.setCslpLumDate(luminaireDate);
         }
         logger.info("cslpDate :" + gson.toJson(cslpDate));
@@ -364,7 +366,18 @@ public abstract class AbstractProcessor {
         return s.substring(0, pos) + c + s.substring(pos + 1).trim();
     }
 
-    public void buildFixtureStreetLightData(String data, List<Object> paramsList, EdgeNote edgeNote, SlvServerData slvServerData,InstallMaintenanceLogModel loggingModel)
+    public boolean stringContainsNumber( String s )
+    {
+        if(s != null && !s.trim().isEmpty()){
+            Pattern p = Pattern.compile( "[0-9]" );
+            Matcher m = p.matcher( s );
+
+            return m.find();
+        }
+        return false;
+    }
+
+    public void buildFixtureStreetLightData(String data, List<Object> paramsList, EdgeNote edgeNote, SlvServerData slvServerData,LoggingModel loggingModel)
             throws InValidBarCodeException {
         String[] fixtureInfo = data.split(",");
         logger.info("Fixture QR Scan Val length" + fixtureInfo.length);
@@ -406,7 +419,7 @@ public abstract class AbstractProcessor {
             addStreetLightData("power", powerVal, paramsList);
 
             String dimmingGroupName = contextListHashMap.get(loggingModel.getIdOnController());
-            if(dimmingGroupName != null && (dimmingGroupName.startsWith("3") || dimmingGroupName.startsWith("11") || dimmingGroupName.startsWith("12"))){
+            if(dimmingGroupName != null && stringContainsNumber(fixtureInfo[5]) && (dimmingGroupName.startsWith("3") || dimmingGroupName.startsWith("11") || dimmingGroupName.startsWith("12"))){
                 fixtureInfo[5] = "LED";
             }
 

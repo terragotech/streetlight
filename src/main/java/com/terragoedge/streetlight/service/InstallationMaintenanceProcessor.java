@@ -343,7 +343,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
         SlvServerData slvServerData = new SlvServerData();
         try {
             logger.info("Fixture QR Scan Validation Starts.");
-            buildFixtureStreetLightData(fixtureQrScan, paramsList, edgeNote, slvServerData);
+            buildFixtureStreetLightData(fixtureQrScan, paramsList, edgeNote, slvServerData,loggingModel);
             paramsList.clear();
             slvServerData.setIdOnController(edgeNote.getTitle());
 
@@ -441,7 +441,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
             addOtherParams(edgeNote, paramsList, idOnController, utilLocId, isNew, fixerQrScanValue, macAddress, loggingModel);
 
             if (fixerQrScanValue != null && !loggingModel.isFixtureQRSame()) {
-                buildFixtureStreetLightData(fixerQrScanValue, paramsList, edgeNote, slvServerData);//update fixer qrscan value
+                buildFixtureStreetLightData(fixerQrScanValue, paramsList, edgeNote, slvServerData,loggingModel);//update fixer qrscan value
             }
 
             if (comment != null) {
