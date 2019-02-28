@@ -84,6 +84,7 @@ public abstract class AbstractSlvService extends EdgeService {
     public ResponseEntity<String> createDevice(EdgeNote edgenote,
                                                JPSWorkflowModel jpsWorkflowModel) {
         if(properties.getProperty("streetlights.create.enable").equals("true")) {
+            logger.info("Create device in slv");
             Feature feature = (Feature) GeoJSONFactory.create(edgenote.getGeometry());
 
             // parse Geometry from Feature
@@ -196,6 +197,7 @@ public abstract class AbstractSlvService extends EdgeService {
         String params = StringUtils.join(paramsList, "&");
         url = url + "&" + params;
         System.out.println("SetDevice Called");
+        logger.info("settDevice value called");
         System.out.println("URL : " + url);
         ResponseEntity<String> response = slvRestService.getPostRequest(url, null);
         return response;
@@ -208,6 +210,7 @@ public abstract class AbstractSlvService extends EdgeService {
     public void replaceOLC(String controllerStrIdValue, String idOnController, String macAddress, EdgeNote edgeNote, JPSWorkflowModel jpsWorkflowModel)
             throws ReplaceOLCFailedException {
         try {
+            logger.info("Replace Olc called, Given Mac:"+macAddress);
             // Get Url detail from properties
             String mainUrl = properties.getProperty("streetlight.slv.url.main");
             String dataUrl = properties.getProperty("streetlight.url.replaceolc");
@@ -222,10 +225,11 @@ public abstract class AbstractSlvService extends EdgeService {
             paramsList.add("ser=json");
             String params = StringUtils.join(paramsList, "&");
             url = url + "?" + params;
-            System.out.println("Replace OLc called: " + macAddress);
-            System.out.println("Replace OLc Url" + url);
+            logger.info("Replace OLc called: " + macAddress);
+            logger.info("Replace OLc Url" + url);
             ResponseEntity<String> response = slvRestService.getPostRequest(url, null);
             String responseString = response.getBody();
+            logger.info("Replace Olc response :"+responseString);
             JsonObject replaceOlcResponse = (JsonObject) jsonParser.parse(responseString);
             String errorStatus = replaceOlcResponse.get("status").getAsString();
             SlvSyncDetail dbSyncDetail = connectionDAO.getSlvSyncDetail(idOnController);
@@ -265,7 +269,7 @@ public abstract class AbstractSlvService extends EdgeService {
 
     public JsonArray checkDeviceExist(String idOnController) {
         try {
-            logger.info("loadDeviceValues called.");
+            logger.info("Check given idOncontroller is exist or not");
             String mainUrl = properties.getProperty("streetlight.slv.url.main");
             String deviceUrl = properties.getProperty("streetlight.slv.url.search.device");
             String url = mainUrl + deviceUrl;
@@ -280,12 +284,13 @@ public abstract class AbstractSlvService extends EdgeService {
             String params = StringUtils.join(paramsList, "&");
             url = url + "?" + params;
             logger.info("Load Device url :" + url);
+            logger.info("Check idOnController's Url :"+url);
             ResponseEntity<String> response = slvRestService.getRequest(url, true, null);
             if (response.getStatusCodeValue() == 200) {
-                logger.info("LoadDevice Respose :" + response.getBody());
+                logger.info("check idoncontroller url Respose :" + response.getBody());
                 String responseString = response.getBody();
                 JsonObject jsonObject = new JsonParser().parse(responseString).getAsJsonObject();
-                logger.info("Device request json:" + gson.toJson(jsonObject));
+                logger.info("check request json:" + gson.toJson(jsonObject));
                 return jsonObject.getAsJsonArray("value");
             }
         } catch (Exception e) {
@@ -313,6 +318,7 @@ public abstract class AbstractSlvService extends EdgeService {
         paramsList.add("valueName=MacAddress");
         String params = StringUtils.join(paramsList, "&");
         deviceMainUrl = deviceMainUrl + "?" + params;
+        logger.info("GetDevice Url :"+deviceMainUrl);
         ResponseEntity<String> responseEntity = slvRestService.getRequest(deviceMainUrl, true, null);
         return responseEntity;
     }
@@ -331,9 +337,14 @@ public abstract class AbstractSlvService extends EdgeService {
         paramsList.add("ser=json");
         String params = StringUtils.join(paramsList, "&");
         geozoneUrl = geozoneUrl + "?" + params;
+        logger.info("-------Create Geozone start-----");
+        logger.info(geozoneUrl);
+        logger.info(parentId);
+        logger.info("-------Create Geozone end-----");
         ResponseEntity<String> responseEntity = slvRestService.getRequest(geozoneUrl, true, null);
         if (responseEntity.getStatusCodeValue() == 200) {
             String geozoneResponse = responseEntity.getBody();
+            logger.info("Create Geozone Response : "+geozoneResponse);
             geozoneModels = gson.fromJson(geozoneResponse, new TypeToken<List<GeozoneModel>>() {
             }.getType());
             if (geozoneModels.size() > 0) {
@@ -373,8 +384,11 @@ public abstract class AbstractSlvService extends EdgeService {
     }
 
     public GeozoneEntity getGeozoneEntity(String notebookName, String streetName) {
+        logger.info("Parent Geozone name as notebookName:"+notebookName);
+        logger.info("Sub or childgezone Name as StreetName :"+streetName);
         GeozoneEntity geozoneEntity = connectionDAO.getGeozoneEntity(notebookName, streetName);
         if (geozoneEntity != null) {
+            logger.info("Already has geozone values in geozone table");
             return geozoneEntity;
         }
         geozoneEntity = new GeozoneEntity();
@@ -386,14 +400,20 @@ public abstract class AbstractSlvService extends EdgeService {
         GeozoneModel parentGeozoneModel = getGeozoneIdByName(notebookName, -1);
         // create parent and child geozone if not exist parent geozone
         if (parentGeozoneModel == null) {
+            logger.info("There is no parent Geozones, need to create parent and child");
             //create parent and child geozone
             parentGeozoneModel = createGeozone(notebookName, 467);
+            logger.info("ParentGeozone value : "+((parentGeozoneModel!=null)? gson.toJson(parentGeozoneModel):null));
             childGeozone = createGeozone(streetName, parentGeozoneModel.getId());
+            logger.info("childGeozone value : "+((childGeozone!=null)? gson.toJson(childGeozone):null));
         } else {
             //get child geozone
+            logger.info("Exist parent geozone, Going to veryfi child geozone is exist or not");
             childGeozone = getGeozoneIdByName(streetName, parentGeozoneModel.getId());
+            logger.info("childGeozone value : "+((childGeozone!=null)? gson.toJson(childGeozone):null));
             //check if child geozone under another parentgeozone, create new child geozone based on parent geozone.
             if (childGeozone == null || !(childGeozone.getParentId() == parentGeozoneModel.getId())) {
+                logger.info("check if child geozone under another parentgeozone, create new child geozone based on parent geozone");
                 childGeozone = createGeozone(streetName, parentGeozoneModel.getId());
                 //  childGeozone = getGeozoneIdByName(streetName, parentGeozoneModel.getId());
             }

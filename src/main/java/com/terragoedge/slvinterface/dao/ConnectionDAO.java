@@ -109,7 +109,7 @@ public enum ConnectionDAO {
         try {
             duplicateMacaddressDao.create(duplicateMacAddress);
         } catch (Exception e) {
-            e.printStackTrace();
+            logger.error("Erro ",e);
         }
     }
 
@@ -203,9 +203,10 @@ public enum ConnectionDAO {
 
     public void createGeozone(GeozoneEntity geozoneEntity) {
         try {
+            logger.info("Geozone value has been inserted local geozone table");
             geozoneEntitiesDao.create(geozoneEntity);
         } catch (Exception e) {
-            e.printStackTrace();
+         logger.error("geozone inserted Error",e);
         }
     }
 

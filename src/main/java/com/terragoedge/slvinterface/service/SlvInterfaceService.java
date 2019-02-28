@@ -56,7 +56,7 @@ public class SlvInterfaceService extends AbstractSlvService {
         logger.info("GetNotesUrl :" + url);
         // Get List of noteid
         List<String> noteGuidsList = connectionDAO.getEdgeNoteGuid(formTemplateGuid);
-        System.out.println("noteList: " + noteGuidsList);
+        System.out.println("Processed NoteList: " + noteGuidsList);
         //end
         for (String edgenoteGuid : noteGuidsList) {
             try {
@@ -68,8 +68,9 @@ public class SlvInterfaceService extends AbstractSlvService {
                         List<EdgeNote> edgeNoteList = new ArrayList<>();
                         EdgeNote edgeNote = gson.fromJson(notesData, EdgeNote.class);
                         edgeNoteList.add(edgeNote);
-
+                        logger.info("Processed Note title size :" + edgeNoteList.size());
                         for (EdgeNote edgenote : edgeNoteList) {
+                            logger.info("ProcessNoteGuid is :" + edgenoteGuid);
                             logger.info("ProcessNoteTitle is :" + edgenote.getTitle());
                             processEdgeNote(edgenote, noteGuids, formTemplateGuid, false);
                         }
@@ -86,7 +87,6 @@ public class SlvInterfaceService extends AbstractSlvService {
     }
 
     private void processEdgeNote(EdgeNote edgeNote, List<String> noteGuids, String formTemplateGuid, boolean isResync) {
-        System.out.println("processEdgeNote :" + edgeNote.getTitle());
         try {
             // Check whether this note is already processed or not.
             if (!noteGuids.contains(edgeNote.getNoteGuid())) {
@@ -105,9 +105,11 @@ public class SlvInterfaceService extends AbstractSlvService {
                     }
 
                     if (isFormTemplatePresent) {
+                        logger.info("Given formtemplates present in this note.: "+edgeNote.getTitle());
                         FormData formData = formDataMaps.get(formTemplateGuid);
                         List<EdgeFormData> edgeFormDataList = formData.getFormDef();
                         JPSWorkflowModel jpsWorkflowModel = processWorkFlowForm(formDatasList, edgeNote);
+                        logger.info("JspWorkmodel json :"+gson.toJson(jpsWorkflowModel));
                         slvService.processSlv(jpsWorkflowModel, edgeNote);
                     } else {
                         System.out.println("Wrong formtemplate");
@@ -142,6 +144,8 @@ public class SlvInterfaceService extends AbstractSlvService {
         if (edgeNote.getGeometry() != null) {
             jpsWorkflowModel.setLat(String.valueOf(geom.getCoordinate().x));
             jpsWorkflowModel.setLng(String.valueOf(geom.getCoordinate().y));
+        }else {
+            logger.info("There is no location given note :"+edgeNote.getTitle());
         }
         jpsWorkflowModel.setControllerStrId(controllerStrId);
         jpsWorkflowModel.setEquipmentType(nodeTypeStrId);
@@ -228,6 +232,7 @@ public class SlvInterfaceService extends AbstractSlvService {
             }
         }
         String geozonePaths = "/"+jpsWorkflowModel.getNotebookName()+"/"+jpsWorkflowModel.getAddress1();
+        logger.info("Geozone path :"+geozonePath);
         jpsWorkflowModel.setGeozonePath(geozonePaths);
         return jpsWorkflowModel;
     }

@@ -16,7 +16,7 @@ public class SlvRestService {
     Properties properties = null;
     private static Logger logger = Logger.getLogger(SlvRestService.class);
 
-    public SlvRestService(){
+    public SlvRestService() {
         properties = PropertiesReader.getProperties();
     }
 
@@ -30,15 +30,15 @@ public class SlvRestService {
         }
         String params = StringUtils.join(values, "&");
         url = url + "?" + params;
-
-        return getRequest(url,isLog);
+        logger.info("Create Device Url"+url);
+        return getRequest(url, isLog);
     }
 
-    public ResponseEntity<String> getRequest(String url,boolean isLog) {
+    public ResponseEntity<String> getRequest(String url, boolean isLog) {
         logger.info("------------ Request ------------------");
         logger.info(url);
         logger.info("------------ Request End ------------------");
-       // url = "https://slv.poc02.ssn.ssnsgs.net:8443/reports/api/servlet/SLVAssetManagementAPI?methodName=createCategoryDevice&nodeTypeStrId=TB398484989!lightNode01&geoZoneId=738&lng=51.515193&lat=-0.10689554&controllerStrId=TalqBridge@TB398484989&categoryStrId=streetlight&idOnController=38127-demo";
+        // url = "https://slv.poc02.ssn.ssnsgs.net:8443/reports/api/servlet/SLVAssetManagementAPI?methodName=createCategoryDevice&nodeTypeStrId=TB398484989!lightNode01&geoZoneId=738&lng=51.515193&lat=-0.10689554&controllerStrId=TalqBridge@TB398484989&categoryStrId=streetlight&idOnController=38127-demo";
         HttpHeaders headers = getHeaders();
         RestTemplate restTemplate = new RestTemplate();
         HttpEntity request = new HttpEntity<>(headers);
@@ -46,7 +46,7 @@ public class SlvRestService {
         logger.info("------------ Response ------------------");
         logger.info("Response Code:" + response.getStatusCode().toString());
         String responseBody = response.getBody();
-        if(isLog){
+        if (isLog) {
             logger.info(responseBody);
         }
 
@@ -55,7 +55,7 @@ public class SlvRestService {
         return response;
     }
 
-    public ResponseEntity<String> getRequest(String url,boolean isLog,String accessToken) {
+    public ResponseEntity<String> getRequest(String url, boolean isLog, String accessToken) {
         logger.info("------------ Request ------------------");
         logger.info(url);
         logger.info("------------ Request End ------------------");
@@ -66,7 +66,7 @@ public class SlvRestService {
         logger.info("------------ Response ------------------");
         logger.info("Response Code:" + response.getStatusCode().toString());
         String responseBody = response.getBody();
-        if(isLog){
+        if (isLog) {
             logger.info(responseBody);
         }
 
@@ -75,7 +75,7 @@ public class SlvRestService {
         return response;
     }
 
-    public ResponseEntity<String> getPostRequest(String url,String accessToken) {
+    public ResponseEntity<String> getPostRequest(String url, String accessToken) {
         logger.info("------------ Request ------------------");
         logger.info(url);
         logger.info("------------ Request End ------------------");
@@ -86,10 +86,11 @@ public class SlvRestService {
         logger.info("------------ Response ------------------");
         logger.info("Response Code:" + response.getStatusCode().toString());
         String responseBody = response.getBody();
-      //  logger.info(responseBody);
+        //  logger.info(responseBody);
         logger.info("------------ Response End ------------------");
         return response;
     }
+
     public ResponseEntity<String> getPostRequest(String url) {
         logger.info("------------ Request ------------------");
         logger.info(url);
@@ -107,7 +108,7 @@ public class SlvRestService {
     }
 
 
-    public ResponseEntity<String> getPostRequest(String url,String accessToken,String contentType) {
+    public ResponseEntity<String> getPostRequest(String url, String accessToken, String contentType) {
         logger.info("------------ Request ------------------");
         logger.info(url);
         logger.info("------------ Request End ------------------");
@@ -129,10 +130,10 @@ public class SlvRestService {
         String userName = null;
         String password = null;
         HttpHeaders headers = new HttpHeaders();
-        if(accessToken != null){
-            headers.add("Authorization",  "Bearer "+accessToken);
+        if (accessToken != null) {
+            headers.add("Authorization", "Bearer " + accessToken);
             return headers;
-        }else{
+        } else {
             userName = properties.getProperty("streetlight.slv.username");
             password = properties.getProperty("streetlight.slv.password");
         }
@@ -141,17 +142,17 @@ public class SlvRestService {
         byte[] plainCredsBytes = plainCreds.getBytes();
         byte[] base64CredsBytes = Base64.encodeBase64(plainCredsBytes);
         String base64Creds = new String(base64CredsBytes);
-        headers.add("Authorization", "Basic "+base64Creds);
+        headers.add("Authorization", "Basic " + base64Creds);
         return headers;
     }
 
 
-    public ResponseEntity<String> getRequest(String url){
+    public ResponseEntity<String> getRequest(String url) {
         logger.info("------------ Request ------------------");
         logger.info(url);
         logger.info("------------ Request End ------------------");
         RestTemplate restTemplate = new RestTemplate();
-        ResponseEntity<String> response = restTemplate.postForEntity(url,null,   String.class);
+        ResponseEntity<String> response = restTemplate.postForEntity(url, null, String.class);
         logger.info("------------ Response ------------------");
         logger.info("Response Code:" + response.getStatusCode().toString());
         String responseBody = response.getBody();
@@ -161,6 +162,7 @@ public class SlvRestService {
         // return responseBody;
         return response;
     }
+
     private HttpHeaders getHeaders() {
         String userName = properties.getProperty("streetlight.slv.username");
         String password = properties.getProperty("streetlight.slv.password");
@@ -169,7 +171,7 @@ public class SlvRestService {
         byte[] base64CredsBytes = Base64.encodeBase64(plainCredsBytes);
         String base64Creds = new String(base64CredsBytes);
         HttpHeaders headers = new HttpHeaders();
-        headers.add("Authorization", "Basic "+base64Creds);
+        headers.add("Authorization", "Basic " + base64Creds);
         return headers;
     }
 

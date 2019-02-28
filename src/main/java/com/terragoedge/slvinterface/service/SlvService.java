@@ -36,21 +36,30 @@ public class SlvService extends AbstractSlvService {
     }
 
     public void processSlv(JPSWorkflowModel jpsWorkflowModel, EdgeNote edgeNote) throws Exception {
+        logger.info("ProcessSlv method start.");
         GeozoneEntity geozoneEntity = getGeozoneEntity(jpsWorkflowModel.getNotebookName(), jpsWorkflowModel.getAddress1());
+        logger.info("---------------------Geozone info start---------------------------");
+        logger.info(gson.toJson(geozoneEntity));
+        logger.info("---------------------Geozone info end---------------------------");
         jpsWorkflowModel.setGeozoneId(geozoneEntity.getChildgeozoneId());
         JsonArray devices = checkDeviceExist(jpsWorkflowModel.getIdOnController());// search idoncontroller on slv - ** rest call
         if (devices != null && devices.size() == 1) {// device already present in slv
+            logger.info("Given fixtures already exist in slv");
             processDeviceValues(jpsWorkflowModel, true, edgeNote);
             processMacAddress(jpsWorkflowModel, edgeNote, devices.get(0).getAsJsonObject().get("id").getAsInt());
         } else if (devices == null || devices.size() == 0) {// device not present in slv
+            logger.info("Given device not present in slv");
             ResponseEntity<String> responseEntity = createDevice(edgeNote, jpsWorkflowModel);// create device in slv
             if (responseEntity != null) {
+                logger.info("Create device Json response"+responseEntity.getBody());
                 saveDevice(jpsWorkflowModel, edgeNote, responseEntity);// save or update slvdevice in local db
                 if (responseEntity.getStatusCode() == HttpStatus.OK) {
                     JsonObject jsonObject = new JsonParser().parse(responseEntity.getBody()).getAsJsonObject();
                     int deviceid = jsonObject.get("id").getAsInt();
                     processDeviceValues(jpsWorkflowModel, false, edgeNote);
                     processMacAddress(jpsWorkflowModel, edgeNote, deviceid);
+                }else {
+                    logger.info("Device creation URL not Successed");
                 }
             }
         } else {
@@ -62,20 +71,28 @@ public class SlvService extends AbstractSlvService {
         if (properties.getProperty("streetlights.setdevice.enable").equals("true")) {
             SlvSyncDetail dbSyncDetail = connectionDAO.getSlvSyncDetail(jpsWorkflowModel.getIdOnController());
             if (devicePresentInSlv) { // if false, then no need to check device values are same or not
+                logger.info("Given fixtures already exist in slv.");
                 if (dbSyncDetail == null) {// get device values from local dp and check
+                    logger.info("Given fixture value not exist in local db");
                     ResponseEntity<String> responseEntity = callSetDeviceValues(jpsWorkflowModel);// call set device values - ** rest call
                     SlvSyncDetail slvSyncDetail = new SlvSyncDetail();// save slvSyncDetail in local db
                     saveSlvSyncDetail(slvSyncDetail, edgeNote, jpsWorkflowModel, responseEntity, false);
                     if (responseEntity.getStatusCode() != HttpStatus.OK) {
+                        logger.info("Error in set device values of fixture's info exist in local db");
                         throw new Exception("Error in set device values");
                     }
                 } else {
+                    logger.info("Given fixture value exist in local db");
                     if (!dbSyncDetail.getDeviceDetails().equals(gson.toJson(jpsWorkflowModel))) {// check local and current device details changed or not
+                        logger.info("Current fixtures and previous revision values are mismatch.");
                         ResponseEntity<String> responseEntity = callSetDeviceValues(jpsWorkflowModel);// call set device values - ** rest call
                         saveSlvSyncDetail(dbSyncDetail, edgeNote, jpsWorkflowModel, responseEntity, true);
                         if (responseEntity.getStatusCode() != HttpStatus.OK) {
+                            logger.info("Error in set device values of fixture's info exist in local db");
                             throw new Exception("Error in set device values");
                         }
+                    }else {
+                        logger.info("Current fixtures and previous revision values are same.");
                     }
                 }
             } else {
@@ -94,6 +111,7 @@ public class SlvService extends AbstractSlvService {
         if (properties.getProperty("streetlights.replaceolc.enable").equals("true")) {
             List<Value> values = checkMacAddressExists(jpsWorkflowModel.getMacAddress());// check mac address already present
             if (values != null && values.size() > 0) {
+                logger.info("Given fixture's macaddress is already present");
                 String existingPoleNumber = "";
                 boolean isDuplicateMacAddress = false;
                 for (Value value : values) {
@@ -102,6 +120,8 @@ public class SlvService extends AbstractSlvService {
                         existingPoleNumber = value.getIdOnController();
                     }
                 }
+                logger.info("Existing pole Number :"+existingPoleNumber);
+                logger.info("isDuplicateMacAddress :"+isDuplicateMacAddress);
                 if (isDuplicateMacAddress) {
                     // save duplicate mac address to local db
                     DuplicateMacAddress duplicateMacAddress = new DuplicateMacAddress();
@@ -111,13 +131,18 @@ public class SlvService extends AbstractSlvService {
                     duplicateMacAddress.setPoleNumber(jpsWorkflowModel.getIdOnController());
                     duplicateMacAddress.setProcessedDateTime(System.currentTimeMillis());
                     duplicateMacAddress.setTitle(edgeNote.getTitle());
+                    logger.info("Going to insert duplicateMacAddress Json:"+gson.toJson(duplicateMacAddress));
                     connectionDAO.saveDuplicateMacAddress(duplicateMacAddress);
-                }// else pole already assigned with correct macaddress
+                }else {
+                    logger.info("Given Macaddress assigned in same idoncontroller");
+                }
             } else {
-                ResponseEntity<String> responseEntity = getDeviceData(deviceID);// check device has another mac  - ** rest call
+                logger.info("check device has another mac");
+                ResponseEntity<String> responseEntity = getDeviceData(deviceID);
                 if (responseEntity.getStatusCode() == HttpStatus.OK) {
                     JsonObject jsonObject = new JsonParser().parse(responseEntity.getBody()).getAsJsonObject();
                     JsonArray macvalues = jsonObject.get("values").getAsJsonArray();
+                    logger.info("Device has another mac address response :"+gson.toJson(jsonObject));
                     if (macvalues != null && macvalues.size() == 1) {
                         JsonElement jsonElement = macvalues.get(0);
                         String mac = null;
@@ -128,17 +153,21 @@ public class SlvService extends AbstractSlvService {
                             }
                         }
                         if(mac == null){
+                            logger.info("MacAddress is null");
                             replaceOLC(jpsWorkflowModel.getControllerStrId(), jpsWorkflowModel.getIdOnController(), jpsWorkflowModel.getMacAddress(), edgeNote, jpsWorkflowModel);
-                        }else if (!mac.equals(jpsWorkflowModel.getMacAddress())) {// slv and edge having different mac address
+                        }else if (!mac.equals(jpsWorkflowModel.getMacAddress())) {
+                            logger.info("slv and edge having different mac address, Ready to called empty replace olc and macaddress");
                             replaceOLC(jpsWorkflowModel.getControllerStrId(), jpsWorkflowModel.getIdOnController(), "", edgeNote, jpsWorkflowModel);
                             replaceOLC(jpsWorkflowModel.getControllerStrId(), jpsWorkflowModel.getIdOnController(), jpsWorkflowModel.getMacAddress(), edgeNote, jpsWorkflowModel);
                         }
-                    } else if (macvalues == null || macvalues.size() == 0) {// mac address not present in slv so update mac address
+                    } else if (macvalues == null || macvalues.size() == 0) {
+                        logger.info("mac address not present in slv so update mac address");
                         replaceOLC(jpsWorkflowModel.getControllerStrId(), jpsWorkflowModel.getIdOnController(), jpsWorkflowModel.getMacAddress(), edgeNote, jpsWorkflowModel);
                     } else {
                         logger.error("slv device having more mac address pole: " + jpsWorkflowModel.getIdOnController());
                     }
                 } else if(responseEntity.getStatusCode() == HttpStatus.NOT_FOUND){// device doesn't had mac address
+                    logger.info("Device doesn't had mac address");
                     replaceOLC(jpsWorkflowModel.getControllerStrId(), jpsWorkflowModel.getIdOnController(), jpsWorkflowModel.getMacAddress(), edgeNote, jpsWorkflowModel);
                 }
                 else {
@@ -232,8 +261,10 @@ public class SlvService extends AbstractSlvService {
         slvSyncDetail.setDeviceDetails(gson.toJson(jpsWorkflowModel));
         slvSyncDetail.setStatus((responseEntity.getStatusCode() == HttpStatus.OK) ? Status.Success : Status.Failure);
         if (isUpdate) {
+            logger.info("slvsyncdetails object is updated");
             connectionDAO.updateSlvSyncDetail(slvSyncDetail);
         } else {
+            logger.info("slvsyncdetails object is newly inserted");
             connectionDAO.saveSlvSyncDetail(slvSyncDetail);
         }
     }
