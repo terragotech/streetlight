@@ -307,6 +307,14 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
             fixerQrScanValue = temp;
         }
 
+
+        //Suppose fixtureqrscan value has mac address but MAC Address is empty
+        if(newNodeMacAddress == null &&  (fixerQrScanValue != null && fixerQrScanValue.startsWith("00"))){
+            newNodeMacAddress = fixerQrScanValue;
+            fixerQrScanValue = null;
+            loggingModel.setFixtureQRSame(true);
+        }
+
         if (newNodeMacAddress != null) {
             try {
                 checkMacAddressExists(newNodeMacAddress, idOnController, null, null, loggingModel);
@@ -640,6 +648,14 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
                 nodeMacValue = fixerQrScanValue;
                 fixerQrScanValue = temp;
             }
+
+            //Suppose fixtureqrscan value has mac address but MAC Address is empty
+            if(nodeMacValue == null &&  (fixerQrScanValue != null && fixerQrScanValue.startsWith("00"))){
+                nodeMacValue = fixerQrScanValue;
+                fixerQrScanValue = null;
+                loggingModel.setFixtureQRSame(true);
+            }
+
             if ((nodeMacValue == null || nodeMacValue.isEmpty()) && fixerQrScanValue != null) {
                 loggingModel.setFixtureOnly(true);
             } else {
@@ -770,6 +786,13 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
                 String temp = newNodeMacAddress;
                 newNodeMacAddress = fixerQrScanValue;
                 fixerQrScanValue = temp;
+            }
+
+            //Suppose fixtureqrscan value has mac address but MAC Address is empty
+            if(newNodeMacAddress == null &&  (fixerQrScanValue != null && fixerQrScanValue.startsWith("00"))){
+                newNodeMacAddress = fixerQrScanValue;
+                fixerQrScanValue = null;
+                loggingModel.setFixtureQRSame(true);
             }
 
             String idOnController = loggingModel.getIdOnController();
