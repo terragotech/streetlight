@@ -10,7 +10,11 @@ import com.terragoedge.streetlight.installmaintain.json.Config;
 import com.terragoedge.streetlight.installmaintain.json.Ids;
 import com.terragoedge.streetlight.installmaintain.json.Prop;
 import com.terragoedge.streetlight.installmaintain.utills.Utils;
+import com.terragoedge.streetlight.service.StreetlightChicagoService;
 
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.Statement;
@@ -25,10 +29,13 @@ public class InstallMaintenanceDao extends UtilDao {
     }
 
     public void doProcess(){
+        File file = new File("./daily_install_report_"+Utils.getDate(System.currentTimeMillis()));
         Statement queryStatement = null;
         ResultSet queryResponse = null;
         List<Config> configs = new ArrayList<Config>();
         try{
+            StringBuilder stringBuilder = new StringBuilder();
+            StreetlightChicagoService.populateNotesHeader(stringBuilder);
             queryResponse = queryStatement.executeQuery("select noteguid,parentnoteid,createddatetime,noteid,createdby,locationdescription,title,groupname,ST_X(geometry::geometry) as lat, ST_Y(geometry::geometry) as lng from edgenoteview where title in (select distinct title from edgenoteview where createddatetime >= ) where iscurrent = true and isdeleted = false;");
             while (queryResponse.next()) {
                NoteData parentNoteData = new NoteData();
@@ -73,7 +80,30 @@ public class InstallMaintenanceDao extends UtilDao {
                                        if(installMaintenanceModel.equals(childInstallMaintenanceModel) && !createdDate.equals(childCreatedDate)){
                                             break;
                                        }else if(!installMaintenanceModel.equals(childInstallMaintenanceModel)) {
-                                           noteguids.add(noteGuid);
+                                           stringBuilder.append(parentNoteData.getTitle());
+                                           stringBuilder.append(",");
+                                           stringBuilder.append(installMaintenanceModel.getMacAddress());
+                                           stringBuilder.append(",");
+                                           stringBuilder.append(parentNoteData.getCreatedBy());
+                                           stringBuilder.append(",");
+                                           stringBuilder.append(installMaintenanceModel.getFixtureQRScan());
+                                           stringBuilder.append(",");
+                                           stringBuilder.append(parentNoteData.getTitle());
+                                           stringBuilder.append(",");
+                                           stringBuilder.append(installMaintenanceModel.getProposedContext());
+                                           stringBuilder.append(",");
+                                           stringBuilder.append(parentNoteData.getLat());
+                                           stringBuilder.append(",");
+                                           stringBuilder.append(parentNoteData.getLng());
+                                           stringBuilder.append(",");
+                                           stringBuilder.append(Utils.getDateTime(parentNoteData.getCreatedDateTime()));
+                                           stringBuilder.append(",");
+                                           stringBuilder.append(isReplace(installMaintenanceModel.getMacAddressRNF(),installMaintenanceModel.getMacAddressRN()));
+                                           stringBuilder.append(",");
+                                           stringBuilder.append(validateTwoString(installMaintenanceModel.getExMacAddressRNF(),installMaintenanceModel.getExMacAddressRN()));
+                                           stringBuilder.append(",");
+                                           stringBuilder.append(validateTwoString(installMaintenanceModel.getMacAddressRNF(),installMaintenanceModel.getMacAddressRN()));
+                                           stringBuilder.append("\n");
                                            break;
                                        }
                                    }
@@ -82,6 +112,7 @@ public class InstallMaintenanceDao extends UtilDao {
                        }
                }
             }
+            StreetlightChicagoService.logData(stringBuilder.toString(),"daily_install_report_"+Utils.getDate(System.currentTimeMillis())+".csv");
         }catch (Exception e){
             e.printStackTrace();
         }finally {
@@ -152,8 +183,8 @@ public class InstallMaintenanceDao extends UtilDao {
                     InstallMaintenanceEnum type =  prop.getType();
                     switch (type){
                         case RF:
-                                installMaintenanceModel.setFixtureQRScanRF(getValue(idsList.getFix(),edgeFormDatas));
-                                installMaintenanceModel.setExFixtureQRScanRF(getValue(idsList.getExFix(),edgeFormDatas));
+                            installMaintenanceModel.setFixtureQRScanRF(getValue(idsList.getFix(),edgeFormDatas));
+                            installMaintenanceModel.setExFixtureQRScanRF(getValue(idsList.getExFix(),edgeFormDatas));
                             break;
                         case NEW:
                             installMaintenanceModel.setMacAddress(getValue(idsList.getMac(),edgeFormDatas));
@@ -190,5 +221,24 @@ public class InstallMaintenanceDao extends UtilDao {
         Config config = new Config();
         config.setFormTemplateGuid(formTemplateGuid);
         return configs.contains(config);
+    }
+    private String isReplace(String macRNF,String macRN){
+        if ((macRNF != null && !macRNF.equals(""))  || (macRN != null && !macRN.equals(""))){
+            return "Yes";
+        } else {
+            return "No";
+        }
+    }
+
+    private String validateTwoString(String txt,String txt1){
+        if(txt == null && txt1 == null){
+            return "";
+        }else if(txt == null && txt1 != null){
+            return txt1;
+        }else if(txt1 == null && txt != null){
+            return txt;
+        }else{
+            return txt;
+        }
     }
 }

@@ -100,7 +100,7 @@ public class StreetlightChicagoService {
         quickNoteBuilder.append("\n");
     }
 
-    private void populateNotesHeader(StringBuilder noteBuilder) {
+    public static void populateNotesHeader(StringBuilder noteBuilder) {
         noteBuilder.append("Title,");
         noteBuilder.append("MAC Address,");
         noteBuilder.append("User Id,");
@@ -359,7 +359,7 @@ public class StreetlightChicagoService {
     }
 
 
-    private void logData(String data, String fileName) {
+    public static void logData(String data, String fileName) {
         FileOutputStream fileOutputStream = null;
         try {
             fileOutputStream = new FileOutputStream("./report/" + fileName);
