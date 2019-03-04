@@ -109,4 +109,30 @@ public class InstallMaintenanceModel {
                 ", exFixtureQRScanRF='" + exFixtureQRScanRF + '\'' +
                 '}';
     }
+
+
+    public boolean hasVal(){
+        if(macAddress != null && macAddress.length() > 1){
+            return true;
+        }
+        if(macAddressRNF != null && macAddressRNF.length() > 1){
+            return true;
+        }
+        if(macAddressRN != null && macAddressRN.length() > 1){
+            return true;
+        }
+
+        if(fixtureQRScan != null && fixtureQRScan.length() > 1){
+            return true;
+        }
+
+        if(fixtureQRScanRF != null && fixtureQRScanRF.length() > 1){
+            return true;
+        }
+
+        if(fixtureQRScanRNF != null && fixtureQRScanRNF.length() > 1){
+            return true;
+        }
+        return false;
+    }
 }

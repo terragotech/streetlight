@@ -55,7 +55,18 @@ public class InstallMaintenanceDao extends UtilDao {
                 List<Prop> props = config.getProps();
                 for(Prop prop : props){
                     List<Ids> idsList = prop.getIds();
-                    prop.getType();
+                    InstallMaintenanceEnum type =  prop.getType();
+                    switch (type){
+                        case RF:
+                            break;
+                        case NEW:
+                            break;
+                        case RN:
+                            break;
+                        case RNF:
+                            break;
+
+                    }
                 }
             }
         }
