@@ -15,7 +15,16 @@ public class NoteData {
     private String groupName;
     private String lat;
     private String lng;
+    private String noteGuid;
 
+
+    public String getNoteGuid() {
+        return noteGuid;
+    }
+
+    public void setNoteGuid(String noteGuid) {
+        this.noteGuid = noteGuid;
+    }
 
     private List<FormData> formDataList = new ArrayList<>();
 
@@ -102,6 +111,7 @@ public class NoteData {
                 ", groupName='" + groupName + '\'' +
                 ", lat='" + lat + '\'' +
                 ", lng='" + lng + '\'' +
+                ", noteGuid='" + noteGuid + '\'' +
                 ", formDataList=" + formDataList +
                 '}';
     }

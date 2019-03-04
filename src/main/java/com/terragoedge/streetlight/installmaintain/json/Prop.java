@@ -7,7 +7,7 @@ import java.util.List;
 
 public class Prop {
     private InstallMaintenanceEnum type;
-    private List<Ids> ids = new ArrayList<>();
+    private Ids ids;
 
     public InstallMaintenanceEnum getType() {
         return type;
@@ -17,11 +17,19 @@ public class Prop {
         this.type = type;
     }
 
-    public List<Ids> getIds() {
+    public Ids getIds() {
         return ids;
     }
 
-    public void setIds(List<Ids> ids) {
+    public void setIds(Ids ids) {
         this.ids = ids;
+    }
+
+    @Override
+    public String toString() {
+        return "Prop{" +
+                "type=" + type +
+                ", ids=" + ids +
+                '}';
     }
 }

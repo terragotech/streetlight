@@ -1,5 +1,7 @@
 package com.terragoedge.streetlight.installmaintain;
 
+import java.util.Objects;
+
 public class InstallMaintenanceModel {
 
     private String macAddress;
@@ -13,6 +15,26 @@ public class InstallMaintenanceModel {
     private String exFixtureQRScanRNF;
     private String fixtureQRScanRF;
     private String exFixtureQRScanRF;
+
+    private String installStatus;
+    private String proposedContext;
+
+
+    public String getInstallStatus() {
+        return installStatus;
+    }
+
+    public void setInstallStatus(String installStatus) {
+        this.installStatus = installStatus;
+    }
+
+    public String getProposedContext() {
+        return proposedContext;
+    }
+
+    public void setProposedContext(String proposedContext) {
+        this.proposedContext = proposedContext;
+    }
 
     public String getMacAddress() {
         return macAddress;
@@ -107,9 +129,10 @@ public class InstallMaintenanceModel {
                 ", exFixtureQRScanRNF='" + exFixtureQRScanRNF + '\'' +
                 ", fixtureQRScanRF='" + fixtureQRScanRF + '\'' +
                 ", exFixtureQRScanRF='" + exFixtureQRScanRF + '\'' +
+                ", installStatus='" + installStatus + '\'' +
+                ", proposedContext='" + proposedContext + '\'' +
                 '}';
     }
-
 
     public boolean hasVal(){
         if(macAddress != null && macAddress.length() > 1){
@@ -134,5 +157,23 @@ public class InstallMaintenanceModel {
             return true;
         }
         return false;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        InstallMaintenanceModel that = (InstallMaintenanceModel) o;
+        return Objects.equals(macAddress, that.macAddress) &&
+                Objects.equals(macAddressRNF, that.macAddressRNF) &&
+                Objects.equals(macAddressRN, that.macAddressRN) &&
+                Objects.equals(fixtureQRScan, that.fixtureQRScan) &&
+                Objects.equals(fixtureQRScanRNF, that.fixtureQRScanRNF) &&
+                Objects.equals(fixtureQRScanRF, that.fixtureQRScanRF);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(macAddress, macAddressRNF, macAddressRN, fixtureQRScan, fixtureQRScanRNF, fixtureQRScanRF);
     }
 }

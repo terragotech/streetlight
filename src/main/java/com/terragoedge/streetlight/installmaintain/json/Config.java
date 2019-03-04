@@ -4,6 +4,7 @@ import com.terragoedge.streetlight.installmaintain.json.Prop;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 public class Config {
 
@@ -47,5 +48,16 @@ public class Config {
                 '}';
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Config config = (Config) o;
+        return Objects.equals(formTemplateGuid, config.formTemplateGuid);
+    }
 
+    @Override
+    public int hashCode() {
+        return Objects.hash(formTemplateGuid);
+    }
 }
