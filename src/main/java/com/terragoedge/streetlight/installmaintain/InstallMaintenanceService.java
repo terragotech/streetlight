@@ -1,6 +1,7 @@
 package com.terragoedge.streetlight.installmaintain;
 
 import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 import com.terragoedge.streetlight.PropertiesReader;
 import com.terragoedge.streetlight.installmaintain.json.Config;
 import org.apache.commons.io.IOUtils;
@@ -10,11 +11,10 @@ import java.util.List;
 
 public class InstallMaintenanceService {
 
-    private Gson gson;
+    private Gson gson = new Gson();
     private List<Config> getConfigList(){
-
        String data = readFile();
-
+       return  gson.fromJson(data,new TypeToken<List<Config>>(){}.getType());
     }
 
     private String readFile(){

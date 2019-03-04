@@ -10,8 +10,26 @@ public class Config {
 
     private String formTemplateGuid;
     private String name;
+    private int installStatus;
+    private int proposedContext;
     private List<Prop> props = new ArrayList<>();
 
+
+    public int getInstallStatus() {
+        return installStatus;
+    }
+
+    public void setInstallStatus(int installStatus) {
+        this.installStatus = installStatus;
+    }
+
+    public int getProposedContext() {
+        return proposedContext;
+    }
+
+    public void setProposedContext(int proposedContext) {
+        this.proposedContext = proposedContext;
+    }
 
     public String getFormTemplateGuid() {
         return formTemplateGuid;
@@ -38,12 +56,13 @@ public class Config {
     }
 
 
-
     @Override
     public String toString() {
         return "Config{" +
                 "formTemplateGuid='" + formTemplateGuid + '\'' +
                 ", name='" + name + '\'' +
+                ", installStatus=" + installStatus +
+                ", proposedContext=" + proposedContext +
                 ", props=" + props +
                 '}';
     }

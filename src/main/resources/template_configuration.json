@@ -1,0 +1,72 @@
+[
+  {
+    "formTemplateGuid": "c8acc150-6228-4a27-bc7e-0fabea0e2b93",
+    "name":"Installation and Maintenance",
+    "install_status": 22,
+    "proposed_context": 16,
+    "props":[
+      {
+        "type":"NEW", "ids":{"mac":19,"fix":20,"exMac": -1,"exFix":-1}
+      },{
+        "type":"RNF", "ids":{"mac":26,"fix":38,"exMac": 36,"exFix":116}
+      },{
+        "type":"RN", "ids":{"mac":30,"fix":-1,"exMac": 29,"exFix":-1}
+      },{
+        "type":"RF", "ids":{"mac":-1,"fix":39,"exMac": -1,"exFix":41}
+      }
+    ]
+  },
+  {
+    "formTemplateGuid": "fa47c708-fb82-4877-938c-992e870ae2a4",
+    "name":"Installation and Maintenance - Updated",
+    "install_status": 22,
+    "proposed_context": 16,
+    "props":[
+      {
+        "type":"NEW", "ids":{"mac":19,"fix":20,"exMac": -1,"exFix":-1}
+      },{
+        "type":"RNF", "ids":{"mac":26,"fix":38,"exMac": 36,"exFix":-1}
+      },{
+        "type":"RN", "ids":{"mac":30,"fix":-1,"exMac": 29,"exFix":-1}
+      },{
+        "type":"RF", "ids":{"mac":-1,"fix":39,"exMac": -1,"exFix":41}
+      }
+    ]
+  },{
+  "formTemplateGuid": "8b722347-c3a7-41f4-a8a9-c35dece6f98b",
+  "name":"Installation and Maintenance",
+  "install_status": 22,
+  "proposed_context": 16,
+  "props":[
+    {
+      "type":"NEW", "ids":{"mac":19,"fix":20,"exMac": -1,"exFix":-1}
+    },{
+      "type":"RNF", "ids":{"mac":26,"fix":38,"exMac": 36,"exFix":-1}
+    },{
+      "type":"RN", "ids":{"mac":30,"fix":-1,"exMac": 29,"exFix":-1}
+    },{
+      "type":"RF", "ids":{"mac":-1,"fix":39,"exMac": -1,"exFix":41}
+    }
+  ]
+},{
+  "formTemplateGuid": "606fb4ca-40a4-466b-ac00-7c0434f82bfa",
+  "name":"Replace Node",
+  "install_status": -1,
+  "proposed_context": -1,
+  "props":[
+    {
+      "type":"RN", "ids":{"mac":2,"fix":4,"exMac": 1,"exFix":-1}
+    }
+  ]
+},{
+  "formTemplateGuid": "0ea4f5d4-0a17-4a17-ba8f-600de1e2515f",
+  "name":"New Installation QR Scan",
+  "install_status": -1,
+  "proposed_context": -1,
+  "props":[
+    {
+      "type":"NEW", "ids":{"mac":2,"fix":1,"exMac": -1,"exFix":-1}
+    }
+  ]
+}
+]

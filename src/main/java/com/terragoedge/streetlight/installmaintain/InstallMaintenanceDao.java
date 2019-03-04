@@ -29,7 +29,6 @@ public class InstallMaintenanceDao extends UtilDao {
     }
 
     public void doProcess(){
-        File file = new File("./daily_install_report_"+Utils.getDate(System.currentTimeMillis()));
         Statement queryStatement = null;
         ResultSet queryResponse = null;
         List<Config> configs = new ArrayList<Config>();
@@ -64,11 +63,14 @@ public class InstallMaintenanceDao extends UtilDao {
                 parentNoteData.setLng(String.valueOf(lng));
                 parentNoteData.setTitle(title);
                 parentNoteData.setNoteId(noteid);
-
-
+                InstallMaintenanceModel newInstallMaintenanceModel = null;
+                InstallMaintenanceModel replaceNoteMaintenanceModel = null;
+                NoteData resultNoteData = null;
                List<FormData> formDatas = getCurrentNoteDetails(noteGuid,configs);
+               boolean isCsvWritten = false;
                for(FormData formData : formDatas){
-                       InstallMaintenanceModel installMaintenanceModel = getInstallMaintenanceModel(configs, formData.getFormDef(), formData.getFormTemplateGuid());
+                   String formTemplateGuid = formData.getFormTemplateGuid();
+                       InstallMaintenanceModel installMaintenanceModel = getInstallMaintenanceModel(configs, formData.getFormDef(), formTemplateGuid);
                        List<NoteData> noteDatas = getChildNotes(parentNoteId);
                        for (NoteData noteData : noteDatas) {
                            if (!noteData.getNoteGuid().equals(noteGuid)) {
@@ -78,38 +80,38 @@ public class InstallMaintenanceDao extends UtilDao {
                                    if(formData1.getFormTemplateGuid().equals(formData.getFormTemplateGuid())) {
                                        InstallMaintenanceModel childInstallMaintenanceModel = getInstallMaintenanceModel(configs, formData1.getFormDef(), formData1.getFormTemplateGuid());
                                        if(installMaintenanceModel.equals(childInstallMaintenanceModel) && !createdDate.equals(childCreatedDate)){
-                                            break;
-                                       }else if(!installMaintenanceModel.equals(childInstallMaintenanceModel)) {
-                                           stringBuilder.append(parentNoteData.getTitle());
-                                           stringBuilder.append(",");
-                                           stringBuilder.append(installMaintenanceModel.getMacAddress());
-                                           stringBuilder.append(",");
-                                           stringBuilder.append(parentNoteData.getCreatedBy());
-                                           stringBuilder.append(",");
-                                           stringBuilder.append(installMaintenanceModel.getFixtureQRScan());
-                                           stringBuilder.append(",");
-                                           stringBuilder.append(parentNoteData.getTitle());
-                                           stringBuilder.append(",");
-                                           stringBuilder.append(installMaintenanceModel.getProposedContext());
-                                           stringBuilder.append(",");
-                                           stringBuilder.append(parentNoteData.getLat());
-                                           stringBuilder.append(",");
-                                           stringBuilder.append(parentNoteData.getLng());
-                                           stringBuilder.append(",");
-                                           stringBuilder.append(Utils.getDateTime(parentNoteData.getCreatedDateTime()));
-                                           stringBuilder.append(",");
-                                           stringBuilder.append(isReplace(installMaintenanceModel.getMacAddressRNF(),installMaintenanceModel.getMacAddressRN()));
-                                           stringBuilder.append(",");
-                                           stringBuilder.append(validateTwoString(installMaintenanceModel.getExMacAddressRNF(),installMaintenanceModel.getExMacAddressRN()));
-                                           stringBuilder.append(",");
-                                           stringBuilder.append(validateTwoString(installMaintenanceModel.getMacAddressRNF(),installMaintenanceModel.getMacAddressRN()));
-                                           stringBuilder.append("\n");
-                                           break;
+                                           isCsvWritten = processCSV(formTemplateGuid,newInstallMaintenanceModel,replaceNoteMaintenanceModel,installMaintenanceModel,parentNoteData,configs,formData,stringBuilder,resultNoteData);
+                                           if(isCsvWritten) {
+                                               break;
+                                           }
+                                       }else if(installMaintenanceModel.equals(childInstallMaintenanceModel) && createdDate.equals(childCreatedDate)){
+                                           isCsvWritten = processCSV(formTemplateGuid,newInstallMaintenanceModel,replaceNoteMaintenanceModel,childInstallMaintenanceModel,noteData,configs,formData,stringBuilder,resultNoteData);
+                                           if(isCsvWritten) {
+                                               break;
+                                           }
+                                       }
+                                       else if(!installMaintenanceModel.equals(childInstallMaintenanceModel)) {
+                                           isCsvWritten = processCSV(formTemplateGuid,newInstallMaintenanceModel,replaceNoteMaintenanceModel,installMaintenanceModel,parentNoteData,configs,formData,stringBuilder,resultNoteData);
+                                           if(isCsvWritten) {
+                                               break;
+                                           }
                                        }
                                    }
                                }
                            }
                        }
+               }
+               if(!isCsvWritten && (newInstallMaintenanceModel != null || replaceNoteMaintenanceModel != null)){
+                   InstallMaintenanceModel oldInstallMaintenanceModel = new InstallMaintenanceModel();
+                   if(newInstallMaintenanceModel != null){
+                       oldInstallMaintenanceModel.setMacAddress(newInstallMaintenanceModel.getMacAddress());
+                       oldInstallMaintenanceModel.setFixtureQRScan(newInstallMaintenanceModel.getFixtureQRScan());
+                   }
+                   if(replaceNoteMaintenanceModel != null){
+                       oldInstallMaintenanceModel.setExMacAddressRN(replaceNoteMaintenanceModel.getExMacAddressRN());
+                       oldInstallMaintenanceModel.setMacAddressRN(replaceNoteMaintenanceModel.getMacAddressRN());
+                   }
+                   updateCSV(stringBuilder, resultNoteData, oldInstallMaintenanceModel);
                }
             }
             StreetlightChicagoService.logData(stringBuilder.toString(),"daily_install_report_"+Utils.getDate(System.currentTimeMillis())+".csv");
@@ -121,6 +123,19 @@ public class InstallMaintenanceDao extends UtilDao {
         }
     }
 
+    private boolean processCSV(String formTemplateGuid,InstallMaintenanceModel newInstallMaintenanceModel, InstallMaintenanceModel replaceNoteMaintenanceModel,InstallMaintenanceModel installMaintenanceModel,NoteData noteData,List<Config> configs,FormData formData,StringBuilder stringBuilder,NoteData resultNoteData){
+        if(formTemplateGuid.equals("0ea4f5d4-0a17-4a17-ba8f-600de1e2515f")){// new installation form template
+            resultNoteData = noteData;
+            newInstallMaintenanceModel = getInstallMaintenanceModel(configs, formData.getFormDef(), formTemplateGuid);
+        }else if(formTemplateGuid.equals("606fb4ca-40a4-466b-ac00-7c0434f82bfa")){// replace node form template
+            resultNoteData = noteData;
+            replaceNoteMaintenanceModel = getInstallMaintenanceModel(configs, formData.getFormDef(), formTemplateGuid);
+        }else {
+            updateCSV(stringBuilder, noteData, installMaintenanceModel);
+            return true;
+        }
+        return false;
+    }
 
     public List<FormData> getCurrentNoteDetails(String noteGuid,List<Config> configs){
         List<FormData> formDatas = new ArrayList<>();
@@ -176,6 +191,8 @@ public class InstallMaintenanceDao extends UtilDao {
         InstallMaintenanceModel installMaintenanceModel = new InstallMaintenanceModel();
         List<EdgeFormData> edgeFormDatas = gson.fromJson(formDef,new TypeToken<List<EdgeFormData>>(){}.getType());
         for(Config config : configList){
+            installMaintenanceModel.setInstallStatus(getValue(config.getInstallStatus(),edgeFormDatas));
+            installMaintenanceModel.setProposedContext(getValue(config.getProposedContext(),edgeFormDatas));
             if(config.getFormTemplateGuid().equals(formTemplateGuid)){
                 List<Prop> props = config.getProps();
                 for(Prop prop : props){
@@ -240,5 +257,32 @@ public class InstallMaintenanceDao extends UtilDao {
         }else{
             return txt;
         }
+    }
+
+    private void updateCSV(StringBuilder stringBuilder,NoteData noteData,InstallMaintenanceModel installMaintenanceModel){
+        stringBuilder.append(noteData.getTitle());
+        stringBuilder.append(",");
+        stringBuilder.append(installMaintenanceModel.getMacAddress());
+        stringBuilder.append(",");
+        stringBuilder.append(noteData.getCreatedBy());
+        stringBuilder.append(",");
+        stringBuilder.append(installMaintenanceModel.getFixtureQRScan());
+        stringBuilder.append(",");
+        stringBuilder.append(noteData.getTitle());
+        stringBuilder.append(",");
+        stringBuilder.append(installMaintenanceModel.getProposedContext());
+        stringBuilder.append(",");
+        stringBuilder.append(noteData.getLat());
+        stringBuilder.append(",");
+        stringBuilder.append(noteData.getLng());
+        stringBuilder.append(",");
+        stringBuilder.append(Utils.getDateTime(noteData.getCreatedDateTime()));
+        stringBuilder.append(",");
+        stringBuilder.append(isReplace(installMaintenanceModel.getMacAddressRNF(),installMaintenanceModel.getMacAddressRN()));
+        stringBuilder.append(",");
+        stringBuilder.append(validateTwoString(installMaintenanceModel.getExMacAddressRNF(),installMaintenanceModel.getExMacAddressRN()));
+        stringBuilder.append(",");
+        stringBuilder.append(validateTwoString(installMaintenanceModel.getMacAddressRNF(),installMaintenanceModel.getMacAddressRN()));
+        stringBuilder.append("\n");
     }
 }
