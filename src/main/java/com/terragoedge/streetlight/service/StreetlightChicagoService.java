@@ -362,6 +362,10 @@ public class StreetlightChicagoService {
     public static void logData(String data, String fileName) {
         FileOutputStream fileOutputStream = null;
         try {
+            File folder = new File("./report/");
+            if(!folder.exists()){
+                folder.mkdirs();
+            }
             fileOutputStream = new FileOutputStream("./report/" + fileName);
             //fileOutputStream = new FileOutputStream("./"+fileName);
             fileOutputStream.write(data.getBytes());
