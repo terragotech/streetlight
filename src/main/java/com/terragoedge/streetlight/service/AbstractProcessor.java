@@ -400,7 +400,7 @@ public abstract class AbstractProcessor {
              */
             String partNumber = fixtureInfo[1].trim();
             String model = fixtureInfo[2].trim();
-            if (fixtureInfo[1].trim().length() <= fixtureInfo[2].trim().length()) {
+            if (fixtureInfo[1].trim().length() <= fixtureInfo[2].trim().length() && !fixtureInfo[0].trim().equals("LV Manufacturing")) {
                 model = fixtureInfo[1].trim();
                 partNumber = fixtureInfo[2].trim();
             }
