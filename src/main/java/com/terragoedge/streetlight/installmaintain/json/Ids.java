@@ -3,15 +3,15 @@ package com.terragoedge.streetlight.installmaintain.json;
 public class Ids {
     private int mac;
     private int fix;
-    private int exMax;
+    private int exMac;
     private int exFix;
 
-    public int getExMax() {
-        return exMax;
+    public int getExMac() {
+        return exMac;
     }
 
-    public void setExMax(int exMax) {
-        this.exMax = exMax;
+    public void setExMac(int exMac) {
+        this.exMac = exMac;
     }
 
     public int getExFix() {
@@ -38,12 +38,13 @@ public class Ids {
         this.fix = fix;
     }
 
+
     @Override
     public String toString() {
         return "Ids{" +
                 "mac=" + mac +
                 ", fix=" + fix +
-                ", exMax=" + exMax +
+                ", exMac=" + exMac +
                 ", exFix=" + exFix +
                 '}';
     }

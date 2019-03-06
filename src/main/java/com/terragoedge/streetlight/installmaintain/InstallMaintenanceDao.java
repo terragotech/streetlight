@@ -13,6 +13,7 @@ import com.terragoedge.streetlight.installmaintain.utills.Utils;
 import com.terragoedge.streetlight.service.StreetlightChicagoService;
 import org.apache.log4j.Logger;
 import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -27,6 +28,8 @@ public class InstallMaintenanceDao extends UtilDao {
     private Gson gson;
     private InstallMaintenanceService installMaintenanceService;
     private List<Config> configs = new ArrayList<>();
+    private String today = "";
+    private String yesterday = "";
 
     public InstallMaintenanceDao() {
         gson = new Gson();
@@ -34,6 +37,7 @@ public class InstallMaintenanceDao extends UtilDao {
         configs = installMaintenanceService.getConfigList();
     }
     private Logger logger = Logger.getLogger(InstallMaintenanceDao.class);
+
     public void doProcess(){
         Statement queryStatement = null;
         ResultSet queryResponse = null;
@@ -42,42 +46,31 @@ public class InstallMaintenanceDao extends UtilDao {
             queryStatement = connection.createStatement();
             StringBuilder stringBuilder = new StringBuilder();
             StreetlightChicagoService.populateNotesHeader(stringBuilder);
-            long startTime = DateTime.now().minusDays(1).withTimeAtStartOfDay().getMillis();
+            today = Utils.getDate(DateTime.now(DateTimeZone.UTC).withTimeAtStartOfDay().getMillis());
+            long startTime = DateTime.now(DateTimeZone.UTC).minusDays(1).withTimeAtStartOfDay().getMillis();
+            yesterday = Utils.getDate(startTime);
             logger.info("start time:"+startTime);
             logger.info("readable fromat time:"+Utils.getDateTime(startTime));
             queryResponse = queryStatement.executeQuery("select noteguid,parentnoteid,createddatetime,noteid,createdby,locationdescription,title,groupname,ST_X(geometry::geometry) as lat, ST_Y(geometry::geometry) as lng from edgenoteview where title in (select distinct title from edgenoteview where createddatetime >="+ startTime +" ) and createddatetime>="+startTime+" and iscurrent = true and isdeleted = false;");
-//            queryResponse = queryStatement.executeQuery("select noteguid,parentnoteid,createddatetime,noteid,createdby,locationdescription,title,groupname,ST_X(geometry::geometry) as lat, ST_Y(geometry::geometry) as lng from edgenoteview where title in (select distinct title from edgenoteview where noteguid='1558d1db-ba86-4e7e-b4b9-f8cac433c26c' ) and iscurrent = true and isdeleted = false;");
+//            queryResponse = queryStatement.executeQuery("select noteguid,parentnoteid,createddatetime,noteid,createdby,locationdescription,title,groupname,ST_X(geometry::geometry) as lat, ST_Y(geometry::geometry) as lng from edgenoteview where title in (select distinct title from edgenoteview where noteguid='88e9b5ef-7793-432b-ae88-d5d593f4abe3' ) and iscurrent = true and isdeleted = false;");
             logger.info("query response executed");
             int i = 0;
             while (queryResponse.next()) {
                 i++;
-               NoteData parentNoteData = new NoteData();
-               String noteGuid = queryResponse.getString("noteguid");
-               String parentNoteId =  queryResponse.getString("parentnoteid");
-               logger.info("noteguid: "+noteGuid);
-               logger.info("parentNoteId: "+parentNoteId);
-               long createddatetime = queryResponse.getLong("createddatetime");
+                String noteGuid = queryResponse.getString("noteguid");
+                String parentNoteId =  queryResponse.getString("parentnoteid");
+                logger.info("noteguid: "+noteGuid);
+                logger.info("parentNoteId: "+parentNoteId);
+                long createddatetime = queryResponse.getLong("createddatetime");
                 long noteid = queryResponse.getLong("noteid");
                 String createdBy = queryResponse.getString("createdby");
                 String locationDescription = queryResponse.getString("locationdescription");
-                String[] locations = locationDescription.split("\\|");
-
-                if (locations.length == 2) {
-                    locationDescription = locations[0];
-                }
                 String title = queryResponse.getString("title");
                 String groupname = queryResponse.getString("groupname");
                 double lat = queryResponse.getDouble("lat");
                 double lng = queryResponse.getDouble("lng");
-                parentNoteData.setCreatedDateTime(createddatetime);
-                parentNoteData.setCreatedBy(createdBy);
-                parentNoteData.setNoteGuid(noteGuid);
-                parentNoteData.setDescription(locationDescription);
-                parentNoteData.setGroupName(groupname);
-                parentNoteData.setLat(String.valueOf(lat));
-                parentNoteData.setLng(String.valueOf(lng));
-                parentNoteData.setTitle(title);
-                parentNoteData.setNoteId(noteid);
+                NoteData parentNoteData = getNoteData(locationDescription,title,createdBy,noteGuid,groupname,lat,lng,noteid,createddatetime);
+
                 InstallMaintenanceModel newInstallMaintenanceModel = null;
                 InstallMaintenanceModel replaceNoteMaintenanceModel = null;
                List<FormData> formDatas = getCurrentNoteDetails(noteGuid);
@@ -91,6 +84,8 @@ public class InstallMaintenanceDao extends UtilDao {
                         boolean isProcessed = processForm(noteData,parentNoteData,formDatas,newInstallMaintenanceModel,replaceNoteMaintenanceModel,stringBuilder,isCsvWritten);
                         if(isProcessed){
                             break;
+                        }else {
+                            parentNoteData = noteData;
                         }
                     }
                 }
@@ -168,13 +163,21 @@ public class InstallMaintenanceDao extends UtilDao {
         List<NoteData> noteDatas = new ArrayList<>();
         try{
             queryStatement = connection.createStatement();
-            queryResponse = queryStatement.executeQuery("select noteguid,createddatetime,createdby from edgenote where parentnoteid='"+parentNoteGuid+"' order by createddatetime desc");
+            queryResponse = queryStatement.executeQuery("select noteguid,parentnoteid,createddatetime,noteid,createdby,locationdescription,title,groupname,ST_X(geometry::geometry) as lat, ST_Y(geometry::geometry) as lng from edgenoteview where parentnoteid='"+parentNoteGuid+"' or noteguid='"+parentNoteGuid+"' order by createddatetime desc");
             while (queryResponse.next()) {
-                NoteData noteData = new NoteData();
                 String noteGuid = queryResponse.getString("noteguid");
-                noteData.setNoteGuid(noteGuid);
-                noteData.setCreatedBy(queryResponse.getString("createdby"));
-                noteData.setCreatedDateTime(queryResponse.getLong("createddatetime"));
+                String parentNoteId =  queryResponse.getString("parentnoteid");
+                logger.info("noteguid: "+noteGuid);
+                logger.info("parentNoteId: "+parentNoteId);
+                long createddatetime = queryResponse.getLong("createddatetime");
+                long noteid = queryResponse.getLong("noteid");
+                String createdBy = queryResponse.getString("createdby");
+                String locationDescription = queryResponse.getString("locationdescription");
+                String title = queryResponse.getString("title");
+                String groupname = queryResponse.getString("groupname");
+                double lat = queryResponse.getDouble("lat");
+                double lng = queryResponse.getDouble("lng");
+                NoteData noteData = getNoteData(locationDescription,title,createdBy,noteGuid,groupname,lat,lng,noteid,createddatetime);
                 noteDatas.add(noteData);
             }
         }catch (Exception e){
@@ -208,11 +211,11 @@ public class InstallMaintenanceDao extends UtilDao {
                             break;
                         case RN:
                             installMaintenanceModel.setMacAddressRN(getValue(idsList.getMac(),edgeFormDatas));
-                            installMaintenanceModel.setExMacAddressRN(getValue(idsList.getExMax(),edgeFormDatas));
+                            installMaintenanceModel.setExMacAddressRN(getValue(idsList.getExMac(),edgeFormDatas));
                             break;
                         case RNF:
                             installMaintenanceModel.setMacAddressRNF(getValue(idsList.getMac(),edgeFormDatas));
-                            installMaintenanceModel.setExMacAddressRNF(getValue(idsList.getExMax(),edgeFormDatas));
+                            installMaintenanceModel.setExMacAddressRNF(getValue(idsList.getExMac(),edgeFormDatas));
                             installMaintenanceModel.setFixtureQRScanRNF(getValue(idsList.getFix(),edgeFormDatas));
                             installMaintenanceModel.setExFixtureQRScanRNF(getValue(idsList.getExFix(),edgeFormDatas));
                             break;
@@ -264,13 +267,13 @@ public class InstallMaintenanceDao extends UtilDao {
         stringBuilder.append(installMaintenanceModel.getMacAddress());
         stringBuilder.append(",");
         stringBuilder.append(noteData.getCreatedBy());
-        stringBuilder.append(",");
+        stringBuilder.append(",\"");
         stringBuilder.append(installMaintenanceModel.getFixtureQRScan());
-        stringBuilder.append(",");
-        stringBuilder.append(noteData.getTitle());
-        stringBuilder.append(",");
+        stringBuilder.append("\",");
+        stringBuilder.append(noteData.getFixtureType());
+        stringBuilder.append(",\"");
         stringBuilder.append(installMaintenanceModel.getProposedContext());
-        stringBuilder.append(",");
+        stringBuilder.append("\",");
         stringBuilder.append(noteData.getLat());
         stringBuilder.append(",");
         stringBuilder.append(noteData.getLng());
@@ -287,7 +290,7 @@ public class InstallMaintenanceDao extends UtilDao {
     private boolean processForm(NoteData noteData,NoteData parentNoteData,List<FormData> formDatas,InstallMaintenanceModel newInstallMaintenanceModel, InstallMaintenanceModel replaceNoteMaintenanceModel,StringBuilder stringBuilder,boolean isCsvWritten){
         String childCreatedDate = Utils.getDate(noteData.getCreatedDateTime());
         String createdDate = Utils.getDate(parentNoteData.getCreatedDateTime());
-        List<FormData> childFormDatas = getCurrentNoteDetails(parentNoteData.getNoteGuid());
+        List<FormData> childFormDatas = getCurrentNoteDetails(noteData.getNoteGuid());
         logger.info("child note: "+noteData.getNoteGuid());
         logger.info("child note forms count: "+childFormDatas.size());
 
@@ -298,9 +301,16 @@ public class InstallMaintenanceDao extends UtilDao {
                 for (FormData formData1 : childFormDatas) {
                     if (formData1.getFormTemplateGuid().equals(formData.getFormTemplateGuid())) {
                         InstallMaintenanceModel childInstallMaintenanceModel = getInstallMaintenanceModel(formData1.getFormDef(), formData1.getFormTemplateGuid());
+                        logger.info("parent model: "+gson.toJson(installMaintenanceModel));
+                        logger.info("parent date: "+createdDate);
+                        logger.info("child model: "+gson.toJson(childInstallMaintenanceModel));
+                        logger.info("child date: "+childCreatedDate);
+                        logger.info("is equal: "+installMaintenanceModel.equals(childInstallMaintenanceModel));
                         if (installMaintenanceModel.equals(childInstallMaintenanceModel) && !createdDate.equals(childCreatedDate)) {
-                            logger.info("parent and child form equal and create date changed so breaking...");
-                            return true;
+                            if(!childCreatedDate.equals(today) && !childCreatedDate.equals(yesterday)) {
+                                logger.info("parent and child form equal and create date changed so breaking...");
+                                return true;
+                            }
                         } else if (!installMaintenanceModel.equals(childInstallMaintenanceModel)) {
                             logger.info("parent and child form not equal. so going to write it in csv");
                             isCsvWritten = processCSV(formTemplateGuid, newInstallMaintenanceModel, replaceNoteMaintenanceModel, installMaintenanceModel, parentNoteData, formData, stringBuilder);
@@ -313,5 +323,28 @@ public class InstallMaintenanceDao extends UtilDao {
             }
         }
         return false;
+    }
+
+    private NoteData getNoteData(String locationDescription,String title,String createdBy,String noteGuid,String groupname,double lat,double lng,long noteid,long createddatetime){
+        NoteData noteData = new NoteData();
+        String fixtureType = "";
+        String[] locations = locationDescription.split("\\|");
+
+        if (locations.length == 2) {
+            locationDescription = locations[0];
+            fixtureType = locations[1];
+        }
+
+        noteData.setCreatedDateTime(createddatetime);
+        noteData.setCreatedBy(createdBy);
+        noteData.setNoteGuid(noteGuid);
+        noteData.setDescription(locationDescription);
+        noteData.setGroupName(groupname);
+        noteData.setLat(String.valueOf(lat));
+        noteData.setLng(String.valueOf(lng));
+        noteData.setTitle(title);
+        noteData.setNoteId(noteid);
+        noteData.setFixtureType(fixtureType);
+        return noteData;
     }
 }

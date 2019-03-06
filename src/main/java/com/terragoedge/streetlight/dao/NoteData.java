@@ -16,7 +16,15 @@ public class NoteData {
     private String lat;
     private String lng;
     private String noteGuid;
+    private String fixtureType;
 
+    public String getFixtureType() {
+        return fixtureType;
+    }
+
+    public void setFixtureType(String fixtureType) {
+        this.fixtureType = fixtureType;
+    }
 
     public String getNoteGuid() {
         return noteGuid;
@@ -112,6 +120,7 @@ public class NoteData {
                 ", lat='" + lat + '\'' +
                 ", lng='" + lng + '\'' +
                 ", noteGuid='" + noteGuid + '\'' +
+                ", fixtureType='" + fixtureType + '\'' +
                 ", formDataList=" + formDataList +
                 '}';
     }
