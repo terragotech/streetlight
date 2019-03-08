@@ -112,20 +112,13 @@ public class EdgeService {
         int size = serverEdgeFormJsonArray.size();
         for (int i = 0; i < size; i++) {
             JsonObject serverEdgeForm = serverEdgeFormJsonArray.get(i).getAsJsonObject();
-            logger.info("before processed"+serverEdgeForm.get("formTemplateGuid").getAsString());
-            if (serverEdgeForm.get("formTemplateGuid").getAsString().equals("c8acc150-6228-4a27-bc7e-0fabea0e2b93")) {
+            logger.info("before processed" + serverEdgeForm.get("formTemplateGuid").getAsString());
+            if (serverEdgeForm.get("formTemplateGuid").getAsString().equals("d2c690b0-10fe-4559-bf67-956219b0088e")) {
                 logger.info("processed given form");
                 String formDefJson = serverEdgeForm.get("formDef").toString();
                 formDefJson = formDefJson.replaceAll("\\\\", "");
                 List<EdgeFormData> formDataList = getEdgeFormData(formDefJson);
-                EdgeFormData edgeFormData = new EdgeFormData();
-                edgeFormData.setId(115);
-
-                int pos = formDataList.indexOf(edgeFormData);
-                if (pos != -1) {
-                    edgeFormData = formDataList.get(pos);
-                    edgeFormData.setId(20);
-                }
+                updateProjectName(formDataList, slvData);
                 serverEdgeForm.add("formDef", gson.toJsonTree(formDataList));
                 serverEdgeForm.addProperty("formGuid", UUID.randomUUID().toString());
             } else {
@@ -134,7 +127,6 @@ public class EdgeService {
                 List<EdgeFormData> formDataList = getEdgeFormData(formDefJson);
                 serverEdgeForm.add("formDef", gson.toJsonTree(formDataList));
                 serverEdgeForm.addProperty("formGuid", UUID.randomUUID().toString());
-
             }
 
         }
@@ -144,7 +136,7 @@ public class EdgeService {
         edgeJsonObject.addProperty("createdDateTime", System.currentTimeMillis());
         edgeJsonObject.addProperty("noteGuid", UUID.randomUUID().toString());
 
-        List<Dictionary> dictionaryList = edgeNote.getDictionary();
+       /* List<Dictionary> dictionaryList = edgeNote.getDictionary();
         boolean isDictionaryExist = false;
         for (Dictionary dictionary : dictionaryList) {
             if (dictionary.getKey().equals("groupGuid") && !dictionary.getValue().equals(layerGuid)) {
@@ -159,7 +151,7 @@ public class EdgeService {
             dictionaryList.add(dictionary);
         }
         edgeJsonObject.add("dictionary", gson.toJsonTree(dictionaryList));
-        return edgeJsonObject;
+ */       return edgeJsonObject;
     }
 
     public ResponseEntity<String> updateNoteDetails(String noteDetails, String noteGuid, String notebookGuid) {
@@ -300,4 +292,30 @@ public class EdgeService {
         throw new NoValueException(id + " is not found.");
     }
 
+    public EdgeFormData getProjectNameComponent() {
+//{\"id\":38,\"label\":\"Wattage\",\"value\":\"Wattage#\",\"count\":0,\"groupId\":5,\"groupRepeatableCount\":1,\"isGroup\":true}
+        EdgeFormData edgeFormData = new EdgeFormData();
+        edgeFormData.setId(40);
+        edgeFormData.setLabel("Project Name");
+        edgeFormData.setValue("Project Name#");
+        edgeFormData.setCount(0);
+        edgeFormData.setGroupId(5);
+        edgeFormData.setGroupRepeatableCount(1);
+        edgeFormData.setGroup(true);
+        return edgeFormData;
+    }
+
+    public void updateProjectName(List<EdgeFormData> edgeFormDataList, SlvData slvData) {
+        EdgeFormData tempEdgeFormData = new EdgeFormData();
+        tempEdgeFormData.setId(40);
+        int pos = edgeFormDataList.indexOf(tempEdgeFormData);
+        logger.info("wattage index Position :" + pos);
+        if (pos == -1) {
+            EdgeFormData edgeFormData = getProjectNameComponent();
+            edgeFormDataList.add(edgeFormData);
+            logger.info("wattage component :" + gson.toJson(edgeFormData));
+        }
+        updateFormValue(edgeFormDataList, 40, slvData.getProjectName());
+
+    }
 }

@@ -25,6 +25,8 @@ public class SlvData extends CsvToBean {
     private String existingMunicipality;
     @CsvBindByName(column = "Municipality")
     private String municipality;
+    @CsvBindByName(column = "Project Name")
+    private String projectName;
 
 
     public String getNewNoteTitle() {
@@ -105,6 +107,14 @@ public class SlvData extends CsvToBean {
 
     public void setExistingMunicipality(String existingMunicipality) {
         this.existingMunicipality = existingMunicipality;
+    }
+
+    public String getProjectName() {
+        return projectName;
+    }
+
+    public void setProjectName(String projectName) {
+        this.projectName = projectName;
     }
 
     @Override

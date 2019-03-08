@@ -39,7 +39,7 @@ public class SlvToEdgeService extends EdgeService {
         }.getType();
         Gson gson = new Gson();
         //List<EdgeNote> edgeNoteList = gson.fromJson(notesJson, listType);
-        List<EdgeNote> edgeNoteList= new ArrayList<>();
+        List<EdgeNote> edgeNoteList = new ArrayList<>();
         EdgeNote edgeNote1 = gson.fromJson(notesJson, EdgeNote.class);
         edgeNoteList.add(edgeNote1);
         for (EdgeNote edgeNote : edgeNoteList) {
@@ -50,10 +50,10 @@ public class SlvToEdgeService extends EdgeService {
                     long createddatetime = edgeNote.getCreatedDateTime();
                     SlvData resultSlvData = processInstallationForm(edgeNote, formData, formTemplateGuid, slvData);
                     if (resultSlvData.getStatus().equals("Success")) {
-                       streetlightDao.updateNoteDetails(createddatetime + 1000, "milhouseinterface", resultSlvData.getNewNoteGuid());
+                        streetlightDao.updateNoteDetails(createddatetime + 1000, createdBy, resultSlvData.getNewNoteGuid());
                         logger.info("------------------Success---------------------");
                         logger.info("Processed notetitle: " + edgeNote.getTitle());
-                    }else {
+                    } else {
                         logger.info("------------------failure---------------------");
                         logger.info("Processed notetitle: " + edgeNote.getTitle());
                     }
