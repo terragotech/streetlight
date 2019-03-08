@@ -78,8 +78,8 @@ public class ReadCSvservice {
             while ((currentRow = bufferedReader.readLine()) != null) {
                 String values[] = currentRow.split(",");
                 SlvData slvData = new SlvData();
-                slvData.setNoteGuid(values[0]);
-                slvData.setProjectName(values[1]);
+                slvData.setNoteTitle(values[0].trim());
+                slvData.setProjectName(values[1].trim());
                 //slvData.setExistingMunicipality(values[1]);
                 //slvData.setMunicipality(values[2]);
                 slvDataList.add(slvData);

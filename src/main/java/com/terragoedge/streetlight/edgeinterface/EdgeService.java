@@ -104,9 +104,8 @@ public class EdgeService {
         }
     }
 
-    public JsonObject processEdgeForms(EdgeNote edgeNote, List<EdgeFormData> edgeFormDataList, String errorFormTemplateGuid, SlvData slvData) {
+    public JsonObject processEdgeForms(EdgeNote edgeNote,  String errorFormTemplateGuid, SlvData slvData) {
         String edgenoteJson = gson.toJson(edgeNote);
-        String layerGuid = PropertiesReader.getProperties().getProperty("milhouse.layerguid");
         JsonObject edgeJsonObject = (JsonObject) jsonParser.parse(edgenoteJson);
         JsonArray serverEdgeFormJsonArray = edgeJsonObject.get("formData").getAsJsonArray();
         int size = serverEdgeFormJsonArray.size();
@@ -292,12 +291,12 @@ public class EdgeService {
         throw new NoValueException(id + " is not found.");
     }
 
-    public EdgeFormData getProjectNameComponent() {
+    public EdgeFormData getProjectNameComponent(String name) {
 //{\"id\":38,\"label\":\"Wattage\",\"value\":\"Wattage#\",\"count\":0,\"groupId\":5,\"groupRepeatableCount\":1,\"isGroup\":true}
         EdgeFormData edgeFormData = new EdgeFormData();
         edgeFormData.setId(40);
         edgeFormData.setLabel("Project Name");
-        edgeFormData.setValue("Project Name#");
+        edgeFormData.setValue("Project Name#"+name);
         edgeFormData.setCount(0);
         edgeFormData.setGroupId(5);
         edgeFormData.setGroupRepeatableCount(1);
@@ -311,11 +310,13 @@ public class EdgeService {
         int pos = edgeFormDataList.indexOf(tempEdgeFormData);
         logger.info("wattage index Position :" + pos);
         if (pos == -1) {
-            EdgeFormData edgeFormData = getProjectNameComponent();
+            EdgeFormData edgeFormData = getProjectNameComponent(slvData.getProjectName());
             edgeFormDataList.add(edgeFormData);
             logger.info("wattage component :" + gson.toJson(edgeFormData));
+        }else{
+            updateFormValue(edgeFormDataList, 40, slvData.getProjectName());
         }
-        updateFormValue(edgeFormDataList, 40, slvData.getProjectName());
+
 
     }
 }
