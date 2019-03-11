@@ -164,7 +164,7 @@ public class StreetlightChicagoService extends AbstractProcessor {
     }
 
 
-    private void reSync(String noteGuid, String accessToken, boolean isResync, String utilLocId) {
+    public void reSync(String noteGuid, String accessToken, boolean isResync, String utilLocId) {
         logger.info("resync method called ");
         // Get Edge Server Url from properties
         String url = PropertiesReader.getProperties().getProperty("streetlight.edge.url.main");
@@ -195,6 +195,7 @@ public class StreetlightChicagoService extends AbstractProcessor {
             //updateSlvStatusToEdge(installMaintenanceLogModel, edgeNote);
             LoggingModel loggingModel = installMaintenanceLogModel;
             streetlightDao.insertProcessedNotes(loggingModel, installMaintenanceLogModel);
+            connectionDAO.deleteDuplicateMacAddress(noteGuid);
             //  }
         }
 
@@ -336,7 +337,7 @@ public class StreetlightChicagoService extends AbstractProcessor {
 
     // http://192.168.1.9:8080/edgeServer/oauth/token?grant_type=password&username=admin&password=admin&client_id=edgerestapp
 
-    private String getEdgeToken() {
+    public String getEdgeToken() {
         String url = PropertiesReader.getProperties().getProperty("streetlight.edge.url.main");
         String userName = properties.getProperty("streetlight.edge.username");
         String password = properties.getProperty("streetlight.edge.password");

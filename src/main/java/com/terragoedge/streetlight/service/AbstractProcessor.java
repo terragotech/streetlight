@@ -10,10 +10,7 @@ import com.terragoedge.streetlight.dao.ConnectionDAO;
 import com.terragoedge.streetlight.dao.StreetlightDao;
 import com.terragoedge.streetlight.enumeration.ProcessType;
 import com.terragoedge.streetlight.exception.*;
-import com.terragoedge.streetlight.json.model.ContextList;
-import com.terragoedge.streetlight.json.model.CslpDate;
-import com.terragoedge.streetlight.json.model.SlvServerData;
-import com.terragoedge.streetlight.json.model.SlvServerDataColumnPos;
+import com.terragoedge.streetlight.json.model.*;
 import com.terragoedge.streetlight.logging.InstallMaintenanceLogModel;
 import com.terragoedge.streetlight.logging.LoggingModel;
 import org.apache.commons.lang3.StringUtils;
@@ -23,6 +20,7 @@ import org.springframework.http.ResponseEntity;
 import java.sql.SQLException;
 import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.Properties;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -35,11 +33,13 @@ public abstract class AbstractProcessor {
     Properties properties = null;
     Gson gson = null;
     JsonParser jsonParser = null;
+    ConnectionDAO connectionDAO;
 
     WeakHashMap<String, String> contextListHashMap = new WeakHashMap<>();
     HashMap<String, CslpDate> cslpDateHashMap = new HashMap<>();
 
     public AbstractProcessor() {
+        this.connectionDAO = ConnectionDAO.INSTANCE;
         this.streetlightDao = new StreetlightDao();
         this.restService = new RestService();
         this.properties = PropertiesReader.getProperties();
@@ -242,6 +242,11 @@ public abstract class AbstractProcessor {
                     stringBuilder.append(value.getIdOnController());
                     stringBuilder.append("\n");
                 }
+                DuplicateMacAddress duplicateMacAddress = new DuplicateMacAddress();
+                duplicateMacAddress.setTitle(idOnController);
+                duplicateMacAddress.setMacaddress(macAddress);
+                duplicateMacAddress.setNoteguid(streetlightDao.getNoteguid(idOnController));
+                connectionDAO.saveDuplicateMacAddress(duplicateMacAddress);
             }
             loggingModel.setMacAddressUsed(true);
             throw new QRCodeAlreadyUsedException(stringBuilder.toString(), macAddress);

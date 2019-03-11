@@ -8,6 +8,7 @@ import java.util.Random;
 
 import com.google.gson.JsonObject;
 import com.j256.ormlite.dao.Dao;
+import com.j256.ormlite.table.TableUtils;
 import com.terragoedge.edgeserver.EdgeNotebook;
 import com.terragoedge.edgeserver.FullEdgeNotebook;
 import com.terragoedge.edgeserver.SlvData;
@@ -632,9 +633,28 @@ public class StreetlightDao extends UtilDao {
         slvDeviceDao.update(slvServerData);
     }
 
+    public String getNoteguid(String title) {
+        Statement queryStatement = null;
+        ResultSet queryResponse = null;
+        try {
+            queryStatement = connection.createStatement();
+            queryResponse = queryStatement.executeQuery("Select noteguid from edgenote where title='" + title + "';");
+
+            while (queryResponse.next()) {
+                return queryResponse.getString("noteguid");
+            }
+
+        } catch (Exception e) {
+            logger.error("Error in getNoteguid", e);
+        } finally {
+            closeResultSet(queryResponse);
+            closeStatement(queryStatement);
+        }
+        return null;
+    }
+
     public void closeConnection(){
         connectionDAO.closeConnection();
     }
-
 
 }
