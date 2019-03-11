@@ -72,7 +72,7 @@ public class SlvInterfaceService extends AbstractSlvService {
                         for (EdgeNote edgenote : edgeNoteList) {
                             logger.info("ProcessNoteGuid is :" + edgenoteGuid);
                             logger.info("ProcessNoteTitle is :" + edgenote.getTitle());
-                            processEdgeNote(edgenote, noteGuids, formTemplateGuid, false);
+                         //   processEdgeNote(edgenote, noteGuids, formTemplateGuid, false);
                         }
                     }
                 }
@@ -81,9 +81,13 @@ public class SlvInterfaceService extends AbstractSlvService {
             }
         }
         logger.info("Process End :");
+    }
+
+    public void startReport() {
         logger.info("start report process");
-         slvService.startReport();
+        slvService.startReport();
         logger.info("report process end");
+
     }
 
     private void processEdgeNote(EdgeNote edgeNote, List<String> noteGuids, String formTemplateGuid, boolean isResync) {
@@ -105,11 +109,11 @@ public class SlvInterfaceService extends AbstractSlvService {
                     }
 
                     if (isFormTemplatePresent) {
-                        logger.info("Given formtemplates present in this note.: "+edgeNote.getTitle());
+                        logger.info("Given formtemplates present in this note.: " + edgeNote.getTitle());
                         FormData formData = formDataMaps.get(formTemplateGuid);
                         List<EdgeFormData> edgeFormDataList = formData.getFormDef();
                         JPSWorkflowModel jpsWorkflowModel = processWorkFlowForm(formDatasList, edgeNote);
-                        logger.info("JspWorkmodel json :"+gson.toJson(jpsWorkflowModel));
+                        logger.info("JspWorkmodel json :" + gson.toJson(jpsWorkflowModel));
                         slvService.processSlv(jpsWorkflowModel, edgeNote);
                     } else {
                         System.out.println("Wrong formtemplate");
@@ -142,10 +146,10 @@ public class SlvInterfaceService extends AbstractSlvService {
         GeoJSONReader reader = new GeoJSONReader();
         Geometry geom = reader.read(feature.getGeometry());
         if (edgeNote.getGeometry() != null) {
-            jpsWorkflowModel.setLat(String.valueOf(geom.getCoordinate().x));
-            jpsWorkflowModel.setLng(String.valueOf(geom.getCoordinate().y));
-        }else {
-            logger.info("There is no location given note :"+edgeNote.getTitle());
+            jpsWorkflowModel.setLat(String.valueOf(geom.getCoordinate().y));
+            jpsWorkflowModel.setLng(String.valueOf(geom.getCoordinate().x));
+        } else {
+            logger.info("There is no location given note :" + edgeNote.getTitle());
         }
         jpsWorkflowModel.setControllerStrId(controllerStrId);
         jpsWorkflowModel.setEquipmentType(nodeTypeStrId);
@@ -221,7 +225,11 @@ public class SlvInterfaceService extends AbstractSlvService {
                             break;
                         case "Condition":
                             if (nullCheck(edgeFormData.getValue()))
-                                jpsWorkflowModel.setPole_type(edgeFormData.getValue());
+                                jpsWorkflowModel.setPole_status(edgeFormData.getValue());
+                            break;
+                        case "polenumber":
+                            if (nullCheck(edgeFormData.getValue()))
+                                jpsWorkflowModel.setUtillocationid(edgeFormData.getValue());
                             break;
                         case "facilityID":
                             if (nullCheck(edgeFormData.getValue()))
@@ -231,8 +239,8 @@ public class SlvInterfaceService extends AbstractSlvService {
                 }
             }
         }
-        String geozonePaths = "/"+jpsWorkflowModel.getNotebookName()+"/"+jpsWorkflowModel.getAddress1();
-        logger.info("Geozone path :"+geozonePath);
+        String geozonePaths = "/" + jpsWorkflowModel.getNotebookName() + "/" + jpsWorkflowModel.getAddress1();
+        logger.info("Geozone path :" + geozonePath);
         jpsWorkflowModel.setGeozonePath(geozonePaths);
         return jpsWorkflowModel;
     }

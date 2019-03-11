@@ -16,8 +16,8 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
 public class EmailUtils {
-    public static void sendEmail(String filePath, String subject, String body, String fileName){
-        try{
+    public static void sendEmail(String filePath, String subject, String body, String fileName) {
+        try {
             Properties properties = PropertiesReader.getProperties();
             Properties props = System.getProperties();
             final String fromEmail = properties.getProperty("email.id");
@@ -66,7 +66,7 @@ public class EmailUtils {
             transport.connect(host, fromEmail, emailPassword);
             transport.sendMessage(message, message.getAllRecipients());
             transport.close();
-        }catch (Exception e){
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }
@@ -75,6 +75,39 @@ public class EmailUtils {
         ZipOutputStream zipFile = new ZipOutputStream(new FileOutputStream(outputFile));
         compressDirectoryToZipfile(sourceDir, sourceDir, zipFile);
         IOUtils.closeQuietly(zipFile);
+    }
+
+    public static String zipFiles(String zipFile, String srcDir) {
+        try {
+            File srcFile = new File(srcDir);
+            File[] files = srcFile.listFiles();
+            FileOutputStream fos = new FileOutputStream(zipFile);
+            ZipOutputStream zos = new ZipOutputStream(fos);
+            for (int i = 0; i < files.length; i++) {
+                // create byte buffer
+                byte[] buffer = new byte[1024];
+                FileInputStream fis = new FileInputStream(files[i]);
+                zos.putNextEntry(new ZipEntry(files[i].getName()));
+
+                int length;
+
+                while ((length = fis.read(buffer)) > 0) {
+                    zos.write(buffer, 0, length);
+                }
+
+                zos.closeEntry();
+
+// close the InputStream
+                fis.close();
+
+            }
+            zos.close();
+        }
+//
+        catch (Exception e) {
+            return e.getMessage();
+        }
+        return "Successfully created the zip file" + zipFile;
     }
 
     private static void compressDirectoryToZipfile(String rootDir, String sourceDir, ZipOutputStream out) throws IOException, FileNotFoundException {

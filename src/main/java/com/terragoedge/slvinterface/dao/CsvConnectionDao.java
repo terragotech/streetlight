@@ -21,8 +21,10 @@ public class CsvConnectionDao {
             }
         }
         try{
+            System.out.println(query);
+            logger.info(query);
             statement = connection.createStatement();
-            resultSet = statement.executeQuery(query);
+            statement.execute(query);
         }catch (Exception e){
             logger.info("Error: "+e);
             e.printStackTrace();

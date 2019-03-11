@@ -187,6 +187,25 @@ public abstract class AbstractSlvService extends EdgeService {
         }
         return values;
     }
+    public void deleteDevice(JPSWorkflowModel jpsWorkflowModel) {
+        logger.info("Getting Delete Device from SLV.");
+        String mainUrl = properties.getProperty("streetlight.slv.url.main");
+        String updateDeviceValues = properties.getProperty("streetlight.slv.delete.device");
+        String url = mainUrl + updateDeviceValues;
+        List<String> paramsList = new ArrayList<String>();
+        paramsList.add("controllerStrId="+jpsWorkflowModel.getControllerStrId());
+        paramsList.add("idOnController=" + jpsWorkflowModel.getOldPoleNumber());
+        paramsList.add("ser=json");
+        String params = StringUtils.join(paramsList, "&");
+        url = url + "?" + params;
+        logger.info(" Deleted Url  :" + url);
+        ResponseEntity<String> response = slvRestService.getRequest(url, true, null);
+        if (response.getStatusCodeValue() == 200) {
+
+            logger.info("-------Successfully deleted device----------");
+            logger.info(response.getStatusCode());
+        }
+    }
 
     public ResponseEntity<String> setDeviceValues(List<Object> paramsList) {
         String mainUrl = properties.getProperty("streetlight.slv.url.main");
@@ -227,7 +246,7 @@ public abstract class AbstractSlvService extends EdgeService {
             url = url + "?" + params;
             logger.info("Replace OLc called: " + macAddress);
             logger.info("Replace OLc Url" + url);
-            ResponseEntity<String> response = slvRestService.getPostRequest(url, null);
+           /* ResponseEntity<String> response = slvRestService.getPostRequest(url, null);
             String responseString = response.getBody();
             logger.info("Replace Olc response :"+responseString);
             JsonObject replaceOlcResponse = (JsonObject) jsonParser.parse(responseString);
@@ -259,7 +278,7 @@ public abstract class AbstractSlvService extends EdgeService {
             }
             if (status == Status.Failure) {
                 throw new ReplaceOLCFailedException(errorValue);
-            }
+            }*/
         } catch (Exception e) {
             logger.error("Error in replaceOLC", e);
             throw new ReplaceOLCFailedException(e.getMessage());
