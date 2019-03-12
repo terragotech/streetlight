@@ -1,6 +1,7 @@
 package com.terragoedge.streetlight.service;
 
 import com.terragoedge.edgeserver.*;
+import com.terragoedge.streetlight.PropertiesReader;
 import com.terragoedge.streetlight.exception.*;
 import com.terragoedge.streetlight.json.model.CslpDate;
 import com.terragoedge.streetlight.json.model.DuplicateMacAddress;
@@ -18,11 +19,9 @@ import java.util.List;
 import java.util.WeakHashMap;
 
 public class InstallationMaintenanceProcessor extends AbstractProcessor {
-    private StreetlightChicagoService streetlightChicagoService;
 
     public InstallationMaintenanceProcessor(WeakHashMap<String, String> contextListHashMap, HashMap<String, CslpDate> cslpDateHashMap) {
         super();
-        streetlightChicagoService = new StreetlightChicagoService();
         this.contextListHashMap = contextListHashMap;
         this.cslpDateHashMap = cslpDateHashMap;
     }
@@ -213,6 +212,8 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
                     loggingModel.setErrorDetails("Repairs & Outages options are not selected.");
                 }
 
+            }else if(value.equals("Remove")){
+                return value;
             }
         } catch (NoValueException e) {
             e.printStackTrace();
@@ -947,31 +948,27 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
             switch (removeReason){
                 case "Installed on Wrong Fixture":
                     try {
-                        SlvServerData slvServerData = streetlightDao.getSlvServerData(loggingModel.getIdOnController());
-                        if(slvServerData != null){
-                            String macaddress = slvServerData.getMacAddress();
+                            String macaddress = getMacAddress(loggingModel.getIdOnController(),loggingModel.getControllerSrtId());
+                            replaceOLC(loggingModel.getControllerSrtId(), loggingModel.getIdOnController(), "");
+                            clearDeviceValues(loggingModel.getIdOnController(),loggingModel.getControllerSrtId(),"Installed on Wrong Fixture");
                             DuplicateMacAddress duplicateMacAddress = connectionDAO.getDuplicateMacAddress(macaddress);
                             if(duplicateMacAddress != null){
-                                streetlightChicagoService.reSync(duplicateMacAddress.getNoteguid(),streetlightChicagoService.getEdgeToken(),true,utilLocId);
+                                reSync(duplicateMacAddress.getNoteguid(),getEdgeToken(),true,utilLocId,true);
                             }
-                            replaceOLC(loggingModel.getControllerSrtId(), loggingModel.getIdOnController(), "");
-                        }
                     }catch (Exception e){
                         e.printStackTrace();
                     }
                     break;
                 case "Pole Removed":
                     try {
-                        clearDeviceValues(loggingModel.getIdOnController(),loggingModel.getControllerSrtId(),"");
-                        replaceOLC(loggingModel.getControllerSrtId(), loggingModel.getIdOnController(), "");
+                        clearDeviceValues(loggingModel.getIdOnController(),loggingModel.getControllerSrtId(),"Pole Removed");
                     }catch (Exception e){
                         e.printStackTrace();
                     }
                     break;
                 case "Pole Knocked-Down":
                     try {
-                        clearDeviceValues(loggingModel.getIdOnController(),loggingModel.getControllerSrtId(),"");
-                        replaceOLC(loggingModel.getControllerSrtId(), loggingModel.getIdOnController(), "");
+                        clearDeviceValues(loggingModel.getIdOnController(),loggingModel.getControllerSrtId(),"Pole Knocked-Down");
                     }catch (Exception e){
                         e.printStackTrace();
                     }
@@ -980,15 +977,34 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
         }
     }
 
-    private void clearDeviceValues(String idOnController,String controllerStrIdValue,String installStatus){
+    private void clearDeviceValues(String idOnController,String controllerStrIdValue,String type){
         List<Object> paramsList = new ArrayList<>();
         paramsList.add("idOnController=" + idOnController);
         paramsList.add("controllerStrId=" + controllerStrIdValue);
-        addStreetLightData("installStatus", installStatus, paramsList);
-        addStreetLightData("comment", "", paramsList);
-        addStreetLightData("cslp.node.install.date", "", paramsList);
-        addStreetLightData("install.date", "", paramsList);
-        addStreetLightData("MacAddress", "", paramsList);
+        switch (type){
+            case "Installed on Wrong Fixture":
+                clearFixtureValues(paramsList);
+                addStreetLightData("cslp.lum.install.date", "", paramsList);
+                addStreetLightData("luminaire.installdate","", paramsList);
+                addStreetLightData("cslp.node.install.date", "", paramsList);
+                addStreetLightData("install.date", "", paramsList);
+                addStreetLightData("installStatus", "To be installed", paramsList);
+                break;
+            case "Pole Removed":
+                clearFixtureValues(paramsList);
+                addStreetLightData("install.date", "", paramsList);
+                addStreetLightData("luminaire.installdate","", paramsList);
+                addStreetLightData("installStatus", "Removed", paramsList);
+                addStreetLightData("luminaire.type", "HPS", paramsList);
+                break;
+            case "Pole Knocked-Down":
+                clearFixtureValues(paramsList);
+                addStreetLightData("install.date", "", paramsList);
+                addStreetLightData("luminaire.installdate","", paramsList);
+                addStreetLightData("installStatus", "Pole Knocked Down", paramsList);
+                addStreetLightData("luminaire.type", "HPS", paramsList);
+                break;
+        }
         int errorCode = setDeviceValues(paramsList);
         if(errorCode == 0){
             logger.info("clearing device values completed: "+idOnController);
@@ -997,4 +1013,57 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
         }
     }
 
+    private void clearFixtureValues(List<Object> paramsList){
+        addStreetLightData("luminaire.brand", "", paramsList);
+        addStreetLightData("device.luminaire.partnumber", "", paramsList);
+        addStreetLightData("luminaire.model", "", paramsList);
+        addStreetLightData("device.luminaire.manufacturedate", "", paramsList);
+        addStreetLightData("power", "", paramsList);
+        addStreetLightData("device.luminaire.colortemp", "", paramsList);
+        addStreetLightData("device.luminaire.lumenoutput", "", paramsList);
+        addStreetLightData("luminaire.DistributionType", "", paramsList);
+        addStreetLightData("luminaire.colorcode", "", paramsList);
+        addStreetLightData("device.luminaire.drivermanufacturer", "", paramsList);
+        addStreetLightData("device.luminaire.driverpartnumber", "", paramsList);
+        addStreetLightData("ballast.dimmingtype", "", paramsList);
+    }
+
+    public void reSync(String noteGuid, String accessToken, boolean isResync, String utilLocId,boolean isFromRemoveAction) {
+        logger.info("resync method called ");
+        // Get Edge Server Url from properties
+        String url = PropertiesReader.getProperties().getProperty("streetlight.edge.url.main");
+
+        url = url + PropertiesReader.getProperties().getProperty("streetlight.edge.url.notes.get");
+
+        url = url + "/" + noteGuid;
+        logger.info("Given url is :" + url);
+        // Get NoteList from edgeserver
+        ResponseEntity<String> responseEntity = restService.getRequest(url, false, accessToken);
+
+        // Process only response code as success
+        if (responseEntity.getStatusCode().is2xxSuccessful()) {
+            // Get Response String
+            String notesData = responseEntity.getBody();
+            logger.info("rest service data:" + notesData);
+            EdgeNote edgeNote = gson.fromJson(notesData, EdgeNote.class);
+            //   if(!edgeNote.getCreatedBy().contains("admin")){
+            InstallMaintenanceLogModel installMaintenanceLogModel = new InstallMaintenanceLogModel();
+            installMaintenanceLogModel.setLastSyncTime(edgeNote.getSyncTime());
+            installMaintenanceLogModel.setProcessedNoteId(edgeNote.getNoteGuid());
+            installMaintenanceLogModel.setNoteName(edgeNote.getTitle());
+            installMaintenanceLogModel.setCreatedDatetime(String.valueOf(edgeNote.getCreatedDateTime()));
+            loadDefaultVal(edgeNote, installMaintenanceLogModel);
+            loadDeviceValues(installMaintenanceLogModel.getIdOnController());
+            logger.info("going to call processnew action");
+            processNewAction(edgeNote, installMaintenanceLogModel, isResync, utilLocId);
+
+            //updateSlvStatusToEdge(installMaintenanceLogModel, edgeNote);
+            LoggingModel loggingModel = installMaintenanceLogModel;
+            streetlightDao.insertProcessedNotes(loggingModel, installMaintenanceLogModel);
+            if(isFromRemoveAction) {
+                connectionDAO.deleteDuplicateMacAddress(noteGuid);
+            }
+            //  }
+        }
+    }
 }

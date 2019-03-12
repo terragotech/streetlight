@@ -235,18 +235,24 @@ public abstract class AbstractProcessor {
                 loggingModel.setMacAddressUsed(false);
                 return false;
             } else {
+                boolean isDuplicate = false;
                 for (Value value : values) {
+                    if(!value.getIdOnController().equals(idOnController)){
+                        isDuplicate = true;
+                    }
                     if (value.getIdOnController().equals(idOnController) && nightRideKey != null) {
                         sendNightRideToSLV(value.getIdOnController(), nightRideKey, nightRideValue);
                     }
                     stringBuilder.append(value.getIdOnController());
                     stringBuilder.append("\n");
                 }
-                DuplicateMacAddress duplicateMacAddress = new DuplicateMacAddress();
-                duplicateMacAddress.setTitle(idOnController);
-                duplicateMacAddress.setMacaddress(macAddress);
-                duplicateMacAddress.setNoteguid(streetlightDao.getNoteguid(idOnController));
-                connectionDAO.saveDuplicateMacAddress(duplicateMacAddress);
+                if(isDuplicate) {
+                    DuplicateMacAddress duplicateMacAddress = new DuplicateMacAddress();
+                    duplicateMacAddress.setTitle(idOnController);
+                    duplicateMacAddress.setMacaddress(macAddress);
+                    duplicateMacAddress.setNoteguid(streetlightDao.getNoteguid(idOnController));
+                    connectionDAO.saveDuplicateMacAddress(duplicateMacAddress);
+                }
             }
             loggingModel.setMacAddressUsed(true);
             throw new QRCodeAlreadyUsedException(stringBuilder.toString(), macAddress);
@@ -573,7 +579,33 @@ public abstract class AbstractProcessor {
         throw new QRCodeNotMatchedException(idOnController, existingNodeMacAddress);
     }
 
+    protected String getMacAddress(String idOnController,String controllerStrId){
+        String mainUrl = properties.getProperty("streetlight.url.main");
+        String getMacAddress = properties.getProperty("streetlight.slv.url.getmacaddress");
+        String url = mainUrl + getMacAddress;
 
+        List<Object> paramsList = new ArrayList<Object>();
+        paramsList.add("idOnController=" + idOnController);
+        paramsList.add("controllerStrId=" + controllerStrId);
+        paramsList.add("valueName=MacAddress");
+        paramsList.add("valueName=comment");
+        paramsList.add("ser=json");
+        String params = StringUtils.join(paramsList, "&");
+        url = url + "&" + params;
+        ResponseEntity<String> response = restService.getPostRequest(url, null);
+        if (response.getStatusCode().is2xxSuccessful()) {
+            String responseString = response.getBody();
+            JsonElement jsonElement = jsonParser.parse(responseString);
+            if (jsonElement.isJsonArray()) {
+                JsonArray jsonArray = jsonElement.getAsJsonArray();
+                if (jsonArray.size() > 0) {
+                    return jsonArray.get(0).getAsString();
+
+                }
+            }
+        }
+        return null;
+    }
     /**
      * Check MAC Address is present in given IdonController or not and also if
      * mathches get comment
@@ -818,5 +850,20 @@ public abstract class AbstractProcessor {
 
     public void closeConnection() {
         streetlightDao.closeConnection();
+    }
+
+    protected String getEdgeToken() {
+        String url = PropertiesReader.getProperties().getProperty("streetlight.edge.url.main");
+        String userName = properties.getProperty("streetlight.edge.username");
+        String password = properties.getProperty("streetlight.edge.password");
+        url = url + "/oauth/token?grant_type=password&username=" + userName + "&password=" + password
+                + "&client_id=edgerestapp";
+        ResponseEntity<String> responseEntity = restService.getRequest(url);
+        if (responseEntity.getStatusCode().is2xxSuccessful()) {
+            JsonObject jsonObject = (JsonObject) jsonParser.parse(responseEntity.getBody());
+            return jsonObject.get("access_token").getAsString();
+        }
+        return null;
+
     }
 }

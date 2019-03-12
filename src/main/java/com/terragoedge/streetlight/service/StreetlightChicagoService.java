@@ -2,10 +2,8 @@ package com.terragoedge.streetlight.service;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
-import java.lang.reflect.Type;
 import java.text.SimpleDateFormat;
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
 
 import com.terragoedge.streetlight.edgeinterface.SlvData;
 import com.terragoedge.streetlight.edgeinterface.SlvToEdgeService;
@@ -13,29 +11,13 @@ import com.terragoedge.streetlight.json.model.ContextList;
 import com.terragoedge.streetlight.json.model.CslpDate;
 import com.terragoedge.streetlight.logging.InstallMaintenanceLogModel;
 import com.terragoedge.streetlight.logging.LoggingModel;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 import org.springframework.http.ResponseEntity;
 
-import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
-import com.google.gson.reflect.TypeToken;
-import com.terragoedge.edgeserver.DeviceMacAddress;
-import com.terragoedge.edgeserver.EdgeFormData;
 import com.terragoedge.edgeserver.EdgeNote;
-import com.terragoedge.edgeserver.FormData;
-import com.terragoedge.edgeserver.Value;
 import com.terragoedge.streetlight.PropertiesReader;
-import com.terragoedge.streetlight.dao.StreetlightDao;
-import com.terragoedge.streetlight.exception.DeviceUpdationFailedException;
-import com.terragoedge.streetlight.exception.InValidBarCodeException;
-import com.terragoedge.streetlight.exception.NoValueException;
-import com.terragoedge.streetlight.exception.QRCodeAlreadyUsedException;
-import com.terragoedge.streetlight.exception.QRCodeNotMatchedException;
-import com.terragoedge.streetlight.exception.ReplaceOLCFailedException;
 
 public class StreetlightChicagoService extends AbstractProcessor {
 
@@ -141,11 +123,11 @@ public class StreetlightChicagoService extends AbstractProcessor {
                     if (loggingModelTemp.getStatus() == null || loggingModelTemp.getStatus().toLowerCase().equals("error") || loggingModelTemp.getStatus().toLowerCase().equals("failure")) {
                         streetlightDao.deleteProcessedNotes(loggingModelTemp.getProcessedNoteId());
                         String utilLocId = getUtilLocationId(loggingModelTemp.getErrorDetails());
-                        reSync(line, accessToken, true, utilLocId);
+                        installationMaintenanceProcessor.reSync(line, accessToken, true, utilLocId,false);
                     }
                 } else {
                     logger.info("Note is not Synced. Syncing now.");
-                    reSync(line, accessToken, false, null);
+                    installationMaintenanceProcessor.reSync(line, accessToken, false, null,false);
                 }
 
             }
@@ -162,46 +144,6 @@ public class StreetlightChicagoService extends AbstractProcessor {
             }
         }
     }
-
-
-    public void reSync(String noteGuid, String accessToken, boolean isResync, String utilLocId) {
-        logger.info("resync method called ");
-        // Get Edge Server Url from properties
-        String url = PropertiesReader.getProperties().getProperty("streetlight.edge.url.main");
-
-        url = url + PropertiesReader.getProperties().getProperty("streetlight.edge.url.notes.get");
-
-        url = url + "/" + noteGuid;
-        logger.info("Given url is :" + url);
-        // Get NoteList from edgeserver
-        ResponseEntity<String> responseEntity = restService.getRequest(url, false, accessToken);
-
-        // Process only response code as success
-        if (responseEntity.getStatusCode().is2xxSuccessful()) {
-            // Get Response String
-            String notesData = responseEntity.getBody();
-            logger.info("rest service data:" + notesData);
-            EdgeNote edgeNote = gson.fromJson(notesData, EdgeNote.class);
-            //   if(!edgeNote.getCreatedBy().contains("admin")){
-            InstallMaintenanceLogModel installMaintenanceLogModel = new InstallMaintenanceLogModel();
-            installMaintenanceLogModel.setLastSyncTime(edgeNote.getSyncTime());
-            installMaintenanceLogModel.setProcessedNoteId(edgeNote.getNoteGuid());
-            installMaintenanceLogModel.setNoteName(edgeNote.getTitle());
-            installMaintenanceLogModel.setCreatedDatetime(String.valueOf(edgeNote.getCreatedDateTime()));
-            loadDefaultVal(edgeNote, installMaintenanceLogModel);
-            loadDeviceValues(installMaintenanceLogModel.getIdOnController());
-            logger.info("going to call processnew action");
-            installationMaintenanceProcessor.processNewAction(edgeNote, installMaintenanceLogModel, isResync, utilLocId);
-            //updateSlvStatusToEdge(installMaintenanceLogModel, edgeNote);
-            LoggingModel loggingModel = installMaintenanceLogModel;
-            streetlightDao.insertProcessedNotes(loggingModel, installMaintenanceLogModel);
-            connectionDAO.deleteDuplicateMacAddress(noteGuid);
-            //  }
-        }
-
-
-    }
-
 
     private void updateSlvStatusToEdge(InstallMaintenanceLogModel installMaintenanceLogModel, EdgeNote edgeNote) {
         try {
@@ -332,24 +274,5 @@ public class StreetlightChicagoService extends AbstractProcessor {
         cal.set(Calendar.MILLISECOND, 0);
         return dateFormat.format(cal.getTime());
     }
-
-
-
     // http://192.168.1.9:8080/edgeServer/oauth/token?grant_type=password&username=admin&password=admin&client_id=edgerestapp
-
-    public String getEdgeToken() {
-        String url = PropertiesReader.getProperties().getProperty("streetlight.edge.url.main");
-        String userName = properties.getProperty("streetlight.edge.username");
-        String password = properties.getProperty("streetlight.edge.password");
-        url = url + "/oauth/token?grant_type=password&username=" + userName + "&password=" + password
-                + "&client_id=edgerestapp";
-        ResponseEntity<String> responseEntity = restService.getRequest(url);
-        if (responseEntity.getStatusCode().is2xxSuccessful()) {
-            JsonObject jsonObject = (JsonObject) jsonParser.parse(responseEntity.getBody());
-            return jsonObject.get("access_token").getAsString();
-        }
-        return null;
-
-    }
-
 }
