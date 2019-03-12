@@ -47,7 +47,7 @@ public class SlvService extends AbstractSlvService {
         JsonArray devices = checkDeviceExist(jpsWorkflowModel.getIdOnController());// search idoncontroller on slv - ** rest call
         //start
         int deviceId = -1;
-        if (devices != null && devices.size() == 1) {
+        if (devices == null) {
             ResponseEntity<String> responseEntity = createDevice(edgeNote, jpsWorkflowModel);// create device in slv
             if (responseEntity != null) {
                 logger.info("Create device Json response" + responseEntity.getBody());
@@ -56,47 +56,18 @@ public class SlvService extends AbstractSlvService {
                     JsonObject jsonObject = new JsonParser().parse(responseEntity.getBody()).getAsJsonObject();
                     deviceId = jsonObject.get("id").getAsInt();
                 }
+            }else{
+                throw new Exception("Device creation response return null: " + edgeNote.getTitle());
             }
         } else {
             deviceId = devices.get(0).getAsJsonObject().get("id").getAsInt();
         }
-        processDeviceValues(jpsWorkflowModel, true, edgeNote);
-        processMacAddress(jpsWorkflowModel, edgeNote, deviceId);
         if (jpsWorkflowModel.getOldPoleNumber() != null && !jpsWorkflowModel.getOldPoleNumber().isEmpty()) {
             replaceOLC(jpsWorkflowModel.getControllerStrId(), jpsWorkflowModel.getOldPoleNumber(), "", edgeNote, jpsWorkflowModel);
             deleteDevice(jpsWorkflowModel);
         }
-        //end
-        if (devices != null && devices.size() == 1) {// device already present in slv
-            logger.info("Given fixtures already exist in slv");
-            processDeviceValues(jpsWorkflowModel, true, edgeNote);
-            processMacAddress(jpsWorkflowModel, edgeNote, devices.get(0).getAsJsonObject().get("id").getAsInt());
-            if (jpsWorkflowModel.getOldPoleNumber() != null && !jpsWorkflowModel.getOldPoleNumber().isEmpty()) {
-                replaceOLC(jpsWorkflowModel.getControllerStrId(), jpsWorkflowModel.getOldPoleNumber(), "", edgeNote, jpsWorkflowModel);
-                deleteDevice(jpsWorkflowModel);
-            }
-        } else if (devices == null || devices.size() == 0) {// device not present in slv
-            logger.info("Given device not present in slv");
-            ResponseEntity<String> responseEntity = createDevice(edgeNote, jpsWorkflowModel);// create device in slv
-            if (responseEntity != null) {
-                logger.info("Create device Json response" + responseEntity.getBody());
-                saveDevice(jpsWorkflowModel, edgeNote, responseEntity);// save or update slvdevice in local db
-                if (responseEntity.getStatusCode() == HttpStatus.OK) {
-                    JsonObject jsonObject = new JsonParser().parse(responseEntity.getBody()).getAsJsonObject();
-                    int deviceid = jsonObject.get("id").getAsInt();
-                    processDeviceValues(jpsWorkflowModel, false, edgeNote);
-                    processMacAddress(jpsWorkflowModel, edgeNote, deviceid);
-                    if (jpsWorkflowModel.getOldPoleNumber() != null && !jpsWorkflowModel.getOldPoleNumber().isEmpty()) {
-                        replaceOLC(jpsWorkflowModel.getControllerStrId(), jpsWorkflowModel.getOldPoleNumber(), "", edgeNote, jpsWorkflowModel);
-                        deleteDevice(jpsWorkflowModel);
-                    }
-                } else {
-                    logger.info("Device creation URL not Successed");
-                }
-            }
-        } else {
-            throw new Exception("more devices found for this pole: " + edgeNote.getTitle());
-        }
+        processDeviceValues(jpsWorkflowModel, true, edgeNote);
+        processMacAddress(jpsWorkflowModel, edgeNote, deviceId);
         logger.info("Going to call delete device");
     }
 
