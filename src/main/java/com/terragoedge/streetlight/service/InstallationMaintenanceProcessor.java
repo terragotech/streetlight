@@ -169,6 +169,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
                                 installMaintenanceLogModel.setReplacedDate(edgeNote.getCreatedDateTime());
                                 break;
                             case "Remove":
+                                logger.info("entered remove action");
                                 processRemoveAction(edgeFormDatas,existingFixtureInfo,utilLocId);
                                 break;
                             case "Other Task":
@@ -945,15 +946,31 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
             e.printStackTrace();
         }
         if(removeReason != null){
+            logger.info("remove reason:"+removeReason);
             switch (removeReason){
                 case "Installed on Wrong Fixture":
                     try {
                             String macaddress = getMacAddress(loggingModel.getIdOnController(),loggingModel.getControllerSrtId());
-                            replaceOLC(loggingModel.getControllerSrtId(), loggingModel.getIdOnController(), "");
-                            clearDeviceValues(loggingModel.getIdOnController(),loggingModel.getControllerSrtId(),"Installed on Wrong Fixture");
+                            logger.info("removed mac address:"+macaddress);
+                            try {
+                                replaceOLC(loggingModel.getControllerSrtId(), loggingModel.getIdOnController(), "");
+                            }catch (Exception e){
+                                e.printStackTrace();
+                                logger.error("error in replace OLC:"+e.getMessage());
+                            }
+                            logger.info("empty replaceOLC called");
+                            try {
+                                clearDeviceValues(loggingModel.getIdOnController(), loggingModel.getControllerSrtId(), "Installed on Wrong Fixture");
+                            }catch (Exception e){
+                                e.printStackTrace();
+                                logger.error("Error in clear device values:"+e.getMessage());
+                            }
+                            logger.info("cleared divice value");
                             DuplicateMacAddress duplicateMacAddress = connectionDAO.getDuplicateMacAddress(macaddress);
+                            logger.info("duplicate mac address: "+duplicateMacAddress);
                             if(duplicateMacAddress != null){
                                 reSync(duplicateMacAddress.getNoteguid(),getEdgeToken(),true,utilLocId,true);
+                                logger.info("resync called due to duplicate mac address");
                             }
                     }catch (Exception e){
                         e.printStackTrace();

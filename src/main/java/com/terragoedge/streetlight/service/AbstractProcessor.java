@@ -231,6 +231,7 @@ public abstract class AbstractProcessor {
             DeviceMacAddress deviceMacAddress = gson.fromJson(responseString, DeviceMacAddress.class);
             List<Value> values = deviceMacAddress.getValue();
             StringBuilder stringBuilder = new StringBuilder();
+            logger.info("check mac address exist values:"+values);
             if (values == null || values.size() == 0) {
                 loggingModel.setMacAddressUsed(false);
                 return false;
@@ -246,6 +247,7 @@ public abstract class AbstractProcessor {
                     stringBuilder.append(value.getIdOnController());
                     stringBuilder.append("\n");
                 }
+                logger.info("isduplicate:"+isDuplicate);
                 if(isDuplicate) {
                     DuplicateMacAddress duplicateMacAddress = new DuplicateMacAddress();
                     duplicateMacAddress.setTitle(idOnController);
