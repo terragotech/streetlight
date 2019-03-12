@@ -140,7 +140,7 @@
                             <goal>single</goal>
                         </goals>
                         <configuration>
-                            <finalName>uc_slvinterface</finalName>
+                            <finalName>jps_slvinterface_v8</finalName>
                             <archive>
                                 <manifest>
                                     <mainClass>

@@ -405,6 +405,7 @@ public abstract class AbstractSlvService extends EdgeService {
     public GeozoneEntity getGeozoneEntity(String notebookName, String streetName) {
         logger.info("Parent Geozone name as notebookName:"+notebookName);
         logger.info("Sub or childgezone Name as StreetName :"+streetName);
+        String rootGeozoneId = properties.getProperty("streetlight.slv.rootgeozone");
         GeozoneEntity geozoneEntity = connectionDAO.getGeozoneEntity(notebookName, streetName);
         if (geozoneEntity != null) {
             logger.info("Already has geozone values in geozone table");
@@ -421,7 +422,7 @@ public abstract class AbstractSlvService extends EdgeService {
         if (parentGeozoneModel == null) {
             logger.info("There is no parent Geozones, need to create parent and child");
             //create parent and child geozone
-            parentGeozoneModel = createGeozone(notebookName, 467);
+            parentGeozoneModel = createGeozone(notebookName, Integer.parseInt(rootGeozoneId));
             logger.info("ParentGeozone value : "+((parentGeozoneModel!=null)? gson.toJson(parentGeozoneModel):null));
             childGeozone = createGeozone(streetName, parentGeozoneModel.getId());
             logger.info("childGeozone value : "+((childGeozone!=null)? gson.toJson(childGeozone):null));

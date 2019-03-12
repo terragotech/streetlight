@@ -63,7 +63,7 @@ public enum ConnectionDAO {
 
     public List<String> getEdgeNoteGuid(String formTemplateGuid) {
         try {
-            List<String> noteGuids = slvSyncDetailsDao.queryRaw("select noteguid from edgenote, edgeform where edgenote.isdeleted = false  and edgenote.iscurrent = true  and  edgenote.noteid =  edgeform.edgenoteentity_noteid and edgenote.createddatetime >1551341367341 and edgeform.formtemplateguid = '" + formTemplateGuid + "';", new RawRowMapper<String>() {
+            List<String> noteGuids = slvSyncDetailsDao.queryRaw("select noteguid from edgenote, edgeform where edgenote.isdeleted = false and edgenote.iscurrent = true and edgenote.noteid = edgeform.edgenoteentity_noteid and edgeform.formtemplateguid = '" + formTemplateGuid + "' and edgenote.noteguid not in(select noteguid from slvsyncdetails);", new RawRowMapper<String>() {
                 @Override
                 public String mapRow(String[] columnNames, String[] resultColumns) throws SQLException {
                     return resultColumns[0];
@@ -74,6 +74,17 @@ public enum ConnectionDAO {
             logger.error("Error in getNoteGuids", e);
         }
         return new ArrayList<>();
+
+    }
+
+    public SlvSyncDetail getSlvSyncDetails(String noteguid) {
+        try {
+            SlvSyncDetail slvSyncDetail = slvSyncDetailsDao.queryBuilder().where().eq("noteguid", noteguid).queryForFirst();
+            return slvSyncDetail;
+        } catch (Exception e) {
+            logger.error("Error in getNoteGuids", e);
+        }
+        return null;
 
     }
 
@@ -108,7 +119,7 @@ public enum ConnectionDAO {
         try {
             duplicateMacaddressDao.create(duplicateMacAddress);
         } catch (Exception e) {
-            logger.error("Erro ",e);
+            logger.error("Erro ", e);
         }
     }
 
@@ -205,7 +216,7 @@ public enum ConnectionDAO {
             logger.info("Geozone value has been inserted local geozone table");
             geozoneEntitiesDao.create(geozoneEntity);
         } catch (Exception e) {
-         logger.error("geozone inserted Error",e);
+            logger.error("geozone inserted Error", e);
         }
     }
 

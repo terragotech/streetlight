@@ -43,12 +43,8 @@ public class SlvInterfaceService extends AbstractSlvService {
             return;
         }
         // Already Processed NoteGuids
-        List<String> noteGuids = connectionDAO.getProcessedItems();
         //  List<String> noteGuids = slvInterfaceDAO.getNoteGuids();
-        if (noteGuids == null) {
-            logger.error("Error while getting already process note list.");
-            return;
-        }
+
         String formTemplateGuid = properties.getProperty("streetlight.edge.formtemplateguid");
         String url = PropertiesReader.getProperties().getProperty("streetlight.edge.url.main");
 
@@ -60,20 +56,16 @@ public class SlvInterfaceService extends AbstractSlvService {
         //end
         for (String edgenoteGuid : noteGuidsList) {
             try {
-                if (!noteGuids.contains(edgenoteGuid)) {
+                if (isAlreadyProcessed(edgenoteGuid)) {
                     String restUrl = url + edgenoteGuid;
                     ResponseEntity<String> responseEntity = slvRestService.getRequest(restUrl, false, accessToken);
                     if (responseEntity.getStatusCode().is2xxSuccessful()) {
                         String notesData = responseEntity.getBody();
-                        List<EdgeNote> edgeNoteList = new ArrayList<>();
                         EdgeNote edgeNote = gson.fromJson(notesData, EdgeNote.class);
-                        edgeNoteList.add(edgeNote);
-                        logger.info("Processed Note title size :" + edgeNoteList.size());
-                        for (EdgeNote edgenote : edgeNoteList) {
-                            logger.info("ProcessNoteGuid is :" + edgenoteGuid);
-                            logger.info("ProcessNoteTitle is :" + edgenote.getTitle());
-                         //   processEdgeNote(edgenote, noteGuids, formTemplateGuid, false);
-                        }
+                        logger.info("Processed Note title size :" + gson.toJson(edgeNote));
+                        logger.info("ProcessNoteGuid is :" + edgenoteGuid);
+                        logger.info("ProcessNoteTitle is :" + edgeNote.getTitle());
+                        processEdgeNote(edgeNote, formTemplateGuid, false);
                     }
                 }
             } catch (Exception e) {
@@ -90,38 +82,37 @@ public class SlvInterfaceService extends AbstractSlvService {
 
     }
 
-    private void processEdgeNote(EdgeNote edgeNote, List<String> noteGuids, String formTemplateGuid, boolean isResync) {
+    public boolean isAlreadyProcessed(String noteguid) {
+        SlvSyncDetail slvSyncDetail = connectionDAO.getSlvSyncDetails(noteguid);
+        return (slvSyncDetail == null) ? true : false;
+    }
+
+    private void processEdgeNote(EdgeNote edgeNote, String formTemplateGuid, boolean isResync) {
         try {
             // Check whether this note is already processed or not.
-            if (!noteGuids.contains(edgeNote.getNoteGuid())) {
-                List<FormData> formDataList = new ArrayList<>();
-                try {
-                    List<Object> paramsList = new ArrayList<Object>();
-                    List<FormData> formDatasList = edgeNote.getFormData();
-                    Map<String, FormData> formDataMaps = new HashMap<String, FormData>();
-                    boolean isFormTemplatePresent = false;
-                    for (FormData formData : formDatasList) {
-                        formDataMaps.put(formData.getFormTemplateGuid(), formData);
-                        if (formData.getFormTemplateGuid().equals(formTemplateGuid)) {
-                            isFormTemplatePresent = true;
-                            formDataList.add(formData);
-                        }
+            List<FormData> formDataList = new ArrayList<>();
+            try {
+                List<FormData> formDatasList = edgeNote.getFormData();
+                Map<String, FormData> formDataMaps = new HashMap<String, FormData>();
+                boolean isFormTemplatePresent = false;
+                for (FormData formData : formDatasList) {
+                    formDataMaps.put(formData.getFormTemplateGuid(), formData);
+                    if (formData.getFormTemplateGuid().equals(formTemplateGuid)) {
+                        isFormTemplatePresent = true;
+                        formDataList.add(formData);
                     }
-
-                    if (isFormTemplatePresent) {
-                        logger.info("Given formtemplates present in this note.: " + edgeNote.getTitle());
-                        FormData formData = formDataMaps.get(formTemplateGuid);
-                        List<EdgeFormData> edgeFormDataList = formData.getFormDef();
-                        JPSWorkflowModel jpsWorkflowModel = processWorkFlowForm(formDatasList, edgeNote);
-                        logger.info("JspWorkmodel json :" + gson.toJson(jpsWorkflowModel));
-                        slvService.processSlv(jpsWorkflowModel, edgeNote);
-                    } else {
-                        System.out.println("Wrong formtemplate");
-                        logger.info("Wrong formtemplates Present");
-                    }
-                } catch (Exception e) {
-                    e.printStackTrace();
                 }
+                if (isFormTemplatePresent) {
+                    logger.info("Given formtemplates present in this note.: " + edgeNote.getTitle());
+                    JPSWorkflowModel jpsWorkflowModel = processWorkFlowForm(formDatasList, edgeNote);
+                    logger.info("JspWorkmodel json :" + gson.toJson(jpsWorkflowModel));
+                    slvService.processSlv(jpsWorkflowModel, edgeNote);
+                } else {
+                    System.out.println("Wrong formtemplate");
+                    logger.info("Wrong formtemplates Present");
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -163,75 +154,75 @@ public class SlvInterfaceService extends AbstractSlvService {
             List<EdgeFormData> edgeFormDataList = formData.getFormDef();
             for (EdgeFormData edgeFormData : edgeFormDataList) {
                 if (edgeFormData != null) {
-                    switch (edgeFormData.getLabel()) {
-                        case "feedername":
+                    switch (edgeFormData.getId()) {
+                        case 73:
                             if (nullCheck(edgeFormData.getValue()))
                                 jpsWorkflowModel.setStreetdescription(edgeFormData.getValue());
                             break;
-                        case "Street Name":
+                        case 185:
                             if (nullCheck(edgeFormData.getValue()))
                                 jpsWorkflowModel.setAddress1(edgeFormData.getValue());
                             break;
-                        case "PARISH":
+                        case 78:
                             if (nullCheck(edgeFormData.getValue()))
                                 jpsWorkflowModel.setCity(edgeFormData.getValue());
                             break;
-                        case "New Pole Number":
+                        case 200:
                             if (nullCheck(edgeFormData.getValue())) {
                                 jpsWorkflowModel.setIdOnController(edgeFormData.getValue());
                                 jpsWorkflowModel.setName(edgeFormData.getValue());
                             }
                             break;
-                        case "Retrofit Status":
+                        case 198:
                             if (nullCheck(edgeFormData.getValue()))
                                 jpsWorkflowModel.setInstallStatus(edgeFormData.getValue());
                             break;
-                        case "lamptype":
+                        case 75:
                             if (nullCheck(edgeFormData.getValue()))
                                 jpsWorkflowModel.setLampType(edgeFormData.getValue());
                             break;
-                        case "Old Pole Number":
+                        case 199:
                             if (nullCheck(edgeFormData.getValue()))
                                 jpsWorkflowModel.setOldPoleNumber(edgeFormData.getValue());
                             break;
-                        case "Pole Type":
+                        case 142:
                             if (nullCheck(edgeFormData.getValue()))
                                 jpsWorkflowModel.setPole_type(edgeFormData.getValue());
                             break;
-                        case "MAC Address":
+                        case 194:
                             if (nullCheck(edgeFormData.getValue()))
                                 if (edgeFormData.getValue() != null && edgeFormData.getValue().startsWith("00135"))
                                     jpsWorkflowModel.setMacAddress(edgeFormData.getValue());
                             break;
-                        case "Observed Mast Arm Length":
+                        case 189:
                             if (nullCheck(edgeFormData.getValue()))
                                 jpsWorkflowModel.setFixing_type(edgeFormData.getValue());
                             break;
-                        case "Mast Arm Length - Other":
+                        case 190:
                             if (nullCheck(edgeFormData.getValue()))
                                 jpsWorkflowModel.setOtherFixtureType(edgeFormData.getValue());
                             break;
-                        case "Conversion Date":
+                        case 186:
                             if (nullCheck(edgeFormData.getValue()))
                                 jpsWorkflowModel.setInstall_date(edgeFormData.getValue());
                             break;
-                        case "Feed":
+                        case 144:
                             if (nullCheck(edgeFormData.getValue()))
                                 jpsWorkflowModel.setNetwork_type(edgeFormData.getValue());
                             break;
-                        case "Pole Shape":
+                        case 201:
                             if (nullCheck(edgeFormData.getValue()))
                                 jpsWorkflowModel.setPole_shape(edgeFormData.getValue());
                             break;
-                        case "Condition":
+                        case 140:
                             if (nullCheck(edgeFormData.getValue()))
                                 jpsWorkflowModel.setPole_status(edgeFormData.getValue());
                             break;
-                        case "polenumber":
+                        case 74:
                             if (nullCheck(edgeFormData.getValue()))
                                 jpsWorkflowModel.setUtillocationid(edgeFormData.getValue());
                             break;
-                        case "facilityID":
+                        case 203:
                             if (nullCheck(edgeFormData.getValue()))
                                 jpsWorkflowModel.setLocation_zipcode(edgeFormData.getValue());
                             break;
