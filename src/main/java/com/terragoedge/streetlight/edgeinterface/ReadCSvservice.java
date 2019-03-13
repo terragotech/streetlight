@@ -26,16 +26,19 @@ public class ReadCSvservice {
     }
 
     public void start() {
-       // String filePath = "./resources/input.csv";
-        String filePath = "D:/Report/input.csv";
+        String filePath = "./resources/input.csv";
+       // String filePath = "D:/Report/input.csv";
         List<SlvData> slvDataList = getSlvDataFromCSV(filePath);
         try {
+            int count=0;
             for (SlvData slvData : slvDataList) {
+                System.out.println("ProcessTitle :"+slvData.getNoteTitle());
                     try {
                         slvToEdgeService.run(slvData);
                     } catch (Exception e) {
                         slvData.setStatus("Failure");
                     }
+                    count++;
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -79,7 +82,7 @@ public class ReadCSvservice {
                 String values[] = currentRow.split(",");
                 SlvData slvData = new SlvData();
                 slvData.setNoteTitle(values[0]);
-                slvData.setNoteGuid(values[1]);
+              //  slvData.setNoteGuid(values[0]);
                 slvDataList.add(slvData);
             }
             System.out.println("Successfully");

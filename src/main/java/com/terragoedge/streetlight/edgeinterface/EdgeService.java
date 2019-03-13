@@ -39,12 +39,12 @@ public class EdgeService {
         try {
             // String urlNew = baseUrl + "/rest/notes/notesdata/" + noteGuid;
             String urlNew = baseUrl + "/rest/notes/" + noteGuid;
-            logger.info("Url to get Note Details:" + urlNew);
+         //   logger.info("Url to get Note Details:" + urlNew);
             ResponseEntity<String> responseEntity = serverCall(urlNew, HttpMethod.GET, null);
             if (responseEntity.getStatusCode().is2xxSuccessful()) {
                 String response = responseEntity.getBody();
-                logger.info("----------Response-------");
-                logger.info(response);
+           //     logger.info("----------Response-------");
+             //   logger.info(response);
                 return response;
             }
         } catch (Exception e) {
@@ -54,8 +54,8 @@ public class EdgeService {
     }
 
     public ResponseEntity<String> serverCall(String url, HttpMethod httpMethod, String body) {
-        logger.info("Request Url : " + url);
-        logger.info("Request Data : " + body);
+     //   logger.info("Request Url : " + url);
+      //  logger.info("Request Data : " + body);
         RestTemplate restTemplate = new RestTemplate();
         HttpHeaders headers = getHeaders();
 
@@ -68,11 +68,11 @@ public class EdgeService {
         }
 
         ResponseEntity<String> responseEntity = restTemplate.exchange(url, httpMethod, request, String.class);
-        logger.info("------------ Response ------------------");
+      //  logger.info("------------ Response ------------------");
 
-        logger.info("Response Code:" + responseEntity.getStatusCode().toString());
+      //  logger.info("Response Code:" + responseEntity.getStatusCode().toString());
         if (responseEntity.getBody() != null) {
-            logger.info("Response Data:" + responseEntity.getBody());
+        //    logger.info("Response Data:" + responseEntity.getBody());
         }
 
         return responseEntity;

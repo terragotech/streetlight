@@ -83,8 +83,8 @@ public class EdgeNote {
     }
 
     public List<FormData> getFormData() {
-        System.out.println(formData);
-        System.out.println(formData.toString());
+      //  System.out.println(formData);
+      //  System.out.println(formData.toString());
 	/*	Type listType = new TypeToken<ArrayList<FormData>>() {
 		}.getType();
 		Gson gson = new Gson();

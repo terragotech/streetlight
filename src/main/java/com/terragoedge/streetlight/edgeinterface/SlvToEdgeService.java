@@ -27,37 +27,42 @@ public class SlvToEdgeService extends EdgeService {
     }
 
     public void run(SlvData slvData) {
-        logger.info("-----SLV to Edge Sync Process------------");
-        logger.info(slvData.toString());
+      //  logger.info("-----SLV to Edge Sync Process------------");
+       // logger.info(slvData.toString());
         String formTemplateGuid = PropertiesReader.getProperties().getProperty("amerescousa.edge.formtemplateGuid");
-        String notesJson = getNoteDetails(slvData.getNoteGuid());
-        if (notesJson == null) {
-            logger.info("Note not in AmerescoUSA.");
-            return;
-        }
-        Type listType = new TypeToken<ArrayList<EdgeNote>>() {
-        }.getType();
-        Gson gson = new Gson();
-        List<EdgeNote> edgeNoteList = new ArrayList<>();
-    //    List<EdgeNote> edgeNoteList = gson.fromJson(notesJson, listType);
-        EdgeNote restEdgeNote = gson.fromJson(notesJson, EdgeNote.class);
-        edgeNoteList.add(restEdgeNote);
-        for (EdgeNote edgeNote : edgeNoteList) {
-            List<FormData> formDataList = edgeNote.getFormData();
-            for (FormData formData : formDataList) {
-                if (formData.getFormTemplateGuid().equals(formTemplateGuid)) {
-                    String createdBy = edgeNote.getCreatedBy();
-                    long createddatetime = edgeNote.getCreatedDateTime();
-                    SlvData resultSlvData = processInstallationForm(edgeNote, formData, formTemplateGuid, slvData);
-                    if (resultSlvData.getStatus().equals("Success")) {
-                        streetlightDao.updateNoteDetails(createddatetime + 10000, "admin", resultSlvData.getNewNoteGuid());
-                        logger.info("------------------Success---------------------");
-                        logger.info("Processed notetitle: " + edgeNote.getTitle());
+        List<com.terragoedge.edgeserver.SlvData> noteGuidList = streetlightDao.getNoteDetails(slvData.getNoteTitle());
+        for (com.terragoedge.edgeserver.SlvData dbSLVData : noteGuidList) {
+            slvData.setNoteGuid(dbSLVData.getGuid().trim());
+            String notesJson = getNoteDetails(slvData.getNoteGuid());
+            if (notesJson == null) {
+                logger.info("Note not in AmerescoUSA.");
+                return;
+            }
+            Type listType = new TypeToken<ArrayList<EdgeNote>>() {
+            }.getType();
+            Gson gson = new Gson();
+            List<EdgeNote> edgeNoteList = new ArrayList<>();
+            //    List<EdgeNote> edgeNoteList = gson.fromJson(notesJson, listType);
+            EdgeNote restEdgeNote = gson.fromJson(notesJson, EdgeNote.class);
+            edgeNoteList.add(restEdgeNote);
+            for (EdgeNote edgeNote : edgeNoteList) {
+                List<FormData> formDataList = edgeNote.getFormData();
+                for (FormData formData : formDataList) {
+                    if (formData.getFormTemplateGuid().equals(formTemplateGuid)) {
+                        String createdBy = edgeNote.getCreatedBy();
+                        long createddatetime = edgeNote.getCreatedDateTime();
+                        SlvData resultSlvData = processInstallationForm(edgeNote, formData, formTemplateGuid, slvData);
+                        if (resultSlvData.getStatus().equals("Success")) {
+                            streetlightDao.updateNoteDetails(createddatetime + 10000, createdBy, resultSlvData.getNewNoteGuid());
+                         //   logger.info("------------------Success---------------------");
+                          //  logger.info("Processed notetitle: " + edgeNote.getTitle());
+                        }
+                        return;
                     }
-                    return;
                 }
             }
         }
+
     }
 
     public SlvData processInstallationForm(EdgeNote edgeNote, FormData formData, String formTemplateGuid, SlvData slvData) {
@@ -68,15 +73,15 @@ public class SlvToEdgeService extends EdgeService {
             List<EdgeFormData> edgeFormDataList = formData.getFormDef();
             JsonObject edgeNoteJsonObject = processEdgeForms(edgeNote, edgeFormDataList, formTemplateGuid, slvData);
             String newNoteGuid = edgeNoteJsonObject.get("noteGuid").getAsString();
-            logger.info("ProcessedFormJson " + edgeNoteJsonObject.toString());
+          //  logger.info("ProcessedFormJson " + edgeNoteJsonObject.toString());
             ResponseEntity<String> responseEntity = updateNoteDetails(edgeNoteJsonObject.toString(), oldNoteGuid, notebookGuid);
             if (responseEntity.getStatusCode().value() == HttpStatus.CREATED.value()) {
                 String body = responseEntity.getBody();
                 slvData.setNewNoteGuid(body);
                 slvData.setStatus("Success");
-                logger.info("Success note : " + edgeNote.getTitle());
+               // logger.info("Success note : " + edgeNote.getTitle());
             } else {
-                logger.info("Failure Note : " + edgeNote.getTitle());
+               // logger.info("Failure Note : " + edgeNote.getTitle());
             }
         } catch (Exception e) {
             slvData.setStatus("Failure");
