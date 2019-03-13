@@ -4,6 +4,24 @@ public class InstallMaintenanceLogModel extends LoggingModel {
 
     private boolean isInstallFormPresent;
     private boolean isFixtureOnly;
+    private int deviceId;
+    private String comment;
+
+    public String getComment() {
+        return comment;
+    }
+
+    public void setComment(String comment) {
+        this.comment = comment;
+    }
+
+    public int getDeviceId() {
+        return deviceId;
+    }
+
+    public void setDeviceId(int deviceId) {
+        this.deviceId = deviceId;
+    }
 
     public boolean isInstallFormPresent() {
         return isInstallFormPresent;

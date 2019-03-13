@@ -37,73 +37,6 @@ public class StreetlightChicagoService extends AbstractProcessor {
 
 
 
-    protected void loadContextList() {
-        String mainUrl = properties.getProperty("streetlight.url.main");
-        String dataUrl = properties.getProperty("streetlight.url.get.fxiturecode");
-        String url = mainUrl + dataUrl;
-
-        ResponseEntity<String> response = restService.getContextPostRequest(url, null);
-        String responseString = response.getBody();
-        if (responseString != null) {
-            ContextList contextList = gson.fromJson(responseString, ContextList.class);
-            int idOnControllerPos = -1;
-            int fixtureCodePos = -1;
-            int cslpNodeDate = -1;
-            int cslpLumDate = -1;
-            int pos = 0;
-            for (String columnName : contextList.getColumns()) {
-                switch (columnName) {
-                    case "idOnController":
-                        idOnControllerPos = pos;
-                        break;
-                    case "location.proposedcontext":
-                        fixtureCodePos = pos;
-                        break;
-                    case "cslp.lum.install.date":
-                        cslpLumDate = pos;
-                        break;
-                    case "cslp.node.install.date":
-                        cslpNodeDate = pos;
-                        break;
-                }
-                pos = pos + 1;
-            }
-
-            logger.info("idOnControllerPos:"+idOnControllerPos);
-            logger.info("cslpNodeDate:"+cslpNodeDate);
-            logger.info("cslpLumDate:"+cslpLumDate);
-
-            for (List<String> values : contextList.getValues()) {
-                contextListHashMap.put(values.get(idOnControllerPos), values.get(fixtureCodePos));
-                String cslpLumDateValue = values.get(cslpLumDate);
-                String cslpNodeDateValue =  values.get(cslpNodeDate);
-                CslpDate cslpDate  = new CslpDate();
-                boolean flag = false;
-                if(cslpLumDateValue != null && !cslpLumDateValue.toLowerCase().trim().isEmpty() && !cslpLumDateValue.toLowerCase().contains("null")){
-                    cslpDate.setCslpLumDate(cslpLumDateValue);
-                    flag = true;
-                }
-                if(cslpNodeDateValue != null && !cslpNodeDateValue.toLowerCase().trim().isEmpty() &&!cslpNodeDateValue.toLowerCase().contains("null")){
-                    cslpDate.setCslpNodeDate(cslpNodeDateValue);
-                    flag = true;
-                }
-                if(values.get(idOnControllerPos).contains("8574")){
-                    logger.info("Current id:"+values.get(idOnControllerPos));
-                    logger.info("cslpLumDateValue:"+cslpLumDateValue);
-                    logger.info("cslpNodeDateValue:"+cslpLumDateValue);
-                }
-
-                if(flag){
-                    cslpDateHashMap.put(values.get(idOnControllerPos),cslpDate);
-                }
-
-            }
-
-            logger.info("Total Size:"+cslpDateHashMap.size());
-        }
-
-    }
-
     //703079877   77jmb3
     private void reSync(String accessToken) {
         BufferedReader bufferedReader = null;
@@ -240,14 +173,14 @@ public class StreetlightChicagoService extends AbstractProcessor {
                                    installMaintenanceLogModel.setLastSyncTime(edgeNote.getSyncTime());
                                    installMaintenanceLogModel.setCreatedDatetime(String.valueOf(edgeNote.getCreatedDateTime()));
                                    loadDefaultVal(edgeNote, installMaintenanceLogModel);
-                                   loadDeviceValues(edgeNote.getTitle());
+                                   loadDeviceValues(edgeNote.getTitle(),installMaintenanceLogModel);
                                    installationMaintenanceProcessor.processNewAction(edgeNote, installMaintenanceLogModel, false, null);
                                    //updateSlvStatusToEdge(installMaintenanceLogModel, edgeNote);
                                    LoggingModel loggingModel = installMaintenanceLogModel;
                                    streetlightDao.insertProcessedNotes(loggingModel, installMaintenanceLogModel);
                                }
                            }catch (Exception e){
-
+                                logger.error("Error in run",e);
                            }
                            // Get Response String
 

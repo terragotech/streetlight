@@ -147,12 +147,46 @@ public abstract class AbstractProcessor {
         logger.info("processDeviceValuesJson End");
     }
 
-    public void loadDeviceValues(String idOnController) {
+    //reports/api/logging/getDeviceLastValues?
+    // param0=2190630&returnTimeAges=false&ser=json&valueName=comment
+    public void getComment(InstallMaintenanceLogModel installMaintenanceLogModel){
+        try{
+            if(installMaintenanceLogModel.getDeviceId() > 0){
+                String mainUrl = properties.getProperty("streetlight.slv.url.main");
+                String commentUrl = properties.getProperty("streetlight.slv.url.comment.get");
+                String url = mainUrl + commentUrl;
+                List<String> paramsList = new ArrayList<>();
+                paramsList.add("returnTimeAges=false");
+                paramsList.add("param0=" + installMaintenanceLogModel.getDeviceId());
+                paramsList.add("valueName=comment");
+                paramsList.add("ser=json");
+                String params = StringUtils.join(paramsList, "&");
+                url = url + "?" + params;
+                logger.info("Get Comment url :" + url);
+                ResponseEntity<String> response = restService.getRequest(url, true, null);
+                if (response.getStatusCodeValue() == 200) {
+                    logger.info("Get Comment Respose :"+response.getBody());
+                    String responseString = response.getBody();
+                   JsonArray jsonArray = (JsonArray)jsonParser.parse(responseString);
+                   for(JsonElement commentJson : jsonArray){
+                      JsonObject commentJsonObject = commentJson.getAsJsonObject();
+                       if(commentJsonObject.get("value") != null){
+                          String commentVal = commentJsonObject.get("value").getAsString();
+                          installMaintenanceLogModel.setComment(commentVal);
+                       }
+                   }
+                }
+            }
+        }catch (Exception e){
+            logger.error("Error in getComment",e);
+        }
+    }
+
+    public void loadDeviceValues(String idOnController,InstallMaintenanceLogModel installMaintenanceLogModel) throws Exception{
         try {
             logger.info("loadDeviceValues called.");
             String mainUrl = properties.getProperty("streetlight.slv.url.main");
             String deviceUrl = properties.getProperty("streetlight.slv.url.search.device");
-            String getDeviceUrl = properties.getProperty("streetlight.slv.url.getdevice.device");
             String url = mainUrl + deviceUrl;
             List<String> paramsList = new ArrayList<>();
             paramsList.add("attributeName=idOnController");
@@ -171,11 +205,14 @@ public abstract class AbstractProcessor {
                 String responseString = response.getBody();
                 int id = processDeviceJson(responseString);
                 logger.info("LoadDevice Id :"+id);
+
                 if (id == 0) {
                     logger.info("csl and context hashmap are cleared");
                     cslpDateHashMap.clear();
                     contextListHashMap.clear();
+                    throw new NoValueException("Device id:["+idOnController+"] does not exists in SLV server");
                 } else {
+                    installMaintenanceLogModel.setDeviceId(id);
                     String subDeviceUrl = getDeviceUrl(id);
                     logger.info("subDevice url:" + subDeviceUrl);
                     ResponseEntity<String> responseEntity = restService.getRequest(subDeviceUrl, true, null);
@@ -185,8 +222,9 @@ public abstract class AbstractProcessor {
                     }
                 }
             }
-        } catch (Exception e) {
-            e.printStackTrace();
+        } catch ( Exception e) {
+
+            throw new Exception(e);
         }
     }
 
@@ -520,7 +558,6 @@ public abstract class AbstractProcessor {
 
                 if (macAddress != null) {
                     logger.info("Clear device process starts.");
-                    clearAndUpdateDeviceData(idOnController, controllerStrId);
                     logger.info("Clear device process End.");
                 }
 
@@ -533,132 +570,6 @@ public abstract class AbstractProcessor {
 
     }
 
-
-    public void clearAndUpdateDeviceData(String idOnController, String controllerStrId) {
-
-
-    }
-
-
-    protected String validateMacAddress(String existingNodeMacAddress, String idOnController, String controllerStrId) throws QRCodeNotMatchedException {
-        String mainUrl = properties.getProperty("streetlight.url.main");
-        String getMacAddress = properties.getProperty("streetlight.slv.url.getmacaddress");
-        String url = mainUrl + getMacAddress;
-
-        List<Object> paramsList = new ArrayList<Object>();
-        paramsList.add("idOnController=" + idOnController);
-        paramsList.add("controllerStrId=" + controllerStrId);
-        paramsList.add("valueName=MacAddress");
-        paramsList.add("valueName=comment");
-        paramsList.add("ser=json");
-        String params = StringUtils.join(paramsList, "&");
-        url = url + "&" + params;
-        ResponseEntity<String> response = restService.getPostRequest(url, null);
-        if (response.getStatusCode().is2xxSuccessful()) {
-            String responseString = response.getBody();
-            JsonElement jsonElement = jsonParser.parse(responseString);
-            if (jsonElement.isJsonArray()) {
-                JsonArray jsonArray = jsonElement.getAsJsonArray();
-                if (jsonArray.size() > 0) {
-                    if (jsonArray.get(0).getAsString().toLowerCase().equals(existingNodeMacAddress.toLowerCase())) {
-                        String comment = jsonArray.get(1).getAsString();
-                        return comment;
-                    } else {
-                        // Throws given MAC Address not matched
-                        throw new QRCodeNotMatchedException(idOnController, existingNodeMacAddress);
-                    }
-
-                } else {
-                    throw new QRCodeNotMatchedException(idOnController, existingNodeMacAddress);
-                }
-            } else if (jsonElement.isJsonObject()) {
-                return validateMACAddress(existingNodeMacAddress, idOnController, null);
-
-            }
-        } else {
-            return validateMACAddress(existingNodeMacAddress, idOnController, null);
-        }
-        throw new QRCodeNotMatchedException(idOnController, existingNodeMacAddress);
-    }
-
-    protected String getMacAddress(String idOnController,String controllerStrId){
-        String mainUrl = properties.getProperty("streetlight.url.main");
-        String getMacAddress = properties.getProperty("streetlight.slv.url.getmacaddress");
-        String url = mainUrl + getMacAddress;
-
-        List<Object> paramsList = new ArrayList<Object>();
-        paramsList.add("idOnController=" + idOnController);
-        paramsList.add("controllerStrId=" + controllerStrId);
-        paramsList.add("valueName=MacAddress");
-        paramsList.add("valueName=comment");
-        paramsList.add("ser=json");
-        String params = StringUtils.join(paramsList, "&");
-        url = url + "&" + params;
-        ResponseEntity<String> response = restService.getPostRequest(url, null);
-        if (response.getStatusCode().is2xxSuccessful()) {
-            String responseString = response.getBody();
-            JsonElement jsonElement = jsonParser.parse(responseString);
-            if (jsonElement.isJsonArray()) {
-                JsonArray jsonArray = jsonElement.getAsJsonArray();
-                if (jsonArray.size() > 0) {
-                    return jsonArray.get(0).getAsString();
-
-                }
-            }
-        }
-        return null;
-    }
-    /**
-     * Check MAC Address is present in given IdonController or not and also if
-     * mathches get comment
-     *
-     * @param existingNodeMacAddress
-     * @param idOnController
-     * @param geoZoneId
-     * @return
-     * @throws QRCodeNotMatchedException
-     */
-    private String validateMACAddress(String existingNodeMacAddress, String idOnController, String geoZoneId)
-            throws QRCodeNotMatchedException {
-        String mainUrl = properties.getProperty("streetlight.url.main");
-        String geoZoneDevices = properties.getProperty("streetlight.slv.url.getgeozone.devices");
-        String url = mainUrl + geoZoneDevices;
-
-        List<Object> paramsList = new ArrayList<Object>();
-        if (geoZoneId != null) {
-            paramsList.add("geoZoneId=" + geoZoneId);
-        }
-
-        paramsList.add("valueNames=idOnController");
-        paramsList.add("valueNames=comment");
-        paramsList.add("valueNames=MacAddress");
-        paramsList.add("ser=json");
-        String params = StringUtils.join(paramsList, "&");
-        url = url + "&" + params;
-        ResponseEntity<String> response = restService.getPostRequest(url, null);
-        if (response.getStatusCode().is2xxSuccessful()) {
-            String geoZoneDeviceDetails = response.getBody();
-            JsonObject jsonObject = (JsonObject) jsonParser.parse(geoZoneDeviceDetails);
-            JsonArray deviceValuesAsArray = jsonObject.get("values").getAsJsonArray();
-            int totalSize = deviceValuesAsArray.size();
-            for (int i = 0; i < totalSize; i++) {
-                JsonArray deviceValues = deviceValuesAsArray.get(i).getAsJsonArray();
-                if (deviceValues.get(0).getAsString().equals(idOnController)) {
-                    if (deviceValues.get(2).getAsString().equals(existingNodeMacAddress)) {
-                        try {
-                            String comment = deviceValues.get(1).getAsString();
-                            return comment;
-                        } catch (Exception e) {
-                            return null;
-                        }
-                    }
-                }
-            }
-            // Throws given MAC Address not matched
-            throw new QRCodeNotMatchedException(idOnController, existingNodeMacAddress);
-        }
-        return null;
-    }
 
 
     protected String getUtilLocationId(String errorDetails) {
@@ -698,80 +609,6 @@ public abstract class AbstractProcessor {
     }
 
 
-    public void loadDevices() throws DeviceLoadException, SQLException {
-        logger.info("load Devices Called.");
-        System.out.println("load Devices Called.");
-        String geoZoneDevices = properties.getProperty("streetlight.slv.url.getgeozone.devices");
-        String mainUrl = properties.getProperty("streetlight.url.main");
-        String url = mainUrl + geoZoneDevices;
-        List<Object> paramsList = new ArrayList<Object>();
-        paramsList.add("valueNames=id");
-        paramsList.add("valueNames=idOnController");
-        paramsList.add("valueNames=MacAddress");
-        paramsList.add("valueNames=device.luminaire.partnumber");
-        paramsList.add("valueNames=luminaire.model");
-        paramsList.add("valueNames=device.luminaire.manufacturedate");
-        paramsList.add("valueNames=device.luminaire.colortemp");
-        paramsList.add("valueNames=device.luminaire.lumenoutput");
-        paramsList.add("valueNames=luminaire.DistributionType");
-        paramsList.add("valueNames=luminaire.colorcode");
-        paramsList.add("valueNames=device.luminaire.drivermanufacturer");
-        paramsList.add("valueNames=device.luminaire.driverpartnumber");
-        paramsList.add("valueNames=ballast.dimmingtype");
-        paramsList.add("valueNames=luminaire.serialnumber");
-
-        paramsList.add("ser=json");
-        String params = StringUtils.join(paramsList, "&");
-        url = url + "&" + params;
-        logger.info(url);
-        System.out.println(url);
-        SlvServerDataColumnPos slvServerDataColumnPos = null;
-        ResponseEntity<String> response = restService.getContextPostRequest(url, null);
-        if (response.getStatusCode().is2xxSuccessful()) {
-            System.out.println("Got Response.");
-            String responseString = response.getBody();
-            if (responseString != null) {
-                ContextList contextList = gson.fromJson(responseString, ContextList.class);
-                int pos = 0;
-                slvServerDataColumnPos = new SlvServerDataColumnPos();
-                for (String columnName : contextList.getColumns()) {
-                    loadColumnPos(columnName, slvServerDataColumnPos, pos);
-                    pos += 1;
-                }
-
-                List<List<String>> valuesList = contextList.getValues();
-                for (List<String> valueList : valuesList) {
-                    String idOnController = valueList.get(slvServerDataColumnPos.getIdOnController());
-                    SlvServerData dbSlvServerData = streetlightDao.getSlvServerData(idOnController);
-                    if (dbSlvServerData == null) {
-                        dbSlvServerData = new SlvServerData();
-                        loadSlvServerData(dbSlvServerData, valueList, slvServerDataColumnPos);
-                        if (dbSlvServerData.isValPresent()) {
-                            dbSlvServerData.setCreateDateTime(System.currentTimeMillis());
-                            dbSlvServerData.setLastUpdateDateTime(System.currentTimeMillis());
-                            dbSlvServerData.setProcessType(ProcessType.SLV);
-                            streetlightDao.saveSlvServerData(dbSlvServerData);
-                        }
-
-                    } else {
-                        SlvServerData slvServerData = new SlvServerData();
-                        loadSlvServerData(slvServerData, valueList, slvServerDataColumnPos);
-                        boolean res = dbSlvServerData.equals(slvServerData);
-                        if (!res) {
-                            loadSlvServerData(dbSlvServerData, valueList, slvServerDataColumnPos);
-                            dbSlvServerData.setLastUpdateDateTime(System.currentTimeMillis());
-                            dbSlvServerData.setProcessType(ProcessType.SLV);
-                            streetlightDao.updateSlvServerData(dbSlvServerData);
-                        }
-
-                    }
-                }
-            }
-
-        } else {
-            throw new DeviceLoadException("Unable to load device from SLV Interface");
-        }
-    }
 
     private void loadColumnPos(String columnName, SlvServerDataColumnPos slvServerDataColumnPos, int pos) {
         switch (columnName) {

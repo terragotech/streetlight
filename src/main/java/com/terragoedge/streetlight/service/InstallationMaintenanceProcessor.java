@@ -170,7 +170,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
                                 break;
                             case "Remove":
                                 logger.info("entered remove action");
-                                processRemoveAction(edgeFormDatas,existingFixtureInfo,utilLocId);
+                               // processRemoveAction(edgeFormDatas,existingFixtureInfo,utilLocId);
                                 break;
                             case "Other Task":
                                 // processOtherTask(edgeFormDatas, edgeNote, installMaintenanceLogModel, nightRideKey, formatedValueNR);
@@ -809,17 +809,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
             String controllerStrIdValue = loggingModel.getControllerSrtId();
 
 
-            String comment = "";
-            // Check existingNodeMacAddress is valid or not
-            if (existingNodeMacAddress != null && !existingNodeMacAddress.trim().isEmpty()) {
-                try {
-                    comment = validateMacAddress(existingNodeMacAddress, idOnController, controllerStrIdValue);
-                } catch (QRCodeNotMatchedException e1) {
-                    loggingModel.setStatus(MessageConstants.ERROR);
-                    loggingModel.setErrorDetails(MessageConstants.REPLACE_MAC_NOT_MATCH);
-                    //    return;
-                }
-            }
+
 
             if (newNodeMacAddress != null && !newNodeMacAddress.isEmpty()) {
                 try {
@@ -846,7 +836,16 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
                 e.printStackTrace();
             }
 
-            comment = comment + " replaced on " + dateFormat(edgeNote.getCreatedDateTime());
+
+            getComment(loggingModel);
+
+            String comment = null;
+            if(loggingModel.getComment() != null && !loggingModel.getComment().trim().isEmpty()){
+                comment = loggingModel.getComment() + " replaced on " + dateFormat(edgeNote.getCreatedDateTime());
+            }else{
+                comment = "Replaced on " + dateFormat(edgeNote.getCreatedDateTime());
+            }
+
 
             sync2Slv(newNodeMacAddress, fixerQrScanValue, edgeNote, loggingModel, idOnController, controllerStrIdValue, comment, utilLocId, false, nightRideKey, nightRideValue);
             if (isError) {
@@ -890,16 +889,6 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
             String controllerStrIdValue = loggingModel.getControllerSrtId();
 
 
-            String comment = null;
-
-
-            if (existingNodeMacAddress != null && !existingNodeMacAddress.trim().isEmpty()) {
-                try {
-                    comment = validateMacAddress(existingNodeMacAddress, idOnController, controllerStrIdValue);
-                } catch (Exception e1) {
-
-                }
-            }
 
 
             try {
@@ -926,7 +915,17 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
                 e.printStackTrace();
             }
 
-            comment = comment + " replaced on " + dateFormat(edgeNote.getCreatedDateTime());
+            // Get Comment from SLV.
+            getComment(loggingModel);
+
+            String comment = null;
+            if(loggingModel.getComment() != null && !loggingModel.getComment().trim().isEmpty()){
+                comment = loggingModel.getComment() + " replaced on " + dateFormat(edgeNote.getCreatedDateTime());
+            }else{
+                comment = "Replaced on " + dateFormat(edgeNote.getCreatedDateTime());
+            }
+
+
 
             sync2Slv(newNodeMacAddress, null, edgeNote, loggingModel, idOnController, controllerStrIdValue, comment, utilLocId, false, nightRideKey, nightRideValue);
 
@@ -950,7 +949,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
             switch (removeReason){
                 case "Installed on Wrong Fixture":
                     try {
-                            String macaddress = getMacAddress(loggingModel.getIdOnController(),loggingModel.getControllerSrtId());
+                            String macaddress = null;
                             logger.info("removed mac address:"+macaddress);
                             try {
                                 replaceOLC(loggingModel.getControllerSrtId(), loggingModel.getIdOnController(), "");
@@ -1045,7 +1044,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
         addStreetLightData("ballast.dimmingtype", "", paramsList);
     }
 
-    public void reSync(String noteGuid, String accessToken, boolean isResync, String utilLocId,boolean isFromRemoveAction) {
+    public void reSync(String noteGuid, String accessToken, boolean isResync, String utilLocId,boolean isFromRemoveAction)throws Exception {
         logger.info("resync method called ");
         // Get Edge Server Url from properties
         String url = PropertiesReader.getProperties().getProperty("streetlight.edge.url.main");
@@ -1070,7 +1069,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
             installMaintenanceLogModel.setNoteName(edgeNote.getTitle());
             installMaintenanceLogModel.setCreatedDatetime(String.valueOf(edgeNote.getCreatedDateTime()));
             loadDefaultVal(edgeNote, installMaintenanceLogModel);
-            loadDeviceValues(installMaintenanceLogModel.getIdOnController());
+            loadDeviceValues(installMaintenanceLogModel.getIdOnController(),installMaintenanceLogModel);
             logger.info("going to call processnew action");
             processNewAction(edgeNote, installMaintenanceLogModel, isResync, utilLocId);
 
