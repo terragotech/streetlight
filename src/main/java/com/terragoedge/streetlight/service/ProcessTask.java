@@ -174,9 +174,9 @@ public class ProcessTask extends FailureAbstractService implements Runnable {
                 serverEdgeForm.addProperty("formGuid", UUID.randomUUID().toString());
                 isExisterrorForm = true;
             }
-
             String formDefJson = serverEdgeForm.get("formDef").toString();
             formDefJson = formDefJson.replaceAll("\\\\", "");
+            formDefJson = formDefJson.replace("u0026","\\u0026");
             List<EdgeFormData> formDataList = getEdgeFormData(formDefJson);
             serverEdgeForm.add("formDef", gson.toJsonTree(formDataList));
             serverEdgeForm.addProperty("formGuid", UUID.randomUUID().toString());
