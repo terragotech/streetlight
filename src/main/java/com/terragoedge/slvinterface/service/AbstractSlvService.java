@@ -4,6 +4,8 @@ import com.google.gson.*;
 import com.google.gson.reflect.TypeToken;
 import com.terragoedge.slvinterface.dao.ConnectionDAO;
 import com.terragoedge.slvinterface.dao.tables.GeozoneEntity;
+import com.terragoedge.slvinterface.dao.tables.SlvSyncDetail;
+import com.terragoedge.slvinterface.enumeration.Status;
 import com.terragoedge.slvinterface.exception.*;
 import com.terragoedge.slvinterface.model.*;
 import com.terragoedge.slvinterface.utils.PropertiesReader;
@@ -71,7 +73,7 @@ public abstract class AbstractSlvService extends EdgeService {
             streetLightDataParams.put("categoryStrId", categoryStrId);
             streetLightDataParams.put("controllerStrId", controllerStrId);
             streetLightDataParams.put("idOnController", jpsWorkflowModel.getIdOnController());
-            streetLightDataParams.put("geoZoneId", String.valueOf(jpsWorkflowModel.getGeozoneId()));
+            streetLightDataParams.put("geoZoneId", "5563");
             streetLightDataParams.put("lng", String.valueOf(geom.getCoordinate().x));
             streetLightDataParams.put("lat", String.valueOf(geom.getCoordinate().y));
             streetLightDataParams.put("nodeTypeStrId", nodeTypeStrId);
@@ -169,9 +171,11 @@ public abstract class AbstractSlvService extends EdgeService {
             url = url + "?" + params;
             logger.info("Replace OLc called: " + macAddress);
             logger.info("Replace OLc Url" + url);
-           /* ResponseEntity<String> response = slvRestService.getPostRequest(url, null);
+            ResponseEntity<String> response = slvRestService.getPostRequest(url, null);
+            logger.info("********************** replace OLC reponse code: "+response.getStatusCode());
+            logger.info("replace OLC response: "+response.getBody());
+            logger.info("********************** replace OLC reponse end *********");
             String responseString = response.getBody();
-            logger.info("Replace Olc response :"+responseString);
             JsonObject replaceOlcResponse = (JsonObject) jsonParser.parse(responseString);
             String errorStatus = replaceOlcResponse.get("status").getAsString();
             SlvSyncDetail dbSyncDetail = connectionDAO.getSlvSyncDetail(idOnController);
@@ -201,7 +205,7 @@ public abstract class AbstractSlvService extends EdgeService {
             }
             if (status == Status.Failure) {
                 throw new ReplaceOLCFailedException(errorValue);
-            }*/
+            }
         } catch (Exception e) {
             logger.error("Error in replaceOLC", e);
             throw new ReplaceOLCFailedException(e.getMessage());

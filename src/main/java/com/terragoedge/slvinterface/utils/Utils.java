@@ -5,6 +5,7 @@ import com.terragoedge.slvinterface.model.EdgeFormData;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
+import java.util.TimeZone;
 
 public class Utils {
     public static String dateFormat(Long dateTime) {
@@ -26,5 +27,13 @@ public class Utils {
             }
 
         }
+    }
+
+    public static String installDateFormat(Long dateTime) {
+        Date date = new Date(Long.valueOf(dateTime));
+        SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy");
+        dateFormat.setTimeZone(TimeZone.getTimeZone("EST"));
+        String dff = dateFormat.format(date);
+        return dff;
     }
 }

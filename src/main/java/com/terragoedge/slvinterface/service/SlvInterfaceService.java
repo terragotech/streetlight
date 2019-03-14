@@ -8,6 +8,7 @@ import com.terragoedge.slvinterface.enumeration.Status;
 import com.terragoedge.slvinterface.exception.*;
 import com.terragoedge.slvinterface.model.*;
 import com.terragoedge.slvinterface.utils.PropertiesReader;
+import com.terragoedge.slvinterface.utils.Utils;
 import com.vividsolutions.jts.geom.Geometry;
 import org.apache.log4j.Logger;
 import org.springframework.http.ResponseEntity;
@@ -204,8 +205,9 @@ public class SlvInterfaceService extends AbstractSlvService {
                                 jpsWorkflowModel.setOtherFixtureType(edgeFormData.getValue());
                             break;
                         case 186:
-                            if (nullCheck(edgeFormData.getValue()))
-                                jpsWorkflowModel.setInstall_date(edgeFormData.getValue());
+                            if (nullCheck(edgeFormData.getValue())) {
+                                jpsWorkflowModel.setInstall_date(Utils.installDateFormat(Long.valueOf(edgeFormData.getValue())));
+                            }
                             break;
                         case 144:
                             if (nullCheck(edgeFormData.getValue()))

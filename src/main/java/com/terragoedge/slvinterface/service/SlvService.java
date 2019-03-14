@@ -39,15 +39,15 @@ public class SlvService extends AbstractSlvService {
 
     public void processSlv(JPSWorkflowModel jpsWorkflowModel, EdgeNote edgeNote) throws Exception {
         logger.info("ProcessSlv method start.");
-        GeozoneEntity geozoneEntity = getGeozoneEntity(jpsWorkflowModel);
-        logger.info("---------------------Geozone info start---------------------------");
-        logger.info(gson.toJson(geozoneEntity));
-        logger.info("---------------------Geozone info end---------------------------");
-        jpsWorkflowModel.setGeozoneId(geozoneEntity.getChildgeozoneId());
+//        GeozoneEntity geozoneEntity = getGeozoneEntity(jpsWorkflowModel);
+//        logger.info("---------------------Geozone info start---------------------------");
+//        logger.info(gson.toJson(geozoneEntity));
+//        logger.info("---------------------Geozone info end---------------------------");
+//        jpsWorkflowModel.setGeozoneId(geozoneEntity.getStreetGeozoneId());
         JsonArray devices = checkDeviceExist(jpsWorkflowModel.getIdOnController());// search idoncontroller on slv - ** rest call
         //start
         int deviceId = -1;
-        if (devices == null) {
+        if (devices == null || devices.size() == 0) {
             ResponseEntity<String> responseEntity = createDevice(edgeNote, jpsWorkflowModel);// create device in slv
             if (responseEntity != null) {
                 logger.info("Create device Json response" + responseEntity.getBody());
@@ -62,10 +62,10 @@ public class SlvService extends AbstractSlvService {
         } else {
             deviceId = devices.get(0).getAsJsonObject().get("id").getAsInt();
         }
-        if (jpsWorkflowModel.getOldPoleNumber() != null && !jpsWorkflowModel.getOldPoleNumber().isEmpty()) {
+        /*if (jpsWorkflowModel.getOldPoleNumber() != null && !jpsWorkflowModel.getOldPoleNumber().isEmpty()) {
             replaceOLC(jpsWorkflowModel.getControllerStrId(), jpsWorkflowModel.getOldPoleNumber(), "", edgeNote, jpsWorkflowModel);
             deleteDevice(jpsWorkflowModel);
-        }
+        }*/
         processDeviceValues(jpsWorkflowModel, true, edgeNote);
         processMacAddress(jpsWorkflowModel, edgeNote, deviceId);
         logger.info("Going to call delete device");
@@ -227,14 +227,14 @@ public class SlvService extends AbstractSlvService {
         addStreetLightData("location.city", jpsWorkflowModel.getCity(), paramList);
         addStreetLightData("dimmingGroupName", jpsWorkflowModel.getDimmingGroupName(), paramList);
         addStreetLightData("provider.name", jpsWorkflowModel.getProvider_name(), paramList);
-        addStreetLightData("geoZone path", jpsWorkflowModel.getGeozonePath(), paramList);
+//        addStreetLightData("geoZone path", jpsWorkflowModel.getGeozonePath(), paramList);
         addStreetLightData("network.highvoltagethreshold", String.valueOf(jpsWorkflowModel.getHighvoltagethreshold()), paramList);
         addStreetLightData("idOnController", jpsWorkflowModel.getIdOnController(), paramList);
         addStreetLightData("installStatus", jpsWorkflowModel.getInstallStatus(), paramList);
         addStreetLightData("lampType", jpsWorkflowModel.getLampType(), paramList);
-        addStreetLightData("lat", jpsWorkflowModel.getLat(), paramList);
+//        addStreetLightData("lat", jpsWorkflowModel.getLat(), paramList);
         addStreetLightData("location.locationtype", jpsWorkflowModel.getLocationtype(), paramList);
-        addStreetLightData("lng", jpsWorkflowModel.getLng(), paramList);
+//        addStreetLightData("lng", jpsWorkflowModel.getLng(), paramList);
         addStreetLightData("network.lowvoltagethreshold", String.valueOf(jpsWorkflowModel.getLowvoltagethreshold()), paramList);
         addStreetLightData("name", jpsWorkflowModel.getIdOnController(), paramList);
         addStreetLightData("pole.type", jpsWorkflowModel.getPole_type(), paramList);
@@ -249,6 +249,9 @@ public class SlvService extends AbstractSlvService {
         addStreetLightData("device.node.serialnumber", jpsWorkflowModel.getSerialnumber(), paramList);
         addStreetLightData("location.zipcode", jpsWorkflowModel.getLocation_zipcode(), paramList);
         ResponseEntity<String> responseEntity = setDeviceValues(paramList);
+        logger.info("********************** set device values reponse code: "+responseEntity.getStatusCode());
+        logger.info("set device values response: "+responseEntity.getBody());
+        logger.info("********************** set device values reponse end *********");
         return responseEntity;
     }
 
