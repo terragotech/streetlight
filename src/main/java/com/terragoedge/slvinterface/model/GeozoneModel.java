@@ -15,7 +15,7 @@ public class GeozoneModel {
     }
 
     public GeozoneModel(GeozoneEntity geozoneEntity) {
-        this.id = geozoneEntity.getGeozoneId();
+        this.id = geozoneEntity.getParishzoneId();
         this.parentId = geozoneEntity.getChildgeozoneId();
     }
 

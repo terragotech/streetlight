@@ -4,12 +4,9 @@ import com.google.gson.*;
 import com.google.gson.reflect.TypeToken;
 import com.terragoedge.slvinterface.dao.ConnectionDAO;
 import com.terragoedge.slvinterface.dao.tables.GeozoneEntity;
-import com.terragoedge.slvinterface.dao.tables.SlvSyncDetail;
-import com.terragoedge.slvinterface.enumeration.Status;
 import com.terragoedge.slvinterface.exception.*;
 import com.terragoedge.slvinterface.model.*;
 import com.terragoedge.slvinterface.utils.PropertiesReader;
-import com.terragoedge.slvinterface.utils.Utils;
 import com.vividsolutions.jts.geom.Geometry;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
@@ -50,36 +47,6 @@ public abstract class AbstractSlvService extends EdgeService {
         return null;
     }
 
-    public List<String> getSlvDeviceList() {
-        List<String> slvDeviceList = new ArrayList<String>();
-        String mainUrl = properties.getProperty("streetlight.url.main");
-        String getMacAddress = properties.getProperty("streetlight.slv.url.getmacaddress");
-        String url = mainUrl + getMacAddress;
-        List<Object> paramsList = new ArrayList<Object>();
-        paramsList.add("valueNames=idOnController");
-        paramsList.add("valueNames=comment");
-        paramsList.add("valueNames=MacAddress");
-        paramsList.add("ser=json");
-        String params = StringUtils.join(paramsList, "&");
-        url = url + "&" + params;
-        ResponseEntity<String> responseEntity = slvRestService.getPostRequest(url, null);
-        if (responseEntity.getStatusCode().is2xxSuccessful()) {
-            String deviceJson = responseEntity.getBody();
-            JsonObject jsonObject = (JsonObject) jsonParser.parse(deviceJson);
-            JsonArray deviceValuesAsArray = jsonObject.get("values").getAsJsonArray();
-            int totalSize = deviceValuesAsArray.size();
-            for (int i = 0; i < totalSize; i++) {
-                JsonArray deviceValues = deviceValuesAsArray.get(i).getAsJsonArray();
-                slvDeviceList.add(deviceValues.get(0).getAsString());
-            }
-            System.out.println("TotalSize " + slvDeviceList.size());
-            return slvDeviceList;
-        } else {
-            logger.error("Unable to get message from EdgeServer. Response Code is :" + responseEntity.getStatusCode());
-        }
-        return new ArrayList<String>();
-    }
-
 
     public ResponseEntity<String> createDevice(EdgeNote edgenote,
                                                JPSWorkflowModel jpsWorkflowModel) {
@@ -115,50 +82,6 @@ public abstract class AbstractSlvService extends EdgeService {
         }else{
             return null;
         }
-    }
-
-    public String validateMACAddress(String existingNodeMacAddress, String idOnController, String geoZoneId)
-            throws QRCodeNotMatchedException {
-        String mainUrl = properties.getProperty("streetlight.slv.url.main");
-        String geoZoneDevices = properties.getProperty("streetlight.slv.url.getgeozone.devices");
-        String url = mainUrl + geoZoneDevices;
-
-        List<Object> paramsList = new ArrayList<Object>();
-        if (geoZoneId != null) {
-            //  paramsList.add("geoZoneId=" + geoZoneId);
-        }
-
-        paramsList.add("valueNames=idOnController");
-        paramsList.add("valueNames=comment");
-        paramsList.add("valueNames=MacAddress");
-        paramsList.add("ser=json");
-        String params = StringUtils.join(paramsList, "&");
-        url = url + "&" + params;
-        ResponseEntity<String> response = slvRestService.getPostRequest(url, null);
-        if (response.getStatusCode().is2xxSuccessful()) {
-            String geoZoneDeviceDetails = response.getBody();
-            JsonObject jsonObject = (JsonObject) jsonParser.parse(geoZoneDeviceDetails);
-            if (jsonObject != null) {
-                JsonArray deviceValuesAsArray = jsonObject.get("values").getAsJsonArray();
-                int totalSize = deviceValuesAsArray.size();
-                for (int i = 0; i < totalSize; i++) {
-                    JsonArray deviceValues = deviceValuesAsArray.get(i).getAsJsonArray();
-                    if (deviceValues.get(0).getAsString().equals(idOnController)) {
-                        if (deviceValues.get(2).getAsString().equals(existingNodeMacAddress)) {
-                            if (deviceValues.get(1).isJsonNull()) {
-                                return "";
-                            } else {
-                                String comment = deviceValues.get(1).getAsString();
-                                return comment;
-                            }
-                        }
-                    }
-                }
-                // Throws given MAC Address not matched
-                throw new QRCodeNotMatchedException(idOnController, existingNodeMacAddress);
-            }
-        }
-        return null;
     }
 
     public List<Value> checkMacAddressExists(String macAddress) {
@@ -332,7 +255,8 @@ public abstract class AbstractSlvService extends EdgeService {
         String getDeviceUrl = properties.getProperty("streetlight.slv.url.getdevice.device");
         String deviceMainUrl = mainUrl + getDeviceUrl;
         List<String> paramsList = new ArrayList<>();
-        paramsList.add("deviceId=" + id);
+        paramsList.add("param0=" + id);
+        paramsList.add("returnTimeAges="+false);
         paramsList.add("ser=json");
         paramsList.add("valueName=MacAddress");
         String params = StringUtils.join(paramsList, "&");
@@ -352,7 +276,7 @@ public abstract class AbstractSlvService extends EdgeService {
         if (parentId != -1) {
             paramsList.add("parentId=" + parentId);
         }
-        paramsList.add("partialMatch=true");
+        paramsList.add("partialMatch=false");
         paramsList.add("ser=json");
         String params = StringUtils.join(paramsList, "&");
         geozoneUrl = geozoneUrl + "?" + params;
@@ -402,44 +326,66 @@ public abstract class AbstractSlvService extends EdgeService {
         return null;
     }
 
-    public GeozoneEntity getGeozoneEntity(String notebookName, String streetName) {
+    public GeozoneEntity getGeozoneEntity(JPSWorkflowModel jpsWorkflowModel) {
+        String notebookName = jpsWorkflowModel.getNotebookName();
+        String streetName = jpsWorkflowModel.getAddress1();
         logger.info("Parent Geozone name as notebookName:"+notebookName);
         logger.info("Sub or childgezone Name as StreetName :"+streetName);
         String rootGeozoneId = properties.getProperty("streetlight.slv.rootgeozone");
-        GeozoneEntity geozoneEntity = connectionDAO.getGeozoneEntity(notebookName, streetName);
+        GeozoneEntity geozoneEntity = connectionDAO.getGeozoneEntity(jpsWorkflowModel);
         if (geozoneEntity != null) {
             logger.info("Already has geozone values in geozone table");
             return geozoneEntity;
         }
         geozoneEntity = new GeozoneEntity();
-        geozoneEntity.setGeozoneName(notebookName);
-        geozoneEntity.setChildgeozoneName(streetName);
+        geozoneEntity.setParishZoneName(jpsWorkflowModel.getCity());
+        geozoneEntity.setDivisionZoneName(jpsWorkflowModel.getNotebookName());
+        geozoneEntity.setStreetZoneName(jpsWorkflowModel.getAddress1());
         //check parent notebook has exist or not in slv
-        GeozoneModel childGeozone;
+        GeozoneModel divisionChildGeozone = null;
+        GeozoneModel streetChildGeozone = null;
         // Get parent geozone
-        GeozoneModel parentGeozoneModel = getGeozoneIdByName(notebookName, -1);
+        GeozoneModel parishGeozoneModel = getGeozoneIdByName(jpsWorkflowModel.getCity(), Integer.valueOf(rootGeozoneId));
         // create parent and child geozone if not exist parent geozone
-        if (parentGeozoneModel == null) {
+        if (parishGeozoneModel == null) {
             logger.info("There is no parent Geozones, need to create parent and child");
             //create parent and child geozone
-            parentGeozoneModel = createGeozone(notebookName, Integer.parseInt(rootGeozoneId));
-            logger.info("ParentGeozone value : "+((parentGeozoneModel!=null)? gson.toJson(parentGeozoneModel):null));
-            childGeozone = createGeozone(streetName, parentGeozoneModel.getId());
-            logger.info("childGeozone value : "+((childGeozone!=null)? gson.toJson(childGeozone):null));
+            parishGeozoneModel = createGeozone(jpsWorkflowModel.getCity(), Integer.parseInt(rootGeozoneId));
+            logger.info("ParentGeozone value : "+((parishGeozoneModel!=null)? gson.toJson(parishGeozoneModel):null));
+            if(parishGeozoneModel != null) {
+                divisionChildGeozone = createGeozone(notebookName, parishGeozoneModel.getId());
+                logger.info("childGeozone value : " + ((divisionChildGeozone != null) ? gson.toJson(divisionChildGeozone) : null));
+                if(divisionChildGeozone != null){
+                    streetChildGeozone = createGeozone(jpsWorkflowModel.getAddress1(), divisionChildGeozone.getId());
+                    logger.info("first childGeozone value : " + ((streetChildGeozone != null) ? gson.toJson(streetChildGeozone) : null));
+                }
+
+            }
         } else {
             //get child geozone
             logger.info("Exist parent geozone, Going to veryfi child geozone is exist or not");
-            childGeozone = getGeozoneIdByName(streetName, parentGeozoneModel.getId());
-            logger.info("childGeozone value : "+((childGeozone!=null)? gson.toJson(childGeozone):null));
+            divisionChildGeozone = getGeozoneIdByName(notebookName, parishGeozoneModel.getId());
+            logger.info("division childGeozone value : "+((divisionChildGeozone!=null)? gson.toJson(divisionChildGeozone):null));
             //check if child geozone under another parentgeozone, create new child geozone based on parent geozone.
-            if (childGeozone == null || !(childGeozone.getParentId() == parentGeozoneModel.getId())) {
+            if (divisionChildGeozone == null || divisionChildGeozone.getParentId() != parishGeozoneModel.getId()) {
                 logger.info("check if child geozone under another parentgeozone, create new child geozone based on parent geozone");
-                childGeozone = createGeozone(streetName, parentGeozoneModel.getId());
-                //  childGeozone = getGeozoneIdByName(streetName, parentGeozoneModel.getId());
+                divisionChildGeozone = createGeozone(notebookName, parishGeozoneModel.getId());
+                logger.info("division childGeozone value : " + ((divisionChildGeozone != null) ? gson.toJson(divisionChildGeozone) : null));
+                if(divisionChildGeozone != null){
+                    streetChildGeozone = createGeozone(jpsWorkflowModel.getAddress1(),divisionChildGeozone.getId());
+                    logger.info("street childGeozone value : " + ((streetChildGeozone != null) ? gson.toJson(streetChildGeozone) : null));
+                }
+            }else{
+                streetChildGeozone = getGeozoneIdByName(jpsWorkflowModel.getAddress1(), divisionChildGeozone.getId());
+                if(streetChildGeozone == null){
+                    streetChildGeozone = createGeozone(jpsWorkflowModel.getAddress1(), divisionChildGeozone.getId());
+                    logger.info("street childGeozone value : " + ((streetChildGeozone != null) ? gson.toJson(streetChildGeozone) : null));
+                }
             }
         }
-        geozoneEntity.setGeozoneId(parentGeozoneModel.getId());
-        geozoneEntity.setChildgeozoneId(childGeozone.getId());
+        geozoneEntity.setParishzoneId(parishGeozoneModel.getId());
+        geozoneEntity.setDivisionZoneId(divisionChildGeozone.getId());
+        geozoneEntity.setStreetGeozoneId(streetChildGeozone.getId());
         connectionDAO.createGeozone(geozoneEntity);
         return geozoneEntity;
     }

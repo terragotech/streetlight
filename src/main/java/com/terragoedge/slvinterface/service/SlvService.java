@@ -39,7 +39,7 @@ public class SlvService extends AbstractSlvService {
 
     public void processSlv(JPSWorkflowModel jpsWorkflowModel, EdgeNote edgeNote) throws Exception {
         logger.info("ProcessSlv method start.");
-        GeozoneEntity geozoneEntity = getGeozoneEntity(jpsWorkflowModel.getNotebookName(), jpsWorkflowModel.getAddress1());
+        GeozoneEntity geozoneEntity = getGeozoneEntity(jpsWorkflowModel);
         logger.info("---------------------Geozone info start---------------------------");
         logger.info(gson.toJson(geozoneEntity));
         logger.info("---------------------Geozone info end---------------------------");
@@ -99,14 +99,14 @@ public class SlvService extends AbstractSlvService {
                         logger.info("Current fixtures and previous revision values are same.");
                     }
                 }
-            } else {
+            } /*else {
                 ResponseEntity<String> responseEntity = callSetDeviceValues(jpsWorkflowModel);// call set device values
                 SlvSyncDetail slvSyncDetail = (dbSyncDetail == null) ? new SlvSyncDetail() : dbSyncDetail;
                 saveSlvSyncDetail(slvSyncDetail, edgeNote, jpsWorkflowModel, responseEntity, (dbSyncDetail == null) ? false : true);// save or update slvSyncDetail in local db
                 if (responseEntity.getStatusCode() != HttpStatus.OK) {
                     throw new Exception("Error in set device values");
                 }
-            }
+            }*/
         }
     }
 
@@ -147,19 +147,15 @@ public class SlvService extends AbstractSlvService {
                 logger.info("check device has another mac");
                 ResponseEntity<String> responseEntity = getDeviceData(deviceID);
                 if (responseEntity.getStatusCode() == HttpStatus.OK) {
-                    JsonObject jsonObject = new JsonParser().parse(responseEntity.getBody()).getAsJsonObject();
-                    JsonArray macvalues = jsonObject.get("values").getAsJsonArray();
-                    logger.info("Device has another mac address response :" + gson.toJson(jsonObject));
+                    JsonArray macvalues = new JsonParser().parse(responseEntity.getBody()).getAsJsonArray();
+                    logger.info("Device has another mac address response :" + gson.toJson(macvalues));
                     if (macvalues != null && macvalues.size() == 1) {
-                        JsonElement jsonElement = macvalues.get(0);
+                        JsonObject jsonObject = macvalues.get(0).getAsJsonObject();
                         String mac = null;
-                        if (jsonElement != null) {
-                            JsonArray jsonArray = jsonElement.getAsJsonArray();
-                            if (jsonArray.size() == 1) {
-                                mac = (jsonArray.get(0).isJsonNull()) ? null : jsonArray.get(0).getAsString();
-                            }
+                        if (jsonObject != null && !jsonObject.isJsonNull()) {
+                                mac = jsonObject.get("value").getAsString();
                         }
-                        if (mac == null) {
+                        if (mac == null || mac.equals("")) {
                             logger.info("MacAddress is null");
                             replaceOLC(jpsWorkflowModel.getControllerStrId(), jpsWorkflowModel.getIdOnController(), jpsWorkflowModel.getMacAddress(), edgeNote, jpsWorkflowModel);
                         } else if (!mac.equals(jpsWorkflowModel.getMacAddress())) {

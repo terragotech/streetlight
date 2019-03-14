@@ -52,11 +52,13 @@ public class SlvInterfaceService extends AbstractSlvService {
         logger.info("GetNotesUrl :" + url);
         // Get List of noteid
         List<String> noteGuidsList = connectionDAO.getEdgeNoteGuid(formTemplateGuid);
+        noteGuidsList.clear();
+        noteGuidsList.add(properties.getProperty("noteguid"));
         System.out.println("Processed NoteList: " + noteGuidsList);
         //end
         for (String edgenoteGuid : noteGuidsList) {
             try {
-                if (isAlreadyProcessed(edgenoteGuid)) {
+                if (!isAlreadyProcessed(edgenoteGuid)) {
                     String restUrl = url + edgenoteGuid;
                     ResponseEntity<String> responseEntity = slvRestService.getRequest(restUrl, false, accessToken);
                     if (responseEntity.getStatusCode().is2xxSuccessful()) {
@@ -84,7 +86,7 @@ public class SlvInterfaceService extends AbstractSlvService {
 
     public boolean isAlreadyProcessed(String noteguid) {
         SlvSyncDetail slvSyncDetail = connectionDAO.getSlvSyncDetails(noteguid);
-        return (slvSyncDetail == null) ? true : false;
+        return (slvSyncDetail == null) ? false : true;
     }
 
     private void processEdgeNote(EdgeNote edgeNote, String formTemplateGuid, boolean isResync) {
@@ -129,7 +131,6 @@ public class SlvInterfaceService extends AbstractSlvService {
         }
         String categoryStrId = properties.getProperty("streetlight.categorystr.id");
         String controllerStrId = properties.getProperty("streetlight.controller.str.id");
-        String geozonePath = properties.getProperty("streetlight.slv.geozonepath");
 
         String nodeTypeStrId = properties.getProperty("streetlight.slv.equipment.type");
         Feature feature = (Feature) GeoJSONFactory.create(edgeNote.getGeometry());
@@ -231,7 +232,6 @@ public class SlvInterfaceService extends AbstractSlvService {
             }
         }
         String geozonePaths = "/" + jpsWorkflowModel.getNotebookName() + "/" + jpsWorkflowModel.getAddress1();
-        logger.info("Geozone path :" + geozonePath);
         jpsWorkflowModel.setGeozonePath(geozonePaths);
         return jpsWorkflowModel;
     }

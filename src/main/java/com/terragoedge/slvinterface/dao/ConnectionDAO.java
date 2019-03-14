@@ -10,6 +10,7 @@ import com.terragoedge.slvinterface.dao.tables.DuplicateMacAddress;
 import com.terragoedge.slvinterface.dao.tables.GeozoneEntity;
 import com.terragoedge.slvinterface.dao.tables.SlvDevice;
 import com.terragoedge.slvinterface.dao.tables.SlvSyncDetail;
+import com.terragoedge.slvinterface.model.JPSWorkflowModel;
 import org.apache.log4j.Logger;
 
 import java.sql.ResultSet;
@@ -220,9 +221,9 @@ public enum ConnectionDAO {
         }
     }
 
-    public GeozoneEntity getGeozoneEntity(String notebookName, String streetName) {
+    public GeozoneEntity getGeozoneEntity(JPSWorkflowModel jpsWorkflowModel) {
         try {
-            return geozoneEntitiesDao.queryBuilder().where().eq(GeozoneEntity.NOTEBOOKNAME, notebookName).and().eq(GeozoneEntity.STREETNAME, streetName).queryForFirst();
+            return geozoneEntitiesDao.queryBuilder().where().eq("parishzonename", jpsWorkflowModel.getCity()).and().eq("divisionzonename", jpsWorkflowModel.getNotebookName()).and().eq("streetzonename",jpsWorkflowModel.getAddress1()).queryForFirst();
         } catch (Exception e) {
             e.printStackTrace();
         }
