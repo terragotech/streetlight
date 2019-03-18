@@ -449,11 +449,14 @@ public abstract class AbstractProcessor {
              * shorter version of the fixture, so for the General Electric fixtures it was
              * ERLH. The Luminaire Part Number would be the longer more detailed number.
              */
-            String partNumber = fixtureInfo[1].trim();
-            String model = fixtureInfo[2].trim();
-            if (fixtureInfo[1].trim().length() <= fixtureInfo[2].trim().length() && !fixtureInfo[0].trim().equals("LV Manufacturing")) {
-                model = fixtureInfo[1].trim();
-                partNumber = fixtureInfo[2].trim();
+            String partNumber = fixtureInfo[2].trim();
+            String model = fixtureInfo[1].trim();
+            logger.info("luminaire.brand "+fixtureInfo[0]);
+            if (fixtureInfo[1].trim().length() <= fixtureInfo[2].trim().length() && !fixtureInfo[0].trim().contains("LV Manufacturing")) {
+                model = fixtureInfo[2].trim();
+                partNumber = fixtureInfo[1].trim();
+                logger.info("device.luminaire.partnumber "+partNumber);
+                logger.info("luminaire.model "+model);
             }
             addStreetLightData("device.luminaire.partnumber", partNumber, paramsList);
             slvServerData.setLuminairePartNumber(partNumber);
