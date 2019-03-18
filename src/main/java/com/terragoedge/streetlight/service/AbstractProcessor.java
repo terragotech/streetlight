@@ -147,40 +147,7 @@ public abstract class AbstractProcessor {
         logger.info("processDeviceValuesJson End");
     }
 
-    //reports/api/logging/getDeviceLastValues?
-    // param0=2190630&returnTimeAges=false&ser=json&valueName=comment
-    public void getComment(InstallMaintenanceLogModel installMaintenanceLogModel){
-        try{
-            if(installMaintenanceLogModel.getDeviceId() > 0){
-                String mainUrl = properties.getProperty("streetlight.slv.url.main");
-                String commentUrl = properties.getProperty("streetlight.slv.url.comment.get");
-                String url = mainUrl + commentUrl;
-                List<String> paramsList = new ArrayList<>();
-                paramsList.add("returnTimeAges=false");
-                paramsList.add("param0=" + installMaintenanceLogModel.getDeviceId());
-                paramsList.add("valueName=comment");
-                paramsList.add("ser=json");
-                String params = StringUtils.join(paramsList, "&");
-                url = url + "?" + params;
-                logger.info("Get Comment url :" + url);
-                ResponseEntity<String> response = restService.getRequest(url, true, null);
-                if (response.getStatusCodeValue() == 200) {
-                    logger.info("Get Comment Respose :"+response.getBody());
-                    String responseString = response.getBody();
-                   JsonArray jsonArray = (JsonArray)jsonParser.parse(responseString);
-                   for(JsonElement commentJson : jsonArray){
-                      JsonObject commentJsonObject = commentJson.getAsJsonObject();
-                       if(commentJsonObject.get("value") != null){
-                          String commentVal = commentJsonObject.get("value").getAsString();
-                          installMaintenanceLogModel.setComment(commentVal);
-                       }
-                   }
-                }
-            }
-        }catch (Exception e){
-            logger.error("Error in getComment",e);
-        }
-    }
+
 
     public void loadDeviceValues(String idOnController,InstallMaintenanceLogModel installMaintenanceLogModel) throws Exception{
         try {

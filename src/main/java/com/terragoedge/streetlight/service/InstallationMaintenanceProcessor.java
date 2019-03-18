@@ -445,7 +445,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
         return errorCode;
     }
 
-    private void sync2Slv(String macAddress, String fixerQrScanValue, EdgeNote edgeNote, InstallMaintenanceLogModel loggingModel, String idOnController, String controllerStrIdValue, String comment, String utilLocId, boolean isNew, String nightRideKey, String nightRideValue) {
+    private void sync2Slv(String macAddress, String fixerQrScanValue, EdgeNote edgeNote, InstallMaintenanceLogModel loggingModel, String idOnController, String controllerStrIdValue,  String utilLocId, boolean isNew, String nightRideKey, String nightRideValue) {
         try {
 
             List<Object> paramsList = new ArrayList<>();
@@ -460,9 +460,6 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
                 buildFixtureStreetLightData(fixerQrScanValue, paramsList, edgeNote, slvServerData,loggingModel);//update fixer qrscan value
             }
 
-            if (comment != null) {
-                addStreetLightData("comment", comment, paramsList);
-            }
 
             if (nightRideValue != null) {
                 addStreetLightData(nightRideKey, nightRideValue, paramsList);
@@ -689,7 +686,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
                         + " ]");
             }
             loggingModel.setMacAddress(nodeMacValue);
-            sync2Slv(nodeMacValue, fixerQrScanValue, edgeNote, loggingModel, loggingModel.getIdOnController(), loggingModel.getControllerSrtId(), null, utilLocId, true, nightRideKey, nightRideValue);
+            sync2Slv(nodeMacValue, fixerQrScanValue, edgeNote, loggingModel, loggingModel.getIdOnController(), loggingModel.getControllerSrtId(), utilLocId, true, nightRideKey, nightRideValue);
         } catch (NoValueException e) {
             logger.error("Error no value", e);
             loggingModel.setErrorDetails(e.getMessage());
@@ -730,7 +727,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
                     fixerQrScanValue = valueById(edgeFormDatas, 39);
                     String idOnController = loggingModel.getIdOnController();
                     String controllerStrIdValue = loggingModel.getControllerSrtId();
-                    sync2Slv(null, fixerQrScanValue, edgeNote, loggingModel, idOnController, controllerStrIdValue, "", utilLocId, false, nightRideKey, nightRideValue);
+                    sync2Slv(null, fixerQrScanValue, edgeNote, loggingModel, idOnController, controllerStrIdValue, utilLocId, false, nightRideKey, nightRideValue);
                     break;
                 } catch (NoValueException e) {
                     loggingModel.setStatus(MessageConstants.ERROR);
@@ -837,17 +834,9 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
             }
 
 
-            getComment(loggingModel);
-
-            String comment = null;
-            if(loggingModel.getComment() != null && !loggingModel.getComment().trim().isEmpty()){
-                comment = loggingModel.getComment() + " replaced on " + dateFormat(edgeNote.getCreatedDateTime());
-            }else{
-                comment = "Replaced on " + dateFormat(edgeNote.getCreatedDateTime());
-            }
 
 
-            sync2Slv(newNodeMacAddress, fixerQrScanValue, edgeNote, loggingModel, idOnController, controllerStrIdValue, comment, utilLocId, false, nightRideKey, nightRideValue);
+            sync2Slv(newNodeMacAddress, fixerQrScanValue, edgeNote, loggingModel, idOnController, controllerStrIdValue, utilLocId, false, nightRideKey, nightRideValue);
             if (isError) {
                 loggingModel.setErrorDetails(loggingModel.getErrorDetails() + statusDescription.toString());
             }
@@ -915,19 +904,10 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
                 e.printStackTrace();
             }
 
-            // Get Comment from SLV.
-            getComment(loggingModel);
-
-            String comment = null;
-            if(loggingModel.getComment() != null && !loggingModel.getComment().trim().isEmpty()){
-                comment = loggingModel.getComment() + " replaced on " + dateFormat(edgeNote.getCreatedDateTime());
-            }else{
-                comment = "Replaced on " + dateFormat(edgeNote.getCreatedDateTime());
-            }
 
 
 
-            sync2Slv(newNodeMacAddress, null, edgeNote, loggingModel, idOnController, controllerStrIdValue, comment, utilLocId, false, nightRideKey, nightRideValue);
+            sync2Slv(newNodeMacAddress, null, edgeNote, loggingModel, idOnController, controllerStrIdValue, utilLocId, false, nightRideKey, nightRideValue);
 
 
         } catch (Exception e) {
