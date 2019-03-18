@@ -7,6 +7,7 @@ import com.terragoedge.streetlight.dao.FormData;
 import com.terragoedge.streetlight.dao.NoteData;
 import com.terragoedge.streetlight.dao.UtilDao;
 import com.terragoedge.streetlight.installmaintain.json.Config;
+import com.terragoedge.streetlight.installmaintain.json.CsvStatus;
 import com.terragoedge.streetlight.installmaintain.json.Ids;
 import com.terragoedge.streetlight.installmaintain.json.Prop;
 import com.terragoedge.streetlight.installmaintain.utills.Utils;
@@ -46,12 +47,14 @@ public class InstallMaintenanceDao extends UtilDao {
             queryStatement = connection.createStatement();
             StringBuilder stringBuilder = new StringBuilder();
             StreetlightChicagoService.populateNotesHeader(stringBuilder);
-            today = Utils.getDate(DateTime.now(DateTimeZone.UTC).withTimeAtStartOfDay().getMillis());
-            long startTime = DateTime.now(DateTimeZone.UTC).minusDays(1).withTimeAtStartOfDay().getMillis();
+            today = Utils.getDate(1552712400000L);
+//            today = Utils.getDate(DateTime.now(DateTimeZone.UTC).withTimeAtStartOfDay().getMillis());
+            long startTime = 1552626000000L;
+//            long startTime = DateTime.now(DateTimeZone.UTC).minusDays(1).withTimeAtStartOfDay().getMillis();
             yesterday = Utils.getDate(startTime);
             logger.info("start time:"+startTime);
             logger.info("readable fromat time:"+Utils.getDateTime(startTime));
-            queryResponse = queryStatement.executeQuery("select noteguid,parentnoteid,createddatetime,noteid,createdby,locationdescription,title,groupname,ST_X(geometry::geometry) as lat, ST_Y(geometry::geometry) as lng from edgenoteview where title in (select distinct title from edgenoteview where createddatetime >="+ startTime +" ) and createddatetime>="+startTime+" and iscurrent = true and isdeleted = false;");
+            queryResponse = queryStatement.executeQuery("select noteguid,parentnoteid,createddatetime,noteid,createdby,locationdescription,title,groupname,ST_X(geometry::geometry) as lat, ST_Y(geometry::geometry) as lng from edgenoteview where title in (select distinct title from edgenoteview where createddatetime >="+ startTime +" ) and createddatetime>="+startTime+" and iscurrent = true and isdeleted = false and noteguid='e98c84f1-d9c1-403b-b33e-07e018b7fd62';");
 //            queryResponse = queryStatement.executeQuery("select noteguid,parentnoteid,createddatetime,noteid,createdby,locationdescription,title,groupname,ST_X(geometry::geometry) as lat, ST_Y(geometry::geometry) as lng from edgenoteview where title in (select distinct title from edgenoteview where noteguid='88e9b5ef-7793-432b-ae88-d5d593f4abe3' ) and iscurrent = true and isdeleted = false;");
             logger.info("query response executed");
             int i = 0;
@@ -71,38 +74,28 @@ public class InstallMaintenanceDao extends UtilDao {
                 double lng = queryResponse.getDouble("lng");
                 NoteData parentNoteData = getNoteData(locationDescription,title,createdBy,noteGuid,groupname,lat,lng,noteid,createddatetime);
 
-                InstallMaintenanceModel newInstallMaintenanceModel = null;
-                InstallMaintenanceModel replaceNoteMaintenanceModel = null;
                List<FormData> formDatas = getCurrentNoteDetails(noteGuid);
+               InstallMaintenanceModel parentFormData = getInstallMaintenanceModel(formDatas);
                logger.info("current note forms count: "+formDatas.size());
-                boolean isCsvWritten = false;
 
                 List<NoteData> noteDatas = getChildNotes(parentNoteId);
                 logger.info("child notes count: "+noteDatas.size());
                 for (NoteData noteData : noteDatas) {
+                    List<FormData> childFormDatas = getCurrentNoteDetails(noteData.getNoteGuid());
+                    InstallMaintenanceModel childFormData = getInstallMaintenanceModel(childFormDatas);
+                    logger.info("child note: "+noteData.getNoteGuid());
+                    logger.info("child note forms count: "+childFormDatas.size());
                     if (!noteData.getNoteGuid().equals(noteGuid)) {
-                        boolean isProcessed = processForm(noteData,parentNoteData,formDatas,newInstallMaintenanceModel,replaceNoteMaintenanceModel,stringBuilder,isCsvWritten);
-                        if(isProcessed){
+                        CsvStatus csvStatus = processForm(noteData,parentNoteData,parentFormData,childFormData,stringBuilder);
+                        if(csvStatus.isWritten()){
                             break;
-                        }else {
+                        }
+                        if(csvStatus.isChangeParent()){
+                            parentFormData = childFormData;
                             parentNoteData = noteData;
                         }
                     }
                 }
-
-               if(!isCsvWritten && (newInstallMaintenanceModel != null || replaceNoteMaintenanceModel != null)){
-                   InstallMaintenanceModel oldInstallMaintenanceModel = new InstallMaintenanceModel();
-                   if(newInstallMaintenanceModel != null){
-                       oldInstallMaintenanceModel.setMacAddress(newInstallMaintenanceModel.getMacAddress());
-                       oldInstallMaintenanceModel.setFixtureQRScan(newInstallMaintenanceModel.getFixtureQRScan());
-                   }
-                   if(replaceNoteMaintenanceModel != null){
-                       oldInstallMaintenanceModel.setExMacAddressRN(replaceNoteMaintenanceModel.getExMacAddressRN());
-                       oldInstallMaintenanceModel.setMacAddressRN(replaceNoteMaintenanceModel.getMacAddressRN());
-                   }
-                   logger.info("csv written for old install or replace node form template");
-                   updateCSV(stringBuilder, parentNoteData, oldInstallMaintenanceModel);
-               }
                logger.info("Processed item: "+i);
             }
             StreetlightChicagoService.logData(stringBuilder.toString(),"daily_install_report_"+Utils.getDate(System.currentTimeMillis())+".csv");
@@ -116,17 +109,9 @@ public class InstallMaintenanceDao extends UtilDao {
         }
     }
 
-    private boolean processCSV(String formTemplateGuid,InstallMaintenanceModel newInstallMaintenanceModel, InstallMaintenanceModel replaceNoteMaintenanceModel,InstallMaintenanceModel installMaintenanceModel,NoteData noteData,FormData formData,StringBuilder stringBuilder){
-        if(formTemplateGuid.equals("0ea4f5d4-0a17-4a17-ba8f-600de1e2515f")){// new installation form template
-            newInstallMaintenanceModel = getInstallMaintenanceModel(formData.getFormDef(), formTemplateGuid);
-        }else if(formTemplateGuid.equals("606fb4ca-40a4-466b-ac00-7c0434f82bfa")){// replace node form template
-            replaceNoteMaintenanceModel = getInstallMaintenanceModel(formData.getFormDef(), formTemplateGuid);
-        }else {
+    private void processCSV(InstallMaintenanceModel installMaintenanceModel,NoteData noteData,StringBuilder stringBuilder){
             logger.info("csv written");
             updateCSV(stringBuilder, noteData, installMaintenanceModel);
-            return true;
-        }
-        return false;
     }
 
     public List<FormData> getCurrentNoteDetails(String noteGuid){
@@ -189,40 +174,47 @@ public class InstallMaintenanceDao extends UtilDao {
         return noteDatas;
     }
 
-    private InstallMaintenanceModel getInstallMaintenanceModel(String formDef, String formTemplateGuid){
+    private InstallMaintenanceModel getInstallMaintenanceModel(List<FormData> formDatas) {
         InstallMaintenanceModel installMaintenanceModel = new InstallMaintenanceModel();
-        List<EdgeFormData> edgeFormDatas = gson.fromJson(formDef,new TypeToken<List<EdgeFormData>>(){}.getType());
-        for(Config config : configs){
-            installMaintenanceModel.setInstallStatus(getValue(config.getInstallStatus(),edgeFormDatas));
-            installMaintenanceModel.setProposedContext(getValue(config.getProposedContext(),edgeFormDatas));
-            if(config.getFormTemplateGuid().equals(formTemplateGuid)){
+        for (FormData formData : formDatas){
+            String formDef = formData.getFormDef();
+            List<EdgeFormData> edgeFormDatas = gson.fromJson(formDef, new TypeToken<List<EdgeFormData>>() {
+            }.getType());
+        for (Config config : configs) {
+            if (config.getFormTemplateGuid().equals(formData.getFormTemplateGuid())) {
+                installMaintenanceModel.setInstallStatus(getValue(config.getInstallStatus(), edgeFormDatas));
+                installMaintenanceModel.setProposedContext(getValue(config.getProposedContext(), edgeFormDatas));
                 List<Prop> props = config.getProps();
-                for(Prop prop : props){
+                logger.info("config: "+gson.toJson(config));
+                for (Prop prop : props) {
+                    logger.info("prop: "+gson.toJson(prop));
                     Ids idsList = prop.getIds();
-                    InstallMaintenanceEnum type =  prop.getType();
-                    switch (type){
+                    InstallMaintenanceEnum type = prop.getType();
+                    logger.info("type:"+type.toString());
+                    switch (type) {
                         case RF:
-                            installMaintenanceModel.setFixtureQRScanRF(getValue(idsList.getFix(),edgeFormDatas));
-                            installMaintenanceModel.setExFixtureQRScanRF(getValue(idsList.getExFix(),edgeFormDatas));
+                            installMaintenanceModel.setFixtureQRScanRF(setValue(installMaintenanceModel.getFixtureQRScanRF(),getValue(idsList.getFix(), edgeFormDatas)));
+                            installMaintenanceModel.setExFixtureQRScanRF(setValue(installMaintenanceModel.getExFixtureQRScanRF(),getValue(idsList.getExFix(), edgeFormDatas)));
                             break;
                         case NEW:
-                            installMaintenanceModel.setMacAddress(getValue(idsList.getMac(),edgeFormDatas));
-                            installMaintenanceModel.setFixtureQRScan(getValue(idsList.getFix(),edgeFormDatas));
+                            installMaintenanceModel.setMacAddress(setValue(installMaintenanceModel.getMacAddress(),getValue(idsList.getMac(), edgeFormDatas)));
+                            installMaintenanceModel.setFixtureQRScan(setValue(installMaintenanceModel.getFixtureQRScan(),getValue(idsList.getFix(), edgeFormDatas)));
                             break;
                         case RN:
-                            installMaintenanceModel.setMacAddressRN(getValue(idsList.getMac(),edgeFormDatas));
-                            installMaintenanceModel.setExMacAddressRN(getValue(idsList.getExMac(),edgeFormDatas));
+                            installMaintenanceModel.setMacAddressRN(setValue(installMaintenanceModel.getMacAddressRN(),getValue(idsList.getMac(), edgeFormDatas)));
+                            installMaintenanceModel.setExMacAddressRN(setValue(installMaintenanceModel.getExMacAddressRN(),getValue(idsList.getExMac(), edgeFormDatas)));
                             break;
                         case RNF:
-                            installMaintenanceModel.setMacAddressRNF(getValue(idsList.getMac(),edgeFormDatas));
-                            installMaintenanceModel.setExMacAddressRNF(getValue(idsList.getExMac(),edgeFormDatas));
-                            installMaintenanceModel.setFixtureQRScanRNF(getValue(idsList.getFix(),edgeFormDatas));
-                            installMaintenanceModel.setExFixtureQRScanRNF(getValue(idsList.getExFix(),edgeFormDatas));
+                            installMaintenanceModel.setMacAddressRNF(setValue(installMaintenanceModel.getMacAddressRNF(),getValue(idsList.getMac(), edgeFormDatas)));
+                            installMaintenanceModel.setExMacAddressRNF(setValue(installMaintenanceModel.getExMacAddressRNF(),getValue(idsList.getExMac(), edgeFormDatas)));
+                            installMaintenanceModel.setFixtureQRScanRNF(setValue(installMaintenanceModel.getFixtureQRScanRNF(),getValue(idsList.getFix(), edgeFormDatas)));
+                            installMaintenanceModel.setExFixtureQRScanRNF(setValue(installMaintenanceModel.getExFixtureQRScanRNF(),getValue(idsList.getExFix(), edgeFormDatas)));
                             break;
                     }
                 }
             }
         }
+    }
         return installMaintenanceModel;
     }
 
@@ -230,10 +222,23 @@ public class InstallMaintenanceDao extends UtilDao {
         EdgeFormData edgeFormData = new EdgeFormData();
         edgeFormData.setId(id);
         int pos = edgeFormDatas.indexOf(edgeFormData);
+        String value = "";
         if(pos > -1){
-            return edgeFormDatas.get(pos).getValue();
+            value = edgeFormDatas.get(pos).getValue();
         }
-        return null;
+        return value;
+    }
+
+    private String setValue(String oldValue, String newValue){
+        if(oldValue == null || oldValue.equals("")){
+            return newValue;
+        }else{
+            if(newValue == null || newValue.equals("")){
+                return oldValue;
+            }else{
+                return newValue;
+            }
+        }
     }
 
     private boolean checkFormTemplateInConfig(String formTemplateGuid){
@@ -287,14 +292,33 @@ public class InstallMaintenanceDao extends UtilDao {
         stringBuilder.append(validateTwoString(installMaintenanceModel.getMacAddressRNF(),installMaintenanceModel.getMacAddressRN()));
         stringBuilder.append("\n");
     }
-    private boolean processForm(NoteData noteData,NoteData parentNoteData,List<FormData> formDatas,InstallMaintenanceModel newInstallMaintenanceModel, InstallMaintenanceModel replaceNoteMaintenanceModel,StringBuilder stringBuilder,boolean isCsvWritten){
+    private CsvStatus processForm(NoteData noteData,NoteData parentNoteData,InstallMaintenanceModel parentFormData,InstallMaintenanceModel childFormData, StringBuilder stringBuilder){
+        CsvStatus csvStatus = new CsvStatus();
+        boolean changeParent = false;
+        boolean isWritten = false;
         String childCreatedDate = Utils.getDate(noteData.getCreatedDateTime());
         String createdDate = Utils.getDate(parentNoteData.getCreatedDateTime());
-        List<FormData> childFormDatas = getCurrentNoteDetails(noteData.getNoteGuid());
-        logger.info("child note: "+noteData.getNoteGuid());
-        logger.info("child note forms count: "+childFormDatas.size());
-
-        for(FormData formData : formDatas) {
+        if(parentFormData.equals(childFormData) && !createdDate.equals(childCreatedDate)){
+            if(!childCreatedDate.equals(today) && !childCreatedDate.equals(yesterday)) {
+                logger.info("parent and child form equal and create date changed so breaking...");
+            }else{
+                changeParent = true;
+            }
+        } else if(!parentFormData.equals(childFormData)){
+            logger.info("parent and child form not equal. so going to write it in csv");
+            logger.info("**************************************");
+            logger.info("parent data"+gson.toJson(parentFormData));
+            logger.info("child data"+gson.toJson(childFormData));
+            logger.info("**************************************");
+            processCSV(parentFormData, parentNoteData, stringBuilder);
+            isWritten = true;
+        }else{
+            changeParent = true;
+        }
+        csvStatus.setChangeParent(changeParent);
+        csvStatus.setWritten(isWritten);
+        return csvStatus;
+        /*for(FormData formData : formDatas) {
             String formTemplateGuid = formData.getFormTemplateGuid();
             if (checkFormTemplateInConfig(formTemplateGuid)) {
                 InstallMaintenanceModel installMaintenanceModel = getInstallMaintenanceModel(formData.getFormDef(), formTemplateGuid);
@@ -321,8 +345,7 @@ public class InstallMaintenanceDao extends UtilDao {
                     }
                 }
             }
-        }
-        return false;
+        }*/
     }
 
     private NoteData getNoteData(String locationDescription,String title,String createdBy,String noteGuid,String groupname,double lat,double lng,long noteid,long createddatetime){

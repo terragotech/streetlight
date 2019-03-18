@@ -6,9 +6,12 @@ import java.io.IOException;
 import java.util.*;
 
 import com.terragoedge.streetlight.dao.StreetlightDao;
+import com.terragoedge.streetlight.installmaintain.InstallMaintenanceDao;
+import com.terragoedge.streetlight.installmaintain.utills.Utils;
 import org.apache.log4j.Logger;
 
 import com.terragoedge.streetlight.service.StreetlightChicagoService;
+import org.joda.time.DateTime;
 
 public class StreetlightApp {
 	
@@ -31,7 +34,9 @@ public class StreetlightApp {
 
 	//1525944100172
 	public static void main(String[] args) {
-		try{
+		InstallMaintenanceDao installMaintenanceDao = new InstallMaintenanceDao();
+		installMaintenanceDao.doProcess();
+		/*try{
 			while(true){
 				try{
 					Calendar calendar = Calendar.getInstance(Locale.getDefault());
@@ -69,7 +74,7 @@ public class StreetlightApp {
 			}
 		}catch(Exception e){
 			e.printStackTrace();
-		}
+		}*/
 		
 		
 		
