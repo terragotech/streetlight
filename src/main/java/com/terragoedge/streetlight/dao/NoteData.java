@@ -1,5 +1,7 @@
 package com.terragoedge.streetlight.dao;
 
+import com.terragoedge.streetlight.installmaintain.InstallMaintenanceModel;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -17,6 +19,15 @@ public class NoteData {
     private String lng;
     private String noteGuid;
     private String fixtureType;
+    private InstallMaintenanceModel installMaintenanceModel;
+
+    public InstallMaintenanceModel getInstallMaintenanceModel() {
+        return installMaintenanceModel;
+    }
+
+    public void setInstallMaintenanceModel(InstallMaintenanceModel installMaintenanceModel) {
+        this.installMaintenanceModel = installMaintenanceModel;
+    }
 
     public String getFixtureType() {
         return fixtureType;
