@@ -16,25 +16,9 @@ public class InstallMaintenanceModel {
     private String fixtureQRScanRF;
     private String exFixtureQRScanRF;
 
-    private String installStatus;
-    private String proposedContext;
+    private String isReplaceNode = "No";
 
 
-    public String getInstallStatus() {
-        return installStatus;
-    }
-
-    public void setInstallStatus(String installStatus) {
-        this.installStatus = installStatus;
-    }
-
-    public String getProposedContext() {
-        return proposedContext;
-    }
-
-    public void setProposedContext(String proposedContext) {
-        this.proposedContext = proposedContext;
-    }
 
     public String getMacAddress() {
         return macAddress;
@@ -116,47 +100,62 @@ public class InstallMaintenanceModel {
         this.exFixtureQRScanRF = exFixtureQRScanRF;
     }
 
-    @Override
-    public String toString() {
-        return "InstallMaintenanceModel{" +
-                "macAddress='" + macAddress + '\'' +
-                ", macAddressRNF='" + macAddressRNF + '\'' +
-                ", exMacAddressRNF='" + exMacAddressRNF + '\'' +
-                ", macAddressRN='" + macAddressRN + '\'' +
-                ", exMacAddressRN='" + exMacAddressRN + '\'' +
-                ", fixtureQRScan='" + fixtureQRScan + '\'' +
-                ", fixtureQRScanRNF='" + fixtureQRScanRNF + '\'' +
-                ", exFixtureQRScanRNF='" + exFixtureQRScanRNF + '\'' +
-                ", fixtureQRScanRF='" + fixtureQRScanRF + '\'' +
-                ", exFixtureQRScanRF='" + exFixtureQRScanRF + '\'' +
-                ", installStatus='" + installStatus + '\'' +
-                ", proposedContext='" + proposedContext + '\'' +
-                '}';
+    private void loadExistingMACAddress(){
+        if(exMacAddressRN != null && !exMacAddressRN.trim().isEmpty()){
+            exMacAddressRNF = exMacAddressRN;
+        }
+        if(exMacAddressRNF == null || exMacAddressRNF.trim().isEmpty()){
+            exMacAddressRNF = macAddress;
+        }
     }
 
-    public boolean hasVal(){
-        if(macAddress != null && macAddress.length() > 1){
-            return true;
-        }
-        if(macAddressRNF != null && macAddressRNF.length() > 1){
-            return true;
-        }
-        if(macAddressRN != null && macAddressRN.length() > 1){
-            return true;
+
+
+   public void checkReplacedDetails(){
+       if(macAddressRN != null && !macAddressRN.trim().isEmpty()){
+           macAddressRNF = macAddressRN;
+           isReplaceNode = "Yes";
+           loadExistingMACAddress();
+           return;
+
+       }
+
+        if(macAddressRNF != null && !macAddressRNF.trim().isEmpty()){
+            isReplaceNode = "Yes";
+            loadExistingMACAddress();
+            return;
         }
 
-        if(fixtureQRScan != null && fixtureQRScan.length() > 1){
-            return true;
-        }
+   }
 
-        if(fixtureQRScanRF != null && fixtureQRScanRF.length() > 1){
+   public boolean hasVal(){
+        if(macAddress != null && !macAddress.trim().isEmpty()){
             return true;
         }
+       if(macAddressRN != null && !macAddressRN.trim().isEmpty()){
+           return true;
+       }
+       if(macAddressRNF != null && !macAddressRNF.trim().isEmpty()){
+           return true;
+       }
+       if(fixtureQRScan != null && !fixtureQRScan.trim().isEmpty()){
+           return true;
+       }
+       if(fixtureQRScanRF != null && !fixtureQRScanRF.trim().isEmpty()){
+           return true;
+       }
+       if(fixtureQRScanRNF != null && !fixtureQRScanRNF.trim().isEmpty()){
+           return true;
+       }
+       return false;
+   }
 
-        if(fixtureQRScanRNF != null && fixtureQRScanRNF.length() > 1){
-            return true;
-        }
-        return false;
+    public String getIsReplaceNode() {
+        return isReplaceNode;
+    }
+
+    public void setIsReplaceNode(String isReplaceNode) {
+        this.isReplaceNode = isReplaceNode;
     }
 
     @Override
@@ -175,5 +174,22 @@ public class InstallMaintenanceModel {
     @Override
     public int hashCode() {
         return Objects.hash(macAddress, macAddressRNF, macAddressRN, fixtureQRScan, fixtureQRScanRNF, fixtureQRScanRF);
+    }
+
+    @Override
+    public String toString() {
+        return "InstallMaintenanceModel{" +
+                "macAddress='" + macAddress + '\'' +
+                ", macAddressRNF='" + macAddressRNF + '\'' +
+                ", exMacAddressRNF='" + exMacAddressRNF + '\'' +
+                ", macAddressRN='" + macAddressRN + '\'' +
+                ", exMacAddressRN='" + exMacAddressRN + '\'' +
+                ", fixtureQRScan='" + fixtureQRScan + '\'' +
+                ", fixtureQRScanRNF='" + fixtureQRScanRNF + '\'' +
+                ", exFixtureQRScanRNF='" + exFixtureQRScanRNF + '\'' +
+                ", fixtureQRScanRF='" + fixtureQRScanRF + '\'' +
+                ", exFixtureQRScanRF='" + exFixtureQRScanRF + '\'' +
+                ", isReplaceNode='" + isReplaceNode + '\'' +
+                '}';
     }
 }

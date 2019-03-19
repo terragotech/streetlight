@@ -25,7 +25,7 @@ public class StreetlightDaoConnection {
 	public Connection getConnection() {
 		if (connection == null) {
 			try {
-				String host = "jdbc:postgresql://localhost:5432/terragoedge";
+				String host = "jdbc:postgresql://192.168.2.180:5432/terragoedge";
 				String username = "postgres";
 				String password = "password";
 				connection = DriverManager.getConnection(host, username, password);

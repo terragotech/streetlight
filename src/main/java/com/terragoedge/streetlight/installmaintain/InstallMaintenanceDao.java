@@ -2,18 +2,25 @@ package com.terragoedge.streetlight.installmaintain;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
+import com.opencsv.CSVWriter;
 import com.terragoedge.edgeserver.EdgeFormData;
 import com.terragoedge.streetlight.dao.FormData;
 import com.terragoedge.streetlight.dao.NoteData;
 import com.terragoedge.streetlight.dao.UtilDao;
 import com.terragoedge.streetlight.installmaintain.json.Config;
-import com.terragoedge.streetlight.installmaintain.json.CsvStatus;
 import com.terragoedge.streetlight.installmaintain.json.Ids;
 import com.terragoedge.streetlight.installmaintain.json.Prop;
 import com.terragoedge.streetlight.installmaintain.utills.Utils;
-import com.terragoedge.streetlight.service.StreetlightChicagoService;
 import org.apache.log4j.Logger;
 
+import java.io.BufferedOutputStream;
+import java.io.FileOutputStream;
+import java.io.FileWriter;
+import java.io.Writer;
+import java.net.URI;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.Statement;
@@ -24,8 +31,8 @@ public class InstallMaintenanceDao extends UtilDao {
     private Gson gson;
     private InstallMaintenanceService installMaintenanceService;
     private List<Config> configs = new ArrayList<>();
-    private String today = "";
-    private String yesterday = "";
+    private static Long startTime = 0l;
+
 
     public InstallMaintenanceDao() {
         gson = new Gson();
@@ -37,26 +44,24 @@ public class InstallMaintenanceDao extends UtilDao {
     public void doProcess(){
         Statement queryStatement = null;
         ResultSet queryResponse = null;
+        CSVWriter csvWriter = null;
+        FileWriter fileWriter = null;
+                startTime = 1552885200000L;
         logger.info("configs: "+gson.toJson(configs));
         try{
             queryStatement = connection.createStatement();
-            StringBuilder stringBuilder = new StringBuilder();
-            StreetlightChicagoService.populateNotesHeader(stringBuilder);
-            today = Utils.getDate(1552712400000L);
-//            today = Utils.getDate(DateTime.now(DateTimeZone.UTC).withTimeAtStartOfDay().getMillis());
-            long startTime = 1552626000000L;
-//            long startTime = DateTime.now(DateTimeZone.UTC).minusDays(1).withTimeAtStartOfDay().getMillis();
-            yesterday = Utils.getDate(startTime);
+             fileWriter = new FileWriter(STRING_ARRAY_SAMPLE);
+            csvWriter =  initCSV(fileWriter);
             logger.info("start time:"+startTime);
             logger.info("readable fromat time:"+Utils.getDateTime(startTime));
-            queryResponse = queryStatement.executeQuery("select title,noteguid,parentnoteid,createddatetime from edgenote where iscurrent = true and isdeleted = false and noteguid = 'e98c84f1-d9c1-403b-b33e-07e018b7fd62'");
-//            queryResponse = queryStatement.executeQuery("select noteguid,parentnoteid,createddatetime,noteid,createdby,locationdescription,title,groupname,ST_X(geometry::geometry) as lat, ST_Y(geometry::geometry) as lng from edgenoteview where title in (select distinct title from edgenoteview where noteguid='88e9b5ef-7793-432b-ae88-d5d593f4abe3' ) and iscurrent = true and isdeleted = false;");
+            queryResponse = queryStatement.executeQuery("select title,noteguid,parentnoteid,createddatetime from edgenote where iscurrent = true and isdeleted = false  and createddatetime >= "+startTime+" order by createddatetime;");
+
             logger.info("query response executed");
             int i = 0;
             while (queryResponse.next()) {
                 i++;
                 String currentNoteGuid = queryResponse.getString("noteguid");
-                Long currentNoteDateTime = queryResponse.getLong("noteguid");
+                Long currentNoteDateTime = queryResponse.getLong("createddatetime");
                 NoteData currentNoteData = new NoteData();
                 currentNoteData.setNoteGuid(currentNoteGuid);
                 currentNoteData.setCreatedDateTime(currentNoteDateTime);
@@ -68,45 +73,128 @@ public class InstallMaintenanceDao extends UtilDao {
                 List<FormData> formDatas = getCurrentNoteDetails(currentNoteGuid);
                 logger.info("current note forms count: "+formDatas.size());
                 InstallMaintenanceModel currentNoteInstallForm = getInstallMaintenanceModel(formDatas);
-                currentNoteData.setInstallMaintenanceModel(currentNoteInstallForm);
-
-
-                List<NoteData> allRevisionsNotes = getAllRevisionsNoteGuids(parentNoteId,currentNoteGuid);
-
-
-                logger.info("All Revisions notes Count: "+allRevisionsNotes.size());
-                for (NoteData revisionNote : allRevisionsNotes) {
-                    List<FormData> revisionNoteInstallForm = getCurrentNoteDetails(revisionNote.getNoteGuid());
-                    logger.info("Revision Note: "+revisionNote.getNoteGuid());
-                    logger.info("child note forms count: "+revisionNoteInstallForm.size());
-                    InstallMaintenanceModel previousInstallForm = getInstallMaintenanceModel(revisionNoteInstallForm);
-                    revisionNote.setInstallMaintenanceModel(previousInstallForm);
-
-                    CsvStatus csvStatus = processForm(currentNoteData,revisionNote);
-                    if(csvStatus.isWritten()){
-                        break;
-                    }
-                    if(csvStatus.isChangeParent()){
-                        parentFormData = childFormData;
-                        parentNoteData = noteData;
-                    }
+                if(currentNoteInstallForm.hasVal()){
+                    currentNoteData.setInstallMaintenanceModel(currentNoteInstallForm);
+                    compareRevisionData(parentNoteId,currentNoteData,csvWriter);
+                    logger.info("Processed item: "+i);
                 }
-               logger.info("Processed item: "+i);
+
             }
-            StreetlightChicagoService.logData(stringBuilder.toString(),"daily_install_report_"+Utils.getDate(System.currentTimeMillis())+".csv");
+
             logger.info("daily install report csv file created!");
         }catch (Exception e){
-            logger.error("Error: "+e.getMessage());
-            e.printStackTrace();
+            logger.error("Error in doProcess",e);
         }finally {
+            closeCSVBuffer(csvWriter);
+            closeFileWriter(fileWriter);
             closeResultSet(queryResponse);
             closeStatement(queryStatement);
         }
     }
 
-    private void processCSV(InstallMaintenanceModel installMaintenanceModel,NoteData noteData,StringBuilder stringBuilder){
-            logger.info("csv written");
-            updateCSV(stringBuilder, noteData, installMaintenanceModel);
+
+    private void compareRevisionData(String parentNoteId,NoteData currentNoteData,CSVWriter csvWriter){
+        List<NoteData> allRevisionsNotes = getAllRevisionsNoteGuids(parentNoteId,currentNoteData.getNoteGuid());
+
+
+        logger.info("All Revisions notes Count: "+allRevisionsNotes.size());
+        for (NoteData revisionNote : allRevisionsNotes) {
+            List<FormData> revisionNoteInstallForm = getCurrentNoteDetails(revisionNote.getNoteGuid());
+            logger.info("Revision Note: "+revisionNote.getNoteGuid());
+            logger.info("child note forms count: "+revisionNoteInstallForm.size());
+            InstallMaintenanceModel previousInstallForm = getInstallMaintenanceModel(revisionNoteInstallForm);
+            revisionNote.setInstallMaintenanceModel(previousInstallForm);
+
+          boolean isBothNoteSame = comparator(currentNoteData,revisionNote);
+          if(isBothNoteSame){
+              currentNoteData = revisionNote;
+              boolean todaysInstall = isInstalledOnTime(currentNoteData);
+              if(!todaysInstall){
+                  break;
+              }
+          }else{
+              break;
+          }
+
+
+        }
+        boolean todaysInstall = isInstalledOnTime(currentNoteData);
+        logger.info("Final Note: "+currentNoteData);
+        logger.info("Final Note is within Start  Time:"+todaysInstall);
+        if(todaysInstall){
+            logger.info("CSV Writing Process Starts.");
+            writeCSV(currentNoteData,csvWriter);
+            logger.info("CSV Writing Process Ends.");
+        }
+    }
+
+
+    private boolean isInstalledOnTime(NoteData currentNoteData){
+        return currentNoteData.getCreatedDateTime() >= startTime;
+    }
+
+    private static final String STRING_ARRAY_SAMPLE = "./daily_report_sample.csv";
+
+
+    private CSVWriter initCSV(FileWriter fileWriter)throws Exception{
+
+        CSVWriter csvWriter = new CSVWriter(fileWriter,
+                CSVWriter.DEFAULT_SEPARATOR,
+                CSVWriter.DEFAULT_QUOTE_CHARACTER,
+                CSVWriter.DEFAULT_ESCAPE_CHARACTER,
+                CSVWriter.DEFAULT_LINE_END);
+        String[] headerRecord = {"Title", "MAC Address", "Fixture QR Scan", "Fixture Type",
+                "Context", "Lat", "Lng", "Date Time","Is ReplaceNode","Existing Node MAC Address","New Node MAC Address"};
+        csvWriter.writeNext(headerRecord);
+        return csvWriter;
+    }
+
+    private void closeCSVBuffer(CSVWriter csvWriter){
+        try{
+            if(csvWriter != null){
+                csvWriter.flush();
+                csvWriter.close();
+            }
+
+        }catch (Exception e){
+            logger.error("Error in closeCSVBuffer",e);
+        }
+
+    }
+
+
+    private void closeFileWriter(FileWriter csvWriter){
+        try{
+            if(csvWriter != null){
+                csvWriter.flush();
+                csvWriter.close();
+            }
+
+        }catch (Exception e){
+            logger.error("Error in closeCSVBuffer",e);
+        }
+
+    }
+    private void writeCSV(NoteData noteData,CSVWriter csvWriter){
+
+        loadNotesData(noteData);
+        noteData.getInstallMaintenanceModel().checkReplacedDetails();
+        logger.info(noteData);
+        csvWriter.writeNext(new String[]{
+                noteData.getTitle(),
+                noteData.getInstallMaintenanceModel().getMacAddress(),
+                noteData.getInstallMaintenanceModel().getFixtureQRScan(),
+                noteData.getFixtureType(),
+                noteData.getDescription(),
+                noteData.getLat(),
+                noteData.getLng(),
+                Utils.getDateTime(noteData.getCreatedDateTime()),
+                noteData.getInstallMaintenanceModel().getIsReplaceNode(),
+                noteData.getInstallMaintenanceModel().getExMacAddressRNF(),
+                noteData.getInstallMaintenanceModel().getMacAddressRNF()
+
+        });
+
     }
 
     public List<FormData> getCurrentNoteDetails(String noteGuid){
@@ -172,8 +260,8 @@ public class InstallMaintenanceDao extends UtilDao {
             }.getType());
         for (Config config : configs) {
             if (config.getFormTemplateGuid().equals(formData.getFormTemplateGuid())) {
-                installMaintenanceModel.setInstallStatus(getValue(config.getInstallStatus(), edgeFormDatas));
-                installMaintenanceModel.setProposedContext(getValue(config.getProposedContext(), edgeFormDatas));
+                //installMaintenanceModel.setInstallStatus(getValue(config.getInstallStatus(), edgeFormDatas));
+                //installMaintenanceModel.setProposedContext(getValue(config.getProposedContext(), edgeFormDatas));
                 List<Prop> props = config.getProps();
                 logger.info("config: "+gson.toJson(config));
                 for (Prop prop : props) {
@@ -236,132 +324,51 @@ public class InstallMaintenanceDao extends UtilDao {
         config.setFormTemplateGuid(formTemplateGuid);
         return configs.contains(config);
     }
-    private String isReplace(String macRNF,String macRN){
-        if ((macRNF != null && !macRNF.equals(""))  || (macRN != null && !macRN.equals(""))){
-            return "Yes";
-        } else {
-            return "No";
-        }
-    }
 
-    private String validateTwoString(String txt,String txt1){
-        if(txt == null && txt1 == null){
-            return "";
-        }else if(txt == null && txt1 != null){
-            return txt1;
-        }else if(txt1 == null && txt != null){
-            return txt;
+    private boolean comparator(NoteData currentNoteData,NoteData previousNoteData){
+        logger.info("Current Note:"+currentNoteData.getInstallMaintenanceModel());
+        logger.info("Previous Note:"+previousNoteData.getInstallMaintenanceModel());
+        if(currentNoteData.getInstallMaintenanceModel().equals(previousNoteData.getInstallMaintenanceModel())){
+            return true;
         }else{
-            return txt;
+            logger.info("Previous Note Not Match with Current Note.");
+            return false;
         }
     }
 
-    private void updateCSV(StringBuilder stringBuilder,NoteData noteData,InstallMaintenanceModel installMaintenanceModel){
-        stringBuilder.append(noteData.getTitle());
-        stringBuilder.append(",");
-        stringBuilder.append(installMaintenanceModel.getMacAddress());
-        stringBuilder.append(",");
-        stringBuilder.append(noteData.getCreatedBy());
-        stringBuilder.append(",\"");
-        stringBuilder.append(installMaintenanceModel.getFixtureQRScan());
-        stringBuilder.append("\",");
-        stringBuilder.append(noteData.getFixtureType());
-        stringBuilder.append(",\"");
-        stringBuilder.append(installMaintenanceModel.getProposedContext());
-        stringBuilder.append("\",");
-        stringBuilder.append(noteData.getLat());
-        stringBuilder.append(",");
-        stringBuilder.append(noteData.getLng());
-        stringBuilder.append(",");
-        stringBuilder.append(Utils.getDateTime(noteData.getCreatedDateTime()));
-        stringBuilder.append(",");
-        stringBuilder.append(isReplace(installMaintenanceModel.getMacAddressRNF(),installMaintenanceModel.getMacAddressRN()));
-        stringBuilder.append(",");
-        stringBuilder.append(validateTwoString(installMaintenanceModel.getExMacAddressRNF(),installMaintenanceModel.getExMacAddressRN()));
-        stringBuilder.append(",");
-        stringBuilder.append(validateTwoString(installMaintenanceModel.getMacAddressRNF(),installMaintenanceModel.getMacAddressRN()));
-        stringBuilder.append("\n");
-    }
-    private CsvStatus processForm(NoteData currentNoteData,NoteData previousNoteData){
-        if(currentNoteData.getInstallMaintenanceModel().equals(previousNoteData.getInstallMaintenanceModel()) && previousNoteData){
 
-        }
 
-        CsvStatus csvStatus = new CsvStatus();
-        boolean changeParent = false;
-        boolean isWritten = false;
-        String childCreatedDate = Utils.getDate(noteData.getCreatedDateTime());
-        String createdDate = Utils.getDate(parentNoteData.getCreatedDateTime());
-        if(parentFormData.equals(childFormData) && !createdDate.equals(childCreatedDate)){
-            if(!childCreatedDate.equals(today) && !childCreatedDate.equals(yesterday)) {
-                logger.info("parent and child form equal and create date changed so breaking...");
-            }else{
-                changeParent = true;
-            }
-        } else if(!parentFormData.equals(childFormData)){
-            logger.info("parent and child form not equal. so going to write it in csv");
-            logger.info("**************************************");
-            logger.info("parent data"+gson.toJson(parentFormData));
-            logger.info("child data"+gson.toJson(childFormData));
-            logger.info("**************************************");
-            processCSV(parentFormData, parentNoteData, stringBuilder);
-            isWritten = true;
-        }else{
-            changeParent = true;
-        }
-        csvStatus.setChangeParent(changeParent);
-        csvStatus.setWritten(isWritten);
-        return csvStatus;
-        /*for(FormData formData : formDatas) {
-            String formTemplateGuid = formData.getFormTemplateGuid();
-            if (checkFormTemplateInConfig(formTemplateGuid)) {
-                InstallMaintenanceModel installMaintenanceModel = getInstallMaintenanceModel(formData.getFormDef(), formTemplateGuid);
-                for (FormData formData1 : childFormDatas) {
-                    if (formData1.getFormTemplateGuid().equals(formData.getFormTemplateGuid())) {
-                        InstallMaintenanceModel childInstallMaintenanceModel = getInstallMaintenanceModel(formData1.getFormDef(), formData1.getFormTemplateGuid());
-                        logger.info("parent model: "+gson.toJson(installMaintenanceModel));
-                        logger.info("parent date: "+createdDate);
-                        logger.info("child model: "+gson.toJson(childInstallMaintenanceModel));
-                        logger.info("child date: "+childCreatedDate);
-                        logger.info("is equal: "+installMaintenanceModel.equals(childInstallMaintenanceModel));
-                        if (installMaintenanceModel.equals(childInstallMaintenanceModel) && !createdDate.equals(childCreatedDate)) {
-                            if(!childCreatedDate.equals(today) && !childCreatedDate.equals(yesterday)) {
-                                logger.info("parent and child form equal and create date changed so breaking...");
-                                return true;
-                            }
-                        } else if (!installMaintenanceModel.equals(childInstallMaintenanceModel)) {
-                            logger.info("parent and child form not equal. so going to write it in csv");
-                            isCsvWritten = processCSV(formTemplateGuid, newInstallMaintenanceModel, replaceNoteMaintenanceModel, installMaintenanceModel, parentNoteData, formData, stringBuilder);
-                            if (isCsvWritten) {
-                                return true;
-                            }
-                        }
-                    }
+    public void loadNotesData(NoteData currentNoteData) {
+        Statement queryStatement = null;
+        ResultSet queryResponse = null;
+        try {
+            queryStatement = connection.createStatement();
+            String sql = "select noteid,createddatetime, createdby,locationdescription,title,groupname,ST_X(geometry::geometry) as lat, ST_Y(geometry::geometry) as lng  from edgenoteview where  noteguid = '" + currentNoteData.getNoteGuid() + "';";
+            queryResponse = queryStatement.executeQuery(sql);
+            while (queryResponse.next()) {
+
+                String locationDescription = queryResponse.getString("locationdescription");
+                String[] locations = locationDescription.split("\\|");
+                String groupName = "";
+                if (locations.length == 2) {
+                    locationDescription = locations[0];
+                    groupName = locations[1];
                 }
+
+                currentNoteData.setDescription(locationDescription);
+                currentNoteData.setFixtureType(groupName);
+                currentNoteData.setTitle(queryResponse.getString("title"));
+                currentNoteData.setCreatedBy(queryResponse.getString("createdby"));
+                currentNoteData.setCreatedDateTime(queryResponse.getLong("createddatetime"));
+                currentNoteData.setLat(String.valueOf(queryResponse.getDouble("lat")));
+                currentNoteData.setLng(String.valueOf(queryResponse.getDouble("lng")));
+
             }
-        }*/
-    }
-
-    private NoteData getNoteData(String locationDescription,String title,String createdBy,String noteGuid,String groupname,double lat,double lng,long noteid,long createddatetime){
-        NoteData noteData = new NoteData();
-        String fixtureType = "";
-        String[] locations = locationDescription.split("\\|");
-
-        if (locations.length == 2) {
-            locationDescription = locations[0];
-            fixtureType = locations[1];
+        } catch (Exception e) {
+            e.printStackTrace();
+        }finally {
+            closeResultSet(queryResponse);
+            closeStatement(queryStatement);
         }
-
-        noteData.setCreatedDateTime(createddatetime);
-        noteData.setCreatedBy(createdBy);
-        noteData.setNoteGuid(noteGuid);
-        noteData.setDescription(locationDescription);
-        noteData.setGroupName(groupname);
-        noteData.setLat(String.valueOf(lat));
-        noteData.setLng(String.valueOf(lng));
-        noteData.setTitle(title);
-        noteData.setNoteId(noteid);
-        noteData.setFixtureType(fixtureType);
-        return noteData;
     }
 }

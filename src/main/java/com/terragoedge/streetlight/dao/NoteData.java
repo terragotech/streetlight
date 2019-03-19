@@ -132,6 +132,7 @@ public class NoteData {
                 ", lng='" + lng + '\'' +
                 ", noteGuid='" + noteGuid + '\'' +
                 ", fixtureType='" + fixtureType + '\'' +
+                ", installMaintenanceModel=" + installMaintenanceModel +
                 ", formDataList=" + formDataList +
                 '}';
     }
