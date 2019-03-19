@@ -13,6 +13,7 @@ public class JPSWorkflowModel {
     private String idOnController;
     private String installStatus;
     private String lampType;
+    private String power;
     private String lat;
     private String lng;
     private String locationtype;
@@ -315,5 +316,13 @@ public class JPSWorkflowModel {
 
     public int getLowvoltagethreshold() {
         return lowvoltagethreshold;
+    }
+
+    public String getPower() {
+        return power;
+    }
+
+    public void setPower(String power) {
+        this.power = power;
     }
 }

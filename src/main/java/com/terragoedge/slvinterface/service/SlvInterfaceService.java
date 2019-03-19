@@ -20,6 +20,8 @@ import java.io.BufferedReader;
 import java.io.FileReader;
 import java.lang.reflect.Type;
 import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import static com.terragoedge.slvinterface.utils.Utils.dateFormat;
 
@@ -181,12 +183,19 @@ public class SlvInterfaceService extends AbstractSlvService {
                                 jpsWorkflowModel.setInstallStatus(edgeFormData.getValue());
                             break;
                         case 187:
-                            if (nullCheck(edgeFormData.getValue())){
+                            if (nullCheck(edgeFormData.getValue())) {
                                 String lampType = edgeFormData.getValue();
-                                if(lampType.equals("Other")){
-                                   
+                                if (lampType.equals("Other")) {
+                                    processLampType(edgeFormDataList, jpsWorkflowModel);
+                                } else {
+                                    Pattern pattern = Pattern.compile("\\d+");
+                                    Matcher matcher = pattern.matcher(edgeFormData.getValue());
+                                    if (matcher.find()) {
+                                        jpsWorkflowModel.setPower(matcher.group(0));
+                                    }
+                                    jpsWorkflowModel.setLampType(edgeFormData.getValue());
                                 }
-                                jpsWorkflowModel.setLampType(edgeFormData.getValue());
+
                             }
 
                             break;
@@ -240,6 +249,13 @@ public class SlvInterfaceService extends AbstractSlvService {
         String geozonePaths = "/" + jpsWorkflowModel.getNotebookName() + "/" + jpsWorkflowModel.getAddress1();
         jpsWorkflowModel.setGeozonePath(geozonePaths);
         return jpsWorkflowModel;
+    }
+
+    public void processLampType(List<EdgeFormData> edgeFormDataList, JPSWorkflowModel jpsWorkflowModel) {
+        String otherNewLampModel = valueById(edgeFormDataList, 201);
+        String lampWattage = valueById(edgeFormDataList, 188);
+        jpsWorkflowModel.setLampType(otherNewLampModel);
+        jpsWorkflowModel.setPower(lampWattage);
     }
 
     private boolean nullCheck(String data) {

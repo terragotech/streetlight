@@ -56,7 +56,7 @@ public class SlvService extends AbstractSlvService {
                     JsonObject jsonObject = new JsonParser().parse(responseEntity.getBody()).getAsJsonObject();
                     deviceId = jsonObject.get("id").getAsInt();
                 }
-            }else{
+            } else {
                 throw new Exception("Device creation response return null: " + edgeNote.getTitle());
             }
         } else {
@@ -153,7 +153,7 @@ public class SlvService extends AbstractSlvService {
                         JsonObject jsonObject = macvalues.get(0).getAsJsonObject();
                         String mac = null;
                         if (jsonObject != null && !jsonObject.isJsonNull()) {
-                                mac = jsonObject.get("value").getAsString();
+                            mac = jsonObject.get("value").getAsString();
                         }
                         if (mac == null || mac.equals("")) {
                             logger.info("MacAddress is null");
@@ -232,6 +232,7 @@ public class SlvService extends AbstractSlvService {
         addStreetLightData("idOnController", jpsWorkflowModel.getIdOnController(), paramList);
         addStreetLightData("installStatus", jpsWorkflowModel.getInstallStatus(), paramList);
         addStreetLightData("lampType", jpsWorkflowModel.getLampType(), paramList);
+        addStreetLightData("power", jpsWorkflowModel.getPower(), paramList);
 //        addStreetLightData("lat", jpsWorkflowModel.getLat(), paramList);
         addStreetLightData("location.locationtype", jpsWorkflowModel.getLocationtype(), paramList);
 //        addStreetLightData("lng", jpsWorkflowModel.getLng(), paramList);
@@ -249,8 +250,8 @@ public class SlvService extends AbstractSlvService {
         addStreetLightData("device.node.serialnumber", jpsWorkflowModel.getSerialnumber(), paramList);
         addStreetLightData("location.zipcode", jpsWorkflowModel.getLocation_zipcode(), paramList);
         ResponseEntity<String> responseEntity = setDeviceValues(paramList);
-        logger.info("********************** set device values reponse code: "+responseEntity.getStatusCode());
-        logger.info("set device values response: "+responseEntity.getBody());
+        logger.info("********************** set device values reponse code: " + responseEntity.getStatusCode());
+        logger.info("set device values response: " + responseEntity.getBody());
         logger.info("********************** set device values reponse end *********");
         return responseEntity;
     }

@@ -393,4 +393,17 @@ public abstract class AbstractSlvService extends EdgeService {
         connectionDAO.createGeozone(geozoneEntity);
         return geozoneEntity;
     }
+
+    protected String valueById(List<EdgeFormData> edgeFormDatas, int id){
+        for (EdgeFormData edgeFormData : edgeFormDatas) {
+            if (edgeFormData.getId() == id) {
+                String value = edgeFormData.getValue();
+                if (value == null || value.trim().isEmpty() || value.contains("null")) {
+                    return "";
+                }
+                return value;
+            }
+        }
+        return "";
+    }
 }
