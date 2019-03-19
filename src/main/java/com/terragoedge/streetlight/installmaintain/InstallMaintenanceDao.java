@@ -11,21 +11,17 @@ import com.terragoedge.streetlight.installmaintain.json.Config;
 import com.terragoedge.streetlight.installmaintain.json.Ids;
 import com.terragoedge.streetlight.installmaintain.json.Prop;
 import com.terragoedge.streetlight.installmaintain.utills.Utils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 
-import java.io.BufferedOutputStream;
-import java.io.FileOutputStream;
 import java.io.FileWriter;
-import java.io.Writer;
-import java.net.URI;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 public class InstallMaintenanceDao extends UtilDao {
     private Gson gson;
@@ -44,17 +40,20 @@ public class InstallMaintenanceDao extends UtilDao {
     public void doProcess(){
         Statement queryStatement = null;
         ResultSet queryResponse = null;
-        CSVWriter csvWriter = null;
-        FileWriter fileWriter = null;
-                startTime = 1552885200000L;
+        CSVWriter dailyCompletedCSVWriter = null;
+        List<DuplicateModel> duplicateModelList = new ArrayList<>();
+        startTime = 1552885200000L;
         logger.info("configs: "+gson.toJson(configs));
         try{
+            String fileName = Utils.getDateTime();
+            String dailyReportFile = "./report/daily_report_" + fileName + ".csv";
+            String  duplicateMacAddressFile = "./report/daily_mac_dup_report_" + fileName + ".csv";
             queryStatement = connection.createStatement();
-             fileWriter = new FileWriter(STRING_ARRAY_SAMPLE);
-            csvWriter =  initCSV(fileWriter);
+            FileWriter fileWriter = new FileWriter(dailyReportFile);
+            dailyCompletedCSVWriter =  initCSV(fileWriter);
             logger.info("start time:"+startTime);
             logger.info("readable fromat time:"+Utils.getDateTime(startTime));
-            queryResponse = queryStatement.executeQuery("select title,noteguid,parentnoteid,createddatetime from edgenote where iscurrent = true and isdeleted = false  and createddatetime >= "+startTime+" order by createddatetime;");
+            queryResponse = queryStatement.executeQuery("select title,noteguid,parentnoteid,createddatetime from edgenote where iscurrent = true and isdeleted = false  and createddatetime >= "+startTime+" and title = '85870' order by createddatetime;");
 
             logger.info("query response executed");
             int i = 0;
@@ -75,25 +74,45 @@ public class InstallMaintenanceDao extends UtilDao {
                 InstallMaintenanceModel currentNoteInstallForm = getInstallMaintenanceModel(formDatas);
                 if(currentNoteInstallForm.hasVal()){
                     currentNoteData.setInstallMaintenanceModel(currentNoteInstallForm);
-                    compareRevisionData(parentNoteId,currentNoteData,csvWriter);
+                    compareRevisionData(parentNoteId,currentNoteData,dailyCompletedCSVWriter,duplicateModelList);
                     logger.info("Processed item: "+i);
                 }
 
             }
-
+            writeDupCSV(duplicateModelList,duplicateMacAddressFile);
             logger.info("daily install report csv file created!");
         }catch (Exception e){
             logger.error("Error in doProcess",e);
         }finally {
-            closeCSVBuffer(csvWriter);
-            closeFileWriter(fileWriter);
+            closeCSVBuffer(dailyCompletedCSVWriter);
             closeResultSet(queryResponse);
             closeStatement(queryStatement);
         }
     }
 
 
-    private void compareRevisionData(String parentNoteId,NoteData currentNoteData,CSVWriter csvWriter){
+    private void writeDupCSV(List<DuplicateModel> duplicateModelList,String duplicateMacAddressFile){
+        logger.info("Duplicate MAC Address Writing Process starts.");
+        if(duplicateModelList.size() > 0){
+            CSVWriter csvWriter = null;
+            try{
+                 csvWriter =   initMACDupCSV(duplicateMacAddressFile);
+               for(DuplicateModel duplicateModel : duplicateModelList){
+                   String titles =  StringUtils.join(duplicateModel.getTitles(),",");
+                   csvWriter.writeNext(new String[]{duplicateModel.getTitle(),duplicateModel.getMacAddress(),titles});
+               }
+            }catch (Exception e){
+                logger.error("Error in writeDupCSV",e);
+            }finally {
+                closeCSVBuffer(csvWriter);
+            }
+
+        }
+        logger.info("Duplicate MAC Address Writing Process ends.");
+    }
+
+
+    private void compareRevisionData(String parentNoteId,NoteData currentNoteData,CSVWriter csvWriter,List<DuplicateModel> duplicateModelList){
         List<NoteData> allRevisionsNotes = getAllRevisionsNoteGuids(parentNoteId,currentNoteData.getNoteGuid());
 
 
@@ -123,8 +142,58 @@ public class InstallMaintenanceDao extends UtilDao {
         logger.info("Final Note is within Start  Time:"+todaysInstall);
         if(todaysInstall){
             logger.info("CSV Writing Process Starts.");
-            writeCSV(currentNoteData,csvWriter);
+            writeCSV(currentNoteData,csvWriter,duplicateModelList);
             logger.info("CSV Writing Process Ends.");
+        }
+    }
+
+    private void checkMACDuplicate(NoteData currentNoteData, List<DuplicateModel> duplicateModelList){
+        InstallMaintenanceModel installMaintenanceModel =  currentNoteData.getInstallMaintenanceModel();
+        String macAddress = installMaintenanceModel.getMacAddressRN();
+        if(macAddress != null && macAddress.startsWith("00135")){
+            checkMACDuplicate(macAddress,currentNoteData.getTitle(),duplicateModelList);
+            return;
+        }
+        macAddress = installMaintenanceModel.getFixtureQRScanRF();
+        if(macAddress != null && macAddress.startsWith("00135")){
+            checkMACDuplicate(macAddress,currentNoteData.getTitle(),duplicateModelList);
+            return;
+        }
+
+        macAddress = installMaintenanceModel.getMacAddressRNF();
+        if(macAddress != null && macAddress.startsWith("00135")){
+            checkMACDuplicate(macAddress,currentNoteData.getTitle(),duplicateModelList);
+            return;
+        }
+
+        macAddress = installMaintenanceModel.getFixtureQRScanRNF();
+        if(macAddress != null && macAddress.startsWith("00135")){
+            checkMACDuplicate(macAddress,currentNoteData.getTitle(),duplicateModelList);
+            return;
+        }
+
+        macAddress = installMaintenanceModel.getMacAddress();
+        if(macAddress != null && macAddress.startsWith("00135")){
+            checkMACDuplicate(macAddress,currentNoteData.getTitle(),duplicateModelList);
+            return;
+        }
+
+        macAddress = installMaintenanceModel.getFixtureQRScan();
+        if(macAddress != null && macAddress.startsWith("00135")){
+            checkMACDuplicate(macAddress,currentNoteData.getTitle(),duplicateModelList);
+            return;
+        }
+    }
+
+
+    private void checkMACDuplicate(String macAddress, String title, List<DuplicateModel> duplicateModelList){
+        Set<String> macAddressTitle =  isMACDuplicated(macAddress,title);
+        if(macAddressTitle.size() > 0){
+            DuplicateModel duplicateModel = new DuplicateModel();
+            duplicateModel.setTitle(title);
+            duplicateModel.setMacAddress(macAddress);
+            duplicateModel.setTitles(macAddressTitle);
+            duplicateModelList.add(duplicateModel);
         }
     }
 
@@ -133,18 +202,31 @@ public class InstallMaintenanceDao extends UtilDao {
         return currentNoteData.getCreatedDateTime() >= startTime;
     }
 
-    private static final String STRING_ARRAY_SAMPLE = "./daily_report_sample.csv";
 
 
     private CSVWriter initCSV(FileWriter fileWriter)throws Exception{
 
         CSVWriter csvWriter = new CSVWriter(fileWriter,
                 CSVWriter.DEFAULT_SEPARATOR,
-                CSVWriter.DEFAULT_QUOTE_CHARACTER,
-                CSVWriter.DEFAULT_ESCAPE_CHARACTER,
+                CSVWriter.NO_QUOTE_CHARACTER,
+                CSVWriter.NO_ESCAPE_CHARACTER,
                 CSVWriter.DEFAULT_LINE_END);
         String[] headerRecord = {"Title", "MAC Address","User Id", "Fixture QR Scan", "Fixture Type",
                 "Context", "Lat", "Lng", "Date Time","Is ReplaceNode","Existing Node MAC Address","New Node MAC Address"};
+        csvWriter.writeNext(headerRecord);
+        return csvWriter;
+    }
+
+
+
+    private CSVWriter initMACDupCSV(String duplicateMACFileName)throws Exception{
+        FileWriter fileWriter = new FileWriter(duplicateMACFileName);
+        CSVWriter csvWriter = new CSVWriter(fileWriter,
+                CSVWriter.DEFAULT_SEPARATOR,
+                CSVWriter.NO_QUOTE_CHARACTER,
+                CSVWriter.NO_ESCAPE_CHARACTER,
+                CSVWriter.DEFAULT_LINE_END);
+        String[] headerRecord = {"Title", "MAC Address","Exists In"};
         csvWriter.writeNext(headerRecord);
         return csvWriter;
     }
@@ -163,39 +245,35 @@ public class InstallMaintenanceDao extends UtilDao {
     }
 
 
-    private void closeFileWriter(FileWriter csvWriter){
-        try{
-            if(csvWriter != null){
-                csvWriter.flush();
-                csvWriter.close();
-            }
 
-        }catch (Exception e){
-            logger.error("Error in closeCSVBuffer",e);
-        }
-
-    }
-    private void writeCSV(NoteData noteData,CSVWriter csvWriter){
-
+    private void writeCSV(NoteData noteData,CSVWriter csvWriter,List<DuplicateModel> duplicateModelList){
         loadNotesData(noteData);
+        checkMACDuplicate(noteData,duplicateModelList);
         noteData.getInstallMaintenanceModel().checkReplacedDetails();
         logger.info(noteData);
         csvWriter.writeNext(new String[]{
                 noteData.getTitle(),
-                noteData.getInstallMaintenanceModel().getMacAddress(),
+                addDoubleQuotes(noteData.getInstallMaintenanceModel().getMacAddress()),
                 noteData.getCreatedBy(),
-                noteData.getInstallMaintenanceModel().getFixtureQRScan(),
+                addDoubleQuotes(noteData.getInstallMaintenanceModel().getFixtureQRScan()),
                 noteData.getFixtureType(),
-                noteData.getDescription(),
-                noteData.getLat(),
+                addDoubleQuotes(noteData.getDescription()),
                 noteData.getLng(),
-                Utils.getDateTime(noteData.getCreatedDateTime()),
+                noteData.getLat(),
+                Utils.getDailyReportDateTime(noteData.getCreatedDateTime()),
                 noteData.getInstallMaintenanceModel().getIsReplaceNode(),
-                noteData.getInstallMaintenanceModel().getExMacAddressRNF(),
-                noteData.getInstallMaintenanceModel().getMacAddressRNF()
+                addDoubleQuotes(noteData.getInstallMaintenanceModel().getExMacAddressRNF()),
+                addDoubleQuotes(noteData.getInstallMaintenanceModel().getMacAddressRNF())
 
         });
 
+    }
+
+    private String addDoubleQuotes(String value){
+        if(value != null){
+            return "\""+value+"\"";
+        }
+       return "\"\"";
     }
 
     public List<FormData> getCurrentNoteDetails(String noteGuid){
@@ -371,5 +449,69 @@ public class InstallMaintenanceDao extends UtilDao {
             closeResultSet(queryResponse);
             closeStatement(queryStatement);
         }
+    }
+
+
+    public Set<String> isMACDuplicated(String macAddress,String currentNoteTitle){
+        PreparedStatement queryStatement = null;
+        ResultSet queryResponse = null;
+        Set<String> duplicateTitle = new HashSet<>();
+        try {
+            String sql = "select title,nodemacaddress,fixtureqrscan,nodemacaddressrnf,fixtureqrscanrnf,nodemacaddressrn,fixtureqrscanrf from edge_install_form_data where (lower(nodemacaddress) = ?  or lower(fixtureqrscan) = ? or lower(nodemacaddressrnf) = ? or lower(fixtureqrscanrnf) = ? or lower(nodemacaddressrn) = ? or lower(fixtureqrscanrf) = ?) and title != ?";
+            queryStatement = connection.prepareStatement(sql);
+            macAddress =  macAddress.trim().toLowerCase();
+            queryStatement.setString(1,macAddress);
+            queryStatement.setString(2,macAddress);
+            queryStatement.setString(3,macAddress);
+            queryStatement.setString(4,macAddress);
+            queryStatement.setString(5,macAddress);
+            queryStatement.setString(6,macAddress);
+            queryStatement.setString(7,currentNoteTitle);
+            queryResponse = queryStatement.executeQuery();
+            while (queryResponse.next()) {
+
+                String nodemacaddress = queryResponse.getString("nodemacaddress");
+                String fixtureqrscan = queryResponse.getString("fixtureqrscan");
+                String nodemacaddressrnf = queryResponse.getString("nodemacaddressrnf");
+                String fixtureqrscanrnf =queryResponse.getString("fixtureqrscanrnf");
+                String nodemacaddressrn = queryResponse.getString("nodemacaddressrn");
+                String fixtureqrscanrf = queryResponse.getString("fixtureqrscanrf");
+                String title = queryResponse.getString("title");
+
+                if(nodemacaddressrn != null && nodemacaddressrn.startsWith("00135") ){
+                    if(nodemacaddressrn.toLowerCase().equals(macAddress)){
+                        duplicateTitle.add(title);
+                    }
+
+                }else if(fixtureqrscanrf != null && fixtureqrscanrf.startsWith("00135")){
+                    if(fixtureqrscanrf.toLowerCase().equals(macAddress)){
+                        duplicateTitle.add(title);
+                    }
+                }else  if(nodemacaddressrnf != null && nodemacaddressrnf.startsWith("00135")){
+                    if(nodemacaddressrnf.toLowerCase().equals(macAddress)){
+                        duplicateTitle.add(title);
+                    }
+                }else  if(fixtureqrscanrnf != null && fixtureqrscanrnf.startsWith("00135")){
+                    if(fixtureqrscanrnf.toLowerCase().equals(macAddress)){
+                        duplicateTitle.add(title);
+                    }
+                }
+                else  if(fixtureqrscan != null && fixtureqrscan.startsWith("00135")){
+                    if(fixtureqrscan.toLowerCase().equals(macAddress)){
+                        duplicateTitle.add(title);
+                    }
+                }else{
+                    duplicateTitle.add(title);
+                }
+
+
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }finally {
+            closeResultSet(queryResponse);
+            closeStatement(queryStatement);
+        }
+        return duplicateTitle;
     }
 }
