@@ -173,15 +173,22 @@ public class SlvInterfaceService extends AbstractSlvService {
                             if (nullCheck(edgeFormData.getValue())) {
                                 jpsWorkflowModel.setIdOnController(edgeFormData.getValue());
                                 jpsWorkflowModel.setName(edgeFormData.getValue());
+                                jpsWorkflowModel.setUtillocationid(edgeFormData.getValue());
                             }
                             break;
                         case 198:
                             if (nullCheck(edgeFormData.getValue()))
                                 jpsWorkflowModel.setInstallStatus(edgeFormData.getValue());
                             break;
-                        case 75:
-                            if (nullCheck(edgeFormData.getValue()))
+                        case 187:
+                            if (nullCheck(edgeFormData.getValue())){
+                                String lampType = edgeFormData.getValue();
+                                if(lampType.equals("Other")){
+                                   
+                                }
                                 jpsWorkflowModel.setLampType(edgeFormData.getValue());
+                            }
+
                             break;
                         case 199:
                             if (nullCheck(edgeFormData.getValue()))
@@ -221,10 +228,7 @@ public class SlvInterfaceService extends AbstractSlvService {
                             if (nullCheck(edgeFormData.getValue()))
                                 jpsWorkflowModel.setPole_status(edgeFormData.getValue());
                             break;
-                        case 74:
-                            if (nullCheck(edgeFormData.getValue()))
-                                jpsWorkflowModel.setUtillocationid(edgeFormData.getValue());
-                            break;
+
                         case 203:
                             if (nullCheck(edgeFormData.getValue()))
                                 jpsWorkflowModel.setLocation_zipcode(edgeFormData.getValue());
