@@ -143,7 +143,7 @@ public class InstallMaintenanceDao extends UtilDao {
                 CSVWriter.DEFAULT_QUOTE_CHARACTER,
                 CSVWriter.DEFAULT_ESCAPE_CHARACTER,
                 CSVWriter.DEFAULT_LINE_END);
-        String[] headerRecord = {"Title", "MAC Address", "Fixture QR Scan", "Fixture Type",
+        String[] headerRecord = {"Title", "MAC Address","User Id", "Fixture QR Scan", "Fixture Type",
                 "Context", "Lat", "Lng", "Date Time","Is ReplaceNode","Existing Node MAC Address","New Node MAC Address"};
         csvWriter.writeNext(headerRecord);
         return csvWriter;
@@ -183,6 +183,7 @@ public class InstallMaintenanceDao extends UtilDao {
         csvWriter.writeNext(new String[]{
                 noteData.getTitle(),
                 noteData.getInstallMaintenanceModel().getMacAddress(),
+                noteData.getCreatedBy(),
                 noteData.getInstallMaintenanceModel().getFixtureQRScan(),
                 noteData.getFixtureType(),
                 noteData.getDescription(),
@@ -343,7 +344,7 @@ public class InstallMaintenanceDao extends UtilDao {
         ResultSet queryResponse = null;
         try {
             queryStatement = connection.createStatement();
-            String sql = "select noteid,createddatetime, createdby,locationdescription,title,groupname,ST_X(geometry::geometry) as lat, ST_Y(geometry::geometry) as lng  from edgenoteview where  noteguid = '" + currentNoteData.getNoteGuid() + "';";
+            String sql = "select noteid,createddatetime, createdby,locationdescription,title,groupname,ST_X(geometry::geometry) as lng, ST_Y(geometry::geometry) as lat  from edgenoteview where  noteguid = '" + currentNoteData.getNoteGuid() + "';";
             queryResponse = queryStatement.executeQuery(sql);
             while (queryResponse.next()) {
 
