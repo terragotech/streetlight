@@ -42,7 +42,33 @@ public abstract class UtilDao {
 			}
 		}
 	}
+
+	public void loadNotesData() {
+        clearData();
+		Statement queryStatement = null;
+		try {
+			queryStatement = connection.createStatement();
+			String sql = "insert into edge_install_form_data (select distinct title, noteguid,edgenote.createdby,createddatetime, replace(replace(substring(formdef from 'Node MAC address#(.+?)count'),'\"',''),',','') nodemacaddress,replace(substring(formdef from 'Fixture QR Scan#(.+?)count'),'\"','') fixtureqrscan,replace(replace(substring(formdef from 'New Node MAC Address#(.+?)count'),'\"',''),',','') nodemacaddressrnf,replace(substring(substring(formdef from(position('Fixture QR Scan#' in formdef)+20)) from 'Fixture QR Scan#(.+?)count'),'\"','') fixtureqrscanrnf, replace(replace(substring(substring(formdef from(position('New Node MAC Address#' in formdef)+20)) from 'New Node MAC Address#(.+?)count'),'\"',''),',','') nodemacaddressrn, replace(substring(formdef from 'New Fixture QR Scan#(.+?)count'),'\"','') fixtureqrscanrf, replace(replace(substring(formdef from 'Scan Existing MAC if wrong#(.+?)count'),'\"',''),',','') scanifwrong ,replace(replace(substring(substring(formdef from(position('Scan Existing MAC if wrong#' in formdef)+20)) from 'Scan Existing MAC if wrong#(.+?)count'),'\"',''),',','') scanifwrong_2 from edgenote,edgeform where noteid = edgenoteentity_noteid  and formtemplatedef like '%Node MAC address%' and iscurrent = true and isdeleted = false);";
+			 queryStatement.execute(sql);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}finally {
+			closeStatement(queryStatement);
+		}
+	}
+
+    public void clearData() {
+        Statement queryStatement = null;
+        try {
+            queryStatement = connection.createStatement();
+            String sql = "truncate table edge_install_form_data;";
+            queryStatement.execute(sql);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }finally {
+            closeStatement(queryStatement);
+        }
+    }
 	
-	
-	
+
 }

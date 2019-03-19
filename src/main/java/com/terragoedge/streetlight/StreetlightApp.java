@@ -35,6 +35,7 @@ public class StreetlightApp {
 	//1525944100172
 	public static void main(String[] args) {
 		InstallMaintenanceDao installMaintenanceDao = new InstallMaintenanceDao();
+		installMaintenanceDao.loadNotesData();
 		installMaintenanceDao.doProcess();
 		/*try{
 			while(true){
