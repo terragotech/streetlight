@@ -190,7 +190,7 @@ public class SlvInterfaceService extends AbstractSlvService {
                                 } else {
                                     Pattern pattern = Pattern.compile("\\d+");
                                     Matcher matcher = pattern.matcher(edgeFormData.getValue());
-                                    if (matcher.find()) {
+                                    if (matcher != null && matcher.find()) {
                                         jpsWorkflowModel.setPower(matcher.group(0));
                                     }
                                     jpsWorkflowModel.setLampType(edgeFormData.getValue());
@@ -252,8 +252,10 @@ public class SlvInterfaceService extends AbstractSlvService {
     }
 
     public void processLampType(List<EdgeFormData> edgeFormDataList, JPSWorkflowModel jpsWorkflowModel) {
-        String otherNewLampModel = valueById(edgeFormDataList, 201);
-        String lampWattage = valueById(edgeFormDataList, 188);
+        String otherLampId = properties.getProperty("jps.edge.otherlamptype");//201
+        String otherWattage = properties.getProperty("jps.edge.otherwattage");//188
+        String otherNewLampModel = valueById(edgeFormDataList, Integer.parseInt(otherLampId));
+        String lampWattage = valueById(edgeFormDataList, Integer.parseInt(otherWattage));
         jpsWorkflowModel.setLampType(otherNewLampModel);
         jpsWorkflowModel.setPower(lampWattage);
     }
