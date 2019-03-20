@@ -40,12 +40,12 @@ public class EdgeService {
         try {
             //String urlNew = baseUrl + "/rest/notes/notesdata/" + noteGuid;
             String urlNew = baseUrl + "/rest/notes/" + noteGuid;
-            logger.info("Url to get Note Details:" + urlNew);
+         //   logger.info("Url to get Note Details:" + urlNew);
             ResponseEntity<String> responseEntity = serverCall(urlNew, HttpMethod.GET, null);
             if (responseEntity.getStatusCode().is2xxSuccessful()) {
                 String response = responseEntity.getBody();
-                logger.info("----------Response-------");
-                logger.info(response);
+               // logger.info("----------Response-------");
+              //  logger.info(response);
                 return response;
             }
         } catch (Exception e) {
@@ -55,8 +55,8 @@ public class EdgeService {
     }
 
     public ResponseEntity<String> serverCall(String url, HttpMethod httpMethod, String body) {
-        logger.info("Request Url : " + url);
-        logger.info("Request Data : " + body);
+       // logger.info("Request Url : " + url);
+      //  logger.info("Request Data : " + body);
         RestTemplate restTemplate = new RestTemplate();
         HttpHeaders headers = getHeaders();
 
@@ -69,11 +69,11 @@ public class EdgeService {
         }
 
         ResponseEntity<String> responseEntity = restTemplate.exchange(url, httpMethod, request, String.class);
-        logger.info("------------ Response ------------------");
+      //  logger.info("------------ Response ------------------");
 
         logger.info("Response Code:" + responseEntity.getStatusCode().toString());
         if (responseEntity.getBody() != null) {
-            logger.info("Response Data:" + responseEntity.getBody());
+          //  logger.info("Response Data:" + responseEntity.getBody());
         }
 
         return responseEntity;
@@ -106,14 +106,15 @@ public class EdgeService {
 
     public JsonObject processEdgeForms(EdgeNote edgeNote,  String errorFormTemplateGuid, SlvData slvData) {
         String edgenoteJson = gson.toJson(edgeNote);
+        String layerGuid = PropertiesReader.getProperties().getProperty("milhouse.layerguid");
         JsonObject edgeJsonObject = (JsonObject) jsonParser.parse(edgenoteJson);
         JsonArray serverEdgeFormJsonArray = edgeJsonObject.get("formData").getAsJsonArray();
         int size = serverEdgeFormJsonArray.size();
         for (int i = 0; i < size; i++) {
             JsonObject serverEdgeForm = serverEdgeFormJsonArray.get(i).getAsJsonObject();
-            logger.info("before processed" + serverEdgeForm.get("formTemplateGuid").getAsString());
+          //  logger.info("before processed" + serverEdgeForm.get("formTemplateGuid").getAsString());
             if (serverEdgeForm.get("formTemplateGuid").getAsString().equals("d2c690b0-10fe-4559-bf67-956219b0088e")) {
-                logger.info("processed given form");
+               // logger.info("processed given form");
                 String formDefJson = serverEdgeForm.get("formDef").toString();
                 formDefJson = formDefJson.replaceAll("\\\\", "");
                 List<EdgeFormData> formDataList = getEdgeFormData(formDefJson);
@@ -135,7 +136,7 @@ public class EdgeService {
         edgeJsonObject.addProperty("createdDateTime", System.currentTimeMillis());
         edgeJsonObject.addProperty("noteGuid", UUID.randomUUID().toString());
 
-       /* List<Dictionary> dictionaryList = edgeNote.getDictionary();
+        List<Dictionary> dictionaryList = edgeNote.getDictionary();
         boolean isDictionaryExist = false;
         for (Dictionary dictionary : dictionaryList) {
             if (dictionary.getKey().equals("groupGuid") && !dictionary.getValue().equals(layerGuid)) {
@@ -150,7 +151,7 @@ public class EdgeService {
             dictionaryList.add(dictionary);
         }
         edgeJsonObject.add("dictionary", gson.toJsonTree(dictionaryList));
- */       return edgeJsonObject;
+        return edgeJsonObject;
     }
 
     public ResponseEntity<String> updateNoteDetails(String noteDetails, String noteGuid, String notebookGuid) {
@@ -308,11 +309,11 @@ public class EdgeService {
         EdgeFormData tempEdgeFormData = new EdgeFormData();
         tempEdgeFormData.setId(40);
         int pos = edgeFormDataList.indexOf(tempEdgeFormData);
-        logger.info("wattage index Position :" + pos);
+      //  logger.info("wattage index Position :" + pos);
         if (pos == -1) {
             EdgeFormData edgeFormData = getProjectNameComponent(slvData.getProjectName());
             edgeFormDataList.add(edgeFormData);
-            logger.info("wattage component :" + gson.toJson(edgeFormData));
+        //    logger.info("wattage component :" + gson.toJson(edgeFormData));
         }else{
             updateFormValue(edgeFormDataList, 40, slvData.getProjectName());
         }
