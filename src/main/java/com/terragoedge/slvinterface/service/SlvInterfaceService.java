@@ -54,7 +54,8 @@ public class SlvInterfaceService extends AbstractSlvService {
         url = url + PropertiesReader.getProperties().getProperty("streetlight.edge.url.notes.get");
         logger.info("GetNotesUrl :" + url);
         // Get List of noteid
-        List<String> noteGuidsList = connectionDAO.getEdgeNoteGuid(formTemplateGuid);
+      //  List<String> noteGuidsList = connectionDAO.getEdgeNoteGuid(formTemplateGuid);
+        List<String> noteGuidsList = new ArrayList<>();
         noteGuidsList.clear();
         noteGuidsList.add(properties.getProperty("noteguid"));
         System.out.println("Processed NoteList: " + noteGuidsList);
@@ -191,7 +192,7 @@ public class SlvInterfaceService extends AbstractSlvService {
                                     Pattern pattern = Pattern.compile("\\d+");
                                     Matcher matcher = pattern.matcher(edgeFormData.getValue());
                                     if (matcher != null && matcher.find()) {
-                                        jpsWorkflowModel.setPower(matcher.group(0));
+                                        jpsWorkflowModel.setPower(matcher.group(0).trim());
                                     }
                                     jpsWorkflowModel.setLampType(edgeFormData.getValue());
                                 }
@@ -257,7 +258,10 @@ public class SlvInterfaceService extends AbstractSlvService {
         String otherNewLampModel = valueById(edgeFormDataList, Integer.parseInt(otherLampId));
         String lampWattage = valueById(edgeFormDataList, Integer.parseInt(otherWattage));
         jpsWorkflowModel.setLampType(otherNewLampModel);
-        jpsWorkflowModel.setPower(lampWattage);
+        if(lampWattage != null){
+            jpsWorkflowModel.setPower(lampWattage);
+        }
+
     }
 
     private boolean nullCheck(String data) {

@@ -9,14 +9,16 @@ import java.util.Locale;
 
 public class SlvInterfaceApp {
 
+
+
     public static void main(String[] args) {
         try {
             SlvInterfaceService slvInterfaceService = new SlvInterfaceService();
-            while (true) {
+           // while (true) {
                 slvInterfaceService.start();
-                processedDailyReport(slvInterfaceService);
-                Thread.sleep(60000);
-            }
+                //processedDailyReport(slvInterfaceService);
+             //   Thread.sleep(60000);
+            //}
         } catch (Exception e) {
             e.printStackTrace();
         }

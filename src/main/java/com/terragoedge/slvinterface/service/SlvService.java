@@ -221,11 +221,11 @@ public class SlvService extends AbstractSlvService {
         List<Object> paramList = new ArrayList<>();
         paramList.add("idOnController=" + jpsWorkflowModel.getIdOnController());
         paramList.add("controllerStrId=" + jpsWorkflowModel.getControllerStrId());
-        addStreetLightData("address1", jpsWorkflowModel.getAddress1(), paramList);
+        addStreetLightData("address", jpsWorkflowModel.getAddress1(), paramList);
         addStreetLightData("location.streetdescription", jpsWorkflowModel.getStreetdescription(), paramList);
         addStreetLightData("categoryStrId", jpsWorkflowModel.getCategoryStrId(), paramList);
         addStreetLightData("location.city", jpsWorkflowModel.getCity(), paramList);
-        addStreetLightData("dimmingGroupName", jpsWorkflowModel.getDimmingGroupName(), paramList);
+        addStreetLightData("DimmingGroupName", jpsWorkflowModel.getDimmingGroupName(), paramList);
         addStreetLightData("provider.name", jpsWorkflowModel.getProvider_name(), paramList);
 //        addStreetLightData("geoZone path", jpsWorkflowModel.getGeozonePath(), paramList);
         addStreetLightData("network.highvoltagethreshold", String.valueOf(jpsWorkflowModel.getHighvoltagethreshold()), paramList);
