@@ -327,7 +327,7 @@ public class StreetlightChicagoService {
         file.createNewFile();
         System.out.println("File Created.");
 
-        edgeMailService.sendMail(dupMacAddressFile, dailyReportFile, quickNoteFileName, inspectionFileName,notCompleteFileName);
+        //edgeMailService.sendMail(dupMacAddressFile, dailyReportFile, quickNoteFileName, inspectionFileName,notCompleteFileName);
     	
         String inputFile = "./report/" + dailyReportFile;
 

@@ -36,4 +36,11 @@ public class Utils {
         SimpleDateFormat dateFormat = new SimpleDateFormat("ddMMMyyyy");
         return dateFormat.format(date);
     }
+
+    public static String getGeoPdfDateTime() {
+        Calendar calendar = Calendar.getInstance(Locale.getDefault());
+        Date date = new Date(calendar.getTimeInMillis());
+        SimpleDateFormat dateFormat = new SimpleDateFormat("MM-dd-yyyy");
+        return dateFormat.format(date);
+    }
 }

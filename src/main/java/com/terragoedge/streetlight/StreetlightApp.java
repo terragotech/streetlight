@@ -35,8 +35,9 @@ public class StreetlightApp {
 	//1525944100172
 	public static void main(String[] args) {
 		InstallMaintenanceDao installMaintenanceDao = new InstallMaintenanceDao();
-		installMaintenanceDao.loadNotesData();
-		installMaintenanceDao.doProcess();
+		//installMaintenanceDao.loadNotesData();
+		//installMaintenanceDao.doProcess();
+		installMaintenanceDao.startGeoPDFProcess("/Users/Nithish/Documents/office/data-fix/Mar20/daily_report_20Mar2019.csv");
 		/*try{
 			while(true){
 				try{

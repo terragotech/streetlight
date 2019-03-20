@@ -145,7 +145,7 @@ public class EdgeMailService {
 		}
 			
 	}
-	public void sendMail(String dupMacAddressFile,String dailyReportFile,String quickNoteFile, String inspectionNoteFile,String notCompleteFileName) {
+	public void sendMail(String dupMacAddressFile,String dailyReportFile) {
 		logger.info("Mail Server Triggered");
 		Properties props = System.getProperties();
 		final String fromEmail = properties.getProperty("email.id");
@@ -187,52 +187,26 @@ public class EdgeMailService {
 
 			DataSource source = null;
 			if(dailyReportFile != null){
-                source = new FileDataSource("./report/" + dailyReportFile);
-                //DataSource source = new FileDataSource( dailyReportFile);
-                messageBodyPart.setDataHandler(new DataHandler(source));
-                messageBodyPart.setFileName(dailyReportFile);
-                multipart.addBodyPart(messageBodyPart);
+                source = new FileDataSource(dailyReportFile);
+                if(((FileDataSource) source).getFile().exists()){
+					messageBodyPart.setDataHandler(new DataHandler(source));
+					messageBodyPart.setFileName(((FileDataSource) source).getFile().getName());
+					multipart.addBodyPart(messageBodyPart);
+				}
 			}
-
-
-
 
 			if (dupMacAddressFile != null) {
-				messageBodyPart = new MimeBodyPart();
-				source = new FileDataSource("./report/" + dupMacAddressFile);
-				//source = new FileDataSource( dupMacAddressFile);
-				messageBodyPart.setDataHandler(new DataHandler(source));
-				messageBodyPart.setFileName(dupMacAddressFile);
-				multipart.addBodyPart(messageBodyPart);
+				source = new FileDataSource(dupMacAddressFile);
+				if(((FileDataSource) source).getFile().exists()){
+					messageBodyPart = new MimeBodyPart();
+					messageBodyPart.setDataHandler(new DataHandler(source));
+					messageBodyPart.setFileName(((FileDataSource) source).getFile().getName());
+					multipart.addBodyPart(messageBodyPart);
+				}
+
 			}
 			
-			/*
-			if(quickNoteFile != null){
-				messageBodyPart = new MimeBodyPart();
-				source = new FileDataSource("./report/" + quickNoteFile);
-				//source = new FileDataSource( quickNoteFile);
-				messageBodyPart.setDataHandler(new DataHandler(source));
-				messageBodyPart.setFileName(quickNoteFile);
-				multipart.addBodyPart(messageBodyPart);
-			}*/
 
-			/*if(inspectionNoteFile != null){
-				messageBodyPart = new MimeBodyPart();
-				source = new FileDataSource("./report/" + inspectionNoteFile);
-				//source = new FileDataSource( quickNoteFile);
-				messageBodyPart.setDataHandler(new DataHandler(source));
-				messageBodyPart.setFileName(inspectionNoteFile);
-				multipart.addBodyPart(messageBodyPart);
-			}*/
-
-			if(notCompleteFileName != null){
-				messageBodyPart = new MimeBodyPart();
-				source = new FileDataSource("./report/" + notCompleteFileName);
-				//source = new FileDataSource( quickNoteFile);
-				messageBodyPart.setDataHandler(new DataHandler(source));
-				messageBodyPart.setFileName(notCompleteFileName);
-				multipart.addBodyPart(messageBodyPart);
-			}
 
 			message.setContent(multipart);
 

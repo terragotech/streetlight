@@ -4,6 +4,7 @@ import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import com.opencsv.CSVWriter;
 import com.terragoedge.edgeserver.EdgeFormData;
+import com.terragoedge.streetlight.PropertiesReader;
 import com.terragoedge.streetlight.dao.FormData;
 import com.terragoedge.streetlight.dao.NoteData;
 import com.terragoedge.streetlight.dao.UtilDao;
@@ -11,21 +12,27 @@ import com.terragoedge.streetlight.installmaintain.json.Config;
 import com.terragoedge.streetlight.installmaintain.json.Ids;
 import com.terragoedge.streetlight.installmaintain.json.Prop;
 import com.terragoedge.streetlight.installmaintain.utills.Utils;
+import com.terragoedge.streetlight.pdfreport.FilterNewInstallationOnly;
+import com.terragoedge.streetlight.pdfreport.PDFExceptionUtils;
+import com.terragoedge.streetlight.pdfreport.PDFReport;
+import com.terragoedge.streetlight.service.EdgeMailService;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 
 import java.io.FileWriter;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.Statement;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 public class InstallMaintenanceDao extends UtilDao {
     private Gson gson;
     private InstallMaintenanceService installMaintenanceService;
+    private EdgeMailService edgeMailService;
     private List<Config> configs = new ArrayList<>();
     private static Long startTime = 0l;
 
@@ -33,6 +40,7 @@ public class InstallMaintenanceDao extends UtilDao {
     public InstallMaintenanceDao() {
         gson = new Gson();
         installMaintenanceService = new InstallMaintenanceService();
+        edgeMailService = new EdgeMailService();
         configs = installMaintenanceService.getConfigList();
     }
     private Logger logger = Logger.getLogger(InstallMaintenanceDao.class);
@@ -42,7 +50,7 @@ public class InstallMaintenanceDao extends UtilDao {
         ResultSet queryResponse = null;
         CSVWriter dailyCompletedCSVWriter = null;
         List<DuplicateModel> duplicateModelList = new ArrayList<>();
-        startTime = 1552885200000L;
+        startTime = 1552971600000L;
         logger.info("configs: "+gson.toJson(configs));
         try{
             String fileName = Utils.getDateTime();
@@ -53,7 +61,7 @@ public class InstallMaintenanceDao extends UtilDao {
             dailyCompletedCSVWriter =  initCSV(fileWriter);
             logger.info("start time:"+startTime);
             logger.info("readable fromat time:"+Utils.getDateTime(startTime));
-            queryResponse = queryStatement.executeQuery("select title,noteguid,parentnoteid,createddatetime from edgenote where iscurrent = true and isdeleted = false  and createddatetime >= "+startTime+" and title = '85870' order by createddatetime;");
+            queryResponse = queryStatement.executeQuery("select title,noteguid,parentnoteid,createddatetime from edgenote where iscurrent = true and isdeleted = false  and createddatetime >= "+startTime+" order by createddatetime;");
 
             logger.info("query response executed");
             int i = 0;
@@ -81,12 +89,41 @@ public class InstallMaintenanceDao extends UtilDao {
             }
             writeDupCSV(duplicateModelList,duplicateMacAddressFile);
             logger.info("daily install report csv file created!");
+            edgeMailService.sendMail(duplicateMacAddressFile,dailyReportFile);
+            startGeoPDFProcess(dailyReportFile);
         }catch (Exception e){
             logger.error("Error in doProcess",e);
         }finally {
             closeCSVBuffer(dailyCompletedCSVWriter);
             closeResultSet(queryResponse);
             closeStatement(queryStatement);
+        }
+    }
+
+
+    public void startGeoPDFProcess(String dailyCompletedReport){
+        Properties properties = PropertiesReader.getProperties();
+        String destFile = properties.getProperty("dailyreport.inputfile");
+        String hostString = properties.getProperty("dailyreport.geomapservice");
+        /*** Apply Filter : Current Installs only ***/
+        String filterFile1 = "./report/" + "dailyreport_filtered.txt";
+        try{
+            FilterNewInstallationOnly.applyOperation(dailyCompletedReport, filterFile1);
+            /** End of Filter : Current Installs only ***/
+            Path source = Paths.get(filterFile1);
+            Path destination = Paths.get(destFile);
+            Files.copy(source, destination, StandardCopyOption.REPLACE_EXISTING);
+            String strDate = Utils.getGeoPdfDateTime();
+            PDFReport pdfReport = new PDFReport();
+            pdfReport.setHostString(hostString);
+            pdfReport.setDateString(strDate);
+            new Thread(pdfReport).start();
+        }
+        catch(Exception e){
+            String errorTrace = PDFExceptionUtils.getStackTrace(e);
+            logger.error(e.getMessage());
+            logger.error(errorTrace);
+            PDFReport.sendErrorMail(errorTrace);
         }
     }
 
