@@ -16,7 +16,6 @@ public class PropertiesReader {
             mainProperties = new Properties();
             FileInputStream file;
 
-
             //  String path = "./src/main/resources/main.properties";
             String path = "./resources/main.properties";
 
