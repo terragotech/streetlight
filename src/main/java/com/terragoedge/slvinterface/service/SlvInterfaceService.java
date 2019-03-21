@@ -49,15 +49,16 @@ public class SlvInterfaceService extends AbstractSlvService {
         //  List<String> noteGuids = slvInterfaceDAO.getNoteGuids();
 
         String formTemplateGuid = properties.getProperty("streetlight.edge.formtemplateguid");
-        String url = PropertiesReader.getProperties().getProperty("streetlight.edge.url.main");
+        String url = properties.getProperty("streetlight.edge.url.main");
 
-        url = url + PropertiesReader.getProperties().getProperty("streetlight.edge.url.notes.get");
+        url = url + properties.getProperty("streetlight.edge.url.notes.get");
         logger.info("GetNotesUrl :" + url);
+        String notebookGuid = properties.getProperty("jps.processing.notebookguid");
         // Get List of noteid
-      //  List<String> noteGuidsList = connectionDAO.getEdgeNoteGuid(formTemplateGuid);
-        List<String> noteGuidsList = new ArrayList<>();
+        List<String> noteGuidsList = connectionDAO.getEdgeNoteGuid(formTemplateGuid,notebookGuid);
+        /*List<String> noteGuidsList = new ArrayList<>();
         noteGuidsList.clear();
-        noteGuidsList.add(properties.getProperty("noteguid"));
+        noteGuidsList.add(properties.getProperty("noteguid"));*/
         System.out.println("Processed NoteList: " + noteGuidsList);
         //end
         for (String edgenoteGuid : noteGuidsList) {
