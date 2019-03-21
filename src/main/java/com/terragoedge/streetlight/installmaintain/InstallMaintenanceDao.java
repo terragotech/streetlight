@@ -50,7 +50,7 @@ public class InstallMaintenanceDao extends UtilDao {
         ResultSet queryResponse = null;
         CSVWriter dailyCompletedCSVWriter = null;
         List<DuplicateModel> duplicateModelList = new ArrayList<>();
-        startTime = 1552971600000L;
+        startTime = 1553058000000L;
         logger.info("configs: "+gson.toJson(configs));
         try{
             String fileName = Utils.getDateTime();
@@ -61,7 +61,7 @@ public class InstallMaintenanceDao extends UtilDao {
             dailyCompletedCSVWriter =  initCSV(fileWriter);
             logger.info("start time:"+startTime);
             logger.info("readable fromat time:"+Utils.getDateTime(startTime));
-            queryResponse = queryStatement.executeQuery("select title,noteguid,parentnoteid,createddatetime from edgenote where iscurrent = true and isdeleted = false  and createddatetime >= "+startTime+" order by createddatetime;");
+            queryResponse = queryStatement.executeQuery("select title,noteguid,parentnoteid,createddatetime from edgenote where iscurrent = true and isdeleted = false  and createddatetime >= "+startTime+" and title = '27746' order by createddatetime;");
 
             logger.info("query response executed");
             int i = 0;
@@ -89,12 +89,13 @@ public class InstallMaintenanceDao extends UtilDao {
             }
             writeDupCSV(duplicateModelList,duplicateMacAddressFile);
             logger.info("daily install report csv file created!");
+            closeCSVBuffer(dailyCompletedCSVWriter);
             edgeMailService.sendMail(duplicateMacAddressFile,dailyReportFile);
             startGeoPDFProcess(dailyReportFile);
         }catch (Exception e){
             logger.error("Error in doProcess",e);
-        }finally {
             closeCSVBuffer(dailyCompletedCSVWriter);
+        }finally {
             closeResultSet(queryResponse);
             closeStatement(queryStatement);
         }
@@ -108,7 +109,7 @@ public class InstallMaintenanceDao extends UtilDao {
         /*** Apply Filter : Current Installs only ***/
         String filterFile1 = "./report/" + "dailyreport_filtered.txt";
         try{
-            FilterNewInstallationOnly.applyOperation(dailyCompletedReport, filterFile1);
+            //FilterNewInstallationOnly.applyOperation(dailyCompletedReport, filterFile1);
             /** End of Filter : Current Installs only ***/
             Path source = Paths.get(filterFile1);
             Path destination = Paths.get(destFile);
@@ -285,24 +286,27 @@ public class InstallMaintenanceDao extends UtilDao {
 
     private void writeCSV(NoteData noteData,CSVWriter csvWriter,List<DuplicateModel> duplicateModelList){
         loadNotesData(noteData);
-        checkMACDuplicate(noteData,duplicateModelList);
-        noteData.getInstallMaintenanceModel().checkReplacedDetails();
-        logger.info(noteData);
-        csvWriter.writeNext(new String[]{
-                noteData.getTitle(),
-                addDoubleQuotes(noteData.getInstallMaintenanceModel().getMacAddress()),
-                noteData.getCreatedBy(),
-                addDoubleQuotes(noteData.getInstallMaintenanceModel().getFixtureQRScan()),
-                noteData.getFixtureType(),
-                addDoubleQuotes(noteData.getDescription()),
-                noteData.getLng(),
-                noteData.getLat(),
-                Utils.getDailyReportDateTime(noteData.getCreatedDateTime()),
-                noteData.getInstallMaintenanceModel().getIsReplaceNode(),
-                addDoubleQuotes(noteData.getInstallMaintenanceModel().getExMacAddressRNF()),
-                addDoubleQuotes(noteData.getInstallMaintenanceModel().getMacAddressRNF())
+        if(!noteData.getCreatedBy().equals("admin")){
+            checkMACDuplicate(noteData,duplicateModelList);
+            noteData.getInstallMaintenanceModel().checkReplacedDetails();
+            logger.info(noteData);
+            csvWriter.writeNext(new String[]{
+                    noteData.getTitle(),
+                    addDoubleQuotes(noteData.getInstallMaintenanceModel().getMacAddress()),
+                    noteData.getCreatedBy(),
+                    addDoubleQuotes(noteData.getInstallMaintenanceModel().getFixtureQRScan()),
+                    noteData.getFixtureType(),
+                    addDoubleQuotes(noteData.getDescription()),
+                    noteData.getLng(),
+                    noteData.getLat(),
+                    Utils.getDailyReportDateTime(noteData.getCreatedDateTime()),
+                    noteData.getInstallMaintenanceModel().getIsReplaceNode(),
+                    addDoubleQuotes(noteData.getInstallMaintenanceModel().getExMacAddressRNF()),
+                    addDoubleQuotes(noteData.getInstallMaintenanceModel().getMacAddressRNF())
 
-        });
+            });
+        }
+
 
     }
 
