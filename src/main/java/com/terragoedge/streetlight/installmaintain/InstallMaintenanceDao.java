@@ -61,7 +61,7 @@ public class InstallMaintenanceDao extends UtilDao {
             dailyCompletedCSVWriter =  initCSV(fileWriter);
             logger.info("start time:"+startTime);
             logger.info("readable fromat time:"+Utils.getDateTime(startTime));
-            queryResponse = queryStatement.executeQuery("select title,noteguid,parentnoteid,createddatetime from edgenote where iscurrent = true and isdeleted = false  and createddatetime >= "+startTime+" and title = '27746' order by createddatetime;");
+            queryResponse = queryStatement.executeQuery("select title,noteguid,parentnoteid,createddatetime from edgenote where iscurrent = true and isdeleted = false  and createddatetime >= "+startTime+" order by createddatetime;");
 
             logger.info("query response executed");
             int i = 0;
