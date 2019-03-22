@@ -61,7 +61,7 @@ public class InstallMaintenanceDao extends UtilDao {
             dailyCompletedCSVWriter =  initCSV(fileWriter);
             logger.info("start time:"+startTime);
             logger.info("readable fromat time:"+Utils.getDateTime(startTime));
-            queryResponse = queryStatement.executeQuery("select title,noteguid,parentnoteid,createddatetime from edgenote where iscurrent = true and isdeleted = false  and createddatetime >= "+startTime+" order by createddatetime;");
+            queryResponse = queryStatement.executeQuery("select title,noteguid,parentnoteid,createddatetime from edgenote where iscurrent = true and isdeleted = false  and createddatetime >= "+startTime+"  order by createddatetime;");
 
             logger.info("query response executed");
             int i = 0;
@@ -286,7 +286,11 @@ public class InstallMaintenanceDao extends UtilDao {
 
     private void writeCSV(NoteData noteData,CSVWriter csvWriter,List<DuplicateModel> duplicateModelList){
         loadNotesData(noteData);
-        if(!noteData.getCreatedBy().equals("admin") && noteData.getInstallMaintenanceModel().getRemovalReason() == null){
+        if(!noteData.getCreatedBy().equals("admin") &&
+                (noteData.getInstallMaintenanceModel().getRemovalReason() == null ||
+                        noteData.getInstallMaintenanceModel().getRemovalReason().equals("Not selected")
+                        ||
+                        noteData.getInstallMaintenanceModel().getRemovalReason().equals("Select From Below"))){
             checkMACDuplicate(noteData,duplicateModelList);
             noteData.getInstallMaintenanceModel().checkReplacedDetails();
             logger.info(noteData);

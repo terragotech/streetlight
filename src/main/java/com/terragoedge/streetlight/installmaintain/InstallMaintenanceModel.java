@@ -26,7 +26,10 @@ public class InstallMaintenanceModel {
     }
 
     public void setRemovalReason(String removalReason) {
-        this.removalReason = removalReason;
+        if(removalReason != null && !removalReason.equals("Not selected") && !removalReason.equals("Select From Below")){
+            this.removalReason = removalReason;
+        }
+
     }
 
     public String getMacAddress() {

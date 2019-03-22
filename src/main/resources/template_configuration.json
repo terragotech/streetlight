@@ -13,6 +13,8 @@
         "type":"RN", "ids":{"mac":30,"fix":-1,"exMac": 29,"exFix":-1}
       },{
         "type":"RF", "ids":{"mac":-1,"fix":39,"exMac": -1,"exFix":41}
+      },{
+        "type":"RR", "ids":{"remove":35}
       }
     ]
   },
