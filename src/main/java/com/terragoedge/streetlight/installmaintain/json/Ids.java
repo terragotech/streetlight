@@ -5,6 +5,15 @@ public class Ids {
     private int fix;
     private int exMac;
     private int exFix;
+    private int remove;
+
+    public int getRemove() {
+        return remove;
+    }
+
+    public void setRemove(int remove) {
+        this.remove = remove;
+    }
 
     public int getExMac() {
         return exMac;
@@ -46,6 +55,7 @@ public class Ids {
                 ", fix=" + fix +
                 ", exMac=" + exMac +
                 ", exFix=" + exFix +
+                ", remove=" + remove +
                 '}';
     }
 }

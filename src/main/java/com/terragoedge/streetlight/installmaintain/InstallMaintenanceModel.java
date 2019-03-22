@@ -18,7 +18,16 @@ public class InstallMaintenanceModel {
 
     private String isReplaceNode = "No";
 
+    private String removalReason;
 
+
+    public String getRemovalReason() {
+        return removalReason;
+    }
+
+    public void setRemovalReason(String removalReason) {
+        this.removalReason = removalReason;
+    }
 
     public String getMacAddress() {
         return macAddress;
@@ -168,12 +177,13 @@ public class InstallMaintenanceModel {
                 Objects.equals(macAddressRN, that.macAddressRN) &&
                 Objects.equals(fixtureQRScan, that.fixtureQRScan) &&
                 Objects.equals(fixtureQRScanRNF, that.fixtureQRScanRNF) &&
+                Objects.equals(removalReason, that.removalReason) &&
                 Objects.equals(fixtureQRScanRF, that.fixtureQRScanRF);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(macAddress, macAddressRNF, macAddressRN, fixtureQRScan, fixtureQRScanRNF, fixtureQRScanRF);
+        return Objects.hash(macAddress, macAddressRNF, macAddressRN, fixtureQRScan, fixtureQRScanRNF, fixtureQRScanRF,removalReason);
     }
 
     @Override
@@ -190,6 +200,7 @@ public class InstallMaintenanceModel {
                 ", fixtureQRScanRF='" + fixtureQRScanRF + '\'' +
                 ", exFixtureQRScanRF='" + exFixtureQRScanRF + '\'' +
                 ", isReplaceNode='" + isReplaceNode + '\'' +
+                ", removalReason='" + removalReason + '\'' +
                 '}';
     }
 }

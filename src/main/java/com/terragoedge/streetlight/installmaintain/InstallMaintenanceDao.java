@@ -50,7 +50,7 @@ public class InstallMaintenanceDao extends UtilDao {
         ResultSet queryResponse = null;
         CSVWriter dailyCompletedCSVWriter = null;
         List<DuplicateModel> duplicateModelList = new ArrayList<>();
-        startTime = 1553058000000L;
+        startTime = 1553144400000L;
         logger.info("configs: "+gson.toJson(configs));
         try{
             String fileName = Utils.getDateTime();
@@ -109,7 +109,7 @@ public class InstallMaintenanceDao extends UtilDao {
         /*** Apply Filter : Current Installs only ***/
         String filterFile1 = "./report/" + "dailyreport_filtered.txt";
         try{
-            //FilterNewInstallationOnly.applyOperation(dailyCompletedReport, filterFile1);
+            FilterNewInstallationOnly.applyOperation(dailyCompletedReport, filterFile1);
             /** End of Filter : Current Installs only ***/
             Path source = Paths.get(filterFile1);
             Path destination = Paths.get(destFile);
@@ -286,7 +286,7 @@ public class InstallMaintenanceDao extends UtilDao {
 
     private void writeCSV(NoteData noteData,CSVWriter csvWriter,List<DuplicateModel> duplicateModelList){
         loadNotesData(noteData);
-        if(!noteData.getCreatedBy().equals("admin")){
+        if(!noteData.getCreatedBy().equals("admin") && noteData.getInstallMaintenanceModel().getRemovalReason() == null){
             checkMACDuplicate(noteData,duplicateModelList);
             noteData.getInstallMaintenanceModel().checkReplacedDetails();
             logger.info(noteData);
@@ -407,6 +407,9 @@ public class InstallMaintenanceDao extends UtilDao {
                             installMaintenanceModel.setExMacAddressRNF(setValue(installMaintenanceModel.getExMacAddressRNF(),getValue(idsList.getExMac(), edgeFormDatas)));
                             installMaintenanceModel.setFixtureQRScanRNF(setValue(installMaintenanceModel.getFixtureQRScanRNF(),getValue(idsList.getFix(), edgeFormDatas)));
                             installMaintenanceModel.setExFixtureQRScanRNF(setValue(installMaintenanceModel.getExFixtureQRScanRNF(),getValue(idsList.getExFix(), edgeFormDatas)));
+                            break;
+                        case RR:
+                            installMaintenanceModel.setRemovalReason(setValue(installMaintenanceModel.getRemovalReason(),getValue(idsList.getRemove(), edgeFormDatas)));
                             break;
                     }
                 }
