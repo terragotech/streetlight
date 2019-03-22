@@ -170,7 +170,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
                                 break;
                             case "Remove":
                                 logger.info("entered remove action");
-                               // processRemoveAction(edgeFormDatas,existingFixtureInfo,utilLocId);
+                                processRemoveAction(edgeFormDatas,existingFixtureInfo,utilLocId,installMaintenanceLogModel);
                                 break;
                             case "Other Task":
                                 // processOtherTask(edgeFormDatas, edgeNote, installMaintenanceLogModel, nightRideKey, formatedValueNR);
@@ -917,7 +917,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
         }
     }
 
-    private void processRemoveAction(List<EdgeFormData> edgeFormDatas,LoggingModel loggingModel,String utilLocId){
+    private void processRemoveAction(List<EdgeFormData> edgeFormDatas,LoggingModel loggingModel,String utilLocId,InstallMaintenanceLogModel installMaintenanceLogModel){
         String removeReason = null;
         try {
             removeReason = valueById(edgeFormDatas, 35);
@@ -929,7 +929,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
             switch (removeReason){
                 case "Installed on Wrong Fixture":
                     try {
-                            String macaddress = null;
+                            String macaddress = getMACAddress(installMaintenanceLogModel);
                             logger.info("removed mac address:"+macaddress);
                             try {
                                 replaceOLC(loggingModel.getControllerSrtId(), loggingModel.getIdOnController(), "");
@@ -945,12 +945,15 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
                                 logger.error("Error in clear device values:"+e.getMessage());
                             }
                             logger.info("cleared divice value");
-                            DuplicateMacAddress duplicateMacAddress = connectionDAO.getDuplicateMacAddress(macaddress);
-                            logger.info("duplicate mac address: "+duplicateMacAddress);
-                            if(duplicateMacAddress != null){
-                                reSync(duplicateMacAddress.getNoteguid(),getEdgeToken(),true,utilLocId,true);
-                                logger.info("resync called due to duplicate mac address");
+                            if(macaddress != null){
+                                DuplicateMacAddress duplicateMacAddress = connectionDAO.getDuplicateMacAddress(macaddress);
+                                logger.info("duplicate mac address: "+duplicateMacAddress);
+                                if(duplicateMacAddress != null){
+                                    reSync(duplicateMacAddress.getNoteguid(),getEdgeToken(),true,utilLocId,true);
+                                    logger.info("resync called due to duplicate mac address");
+                                }
                             }
+
                     }catch (Exception e){
                         e.printStackTrace();
                     }

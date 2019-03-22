@@ -675,4 +675,39 @@ public abstract class AbstractProcessor {
         return null;
 
     }
+
+
+    public String getMACAddress(InstallMaintenanceLogModel installMaintenanceLogModel){
+        try{
+            if(installMaintenanceLogModel.getDeviceId() > 0){
+                String mainUrl = properties.getProperty("streetlight.slv.url.main");
+                String commentUrl = properties.getProperty("streetlight.slv.url.comment.get");
+                String url = mainUrl + commentUrl;
+                List<String> paramsList = new ArrayList<>();
+                paramsList.add("returnTimeAges=false");
+                paramsList.add("param0=" + installMaintenanceLogModel.getDeviceId());
+                paramsList.add("valueName=MacAddress");
+                paramsList.add("ser=json");
+                String params = StringUtils.join(paramsList, "&");
+                url = url + "?" + params;
+                logger.info("Get MAC Address url :" + url);
+                ResponseEntity<String> response = restService.getRequest(url, true, null);
+                if (response.getStatusCodeValue() == 200) {
+                    logger.info("Get MAC Address Respose :"+response.getBody());
+                    String responseString = response.getBody();
+                    JsonArray jsonArray = (JsonArray)jsonParser.parse(responseString);
+                    for(JsonElement macAddressJson : jsonArray){
+                        JsonObject macAddressJsonObject = macAddressJson.getAsJsonObject();
+                        if(macAddressJsonObject.get("value") != null){
+                            String macAddress = macAddressJsonObject.get("value").getAsString();
+                            return macAddress;
+                        }
+                    }
+                }
+            }
+        }catch (Exception e){
+            logger.error("Error in getComment",e);
+        }
+        return null;
+    }
 }
