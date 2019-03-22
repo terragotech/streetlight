@@ -39,11 +39,11 @@ public class SlvService extends AbstractSlvService {
 
     public void processSlv(JPSWorkflowModel jpsWorkflowModel, EdgeNote edgeNote) throws Exception {
         logger.info("ProcessSlv method start.");
-//        GeozoneEntity geozoneEntity = getGeozoneEntity(jpsWorkflowModel);
-//        logger.info("---------------------Geozone info start---------------------------");
-//        logger.info(gson.toJson(geozoneEntity));
-//        logger.info("---------------------Geozone info end---------------------------");
-//        jpsWorkflowModel.setGeozoneId(geozoneEntity.getStreetGeozoneId());
+        GeozoneEntity geozoneEntity = getGeozoneEntity(jpsWorkflowModel);
+        logger.info("---------------------Geozone info start---------------------------");
+        logger.info(gson.toJson(geozoneEntity));
+        logger.info("---------------------Geozone info end---------------------------");
+        jpsWorkflowModel.setGeozoneId(geozoneEntity.getStreetGeozoneId());
         JsonArray devices = checkDeviceExist(jpsWorkflowModel.getIdOnController());// search idoncontroller on slv - ** rest call
         //start
         int deviceId = -1;
