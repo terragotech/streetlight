@@ -50,7 +50,7 @@ public class InstallMaintenanceDao extends UtilDao {
         ResultSet queryResponse = null;
         CSVWriter dailyCompletedCSVWriter = null;
         List<DuplicateModel> duplicateModelList = new ArrayList<>();
-        startTime = 1553144400000L;
+        startTime = 1553230800000L;
         logger.info("configs: "+gson.toJson(configs));
         try{
             String fileName = Utils.getDateTime();
@@ -91,7 +91,7 @@ public class InstallMaintenanceDao extends UtilDao {
             logger.info("daily install report csv file created!");
             closeCSVBuffer(dailyCompletedCSVWriter);
             edgeMailService.sendMail(duplicateMacAddressFile,dailyReportFile);
-            startGeoPDFProcess(dailyReportFile);
+           // startGeoPDFProcess(dailyReportFile);
         }catch (Exception e){
             logger.error("Error in doProcess",e);
             closeCSVBuffer(dailyCompletedCSVWriter);
@@ -250,7 +250,7 @@ public class InstallMaintenanceDao extends UtilDao {
                 CSVWriter.NO_ESCAPE_CHARACTER,
                 CSVWriter.DEFAULT_LINE_END);
         String[] headerRecord = {"Title", "MAC Address","User Id", "Fixture QR Scan", "Fixture Type",
-                "Context", "Lat", "Lng", "Date Time","Is ReplaceNode","Existing Node MAC Address","New Node MAC Address"};
+                "Context", "Lat", "Lng", "Date Time","Is ReplaceNode","Existing Node MAC Address","New Node MAC Address","Reason for removal"};
         csvWriter.writeNext(headerRecord);
         return csvWriter;
     }
@@ -286,12 +286,11 @@ public class InstallMaintenanceDao extends UtilDao {
 
     private void writeCSV(NoteData noteData,CSVWriter csvWriter,List<DuplicateModel> duplicateModelList){
         loadNotesData(noteData);
-        if(!noteData.getCreatedBy().equals("admin") &&
-                (noteData.getInstallMaintenanceModel().getRemovalReason() == null ||
-                        noteData.getInstallMaintenanceModel().getRemovalReason().equals("Not selected")
-                        ||
-                        noteData.getInstallMaintenanceModel().getRemovalReason().equals("Select From Below"))){
-            checkMACDuplicate(noteData,duplicateModelList);
+        if(!noteData.getCreatedBy().equals("admin")){
+            if(noteData.getInstallMaintenanceModel().getRemovalReason() == null){
+                checkMACDuplicate(noteData,duplicateModelList);
+            }
+
             noteData.getInstallMaintenanceModel().checkReplacedDetails();
             logger.info(noteData);
             csvWriter.writeNext(new String[]{
@@ -306,7 +305,8 @@ public class InstallMaintenanceDao extends UtilDao {
                     Utils.getDailyReportDateTime(noteData.getCreatedDateTime()),
                     noteData.getInstallMaintenanceModel().getIsReplaceNode(),
                     addDoubleQuotes(noteData.getInstallMaintenanceModel().getExMacAddressRNF()),
-                    addDoubleQuotes(noteData.getInstallMaintenanceModel().getMacAddressRNF())
+                    addDoubleQuotes(noteData.getInstallMaintenanceModel().getMacAddressRNF()),
+                    addDoubleQuotes(noteData.getInstallMaintenanceModel().getRemovalReason())
 
             });
         }
