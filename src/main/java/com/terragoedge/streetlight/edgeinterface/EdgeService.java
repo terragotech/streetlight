@@ -117,13 +117,15 @@ public class EdgeService {
                // logger.info("processed given form");
                 String formDefJson = serverEdgeForm.get("formDef").toString();
                 formDefJson = formDefJson.replaceAll("\\\\", "");
+                formDefJson = formDefJson.replace("u0026","\\u0026");
                 List<EdgeFormData> formDataList = getEdgeFormData(formDefJson);
-                updateProjectName(formDataList, slvData);
+               // updateProjectName(formDataList, slvData);
                 serverEdgeForm.add("formDef", gson.toJsonTree(formDataList));
                 serverEdgeForm.addProperty("formGuid", UUID.randomUUID().toString());
             } else {
                 String formDefJson = serverEdgeForm.get("formDef").toString();
                 formDefJson = formDefJson.replaceAll("\\\\", "");
+                formDefJson = formDefJson.replace("u0026","\\u0026");
                 List<EdgeFormData> formDataList = getEdgeFormData(formDefJson);
                 serverEdgeForm.add("formDef", gson.toJsonTree(formDataList));
                 serverEdgeForm.addProperty("formGuid", UUID.randomUUID().toString());
@@ -137,7 +139,7 @@ public class EdgeService {
         edgeJsonObject.addProperty("noteGuid", UUID.randomUUID().toString());
 
         List<Dictionary> dictionaryList = edgeNote.getDictionary();
-        boolean isDictionaryExist = false;
+        /*boolean isDictionaryExist = false;
         for (Dictionary dictionary : dictionaryList) {
             if (dictionary.getKey().equals("groupGuid") && !dictionary.getValue().equals(layerGuid)) {
                 isDictionaryExist = true;
@@ -150,7 +152,7 @@ public class EdgeService {
             dictionary.setValue(layerGuid);
             dictionaryList.add(dictionary);
         }
-        edgeJsonObject.add("dictionary", gson.toJsonTree(dictionaryList));
+        edgeJsonObject.add("dictionary", gson.toJsonTree(dictionaryList));*/
         return edgeJsonObject;
     }
 
