@@ -142,7 +142,6 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
                 isInstallForm = true;
                 logger.info("Install  Form  is present.");
                 installMaintenanceLogModel.setInstallFormPresent(true);
-                LoggingModel existingFixtureInfo = getExistingIdOnContoller(edgeNote);
                 List<EdgeFormData> edgeFormDatas = formData.getFormDef();
                 try {
                     logger.info("before Action Val");
@@ -161,16 +160,16 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
                     if (value != null) {
                         switch (value) {
                             case "New":
-                                processNewGroup(edgeFormDatas, edgeNote, installMaintenanceLogModel, isReSync, existingFixtureInfo, utilLocId, nightRideKey, formatedValueNR);
+                                processNewGroup(edgeFormDatas, edgeNote, installMaintenanceLogModel, isReSync,  utilLocId, nightRideKey, formatedValueNR);
                                 installMaintenanceLogModel.setInstalledDate(edgeNote.getCreatedDateTime());
                                 break;
                             case "Repairs & Outages":
-                                repairAndOutage(edgeFormDatas, edgeNote, installMaintenanceLogModel, existingFixtureInfo, utilLocId, nightRideKey, formatedValueNR, formatedValueNR);
+                                repairAndOutage(edgeFormDatas, edgeNote, installMaintenanceLogModel, utilLocId, nightRideKey, formatedValueNR, formatedValueNR);
                                 installMaintenanceLogModel.setReplacedDate(edgeNote.getCreatedDateTime());
                                 break;
                             case "Remove":
                                 logger.info("entered remove action");
-                                processRemoveAction(edgeFormDatas,existingFixtureInfo,utilLocId,installMaintenanceLogModel);
+                                processRemoveAction(edgeFormDatas,utilLocId,installMaintenanceLogModel);
                                 break;
                             case "Other Task":
                                 // processOtherTask(edgeFormDatas, edgeNote, installMaintenanceLogModel, nightRideKey, formatedValueNR);
@@ -577,7 +576,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
     }
 
 
-    private void processNewGroup(List<EdgeFormData> edgeFormDatas, EdgeNote edgeNote, InstallMaintenanceLogModel loggingModel, boolean isResync, LoggingModel existingFixtureInfo, String utilLocId, String nightRideKey, String nightRideValue) {
+    private void processNewGroup(List<EdgeFormData> edgeFormDatas, EdgeNote edgeNote, InstallMaintenanceLogModel loggingModel, boolean isResync,  String utilLocId, String nightRideKey, String nightRideValue) {
         try {
 
             // Get Install status
@@ -701,7 +700,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
     }
 
 
-    public void repairAndOutage(List<EdgeFormData> edgeFormDatas, EdgeNote edgeNote, InstallMaintenanceLogModel loggingModel, LoggingModel existingFixtureInfo, String utilLocId, String nightRideKey, String nightRideValue, String formatedValueNR) {
+    public void repairAndOutage(List<EdgeFormData> edgeFormDatas, EdgeNote edgeNote, InstallMaintenanceLogModel loggingModel, String utilLocId, String nightRideKey, String nightRideValue, String formatedValueNR) {
 
         String repairsOutagesValue = loggingModel.getRepairsOption();
         /*try {
@@ -715,10 +714,10 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
         System.out.println(repairsOutagesValue);
         switch (repairsOutagesValue) {
             case "Replace Node and Fixture":
-                replaceNodeFixture(edgeFormDatas, edgeNote, loggingModel, existingFixtureInfo, utilLocId, nightRideKey, nightRideValue);
+                replaceNodeFixture(edgeFormDatas, edgeNote, loggingModel, utilLocId, nightRideKey, nightRideValue);
                 break;
             case "Replace Node only":
-                replaceNodeOnly(edgeFormDatas, edgeNote, loggingModel, existingFixtureInfo, utilLocId, nightRideKey, nightRideValue);
+                replaceNodeOnly(edgeFormDatas, edgeNote, loggingModel, utilLocId, nightRideKey, nightRideValue);
                 break;
             case "Replace Fixture only":
 
@@ -749,7 +748,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
     }
 
 
-    private void replaceNodeFixture(List<EdgeFormData> edgeFormDatas, EdgeNote edgeNote, InstallMaintenanceLogModel loggingModel, LoggingModel existingFixtureInfo, String utilLocId, String nightRideKey, String nightRideValue) {
+    private void replaceNodeFixture(List<EdgeFormData> edgeFormDatas, EdgeNote edgeNote, InstallMaintenanceLogModel loggingModel,  String utilLocId, String nightRideKey, String nightRideValue) {
         try {
             String existingNodeMacAddress = null;
             String newNodeMacAddress = null;
@@ -849,7 +848,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
     }
 
 
-    private void replaceNodeOnly(List<EdgeFormData> edgeFormDatas, EdgeNote edgeNote, InstallMaintenanceLogModel loggingModel, LoggingModel existingFixtureInfo, String utilLocId, String nightRideKey, String nightRideValue) {
+    private void replaceNodeOnly(List<EdgeFormData> edgeFormDatas, EdgeNote edgeNote, InstallMaintenanceLogModel loggingModel,  String utilLocId, String nightRideKey, String nightRideValue) {
         try {
             String existingNodeMacAddress = null;
             String newNodeMacAddress = null;
@@ -917,7 +916,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
         }
     }
 
-    private void processRemoveAction(List<EdgeFormData> edgeFormDatas,LoggingModel loggingModel,String utilLocId,InstallMaintenanceLogModel installMaintenanceLogModel){
+    private void processRemoveAction(List<EdgeFormData> edgeFormDatas,String utilLocId,InstallMaintenanceLogModel installMaintenanceLogModel){
         String removeReason = null;
         try {
             removeReason = valueById(edgeFormDatas, 35);
@@ -932,14 +931,14 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
                             String macaddress = getMACAddress(installMaintenanceLogModel);
                             logger.info("removed mac address:"+macaddress);
                             try {
-                                replaceOLC(loggingModel.getControllerSrtId(), loggingModel.getIdOnController(), "");
+                                replaceOLC(installMaintenanceLogModel.getControllerSrtId(), installMaintenanceLogModel.getIdOnController(), "");
                             }catch (Exception e){
                                 e.printStackTrace();
                                 logger.error("error in replace OLC:"+e.getMessage());
                             }
                             logger.info("empty replaceOLC called");
                             try {
-                                clearDeviceValues(loggingModel.getIdOnController(), loggingModel.getControllerSrtId(), "Installed on Wrong Fixture");
+                                clearDeviceValues(installMaintenanceLogModel.getIdOnController(), installMaintenanceLogModel.getControllerSrtId(), "Installed on Wrong Fixture");
                             }catch (Exception e){
                                 e.printStackTrace();
                                 logger.error("Error in clear device values:"+e.getMessage());
@@ -960,14 +959,14 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
                     break;
                 case "Pole Removed":
                     try {
-                        clearDeviceValues(loggingModel.getIdOnController(),loggingModel.getControllerSrtId(),"Pole Removed");
+                        clearDeviceValues(installMaintenanceLogModel.getIdOnController(),installMaintenanceLogModel.getControllerSrtId(),"Pole Removed");
                     }catch (Exception e){
                         e.printStackTrace();
                     }
                     break;
                 case "Pole Knocked-Down":
                     try {
-                        clearDeviceValues(loggingModel.getIdOnController(),loggingModel.getControllerSrtId(),"Pole Knocked-Down");
+                        clearDeviceValues(installMaintenanceLogModel.getIdOnController(),installMaintenanceLogModel.getControllerSrtId(),"Pole Knocked-Down");
                     }catch (Exception e){
                         e.printStackTrace();
                     }
