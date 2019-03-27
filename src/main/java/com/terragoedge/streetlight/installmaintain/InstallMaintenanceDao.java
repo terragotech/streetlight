@@ -50,7 +50,7 @@ public class InstallMaintenanceDao extends UtilDao {
         ResultSet queryResponse = null;
         CSVWriter dailyCompletedCSVWriter = null;
         List<DuplicateModel> duplicateModelList = new ArrayList<>();
-        startTime = 1553230800000L;
+        startTime = 1553576400000L;
         logger.info("configs: "+gson.toJson(configs));
         try{
             String fileName = Utils.getDateTime();
@@ -61,7 +61,7 @@ public class InstallMaintenanceDao extends UtilDao {
             dailyCompletedCSVWriter =  initCSV(fileWriter);
             logger.info("start time:"+startTime);
             logger.info("readable fromat time:"+Utils.getDateTime(startTime));
-            queryResponse = queryStatement.executeQuery("select title,noteguid,parentnoteid,createddatetime from edgenote where iscurrent = true and isdeleted = false  and createddatetime >= "+startTime+"  order by createddatetime;");
+            queryResponse = queryStatement.executeQuery("select title,noteguid,parentnoteid,createddatetime from edgenote where iscurrent = true and isdeleted = false  and createddatetime >= "+startTime+"   order by createddatetime;");
 
             logger.info("query response executed");
             int i = 0;
@@ -91,7 +91,7 @@ public class InstallMaintenanceDao extends UtilDao {
             logger.info("daily install report csv file created!");
             closeCSVBuffer(dailyCompletedCSVWriter);
             edgeMailService.sendMail(duplicateMacAddressFile,dailyReportFile);
-           // startGeoPDFProcess(dailyReportFile);
+            startGeoPDFProcess(dailyReportFile);
         }catch (Exception e){
             logger.error("Error in doProcess",e);
             closeCSVBuffer(dailyCompletedCSVWriter);
@@ -286,7 +286,7 @@ public class InstallMaintenanceDao extends UtilDao {
 
     private void writeCSV(NoteData noteData,CSVWriter csvWriter,List<DuplicateModel> duplicateModelList){
         loadNotesData(noteData);
-        if(!noteData.getCreatedBy().equals("admin")){
+        if(!noteData.getCreatedBy().equals("admin") && !noteData.getCreatedBy().equals("slvinterface")){
             if(noteData.getInstallMaintenanceModel().getRemovalReason() == null){
                 checkMACDuplicate(noteData,duplicateModelList);
             }

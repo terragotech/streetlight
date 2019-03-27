@@ -22,6 +22,7 @@ public class FilterNewInstallationOnly {
 			int MACAddressIdx = -1;
 			int ENMACAddressIdx = -1;
 			int NNMACAddressIdx = -1;
+			int removalReasonIdx = -1;
 			
 			// End of List of Fields to check
 			boolean bHeaderRead = false;
@@ -31,6 +32,7 @@ public class FilterNewInstallationOnly {
 	            	MACAddressIdx = CSVUtils.getConditionFieldIndex(csvHeaders, "MAC Address");
 	            	ENMACAddressIdx = CSVUtils.getConditionFieldIndex(csvHeaders,"Existing Node MAC Address");
 	            	NNMACAddressIdx = CSVUtils.getConditionFieldIndex(csvHeaders,"New Node MAC Address");
+                    removalReasonIdx = CSVUtils.getConditionFieldIndex(csvHeaders,"Reason for removal");
 	            	textFileWriter.writeLine(inputLine);
 	            	textFileWriter.writeLine("\n");
 	            	bHeaderRead = true;
@@ -41,6 +43,7 @@ public class FilterNewInstallationOnly {
 	            	String macAddressInstalled = fields.get(MACAddressIdx);
 	            	String macAddressExisting = fields.get(ENMACAddressIdx);
 	            	String macAddressNew = fields.get(NNMACAddressIdx);
+	            	String removalReason = fields.get(removalReasonIdx);
 	            	if(macAddressInstalled != null){
 	            		if(!macAddressInstalled.equals(""))
 	            		{
@@ -48,7 +51,7 @@ public class FilterNewInstallationOnly {
 	            			{
 	            				if(macAddressNew != null)
 	            				{
-	            					if(macAddressExisting.equals("") && macAddressNew.equals(""))
+	            					if(macAddressExisting.equals("") && macAddressNew.equals("") && !(removalReason != null && removalReason.toLowerCase().contains("pole")))
 	            					{
 	            						textFileWriter.writeLine(inputLine);
 	            		            	textFileWriter.writeLine("\n");
