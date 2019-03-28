@@ -419,7 +419,7 @@ public abstract class AbstractProcessor {
             String model = fixtureInfo[1].trim();
             String partNumber = fixtureInfo[2].trim();
             logger.info("luminaire.brand "+fixtureInfo[0]);
-            if (fixtureInfo[1].trim().length() >= fixtureInfo[2].trim().length() && !fixtureInfo[0].trim().contains("LV Manufacturing")) {
+            if (fixtureInfo[1].trim().length() > fixtureInfo[2].trim().length() && !fixtureInfo[0].trim().contains("LV Manufacturing")) {
                 model = fixtureInfo[2].trim();
                 partNumber = fixtureInfo[1].trim();
                 logger.info("device.luminaire.partnumber "+partNumber);
