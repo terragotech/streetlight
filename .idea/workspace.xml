@@ -2,55 +2,73 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="f904f44b-f6bd-48bf-b34b-13f1d328cd66" name="Default" comment="">
+      <change afterPath="$PROJECT_DIR$/.idea/libraries/Maven__com_opencsv_opencsv_4_0.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/libraries/Maven__commons_beanutils_commons_beanutils_1_9_3.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/libraries/Maven__commons_collections_commons_collections_3_2_2.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/libraries/Maven__commons_io_commons_io_2_4.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/libraries/Maven__org_apache_commons_commons_text_1_1.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/terragoedge/slvinterface/model/DailyReportEntity.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/terragoedge/slvinterface/model/InstallationReportModel.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/terragoedge/slvinterface/model/SlvData.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/terragoedge/slvinterface/model/SlvDataPrevious.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/terragoedge/slvinterface/service/AbstractReportService.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/terragoedge/slvinterface/service/InstallationReportService.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/terragoedge/slvinterface/service/SlvDataDifferenceService.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/com/terragoedge/slvinterface/utils/FileUtils.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/pom.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/terragoedge/automation/service/AbstractReportService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/terragoedge/automation/service/AbstractReportService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/syncresources/EdgeFormMobile.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/syncresources/FormDef.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/syncresources/MainApp.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/syncresources/SqliteJDBCConnection.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/terragoedge/automation/Dao/InventoryDAO.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/terragoedge/automation/Dao/InventoryDAO.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/terragoedge/automation/service/AbstractInventoryService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/terragoedge/automation/service/AbstractInventoryService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/terragoedge/automation/service/ComedInventoryService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/terragoedge/automation/service/ComedInventoryService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/terragoedge/automation/service/ExceptionReportAutomationService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/terragoedge/automation/service/ExceptionReportAutomationService.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/com/terragoedge/automation/service/ReportAutomationService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/terragoedge/automation/service/ReportAutomationService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/terragoedge/slvinterface/SlvInterfaceApp.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/terragoedge/slvinterface/SlvInterfaceApp.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/terragoedge/slvinterface/entity/EdgeFormEntity.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/terragoedge/slvinterface/entity/EdgeFormEntity.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/terragoedge/slvinterface/utils/PropertiesReader.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/terragoedge/slvinterface/utils/PropertiesReader.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/terragoedge/slvinterface/utils/Utils.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/terragoedge/slvinterface/utils/Utils.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/terragoedge/slvinterface/CronJobService.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/terragoedge/slvinterface/SlvInterfaceApp.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/terragoedge/slvinterface/ReportAutomation.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/terragoedge/slvinterface/config1.json" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/terragoedge/slvinterface/dao/ConnectionDAO.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/terragoedge/slvinterface/dao/EdgeReportDAO.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/terragoedge/slvinterface/dao/SLVInterfaceDAO.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/terragoedge/slvinterface/dao/tables/SlvDevice.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/terragoedge/slvinterface/dao/tables/SlvSyncDetails.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/terragoedge/slvinterface/entity/EdgeNoteView.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/terragoedge/slvinterface/entity/EdgeNoteView.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/terragoedge/slvinterface/json/edgedata/read.txt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/terragoedge/slvinterface/json/slvInterface/Action.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/terragoedge/slvinterface/json/slvInterface/ConfigurationJson.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/terragoedge/slvinterface/json/slvInterface/Id.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/terragoedge/slvinterface/json/slvdata/read.txt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/terragoedge/slvinterface/model/CsvReportModel.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/terragoedge/slvinterface/model/DeviceMacAddress.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/terragoedge/slvinterface/model/EdgeFormData.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/terragoedge/slvinterface/model/EdgeNote.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/terragoedge/slvinterface/model/ExceptionLocation.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/terragoedge/slvinterface/model/FormData.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/terragoedge/slvinterface/model/NotesType.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/terragoedge/slvinterface/model/User.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/terragoedge/slvinterface/model/Value.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/terragoedge/slvinterface/schedulepropertiesconfig.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/terragoedge/slvinterface/service/AbstractService.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/terragoedge/slvinterface/service/AbstractSlvService.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/terragoedge/slvinterface/service/AmerescoReportService.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/terragoedge/slvinterface/service/EdgeService.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/terragoedge/slvinterface/service/InventoryAutomationService.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/terragoedge/slvinterface/service/LoadForAssignmentService.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/terragoedge/slvinterface/service/SlvInterfaceService.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/terragoedge/slvinterface/service/SlvRestService.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/terragoedge/slvinterface/service/TalkAddressService.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/terragoedge/slvinterface/utils/Constants.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/terragoedge/slvinterface/utils/Constants.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/terragoedge/slvinterface/utils/MessageConstants.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/terragoedge/slvinterface/utils/Utils.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/amerescousa/config.json" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/amerescousa/main.properties" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/log4j.properties" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/log4j.properties" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/resources/main.properties" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/main.properties" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/urbancontrol/config.json" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/urbancontrol/main.properties" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/streetlight.iml" beforeDir="false" afterPath="$PROJECT_DIR$/streetlight.iml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/Block_27.json" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/META-INF/MANIFEST.MF" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/META-INF/maven/com.terragoedge/streetlight/pom.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/Richmond.json" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/com/syncresources/MainApp.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/com/syncresources/MainApp.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/com/terragoedge/edgeserver/ArithmeticOperator.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/com/terragoedge/edgeserver/CalculationDefinition.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/com/terragoedge/edgeserver/CalculationNode.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/com/terragoedge/edgeserver/ComponentType.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/com/terragoedge/edgeserver/ConditionCollection.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/com/terragoedge/edgeserver/Conditions.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/com/terragoedge/edgeserver/EdgeFormData.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/com/terragoedge/edgeserver/EdgeFormFields.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/com/terragoedge/edgeserver/LogicalOperator.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/com/terragoedge/edgeserver/NotesType.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/com/terragoedge/edgeserver/SimpleCalculation.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/com/terragoedge/streetlight/App.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/com/terragoedge/streetlight/FormValue.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/com/terragoedge/streetlight/PropertiesReader.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/com/terragoedge/streetlight/StreetLightDao$1.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/com/terragoedge/streetlight/StreetLightDao.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/com/terragoedge/streetlight/StreetLightData.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/com/terragoedge/streetlight/StreetLightService$1.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/com/terragoedge/streetlight/StreetLightService$2.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/com/terragoedge/streetlight/StreetLightService.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/com/terragoedge/xml/devices/ObjectFactory.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/com/terragoedge/xml/devices/Properties.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/com/terragoedge/xml/devices/SLVDevice.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/com/terragoedge/xml/devices/SLVDeviceArray.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/com/terragoedge/xml/devices/SLVKeyValuePair.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/com/terragoedge/xml/devices/Value.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/com/terragoedge/xml/parser/XMLMarshaller.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/log4j.properties" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/log4j.properties" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/main.properties" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/main.properties" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/classes/mapping.json" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/copy_resources-v1.jar" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/maven-status/maven-compiler-plugin/compile/default-compile/createdFiles.lst" beforeDir="false" afterPath="$PROJECT_DIR$/target/maven-status/maven-compiler-plugin/compile/default-compile/createdFiles.lst" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/maven-status/maven-compiler-plugin/compile/default-compile/inputFiles.lst" beforeDir="false" afterPath="$PROJECT_DIR$/target/maven-status/maven-compiler-plugin/compile/default-compile/inputFiles.lst" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/target/test-classes/com/terragoedge/streetlight/AppTest.class" beforeDir="false" />
     </list>
     <ignored path="$PROJECT_DIR$/target/" />
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
@@ -62,11 +80,11 @@
   </component>
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
-      <file leaf-file-name="ReportAutomationService.java" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/src/main/java/com/terragoedge/automation/service/ReportAutomationService.java">
+      <file leaf-file-name="InstallationReportService.java" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/src/main/java/com/terragoedge/slvinterface/service/InstallationReportService.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="1173">
-              <caret line="96" column="37" selection-start-line="96" selection-start-column="37" selection-end-line="96" selection-end-column="37" />
+            <state relative-caret-position="663">
+              <caret line="48" column="65" selection-start-line="48" selection-start-column="65" selection-end-line="48" selection-end-column="65" />
               <folding>
                 <element signature="imports" expanded="true" />
               </folding>
@@ -74,48 +92,71 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="PropertiesReader.java" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/src/main/java/com/terragoedge/slvinterface/utils/PropertiesReader.java">
-          <provider selected="true" editor-type-id="text-editor" />
-        </entry>
-      </file>
-      <file leaf-file-name="Utils.java" pinned="false" current-in-tab="true">
-        <entry file="file://$PROJECT_DIR$/src/main/java/com/terragoedge/slvinterface/utils/Utils.java">
+      <file leaf-file-name="SlvDataDifferenceService.java" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/src/main/java/com/terragoedge/slvinterface/service/SlvDataDifferenceService.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="181">
-              <caret line="184" column="14" lean-forward="true" selection-start-line="184" selection-start-column="14" selection-end-line="184" selection-end-column="14" />
+            <state relative-caret-position="68">
+              <caret line="4" column="24" selection-start-line="4" selection-start-column="24" selection-end-line="4" selection-end-column="24" />
             </state>
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="pom.xml" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/pom.xml">
+      <file leaf-file-name="SlvDataPrevious.java" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/src/main/java/com/terragoedge/slvinterface/model/SlvDataPrevious.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="221">
-              <caret line="13" selection-start-line="13" selection-end-line="13" />
+            <state relative-caret-position="85">
+              <caret line="6" column="30" selection-start-line="6" selection-start-column="30" selection-end-line="6" selection-end-column="30" />
             </state>
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="MacValidationModel.java" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/src/main/java/com/terragoedge/automation/model/MacValidationModel.java">
-          <provider selected="true" editor-type-id="text-editor" />
+      <file leaf-file-name="SlvData.java" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/src/main/java/com/terragoedge/slvinterface/model/SlvData.java">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="102">
+              <caret line="7" column="3" selection-start-line="7" selection-start-column="3" selection-end-line="8" selection-end-column="29" />
+              <folding>
+                <element signature="e#5359#5360#0" expanded="true" />
+                <element signature="e#5395#5396#0" expanded="true" />
+                <element signature="e#5453#5454#0" expanded="true" />
+                <element signature="e#5503#5504#0" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="DailyReportEntity.java" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/src/main/java/com/terragoedge/slvinterface/model/DailyReportEntity.java">
+          <provider selected="true" editor-type-id="text-editor">
+            <state>
+              <folding>
+                <element signature="imports" expanded="true" />
+                <element signature="e#304#305#0" expanded="true" />
+                <element signature="e#332#333#0" expanded="true" />
+                <element signature="e#374#375#0" expanded="true" />
+                <element signature="e#408#409#0" expanded="true" />
+              </folding>
+            </state>
+          </provider>
         </entry>
       </file>
       <file leaf-file-name="AbstractReportService.java" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/src/main/java/com/terragoedge/automation/service/AbstractReportService.java">
+        <entry file="file://$PROJECT_DIR$/src/main/java/com/terragoedge/slvinterface/service/AbstractReportService.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="969">
-              <caret line="65" column="22" selection-start-line="65" selection-start-column="22" selection-end-line="65" selection-end-column="22" />
+            <state relative-caret-position="85">
+              <caret line="8" column="52" selection-start-line="8" selection-start-column="52" selection-end-line="8" selection-end-column="52" />
+              <folding>
+                <element signature="imports" expanded="true" />
+              </folding>
             </state>
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="ConnectionDAO.java" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/src/main/java/com/terragoedge/slvinterface/dao/ConnectionDAO.java">
+      <file leaf-file-name="InstallationDAO.java" pinned="false" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/src/main/java/com/terragoedge/slvinterface/dao/InstallationDAO.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="952">
-              <caret line="81" column="23" selection-start-line="81" selection-start-column="23" selection-end-line="81" selection-end-column="23" />
+            <state relative-caret-position="354">
+              <caret line="71" column="52" selection-start-line="71" selection-start-column="52" selection-end-line="71" selection-end-column="52" />
               <folding>
                 <element signature="imports" expanded="true" />
               </folding>
@@ -126,8 +167,8 @@
       <file leaf-file-name="main.properties" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/main/resources/main.properties">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="629">
-              <caret line="37" column="15" selection-start-line="37" selection-start-column="15" selection-end-line="37" selection-end-column="15" />
+            <state relative-caret-position="170">
+              <caret line="10" selection-start-line="10" selection-end-line="10" />
             </state>
           </provider>
         </entry>
@@ -150,6 +191,9 @@
       <find>getEdgeNoteViewFromTitle</find>
       <find>edge.formtemplateGuid</find>
       <find>ope</find>
+      <find>StatefulBeanToCsv</find>
+      <find>newNodeMacAddressNR</find>
+      <find>newNodeMacAddressNFR</find>
     </findStrings>
   </component>
   <component name="Git.Settings">
@@ -166,12 +210,28 @@
         <option value="$PROJECT_DIR$/src/main/java/com/terragoedge/slvinterface/dao/ConnectionDAO.java" />
         <option value="$PROJECT_DIR$/src/main/java/com/terragoedge/slvinterface/entity/EdgeFormEntity.java" />
         <option value="$PROJECT_DIR$/src/main/java/com/terragoedge/slvinterface/utils/Utils.java" />
-        <option value="$PROJECT_DIR$/src/main/resources/main.properties" />
-        <option value="$PROJECT_DIR$/pom.xml" />
         <option value="$PROJECT_DIR$/src/main/java/com/terragoedge/automation/service/AbstractReportService.java" />
         <option value="$PROJECT_DIR$/src/main/java/com/terragoedge/automation/service/ReportAutomationService.java" />
-        <option value="$PROJECT_DIR$/src/main/java/com/terragoedge/slvinterface/SlvInterfaceApp.java" />
         <option value="$PROJECT_DIR$/src/main/java/com/terragoedge/slvinterface/utils/PropertiesReader.java" />
+        <option value="$PROJECT_DIR$/src/main/java/com/terragoedge/slvinterface/SlvInterfaceApp.java" />
+        <option value="$PROJECT_DIR$/pom.xml" />
+        <option value="$PROJECT_DIR$/src/main/java/com/terragoedge/slvinterface/service/MailSender.java" />
+        <option value="$PROJECT_DIR$/src/main/java/com/terragoedge/slvinterface/utils/FileUtils.java" />
+        <option value="$PROJECT_DIR$/src/main/java/com/terragoedge/slvinterface/ReportAutomation.java" />
+        <option value="$PROJECT_DIR$/src/main/java/com/terragoedge/slvinterface/dao/tables/InstallationDAO.java" />
+        <option value="$PROJECT_DIR$/src/main/java/com/terragoedge/slvinterface/dao/tables/DBConnection.java" />
+        <option value="$PROJECT_DIR$/src/main/java/com/terragoedge/slvinterface/dao/DBConnection.java" />
+        <option value="$PROJECT_DIR$/src/main/java/com/terragoedge/slvinterface/utils/Constants.java" />
+        <option value="$PROJECT_DIR$/src/main/java/com/terragoedge/slvinterface/model/SlvData.java" />
+        <option value="$PROJECT_DIR$/src/main/java/com/terragoedge/slvinterface/model/InstallationReportModel.java" />
+        <option value="$PROJECT_DIR$/src/main/resources/log4j.properties" />
+        <option value="$PROJECT_DIR$/src/main/resources/main.properties" />
+        <option value="$PROJECT_DIR$/src/main/java/com/terragoedge/slvinterface/service/AbstractReportService.java" />
+        <option value="$PROJECT_DIR$/src/main/java/com/terragoedge/slvinterface/service/InstallationReportService.java" />
+        <option value="$PROJECT_DIR$/src/main/java/com/terragoedge/slvinterface/model/SlvDataPrevious.java" />
+        <option value="$PROJECT_DIR$/src/main/java/com/terragoedge/slvinterface/model/DailyReportEntity.java" />
+        <option value="$PROJECT_DIR$/src/main/java/com/terragoedge/slvinterface/dao/InstallationDAO.java" />
+        <option value="$PROJECT_DIR$/src/main/java/com/terragoedge/slvinterface/service/SlvDataDifferenceService.java" />
       </list>
     </option>
   </component>
@@ -200,10 +260,11 @@
   <component name="NodePackageJsonFileManager">
     <packageJsonPaths />
   </component>
-  <component name="ProjectFrameBounds">
+  <component name="ProjectFrameBounds" extendedState="6">
+    <option name="x" value="110" />
     <option name="y" value="23" />
-    <option name="width" value="1280" />
-    <option name="height" value="712" />
+    <option name="width" value="1268" />
+    <option name="height" value="726" />
   </component>
   <component name="ProjectLevelVcsManager" settingsEditedManually="true" />
   <component name="ProjectView">
@@ -213,7 +274,6 @@
     <panes>
       <pane id="AndroidView" />
       <pane id="Scope" />
-      <pane id="PackagesPane" />
       <pane id="ProjectPane">
         <subPane>
           <expand>
@@ -224,12 +284,95 @@
             <path>
               <item name="streetlight" type="b2602c69:ProjectViewProjectNode" />
               <item name="streetlight" type="462c0819:PsiDirectoryNode" />
+              <item name="src" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="streetlight" type="b2602c69:ProjectViewProjectNode" />
+              <item name="streetlight" type="462c0819:PsiDirectoryNode" />
+              <item name="src" type="462c0819:PsiDirectoryNode" />
+              <item name="main" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="streetlight" type="b2602c69:ProjectViewProjectNode" />
+              <item name="streetlight" type="462c0819:PsiDirectoryNode" />
+              <item name="src" type="462c0819:PsiDirectoryNode" />
+              <item name="main" type="462c0819:PsiDirectoryNode" />
+              <item name="java" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="streetlight" type="b2602c69:ProjectViewProjectNode" />
+              <item name="streetlight" type="462c0819:PsiDirectoryNode" />
+              <item name="src" type="462c0819:PsiDirectoryNode" />
+              <item name="main" type="462c0819:PsiDirectoryNode" />
+              <item name="java" type="462c0819:PsiDirectoryNode" />
+              <item name="terragoedge" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="streetlight" type="b2602c69:ProjectViewProjectNode" />
+              <item name="streetlight" type="462c0819:PsiDirectoryNode" />
+              <item name="src" type="462c0819:PsiDirectoryNode" />
+              <item name="main" type="462c0819:PsiDirectoryNode" />
+              <item name="java" type="462c0819:PsiDirectoryNode" />
+              <item name="terragoedge" type="462c0819:PsiDirectoryNode" />
+              <item name="slvinterface" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="streetlight" type="b2602c69:ProjectViewProjectNode" />
+              <item name="streetlight" type="462c0819:PsiDirectoryNode" />
+              <item name="src" type="462c0819:PsiDirectoryNode" />
+              <item name="main" type="462c0819:PsiDirectoryNode" />
+              <item name="java" type="462c0819:PsiDirectoryNode" />
+              <item name="terragoedge" type="462c0819:PsiDirectoryNode" />
+              <item name="slvinterface" type="462c0819:PsiDirectoryNode" />
+              <item name="dao" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="streetlight" type="b2602c69:ProjectViewProjectNode" />
+              <item name="streetlight" type="462c0819:PsiDirectoryNode" />
+              <item name="src" type="462c0819:PsiDirectoryNode" />
+              <item name="main" type="462c0819:PsiDirectoryNode" />
+              <item name="java" type="462c0819:PsiDirectoryNode" />
+              <item name="terragoedge" type="462c0819:PsiDirectoryNode" />
+              <item name="slvinterface" type="462c0819:PsiDirectoryNode" />
+              <item name="model" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="streetlight" type="b2602c69:ProjectViewProjectNode" />
+              <item name="streetlight" type="462c0819:PsiDirectoryNode" />
+              <item name="src" type="462c0819:PsiDirectoryNode" />
+              <item name="main" type="462c0819:PsiDirectoryNode" />
+              <item name="java" type="462c0819:PsiDirectoryNode" />
+              <item name="terragoedge" type="462c0819:PsiDirectoryNode" />
+              <item name="slvinterface" type="462c0819:PsiDirectoryNode" />
+              <item name="service" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="streetlight" type="b2602c69:ProjectViewProjectNode" />
+              <item name="streetlight" type="462c0819:PsiDirectoryNode" />
+              <item name="src" type="462c0819:PsiDirectoryNode" />
+              <item name="main" type="462c0819:PsiDirectoryNode" />
+              <item name="java" type="462c0819:PsiDirectoryNode" />
+              <item name="terragoedge" type="462c0819:PsiDirectoryNode" />
+              <item name="slvinterface" type="462c0819:PsiDirectoryNode" />
+              <item name="utils" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="streetlight" type="b2602c69:ProjectViewProjectNode" />
+              <item name="streetlight" type="462c0819:PsiDirectoryNode" />
+              <item name="src" type="462c0819:PsiDirectoryNode" />
+              <item name="main" type="462c0819:PsiDirectoryNode" />
+              <item name="resources" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="streetlight" type="b2602c69:ProjectViewProjectNode" />
+              <item name="streetlight" type="462c0819:PsiDirectoryNode" />
               <item name="target" type="462c0819:PsiDirectoryNode" />
             </path>
           </expand>
           <select />
         </subPane>
       </pane>
+      <pane id="PackagesPane" />
     </panes>
   </component>
   <component name="PropertiesComponent">
@@ -244,6 +387,11 @@
     <property name="settings.editor.selected.configurable" value="project.propCompiler" />
   </component>
   <component name="RecentsManager">
+    <key name="CopyClassDialog.RECENTS_KEY">
+      <recent name="com.terragoedge.slvinterface.model" />
+      <recent name="com.terragoedge.slvinterface.service" />
+      <recent name="com.terragoedge.slvinterface.utils" />
+    </key>
     <key name="MoveFile.RECENT_KEYS">
       <recent name="E:\EdgeServer\streetlight\report" />
     </key>
@@ -262,7 +410,7 @@
   </component>
   <component name="RunManager">
     <configuration name="Unnamed" type="Application" factoryName="Application">
-      <option name="MAIN_CLASS_NAME" value="com.terragoedge.slvinterface.SlvInterfaceApp" />
+      <option name="MAIN_CLASS_NAME" value="com.terragoedge.slvinterface.ReportAutomation" />
       <module name="streetlight" />
       <option name="WORKING_DIRECTORY" value="file://$PROJECT_DIR$" />
     </configuration>
@@ -337,35 +485,36 @@
       <workItem from="1536906395340" duration="581000" />
       <workItem from="1537183906608" duration="3280000" />
       <workItem from="1537247815645" duration="591000" />
+      <workItem from="1553673405318" duration="566000" />
     </task>
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="46442000" />
+    <option name="totallyTimeSpent" value="84146000" />
   </component>
   <component name="ToolWindowManager">
-    <frame x="0" y="23" width="1280" height="712" extended-state="0" />
+    <frame x="-8" y="-8" width="1382" height="744" extended-state="6" />
     <layout>
       <window_info anchor="bottom" id="TODO" order="6" />
       <window_info anchor="right" id="Palette&#9;" order="7" />
       <window_info id="Image Layers" order="2" />
       <window_info anchor="right" id="Capture Analysis" order="3" />
       <window_info anchor="bottom" id="Event Log" order="11" sideWeight="0.5008197" side_tool="true" weight="0.40035906" />
-      <window_info anchor="right" id="Maven Projects" order="7" visible="true" weight="0.17704917" />
+      <window_info anchor="right" id="Maven Projects" order="7" visible="true" weight="0.17700455" />
       <window_info anchor="bottom" id="Database Changes" order="11" show_stripe_button="false" />
-      <window_info anchor="bottom" id="Run" order="2" sideWeight="0.49918032" weight="0.40035906" />
       <window_info anchor="bottom" id="Version Control" order="11" />
+      <window_info anchor="bottom" id="Run" order="2" sideWeight="0.49918032" weight="0.40035906" />
       <window_info anchor="bottom" id="Spring" order="7" />
       <window_info anchor="bottom" id="Terminal" order="11" />
       <window_info id="Capture Tool" order="2" />
       <window_info id="Designer" order="6" />
-      <window_info active="true" content_ui="combo" id="Project" order="0" visible="true" weight="0.3180328" />
+      <window_info active="true" content_ui="combo" id="Project" order="0" visible="true" weight="0.32299545" />
       <window_info anchor="right" id="Database" order="7" />
       <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
       <window_info anchor="right" id="Ant Build" order="1" weight="0.25" />
       <window_info anchor="right" id="Theme Preview" order="3" />
-      <window_info anchor="bottom" id="Debug" order="3" weight="0.39856374" />
       <window_info id="Favorites" order="6" side_tool="true" />
+      <window_info anchor="bottom" id="Debug" order="3" weight="0.39856374" />
       <window_info anchor="right" id="Palette" order="7" />
       <window_info anchor="right" content_ui="combo" id="Hierarchy" order="2" weight="0.25" />
       <window_info anchor="bottom" id="Inspection" order="5" weight="0.4" />
@@ -374,21 +523,21 @@
       <window_info id="UI Designer" order="6" />
       <window_info anchor="bottom" id="Message" order="0" />
       <window_info anchor="bottom" id="Cvs" order="4" weight="0.25" />
-      <window_info anchor="bottom" id="Find" order="1" weight="0.28725314" />
+      <window_info anchor="bottom" id="Find" order="1" visible="true" weight="0.28692698" />
     </layout>
     <layout-to-restore>
       <window_info anchor="right" id="Palette" order="0" />
-      <window_info anchor="right" content_ui="combo" id="Hierarchy" order="6" weight="0.25" />
       <window_info anchor="bottom" id="Version Control" order="4" />
-      <window_info id="Favorites" order="2" side_tool="true" />
+      <window_info anchor="right" content_ui="combo" id="Hierarchy" order="6" weight="0.25" />
+      <window_info anchor="bottom" id="Run" order="8" weight="0.37886178" />
       <window_info active="true" content_ui="combo" id="Project" order="3" visible="true" weight="0.28432956" />
       <window_info id="Structure" order="4" side_tool="true" weight="0.25" />
       <window_info anchor="right" id="Commander" internal_type="SLIDING" order="4" type="SLIDING" weight="0.4" />
       <window_info anchor="right" id="Ant Build" order="5" weight="0.25" />
-      <window_info anchor="bottom" id="Spring" order="0" />
+      <window_info anchor="bottom" id="Database Changes" order="1" show_stripe_button="false" />
       <window_info anchor="bottom" id="TODO" order="12" />
-      <window_info anchor="bottom" id="Run" order="8" weight="0.37886178" />
       <window_info id="Designer" order="0" />
+      <window_info anchor="bottom" id="Spring" order="0" />
       <window_info id="UI Designer" order="1" />
       <window_info anchor="bottom" id="Find" order="7" weight="0.045528457" />
       <window_info anchor="right" id="Database" order="1" />
@@ -401,7 +550,7 @@
       <window_info anchor="bottom" id="Message" order="6" />
       <window_info anchor="bottom" id="Messages" order="5" weight="0.09404389" />
       <window_info anchor="right" id="Maven Projects" order="3" weight="0.025848143" />
-      <window_info anchor="bottom" id="Database Changes" order="1" show_stripe_button="false" />
+      <window_info id="Favorites" order="2" side_tool="true" />
     </layout-to-restore>
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -415,169 +564,44 @@
       <breakpoints>
         <line-breakpoint enabled="true" type="java-line">
           <url>file://$PROJECT_DIR$/src/main/java/com/terragoedge/automation/service/ReportAutomationService.java</url>
-          <line>59</line>
+          <line>51</line>
           <properties />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="java-line">
           <url>file://$PROJECT_DIR$/src/main/java/com/terragoedge/automation/service/ReportAutomationService.java</url>
-          <line>62</line>
+          <line>54</line>
           <properties />
           <option name="timeStamp" value="3" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="java-line">
           <url>file://$PROJECT_DIR$/src/main/java/com/terragoedge/automation/service/ReportAutomationService.java</url>
-          <line>95</line>
+          <line>87</line>
           <properties />
           <option name="timeStamp" value="4" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="java-line">
-          <url>file://$PROJECT_DIR$/src/main/java/com/terragoedge/slvinterface/dao/ConnectionDAO.java</url>
-          <line>224</line>
-          <properties />
-          <option name="timeStamp" value="8" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" type="java-line">
-          <url>file://$PROJECT_DIR$/src/main/java/com/terragoedge/slvinterface/dao/ConnectionDAO.java</url>
-          <line>83</line>
-          <properties />
-          <option name="timeStamp" value="15" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" type="java-line">
           <url>file://$PROJECT_DIR$/src/main/java/com/terragoedge/automation/service/ReportAutomationService.java</url>
-          <line>184</line>
+          <line>176</line>
           <properties />
           <option name="timeStamp" value="17" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="java-line">
           <url>file://$PROJECT_DIR$/src/main/java/com/terragoedge/automation/service/ReportAutomationService.java</url>
-          <line>152</line>
+          <line>144</line>
           <properties />
           <option name="timeStamp" value="18" />
         </line-breakpoint>
+        <line-breakpoint enabled="true" type="java-line">
+          <url>file://$PROJECT_DIR$/src/main/java/com/terragoedge/slvinterface/service/InstallationReportService.java</url>
+          <line>39</line>
+          <properties />
+          <option name="timeStamp" value="19" />
+        </line-breakpoint>
       </breakpoints>
-      <option name="time" value="19" />
+      <option name="time" value="20" />
     </breakpoint-manager>
   </component>
   <component name="editorHistoryManager">
-    <entry file="file://$PROJECT_DIR$/pom.xml">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="288">
-          <caret line="70" column="20" selection-start-line="70" selection-start-column="20" selection-end-line="70" selection-end-column="20" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/main/java/com/terragoedge/streetlight/App.java" />
-    <entry file="file://$PROJECT_DIR$/src/main/java/com/terragoedge/install/StreetLightInstallService.java" />
-    <entry file="file://$PROJECT_DIR$/src/main/java/com/terragoedge/streetlight/service/StreetlightService.java" />
-    <entry file="file://$PROJECT_DIR$/src/main/java/com/terragoedge/streetlight/exception/ClearValueException.java" />
-    <entry file="file://$PROJECT_DIR$/src/main/java/com/terragoedge/streetlight/StreetlightApp.java" />
-    <entry file="file://$PROJECT_DIR$/src/main/java/com/terragoedge/streetlight/service/MessageConstants.java" />
-    <entry file="file://$PROJECT_DIR$/src/main/java/com/terragoedge/streetlight/service/StreetlightChicagoService.java" />
-    <entry file="jar://$MAVEN_REPOSITORY$/com/j256/ormlite/ormlite-jdbc/5.1/ormlite-jdbc-5.1.jar!/com/j256/ormlite/jdbc/JdbcConnectionSource.class">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="176">
-          <caret line="35" column="11" selection-start-line="35" selection-start-column="11" selection-end-line="35" selection-end-column="11" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/main/java/com/terragoedge/slvinterface/enumeration/Status.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="17">
-          <caret line="1" column="12" selection-start-line="1" selection-start-column="12" selection-end-line="1" selection-end-column="12" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/main/java/com/terragoedge/slvinterface/service/SlvRestService.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="2006">
-          <caret line="130" selection-start-line="130" selection-end-line="130" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/main/java/com/terragoedge/slvinterface/json/slvInterface/Action.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="34">
-          <caret line="2" column="13" selection-start-line="2" selection-start-column="13" selection-end-line="2" selection-end-column="13" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/main/java/com/terragoedge/slvinterface/json/slvInterface/ConfigurationJson.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="34">
-          <caret line="2" column="13" selection-start-line="2" selection-start-column="13" selection-end-line="2" selection-end-column="13" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/main/java/com/terragoedge/slvinterface/enumeration/SLVProcess.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="51">
-          <caret line="3" lean-forward="true" selection-start-line="3" selection-end-line="3" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/main/java/com/terragoedge/slvinterface/utils/MessageConstants.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="187">
-          <caret line="11" column="25" selection-start-line="11" selection-start-column="25" selection-end-line="11" selection-end-column="25" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/main/java/com/terragoedge/slvinterface/enumeration/EdgeComponentType.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="17">
-          <caret line="1" selection-start-line="1" selection-end-line="1" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="jar://$MAVEN_REPOSITORY$/com/j256/ormlite/ormlite-core/5.1/ormlite-core-5.1.jar!/com/j256/ormlite/dao/Dao.class">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="138">
-          <caret line="60" column="29" selection-start-line="60" selection-start-column="29" selection-end-line="60" selection-end-column="29" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/main/resources/sampletal.txt">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="102">
-          <caret line="40309" column="10" lean-forward="true" selection-start-line="40309" selection-start-column="10" selection-end-line="40309" selection-end-column="10" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/main/java/com/terragoedge/slvinterface/service/EdgeService.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="68">
-          <caret line="10" column="13" selection-start-line="10" selection-start-column="13" selection-end-line="10" selection-end-column="13" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/main/java/com/terragoedge/slvinterface/json/slvInterface/Id.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="181">
-          <caret line="29" column="32" selection-start-line="29" selection-start-column="32" selection-end-line="29" selection-end-column="32" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/main/java/com/terragoedge/slvinterface/dao/tables/SlvSyncDetails.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="119">
-          <caret line="8" column="4" selection-start-line="8" selection-start-column="4" selection-end-line="8" selection-end-column="54" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/main/java/com/terragoedge/slvinterface/service/AbstractSlvService.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="169">
-          <caret line="313" column="55" selection-start-line="313" selection-start-column="55" selection-end-line="313" selection-end-column="55" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/main/java/com/terragoedge/slvinterface/dao/tables/SlvDevice.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="357">
-          <caret line="59" selection-start-line="59" selection-end-line="59" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/src/main/java/com/terragoedge/slvinterface/exception/InValidSLNumberException.java">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="34">
@@ -609,25 +633,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/main/java/com/terragoedge/slvinterface/dao/SLVInterfaceDAO.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="130">
-          <caret line="19" column="11" selection-start-line="19" selection-start-column="11" selection-end-line="19" selection-end-column="11" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/main/java/com/terragoedge/slvinterface/service/SlvInterfaceService.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="17">
-          <caret line="466" column="37" lean-forward="true" selection-start-line="466" selection-start-column="37" selection-end-line="466" selection-end-column="37" />
-          <folding>
-            <element signature="imports" expanded="true" />
-            <element signature="e#5307#5315#0" expanded="true" />
-            <element signature="e#5462#5480#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/src/main/java/com/terragoedge/automation/service/ExceptionReportAutomationService.java">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="510">
@@ -644,15 +649,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/src/main/java/com/terragoedge/automation/Dao/InventoryDAO.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="3859">
-          <caret line="253" column="17" selection-start-line="253" selection-start-column="17" selection-end-line="253" selection-end-column="17" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/main/resources/main.properties">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="629">
-          <caret line="37" column="15" selection-start-line="37" selection-start-column="15" selection-end-line="37" selection-end-column="15" />
+        <state relative-caret-position="527">
+          <caret line="253" column="5" selection-start-line="253" selection-start-column="5" selection-end-line="253" selection-end-column="5" />
         </state>
       </provider>
     </entry>
@@ -663,16 +661,7 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/main/java/com/terragoedge/slvinterface/dao/ConnectionDAO.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="952">
-          <caret line="81" column="23" selection-start-line="81" selection-start-column="23" selection-end-line="81" selection-end-column="23" />
-          <folding>
-            <element signature="imports" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
+    <entry file="file://$PROJECT_DIR$/src/main/java/com/terragoedge/slvinterface/dao/ConnectionDAO.java" />
     <entry file="file://$PROJECT_DIR$/src/main/java/com/terragoedge/automation/service/AbstractReportService.java">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="969">
@@ -681,16 +670,6 @@
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/src/main/java/com/terragoedge/automation/model/MacValidationModel.java">
-      <provider selected="true" editor-type-id="text-editor" />
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/main/java/com/terragoedge/slvinterface/SlvInterfaceApp.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="115">
-          <caret line="27" column="8" selection-start-line="27" selection-start-column="8" selection-end-line="27" selection-end-column="8" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/main/java/com/terragoedge/slvinterface/utils/PropertiesReader.java">
       <provider selected="true" editor-type-id="text-editor" />
     </entry>
     <entry file="file://$PROJECT_DIR$/src/main/java/com/terragoedge/automation/service/ReportAutomationService.java">
@@ -703,17 +682,166 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/pom.xml">
+    <entry file="file://$PROJECT_DIR$/src/main/java/com/terragoedge/slvinterface/utils/Utils.java" />
+    <entry file="file://$PROJECT_DIR$/src/main/java/com/terragoedge/slvinterface/service/AmerescoReportService.java" />
+    <entry file="file://$PROJECT_DIR$/src/main/java/com/terragoedge/automation/Constant.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="221">
-          <caret line="13" selection-start-line="13" selection-end-line="13" />
+        <state relative-caret-position="34">
+          <caret line="2" column="13" selection-start-line="2" selection-start-column="13" selection-end-line="2" selection-end-column="13" />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/main/java/com/terragoedge/slvinterface/utils/Utils.java">
+    <entry file="file://$PROJECT_DIR$/src/main/java/com/terragoedge/automation/Dao/EdgeReportDAO.java">
+      <provider selected="true" editor-type-id="text-editor" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/main/java/com/terragoedge/slvinterface/dao/SLVInterfaceDAO.java" />
+    <entry file="file://$PROJECT_DIR$/src/main/java/com/terragoedge/slvinterface/service/InventoryAutomationService.java" />
+    <entry file="file://$PROJECT_DIR$/pom.xml">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="181">
-          <caret line="184" column="14" lean-forward="true" selection-start-line="184" selection-start-column="14" selection-end-line="184" selection-end-column="14" />
+        <state relative-caret-position="187">
+          <caret line="70" column="21" selection-start-line="70" selection-start-column="21" selection-end-line="70" selection-end-column="21" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/main/java/com/terragoedge/slvinterface/service/MailSender.java" />
+    <entry file="file://$PROJECT_DIR$/src/main/java/com/terragoedge/slvinterface/service/SlvInterfaceService.java" />
+    <entry file="file://$PROJECT_DIR$/src/main/java/com/terragoedge/slvinterface/service/TalkAddressService.java" />
+    <entry file="file://$PROJECT_DIR$/src/main/java/com/terragoedge/slvinterface/CronJobService.java" />
+    <entry file="file://$PROJECT_DIR$/src/main/java/com/terragoedge/slvinterface/ReportAutomation.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="119">
+          <caret line="7" column="38" selection-start-line="7" selection-start-column="38" selection-end-line="7" selection-end-column="38" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/main/java/com/terragoedge/slvinterface/dao/tables/InstallationDAO.java" />
+    <entry file="file://$PROJECT_DIR$/src/main/java/com/terragoedge/slvinterface/dao/tables/DBConnection.java" />
+    <entry file="file://$PROJECT_DIR$/src/main/java/com/terragoedge/slvinterface/utils/ResourceDetails.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="34">
+          <caret line="2" column="13" selection-start-line="2" selection-start-column="13" selection-end-line="2" selection-end-column="13" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/main/java/com/terragoedge/slvinterface/utils/PropertiesReader.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="334">
+          <caret line="39" column="9" selection-start-line="39" selection-start-column="9" selection-end-line="39" selection-end-column="9" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/main/java/com/terragoedge/slvinterface/dao/DBConnection.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="51">
+          <caret line="4" column="13" selection-start-line="4" selection-start-column="13" selection-end-line="4" selection-end-column="13" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/main/java/com/terragoedge/slvinterface/utils/Constants.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="119">
+          <caret line="7" column="43" selection-start-line="7" selection-start-column="43" selection-end-line="7" selection-end-column="43" />
+          <folding>
+            <element signature="imports" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/main/java/com/terragoedge/slvinterface/model/InstallationReportService.java" />
+    <entry file="file://$PROJECT_DIR$/src/main/java/com/terragoedge/slvinterface/model/InstallationReportModel.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="102">
+          <caret line="9" column="13" selection-start-line="9" selection-start-column="13" selection-end-line="9" selection-end-column="13" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/main/resources/log4j.properties">
+      <provider selected="true" editor-type-id="text-editor" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/main/resources/main.properties">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="170">
+          <caret line="10" selection-start-line="10" selection-end-line="10" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/main/java/com/terragoedge/slvinterface/utils/FileUtils.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="335">
+          <caret line="105" column="25" selection-start-line="105" selection-start-column="25" selection-end-line="105" selection-end-column="25" />
+          <folding>
+            <element signature="imports" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/main/java/com/terragoedge/slvinterface/service/AbstractReportService.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="85">
+          <caret line="8" column="52" selection-start-line="8" selection-start-column="52" selection-end-line="8" selection-end-column="52" />
+          <folding>
+            <element signature="imports" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/main/java/com/terragoedge/slvinterface/service/InstallationReportService.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="663">
+          <caret line="48" column="65" selection-start-line="48" selection-start-column="65" selection-end-line="48" selection-end-column="65" />
+          <folding>
+            <element signature="imports" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/main/java/com/terragoedge/slvinterface/model/DailyReportEntity.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state>
+          <folding>
+            <element signature="imports" expanded="true" />
+            <element signature="e#304#305#0" expanded="true" />
+            <element signature="e#332#333#0" expanded="true" />
+            <element signature="e#374#375#0" expanded="true" />
+            <element signature="e#408#409#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/main/java/com/terragoedge/slvinterface/model/SlvData.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="102">
+          <caret line="7" column="3" selection-start-line="7" selection-start-column="3" selection-end-line="8" selection-end-column="29" />
+          <folding>
+            <element signature="e#5359#5360#0" expanded="true" />
+            <element signature="e#5395#5396#0" expanded="true" />
+            <element signature="e#5453#5454#0" expanded="true" />
+            <element signature="e#5503#5504#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/main/java/com/terragoedge/slvinterface/model/SlvDataPrevious.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="85">
+          <caret line="6" column="30" selection-start-line="6" selection-start-column="30" selection-end-line="6" selection-end-column="30" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/main/java/com/terragoedge/slvinterface/service/SlvDataDifferenceService.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="68">
+          <caret line="4" column="24" selection-start-line="4" selection-start-column="24" selection-end-line="4" selection-end-column="24" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/main/java/com/terragoedge/slvinterface/dao/InstallationDAO.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="354">
+          <caret line="71" column="52" selection-start-line="71" selection-start-column="52" selection-end-line="71" selection-end-column="52" />
+          <folding>
+            <element signature="imports" expanded="true" />
+          </folding>
         </state>
       </provider>
     </entry>

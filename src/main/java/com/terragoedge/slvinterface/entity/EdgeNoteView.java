@@ -2,10 +2,7 @@ package com.terragoedge.slvinterface.entity;
 
 import com.j256.ormlite.field.DatabaseField;
 import com.j256.ormlite.table.DatabaseTable;
-import com.terragoedge.slvinterface.model.NotesType;
-import com.vividsolutions.jts.geom.Geometry;
 
-import java.util.List;
 @DatabaseTable(tableName = "edgenoteview")
 public class EdgeNoteView {
 	

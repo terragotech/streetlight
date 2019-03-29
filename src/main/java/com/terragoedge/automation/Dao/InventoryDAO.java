@@ -9,8 +9,6 @@ import com.j256.ormlite.jdbc.JdbcConnectionSource;
 import com.j256.ormlite.stmt.QueryBuilder;
 import com.j256.ormlite.stmt.UpdateBuilder;
 import com.j256.ormlite.support.ConnectionSource;
-import com.terragoedge.slvinterface.dao.tables.SlvDevice;
-import com.terragoedge.slvinterface.dao.tables.SlvSyncDetails;
 import com.terragoedge.slvinterface.entity.EdgeFormEntity;
 import com.terragoedge.slvinterface.entity.EdgeNoteEntity;
 import com.terragoedge.slvinterface.entity.EdgeNoteView;

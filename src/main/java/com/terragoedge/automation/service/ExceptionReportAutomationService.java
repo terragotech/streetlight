@@ -6,23 +6,16 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.reflect.TypeToken;
 import com.terragoedge.automation.Dao.InventoryDAO;
-import com.terragoedge.slvinterface.dao.ConnectionDAO;
-import com.terragoedge.slvinterface.dao.EdgeReportDAO;
 import com.terragoedge.slvinterface.entity.EdgeFormEntity;
 import com.terragoedge.slvinterface.entity.EdgeNoteView;
 import com.terragoedge.slvinterface.entity.EdgeNotebookEntity;
 import com.terragoedge.slvinterface.entity.InventoryReport;
-import com.terragoedge.slvinterface.model.*;
-import com.terragoedge.slvinterface.service.AbstractService;
-import com.terragoedge.slvinterface.service.EdgeService;
 import com.terragoedge.slvinterface.utils.PropertiesReader;
 import org.apache.log4j.Logger;
 import org.springframework.http.HttpMethod;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
 import java.io.*;
-import java.text.SimpleDateFormat;
 import java.util.*;
 
 public class ExceptionReportAutomationService extends EdgeService {

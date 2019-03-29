@@ -8,24 +8,16 @@ import com.terragoedge.automation.enumeration.ServerType;
 import com.terragoedge.automation.enumeration.Status;
 import com.terragoedge.automation.model.MacValidationModel;
 import com.terragoedge.automation.model.ReplaceModel;
-import com.terragoedge.slvinterface.dao.ConnectionDAO;
 import com.terragoedge.slvinterface.entity.EdgeFormEntity;
 import com.terragoedge.slvinterface.entity.EdgeNoteView;
 import com.terragoedge.slvinterface.entity.EdgeNotebookEntity;
 import com.terragoedge.slvinterface.exception.NoValueException;
-import com.terragoedge.slvinterface.model.EdgeFormData;
-import com.terragoedge.slvinterface.model.EdgeNote;
-import com.terragoedge.slvinterface.model.FormData;
 import com.terragoedge.slvinterface.utils.PropertiesReader;
-import com.terragoedge.slvinterface.utils.Utils;
 
 import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
 import java.lang.reflect.Type;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 

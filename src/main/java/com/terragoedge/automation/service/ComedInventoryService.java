@@ -1,11 +1,6 @@
 package com.terragoedge.automation.service;
 
-import com.terragoedge.Test;
-import com.terragoedge.automation.model.EdgeFormInfo;
 import com.terragoedge.automation.model.InventoryResult;
-import com.terragoedge.slvinterface.model.EdgeFormData;
-import com.terragoedge.slvinterface.service.InventoryAutomationService;
-import com.terragoedge.slvinterface.utils.Utils;
 
 import java.util.ArrayList;
 import java.util.List;

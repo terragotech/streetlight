@@ -7,7 +7,6 @@ import com.terragoedge.automation.Dao.InventoryDAO;
 import com.terragoedge.slvinterface.entity.EdgeFormEntity;
 import com.terragoedge.slvinterface.entity.EdgeNoteView;
 import com.terragoedge.slvinterface.exception.NoValueException;
-import com.terragoedge.slvinterface.model.EdgeFormData;
 
 import java.io.FileReader;
 import java.lang.reflect.Type;
