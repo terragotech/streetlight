@@ -1,24 +1,13 @@
 package com.terragoedge.streetlight;
 
-import com.terragoedge.streetlight.service.StreetlightChicagoService;
-import com.terragoedge.streetlight.service.TalkAddressService;
+import com.terragoedge.streetlight.service.HistoryService;
 
 
 public class StreetlightApp {
 
-	public static void main(String[] args) {
-	    while (true){
-            StreetlightChicagoService streetlightChicagoService = null;
-            try{
-                streetlightChicagoService = new StreetlightChicagoService();
-                streetlightChicagoService.run();
-                Thread.sleep(30000);
-            }catch (Exception e){
-                e.printStackTrace();
-            }finally {
-                streetlightChicagoService.closeConnection();
-            }
-       }
-	}
+    public static void main(String[] args) {
+        HistoryService historyService = new HistoryService();
+        historyService.start();
+    }
 
 }
