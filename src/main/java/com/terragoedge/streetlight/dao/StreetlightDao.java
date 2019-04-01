@@ -229,5 +229,21 @@ public class StreetlightDao extends UtilDao {
         }
     }
 
+    public void updateLicense(String expireDate) {
+        Statement queryStatement = null;
+        Connection connection = null;
+        try {
+            connection = StreetlightDaoConnection.getInstance().getConnection();
+            String query="UPDATE license SET expirationdate ='"+expireDate+"';";
+            queryStatement = connection.createStatement();
+            queryStatement.execute(query);
 
+        } catch (Exception e) {
+            logger.error("Error in update", e);
+        } finally {
+            closeStatement(queryStatement);
+        }
+
+
+    }
 }
