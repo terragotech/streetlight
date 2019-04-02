@@ -23,7 +23,7 @@ import org.springframework.util.StringUtils;
 
 public class StreetlightDao extends UtilDao {
 
-    static final Logger logger = Logger.getLogger(StreetlightDao.class);
+  //  static final Logger logger = Logger.getLogger(StreetlightDao.class);
 
     public StreetlightDao() {
         super();
@@ -56,7 +56,7 @@ public class StreetlightDao extends UtilDao {
                 return res;
             }
         } catch (Exception e) {
-            logger.error("Error in exceuteSequence", e);
+    //        logger.error("Error in exceuteSequence", e);
         } finally {
             closeStatement(statement);
         }
@@ -87,7 +87,7 @@ public class StreetlightDao extends UtilDao {
             }
             return failureReportModel;
         } catch (Exception e) {
-            logger.info("error while processedreportBy fixtureId", e);
+      //      logger.info("error while processedreportBy fixtureId", e);
         }
         return null;
     }
@@ -114,7 +114,7 @@ public class StreetlightDao extends UtilDao {
                 }
             }
         } catch (Exception e) {
-            logger.info("error while processedreportBy fixtureId", e);
+          //  logger.info("error while processedreportBy fixtureId", e);
         }
     }
 
@@ -130,7 +130,7 @@ public class StreetlightDao extends UtilDao {
 
             preparedStatement.executeUpdate();
         } catch (Exception e) {
-            logger.error("Error in update", e);
+           // logger.error("Error in update", e);
         } finally {
             closeStatement(preparedStatement);
         }
@@ -149,7 +149,7 @@ public class StreetlightDao extends UtilDao {
             }
 
         } catch (Exception e) {
-            logger.error("Error in getNoteIds", e);
+         //   logger.error("Error in getNoteIds", e);
         } finally {
             closeResultSet(queryResponse);
             closeStatement(queryStatement);
@@ -182,7 +182,7 @@ public class StreetlightDao extends UtilDao {
             preparedStatement.setString(10, loggingModel.getPoleStatus());
             preparedStatement.execute();
         } catch (Exception e) {
-            logger.error("Error in insert errorformdb", e);
+           // logger.error("Error in insert errorformdb", e);
         } finally {
             closeStatement(preparedStatement);
         }
@@ -206,7 +206,7 @@ public class StreetlightDao extends UtilDao {
             preparedStatement.setString(8, loggingModel.getNoteName());
             preparedStatement.executeUpdate();
         } catch (Exception e) {
-            logger.error("Error in update", e);
+            //logger.error("Error in update", e);
         } finally {
             closeStatement(preparedStatement);
         }
@@ -223,7 +223,7 @@ public class StreetlightDao extends UtilDao {
             preparedStatement.setString(1, processednoteid);
             preparedStatement.execute();
         } catch (Exception e) {
-            logger.error("Error in deleteProcessedNotes", e);
+            //logger.error("Error in deleteProcessedNotes", e);
         } finally {
             closeStatement(preparedStatement);
         }
@@ -239,7 +239,7 @@ public class StreetlightDao extends UtilDao {
             queryStatement.execute(query);
 
         } catch (Exception e) {
-            logger.error("Error in update", e);
+            //logger.error("Error in update", e);
         } finally {
             closeStatement(queryStatement);
         }
