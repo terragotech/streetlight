@@ -648,7 +648,7 @@ public class StreetlightDao extends UtilDao {
             preparedStatement.setString(3, slvTransactionLogs.getTitle());
             preparedStatement.setString(4, slvTransactionLogs.getRequestDetails());
             preparedStatement.setString(5, slvTransactionLogs.getResponseBody());
-            preparedStatement.setLong(6, slvTransactionLogs.getEventTime());
+            preparedStatement.setLong(6, System.currentTimeMillis());
             preparedStatement.setLong(7, slvTransactionLogs.getCreatedDateTime());
             preparedStatement.setString(8, slvTransactionLogs.getTypeOfCall().toString());
 
