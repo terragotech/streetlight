@@ -172,6 +172,7 @@ public class StreetlightChicagoService extends AbstractProcessor {
                                    installMaintenanceLogModel.setNoteName(edgeNote.getTitle());
                                    installMaintenanceLogModel.setLastSyncTime(edgeNote.getSyncTime());
                                    installMaintenanceLogModel.setCreatedDatetime(String.valueOf(edgeNote.getCreatedDateTime()));
+                                   installMaintenanceLogModel.setParentNoteId(edgeNote.getBaseParentNoteId());
                                    loadDefaultVal(edgeNote, installMaintenanceLogModel);
                                    loadDeviceValues(edgeNote.getTitle(),installMaintenanceLogModel);
                                    installationMaintenanceProcessor.processNewAction(edgeNote, installMaintenanceLogModel, false, null);

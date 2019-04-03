@@ -13,6 +13,7 @@ import com.terragoedge.edgeserver.EdgeNotebook;
 import com.terragoedge.edgeserver.FullEdgeNotebook;
 import com.terragoedge.edgeserver.SlvData;
 import com.terragoedge.edgeserver.SlvDataDub;
+import com.terragoedge.streetlight.json.model.SLVTransactionLogs;
 import com.terragoedge.streetlight.json.model.SlvServerData;
 import com.terragoedge.streetlight.logging.InstallMaintenanceLogModel;
 import org.apache.log4j.Logger;
@@ -28,6 +29,7 @@ public class StreetlightDao extends UtilDao {
     public StreetlightDao() {
         super();
         createStreetLightSyncTable();
+        createSLVTransactionTable();
         talqSyncTable();
     }
 
@@ -71,6 +73,12 @@ public class StreetlightDao extends UtilDao {
         executeStatement(sql);
 
         //sql = "CREATE TABLE IF NOT EXISTS lastsyncstatus (lastsyncstatusid integer not null, lastsynctime text, CONSTRAINT lastsyncstatus_pkey PRIMARY KEY (lastsyncstatusid))";
+    }
+
+
+    private void createSLVTransactionTable(){
+        String sql = "CREATE TABLE IF NOT EXISTS slvtransactionlogs(id SERIAL PRIMARY KEY,noteguid text,parentnoteid text,title text,requestdata text,responsebody text,eventtime bigint,createddatetime bigint,calltype text)";
+        executeStatement(sql);
     }
 
     private void talqSyncTable() {
@@ -194,34 +202,7 @@ public class StreetlightDao extends UtilDao {
     }
 	
 	
-	/*public void insertProcessedNoteGuids(String noteGuid,String status,String errorDetails,long createdDateTime,String noteName,boolean isQuickNote,String existingNodeMACAddress,String newNodeMACAddress){
-		PreparedStatement preparedStatement = null;
-		Connection connection = null;
-		try {
-			String sql = "SELECT max(streetlightsyncid) + 1 from  notesyncdetails";
-			long id = exceuteSql(sql);
-			if(id == -1 || id == 0){
-				id = 1; 
-			}
-			connection = StreetlightDaoConnection.getInstance().getConnection();
-			preparedStatement = connection.prepareStatement(
-					"INSERT INTO notesyncdetails (streetlightsyncid , processednoteid, status,errordetails,createddatetime, notename,existingnodemacaddress, newnodemacaddress) values (?,?,?,?,?,?,?,?) ;");
-			preparedStatement.setLong(1, id);
-			preparedStatement.setString(2, noteGuid);
-			preparedStatement.setString(3, status);
-			preparedStatement.setString(4, errorDetails);
-			preparedStatement.setLong(5, createdDateTime);
-			preparedStatement.setString(6, noteName);
-			preparedStatement.setBoolean(7, isQuickNote);
-			preparedStatement.setString(8, existingNodeMACAddress);
-			preparedStatement.setString(9, newNodeMACAddress);
-			preparedStatement.execute();
-		} catch (Exception e) {
-			logger.error("Error in insertParentNoteId",e);
-		} finally {
-			closeStatement(preparedStatement);
-		}
-	}*/
+
 
 
     /**
@@ -651,6 +632,32 @@ public class StreetlightDao extends UtilDao {
             closeStatement(queryStatement);
         }
         return null;
+    }
+
+
+
+    public void insertTransactionLogs(SLVTransactionLogs slvTransactionLogs) {
+        PreparedStatement preparedStatement = null;
+        Connection connection = null;
+        try {
+            connection = StreetlightDaoConnection.getInstance().getConnection();
+            preparedStatement = connection.prepareStatement(
+                    "INSERT INTO slvtransactionlogs(noteguid ,parentnoteid , title ,requestdata , responsebody ,eventtime,createddatetime,calltype ) values (?,?,?,?,?,?,?,?) ;");
+            preparedStatement.setString(1, slvTransactionLogs.getNoteGuid());
+            preparedStatement.setString(2, slvTransactionLogs.getParentNoteGuid());
+            preparedStatement.setString(3, slvTransactionLogs.getTitle());
+            preparedStatement.setString(4, slvTransactionLogs.getRequestDetails());
+            preparedStatement.setString(5, slvTransactionLogs.getResponseBody());
+            preparedStatement.setLong(6, slvTransactionLogs.getEventTime());
+            preparedStatement.setLong(7, slvTransactionLogs.getCreatedDateTime());
+            preparedStatement.setString(8, slvTransactionLogs.getTypeOfCall().toString());
+
+            preparedStatement.execute();
+        } catch (Exception e) {
+            logger.error("Error in insertParentNoteId", e);
+        } finally {
+            closeStatement(preparedStatement);
+        }
     }
 
     public void closeConnection(){

@@ -39,6 +39,7 @@ public class EdgeNote {
 	private String corrected = null;
 	private String resourceRef = null;
 	private String sourceType = null;
+	private String baseParentNoteId = null;
 
 	private String altitudeAccuracy = null;
 	private List<Dictionary> dictionary = new ArrayList<Dictionary>();
@@ -49,7 +50,15 @@ private EdgeNotebook edgeNotebook = null;
 
 	}
 
-	public String getPDOP() {
+    public String getBaseParentNoteId() {
+        return baseParentNoteId;
+    }
+
+    public void setBaseParentNoteId(String baseParentNoteId) {
+        this.baseParentNoteId = baseParentNoteId;
+    }
+
+    public String getPDOP() {
 		return PDOP;
 	}
 
@@ -310,39 +319,40 @@ private EdgeNotebook edgeNotebook = null;
 		this.syncTime = syncTime;
 	}
 
-	@Override
-	public String toString() {
-		return "EdgeNote{" +
-				"PDOP='" + PDOP + '\'' +
-				", gpsTime='" + gpsTime + '\'' +
-				", altitude='" + altitude + '\'' +
-				", title='" + title + '\'' +
-				", formData=" + formData +
-				", satellitesCount=" + satellitesCount +
-				", description='" + description + '\'' +
-				", HDOP='" + HDOP + '\'' +
-				", notesType='" + notesType + '\'' +
-				", isTaskNote=" + isTaskNote +
-				", locationDescription='" + locationDescription + '\'' +
-				", speed='" + speed + '\'' +
-				", horizontalAccuracy='" + horizontalAccuracy + '\'' +
-				", locationProvider='" + locationProvider + '\'' +
-				", noteGuid='" + noteGuid + '\'' +
-				", geometry='" + geometry + '\'' +
-				", VDOP='" + VDOP + '\'' +
-				", createdBy='" + createdBy + '\'' +
-				", lockType='" + lockType + '\'' +
-				", createdDateTime=" + createdDateTime +
-				", bearing='" + bearing + '\'' +
-				", bearingAccuracy='" + bearingAccuracy + '\'' +
-				", bearingTruenorth='" + bearingTruenorth + '\'' +
-				", corrected='" + corrected + '\'' +
-				", resourceRef='" + resourceRef + '\'' +
-				", sourceType='" + sourceType + '\'' +
-				", altitudeAccuracy='" + altitudeAccuracy + '\'' +
-				", dictionary=" + dictionary +
-				", syncTime=" + syncTime +
-				", edgeNotebook=" + edgeNotebook +
-				'}';
-	}
+    @Override
+    public String toString() {
+        return "EdgeNote{" +
+                "PDOP='" + PDOP + '\'' +
+                ", gpsTime='" + gpsTime + '\'' +
+                ", altitude='" + altitude + '\'' +
+                ", title='" + title + '\'' +
+                ", formData=" + formData +
+                ", satellitesCount=" + satellitesCount +
+                ", description='" + description + '\'' +
+                ", HDOP='" + HDOP + '\'' +
+                ", notesType='" + notesType + '\'' +
+                ", isTaskNote=" + isTaskNote +
+                ", locationDescription='" + locationDescription + '\'' +
+                ", speed='" + speed + '\'' +
+                ", horizontalAccuracy='" + horizontalAccuracy + '\'' +
+                ", locationProvider='" + locationProvider + '\'' +
+                ", noteGuid='" + noteGuid + '\'' +
+                ", geometry='" + geometry + '\'' +
+                ", VDOP='" + VDOP + '\'' +
+                ", createdBy='" + createdBy + '\'' +
+                ", lockType='" + lockType + '\'' +
+                ", createdDateTime=" + createdDateTime +
+                ", bearing='" + bearing + '\'' +
+                ", bearingAccuracy='" + bearingAccuracy + '\'' +
+                ", bearingTruenorth='" + bearingTruenorth + '\'' +
+                ", corrected='" + corrected + '\'' +
+                ", resourceRef='" + resourceRef + '\'' +
+                ", sourceType='" + sourceType + '\'' +
+                ", baseParentNoteId='" + baseParentNoteId + '\'' +
+                ", altitudeAccuracy='" + altitudeAccuracy + '\'' +
+                ", dictionary=" + dictionary +
+                ", syncTime=" + syncTime +
+                ", edgeNotebook=" + edgeNotebook +
+                '}';
+    }
 }

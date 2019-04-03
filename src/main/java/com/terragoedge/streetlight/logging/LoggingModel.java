@@ -17,6 +17,7 @@ public class LoggingModel {
     private String macAddress;
     private boolean isNoteAlreadySynced;
     private String talqAddressnoteGuid;
+    private String parentNoteId;
 
     private String controllerSrtId;
 
@@ -34,6 +35,14 @@ public class LoggingModel {
     private boolean isNigthRideSame;
 
     private String repairsOption;
+
+    public String getParentNoteId() {
+        return parentNoteId;
+    }
+
+    public void setParentNoteId(String parentNoteId) {
+        this.parentNoteId = parentNoteId;
+    }
 
     public boolean isNigthRideSame() {
         return isNigthRideSame;

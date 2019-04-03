@@ -8,6 +8,7 @@ import com.terragoedge.edgeserver.Value;
 import com.terragoedge.streetlight.PropertiesReader;
 import com.terragoedge.streetlight.dao.ConnectionDAO;
 import com.terragoedge.streetlight.dao.StreetlightDao;
+import com.terragoedge.streetlight.enumeration.CallType;
 import com.terragoedge.streetlight.enumeration.ProcessType;
 import com.terragoedge.streetlight.exception.*;
 import com.terragoedge.streetlight.json.model.*;
@@ -247,7 +248,7 @@ public abstract class AbstractProcessor {
                         isDuplicate = true;
                     }
                     if (value.getIdOnController().equals(idOnController) && nightRideKey != null) {
-                        sendNightRideToSLV(value.getIdOnController(), nightRideKey, nightRideValue);
+                        sendNightRideToSLV(value.getIdOnController(), nightRideKey, nightRideValue,loggingModel);
                     }
                     stringBuilder.append(value.getIdOnController());
                     stringBuilder.append("\n");
@@ -472,21 +473,41 @@ public abstract class AbstractProcessor {
     }
 
 
-    protected int setDeviceValues(List<Object> paramsList) {
-        String mainUrl = properties.getProperty("streetlight.slv.url.main");
-        String updateDeviceValues = properties.getProperty("streetlight.slv.url.updatedevice");
-        String url = mainUrl + updateDeviceValues;
+    protected int setDeviceValues(List<Object> paramsList,SLVTransactionLogs slvTransactionLogs) {
+        int errorCode = -1;
+        try{
+            String mainUrl = properties.getProperty("streetlight.slv.url.main");
+            String updateDeviceValues = properties.getProperty("streetlight.slv.url.updatedevice");
+            String url = mainUrl + updateDeviceValues;
 
-        paramsList.add("ser=json");
-        String params = StringUtils.join(paramsList, "&");
-        url = url + "&" + params;
-        logger.info("SetDevice method called");
-        logger.info("SetDevice url:"+url);
-        ResponseEntity<String> response = restService.getPostRequest(url, null);
-        String responseString = response.getBody();
-        JsonObject replaceOlcResponse = (JsonObject) jsonParser.parse(responseString);
-        int errorCode = replaceOlcResponse.get("errorCode").getAsInt();
+            paramsList.add("ser=json");
+            String params = StringUtils.join(paramsList, "&");
+            url = url + "&" + params;
+            logger.info("SetDevice method called");
+            logger.info("SetDevice url:"+url);
+            setSLVTransactionLogs(slvTransactionLogs,url,CallType.SET_DEVICE);
+            ResponseEntity<String> response = restService.getPostRequest(url, null);
+            String responseString = response.getBody();
+            setResponseDetails(slvTransactionLogs,responseString);
+            JsonObject replaceOlcResponse = (JsonObject) jsonParser.parse(responseString);
+            errorCode = replaceOlcResponse.get("errorCode").getAsInt();
+       }catch (Exception e){
+            setResponseDetails(slvTransactionLogs,"Error in setDeviceValues:"+e.getMessage());
+           logger.error("Error in setDeviceValues",e);
+       }finally {
+           streetlightDao.insertTransactionLogs(slvTransactionLogs);
+       }
+
         return errorCode;
+    }
+
+    private void setSLVTransactionLogs(SLVTransactionLogs slvTransactionLogs, String request,CallType  callType){
+        slvTransactionLogs.setRequestDetails(request);
+        slvTransactionLogs.setTypeOfCall(callType);
+    }
+
+    private void setResponseDetails(SLVTransactionLogs slvTransactionLogs,String responseString){
+        slvTransactionLogs.setResponseBody(responseString);
     }
 
 
@@ -495,7 +516,7 @@ public abstract class AbstractProcessor {
      *
      * @throws ReplaceOLCFailedException
      */
-    public void replaceOLC(String controllerStrIdValue, String idOnController, String macAddress)
+    public void replaceOLC(String controllerStrIdValue, String idOnController, String macAddress,SLVTransactionLogs slvTransactionLogs)
             throws ReplaceOLCFailedException {
        try {
             // String newNetworkId = slvSyncDataEntity.getMacAddress();
@@ -515,8 +536,10 @@ public abstract class AbstractProcessor {
             paramsList.add("ser=json");
             String params = StringUtils.join(paramsList, "&");
             url = url + "?" + params;
+            setSLVTransactionLogs(slvTransactionLogs,url,CallType.REPLACE_OLC);
             ResponseEntity<String> response = restService.getPostRequest(url, null);
             String responseString = response.getBody();
+            setResponseDetails(slvTransactionLogs,responseString);
             JsonObject replaceOlcResponse = (JsonObject) jsonParser.parse(responseString);
             String errorStatus = replaceOlcResponse.get("status").getAsString();
             logger.info("Replace OLC Process End.");
@@ -536,7 +559,9 @@ public abstract class AbstractProcessor {
         } catch (Exception e) {
             logger.error("Error in replaceOLC", e);
             throw new ReplaceOLCFailedException(e.getMessage());
-        }
+        }finally {
+           streetlightDao.insertTransactionLogs(slvTransactionLogs);
+       }
 
     }
 
@@ -559,14 +584,15 @@ public abstract class AbstractProcessor {
         loggingModel.setControllerSrtId(controllerStrId);
     }
 
-    private void sendNightRideToSLV(String idOnController, String nightRideKey, String nightRideValue) {
+    private void sendNightRideToSLV(String idOnController, String nightRideKey, String nightRideValue,LoggingModel loggingModel) {
         List<Object> paramsList = new ArrayList<>();
         String controllerStrId = properties.getProperty("streetlight.slv.controllerstrid");
         paramsList.add("idOnController=" + idOnController);
         paramsList.add("controllerStrId=" + controllerStrId);
         if (nightRideValue != null) {
             addStreetLightData(nightRideKey, nightRideValue, paramsList);
-            int errorCode = setDeviceValues(paramsList);
+            SLVTransactionLogs slvTransactionLogs = getSLVTransactionLogs(loggingModel);
+            int errorCode = setDeviceValues(paramsList,slvTransactionLogs);
             logger.info("Error code" + errorCode);
             if (errorCode != 0) {
                 logger.error(MessageConstants.ERROR_UPDATE_DEVICE_VAL);
@@ -576,6 +602,16 @@ public abstract class AbstractProcessor {
                 logger.info(MessageConstants.SUCCESS);
             }
         }
+    }
+
+
+    public SLVTransactionLogs getSLVTransactionLogs(LoggingModel loggingModel){
+        SLVTransactionLogs slvTransactionLogs = new SLVTransactionLogs();
+        slvTransactionLogs.setNoteGuid(loggingModel.getProcessedNoteId());
+        slvTransactionLogs.setTitle(loggingModel.getNoteName());
+        slvTransactionLogs.setCreatedDateTime(Long.valueOf(loggingModel.getCreatedDatetime()));
+        slvTransactionLogs.setParentNoteGuid(loggingModel.getParentNoteId());
+        return slvTransactionLogs;
     }
 
 

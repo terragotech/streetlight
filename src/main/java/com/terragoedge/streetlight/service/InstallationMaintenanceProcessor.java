@@ -5,6 +5,7 @@ import com.terragoedge.streetlight.PropertiesReader;
 import com.terragoedge.streetlight.exception.*;
 import com.terragoedge.streetlight.json.model.CslpDate;
 import com.terragoedge.streetlight.json.model.DuplicateMacAddress;
+import com.terragoedge.streetlight.json.model.SLVTransactionLogs;
 import com.terragoedge.streetlight.json.model.SlvServerData;
 import com.terragoedge.streetlight.logging.InstallMaintenanceLogModel;
 import com.terragoedge.streetlight.logging.LoggingModel;
@@ -98,8 +99,8 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
                         paramsList.add("idOnController=" + idOnController);
                         paramsList.add("controllerStrId=" + installMaintenanceLogModel.getControllerSrtId());
                         addStreetLightData(nightRideKey, nightRideValue, paramsList);
-
-                        int errorCode = setDeviceValues(paramsList);
+                        SLVTransactionLogs slvTransactionLogs = getSLVTransactionLogs(installMaintenanceLogModel);
+                        int errorCode = setDeviceValues(paramsList,slvTransactionLogs);
                         if (errorCode != 0) {
                             installMaintenanceLogModel.setErrorDetails(MessageConstants.ERROR_NIGHTRIDE_FORM_VAL);
                             installMaintenanceLogModel.setStatus(MessageConstants.ERROR);
@@ -439,7 +440,8 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
             addStreetLightData(nightRideKey, nightRideValue, paramsList);
         }
         addStreetLightData("installStatus", installStatus, paramsList);
-        int errorCode = setDeviceValues(paramsList);
+        SLVTransactionLogs slvTransactionLogs = getSLVTransactionLogs(loggingModel);
+        int errorCode = setDeviceValues(paramsList,slvTransactionLogs);
         logger.info("Error code" + errorCode);
         return errorCode;
     }
@@ -463,6 +465,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
             if (nightRideValue != null) {
                 addStreetLightData(nightRideKey, nightRideValue, paramsList);
             }
+
             if (macAddress != null && !macAddress.trim().isEmpty() && !loggingModel.isMacAddressUsed()) {
                 boolean isNodeDatePresent = isNodeDatePresent(idOnController);
                 if (!isNodeDatePresent) {
@@ -472,8 +475,8 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
                 addStreetLightData("MacAddress", macAddress, paramsList);
             }
 
-
-            int errorCode = setDeviceValues(paramsList);
+            SLVTransactionLogs slvTransactionLogs = getSLVTransactionLogs(loggingModel);
+            int errorCode = setDeviceValues(paramsList,slvTransactionLogs);
             logger.info("Error code" + errorCode);
             if (errorCode != 0) {
                 loggingModel.setErrorDetails(MessageConstants.ERROR_UPDATE_DEVICE_VAL);
@@ -489,7 +492,8 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
                     return;
                 } else {
                     if (!loggingModel.isMacAddressUsed()) {
-                        replaceOLC(controllerStrIdValue, idOnController, macAddress);// insert mac address
+                        slvTransactionLogs = getSLVTransactionLogs(loggingModel);
+                        replaceOLC(controllerStrIdValue, idOnController, macAddress,slvTransactionLogs);// insert mac address
                     }
 
                 }
@@ -562,7 +566,8 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
         } else {
             addStreetLightData(Key, formatedValue, paramsList);
         }
-        int errorCode = setDeviceValues(paramsList);
+        SLVTransactionLogs slvTransactionLogs = getSLVTransactionLogs(loggingModel);
+        int errorCode = setDeviceValues(paramsList,slvTransactionLogs);
         if (errorCode != 0) {
             logger.info("CDOT issue value serDevice error");
             loggingModel.setErrorDetails(MessageConstants.ERROR_OTHERTASK_DEVICE_VAL);
@@ -668,7 +673,8 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
 
             if (isResync) {
                 try {
-                    replaceOLC(loggingModel.getControllerSrtId(), loggingModel.getIdOnController(), "");
+                    SLVTransactionLogs slvTransactionLogs = getSLVTransactionLogs(loggingModel);
+                    replaceOLC(loggingModel.getControllerSrtId(), loggingModel.getIdOnController(), "",slvTransactionLogs);
                 } catch (Exception e) {
                     String message = e.getMessage();
                 }
@@ -822,7 +828,8 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
             // Call Empty ReplaceOLC
             try {
                 if (!loggingModel.isMacAddressUsed()) {
-                    replaceOLC(controllerStrIdValue, idOnController, "");
+                    SLVTransactionLogs slvTransactionLogs = getSLVTransactionLogs(loggingModel);
+                    replaceOLC(controllerStrIdValue, idOnController, "",slvTransactionLogs);
                     statusDescription.append(MessageConstants.EMPTY_REPLACE_OLC_SUCCESS);
                 }
 
@@ -896,7 +903,8 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
             // Call Empty ReplaceOLC
             try {
                 if (!loggingModel.isMacAddressUsed()) {
-                    replaceOLC(controllerStrIdValue, idOnController, "");
+                    SLVTransactionLogs slvTransactionLogs = getSLVTransactionLogs(loggingModel);
+                    replaceOLC(controllerStrIdValue, idOnController, "",slvTransactionLogs);
                 }
 
             } catch (ReplaceOLCFailedException e) {
@@ -931,14 +939,15 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
                             String macaddress = getMACAddress(installMaintenanceLogModel);
                             logger.info("removed mac address:"+macaddress);
                             try {
-                                replaceOLC(installMaintenanceLogModel.getControllerSrtId(), installMaintenanceLogModel.getIdOnController(), "");
+                                SLVTransactionLogs slvTransactionLogs = getSLVTransactionLogs(installMaintenanceLogModel);
+                                replaceOLC(installMaintenanceLogModel.getControllerSrtId(), installMaintenanceLogModel.getIdOnController(), "",slvTransactionLogs);
                             }catch (Exception e){
                                 e.printStackTrace();
                                 logger.error("error in replace OLC:"+e.getMessage());
                             }
                             logger.info("empty replaceOLC called");
                             try {
-                                clearDeviceValues(installMaintenanceLogModel.getIdOnController(), installMaintenanceLogModel.getControllerSrtId(), "Installed on Wrong Fixture");
+                                clearDeviceValues(installMaintenanceLogModel.getIdOnController(), installMaintenanceLogModel.getControllerSrtId(), "Installed on Wrong Fixture",installMaintenanceLogModel);
                             }catch (Exception e){
                                 e.printStackTrace();
                                 logger.error("Error in clear device values:"+e.getMessage());
@@ -959,14 +968,14 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
                     break;
                 case "Pole Removed":
                     try {
-                        clearDeviceValues(installMaintenanceLogModel.getIdOnController(),installMaintenanceLogModel.getControllerSrtId(),"Pole Removed");
+                        clearDeviceValues(installMaintenanceLogModel.getIdOnController(),installMaintenanceLogModel.getControllerSrtId(),"Pole Removed",installMaintenanceLogModel);
                     }catch (Exception e){
                         e.printStackTrace();
                     }
                     break;
                 case "Pole Knocked-Down":
                     try {
-                        clearDeviceValues(installMaintenanceLogModel.getIdOnController(),installMaintenanceLogModel.getControllerSrtId(),"Pole Knocked-Down");
+                        clearDeviceValues(installMaintenanceLogModel.getIdOnController(),installMaintenanceLogModel.getControllerSrtId(),"Pole Knocked-Down",installMaintenanceLogModel);
                     }catch (Exception e){
                         e.printStackTrace();
                     }
@@ -975,7 +984,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
         }
     }
 
-    private void clearDeviceValues(String idOnController,String controllerStrIdValue,String type){
+    private void clearDeviceValues(String idOnController,String controllerStrIdValue,String type,InstallMaintenanceLogModel loggingModel){
         List<Object> paramsList = new ArrayList<>();
         paramsList.add("idOnController=" + idOnController);
         paramsList.add("controllerStrId=" + controllerStrIdValue);
@@ -1003,7 +1012,8 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
                 addStreetLightData("luminaire.type", "HPS", paramsList);
                 break;
         }
-        int errorCode = setDeviceValues(paramsList);
+        SLVTransactionLogs slvTransactionLogs = getSLVTransactionLogs(loggingModel);
+        int errorCode = setDeviceValues(paramsList,slvTransactionLogs);
         if(errorCode == 0){
             logger.info("clearing device values completed: "+idOnController);
         }else{
