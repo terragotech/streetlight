@@ -1055,10 +1055,14 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
             logger.info("rest service data:" + notesData);
             EdgeNote edgeNote = gson.fromJson(notesData, EdgeNote.class);
             //   if(!edgeNote.getCreatedBy().contains("admin")){
+
             InstallMaintenanceLogModel installMaintenanceLogModel = new InstallMaintenanceLogModel();
+
+
             installMaintenanceLogModel.setLastSyncTime(edgeNote.getSyncTime());
             installMaintenanceLogModel.setProcessedNoteId(edgeNote.getNoteGuid());
             installMaintenanceLogModel.setNoteName(edgeNote.getTitle());
+            installMaintenanceLogModel.setParentNoteId(edgeNote.getBaseParentNoteId());
             installMaintenanceLogModel.setCreatedDatetime(String.valueOf(edgeNote.getCreatedDateTime()));
             loadDefaultVal(edgeNote, installMaintenanceLogModel);
             loadDeviceValues(installMaintenanceLogModel.getIdOnController(),installMaintenanceLogModel);

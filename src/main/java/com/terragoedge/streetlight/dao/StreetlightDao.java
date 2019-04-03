@@ -654,7 +654,7 @@ public class StreetlightDao extends UtilDao {
 
             preparedStatement.execute();
         } catch (Exception e) {
-            logger.error("Error in insertParentNoteId", e);
+            logger.error("Error in insertTransactionLogs", e);
         } finally {
             closeStatement(preparedStatement);
         }

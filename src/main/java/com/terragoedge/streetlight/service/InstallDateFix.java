@@ -27,9 +27,9 @@ public class InstallDateFix extends AbstractProcessor {
                      addStreetLightData("luminaire.installdate","", paramsList);
                      addStreetLightData("installStatus", "Verified", paramsList);
                      //  addStreetLightData("DimmingGroupName", res[1], paramsList);
-                    int errorCode = setDeviceValues(paramsList);
+                   // int errorCode = setDeviceValues(paramsList);
 
-                    System.out.println("status "+res[0]+" - "+errorCode);
+                  //  System.out.println("status "+res[0]+" - "+errorCode);
                     // logger.info("Response Code"+errorCode);
                  }catch (Exception e){
                      e.printStackTrace();
