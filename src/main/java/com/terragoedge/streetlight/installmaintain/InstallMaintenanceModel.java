@@ -19,6 +19,14 @@ public class InstallMaintenanceModel {
     private String isReplaceNode = "No";
 
     private String removalReason;
+    //Resolved
+    private String resolvedIssue;
+    private String resolvedComment;
+    private String existingMacIfWrong;
+    //Unable To Repair
+    private String unableToRepairIssue;
+    //Install status
+    private String installStatus;
 
 
     public String getRemovalReason() {
@@ -26,7 +34,7 @@ public class InstallMaintenanceModel {
     }
 
     public void setRemovalReason(String removalReason) {
-        if(removalReason != null && !removalReason.equals("Not selected") && !removalReason.equals("Select From Below")){
+        if (removalReason != null && !removalReason.equals("Not selected") && !removalReason.equals("Select From Below")) {
             this.removalReason = removalReason;
         }
 
@@ -112,55 +120,94 @@ public class InstallMaintenanceModel {
         this.exFixtureQRScanRF = exFixtureQRScanRF;
     }
 
-    private void loadExistingMACAddress(){
-        if(exMacAddressRN != null && !exMacAddressRN.trim().isEmpty()){
+    public String getResolvedIssue() {
+        return resolvedIssue;
+    }
+
+    public void setResolvedIssue(String resolvedIssue) {
+        this.resolvedIssue = resolvedIssue;
+    }
+
+    public String getResolvedComment() {
+        return resolvedComment;
+    }
+
+    public void setResolvedComment(String resolvedComment) {
+        this.resolvedComment = resolvedComment;
+    }
+
+    public String getExistingMacIfWrong() {
+        return existingMacIfWrong;
+    }
+
+    public void setExistingMacIfWrong(String existingMacIfWrong) {
+        this.existingMacIfWrong = existingMacIfWrong;
+    }
+
+    public String getUnableToRepairIssue() {
+        return unableToRepairIssue;
+    }
+
+    public void setUnableToRepairIssue(String unableToRepairIssue) {
+        this.unableToRepairIssue = unableToRepairIssue;
+    }
+
+    public String getInstallStatus() {
+        return installStatus;
+    }
+
+    public void setInstallStatus(String installStatus) {
+        this.installStatus = installStatus;
+    }
+
+    private void loadExistingMACAddress() {
+        if (exMacAddressRN != null && !exMacAddressRN.trim().isEmpty()) {
             exMacAddressRNF = exMacAddressRN;
         }
-        if(exMacAddressRNF == null || exMacAddressRNF.trim().isEmpty()){
+        if (exMacAddressRNF == null || exMacAddressRNF.trim().isEmpty()) {
             exMacAddressRNF = macAddress;
         }
     }
 
 
+    public void checkReplacedDetails() {
+        if (macAddressRN != null && !macAddressRN.trim().isEmpty()) {
+            macAddressRNF = macAddressRN;
+            isReplaceNode = "Yes";
+            loadExistingMACAddress();
+            return;
 
-   public void checkReplacedDetails(){
-       if(macAddressRN != null && !macAddressRN.trim().isEmpty()){
-           macAddressRNF = macAddressRN;
-           isReplaceNode = "Yes";
-           loadExistingMACAddress();
-           return;
+        }
 
-       }
-
-        if(macAddressRNF != null && !macAddressRNF.trim().isEmpty()){
+        if (macAddressRNF != null && !macAddressRNF.trim().isEmpty()) {
             isReplaceNode = "Yes";
             loadExistingMACAddress();
             return;
         }
 
-   }
+    }
 
-   public boolean hasVal(){
-        if(macAddress != null && !macAddress.trim().isEmpty()){
+    public boolean hasVal() {
+        if (macAddress != null && !macAddress.trim().isEmpty()) {
             return true;
         }
-       if(macAddressRN != null && !macAddressRN.trim().isEmpty()){
-           return true;
-       }
-       if(macAddressRNF != null && !macAddressRNF.trim().isEmpty()){
-           return true;
-       }
-       if(fixtureQRScan != null && !fixtureQRScan.trim().isEmpty()){
-           return true;
-       }
-       if(fixtureQRScanRF != null && !fixtureQRScanRF.trim().isEmpty()){
-           return true;
-       }
-       if(fixtureQRScanRNF != null && !fixtureQRScanRNF.trim().isEmpty()){
-           return true;
-       }
-       return false;
-   }
+        if (macAddressRN != null && !macAddressRN.trim().isEmpty()) {
+            return true;
+        }
+        if (macAddressRNF != null && !macAddressRNF.trim().isEmpty()) {
+            return true;
+        }
+        if (fixtureQRScan != null && !fixtureQRScan.trim().isEmpty()) {
+            return true;
+        }
+        if (fixtureQRScanRF != null && !fixtureQRScanRF.trim().isEmpty()) {
+            return true;
+        }
+        if (fixtureQRScanRNF != null && !fixtureQRScanRNF.trim().isEmpty()) {
+            return true;
+        }
+        return false;
+    }
 
     public String getIsReplaceNode() {
         return isReplaceNode;
@@ -181,12 +228,17 @@ public class InstallMaintenanceModel {
                 Objects.equals(fixtureQRScan, that.fixtureQRScan) &&
                 Objects.equals(fixtureQRScanRNF, that.fixtureQRScanRNF) &&
                 Objects.equals(removalReason, that.removalReason) &&
-                Objects.equals(fixtureQRScanRF, that.fixtureQRScanRF);
+                Objects.equals(fixtureQRScanRF, that.fixtureQRScanRF) &&
+                Objects.equals(resolvedIssue, that.resolvedIssue) &&
+                Objects.equals(resolvedComment, that.resolvedComment) &&
+                Objects.equals(existingMacIfWrong, that.existingMacIfWrong) &&
+                Objects.equals(unableToRepairIssue, that.unableToRepairIssue) &&
+                Objects.equals(installStatus, that.installStatus);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(macAddress, macAddressRNF, macAddressRN, fixtureQRScan, fixtureQRScanRNF, fixtureQRScanRF,removalReason);
+        return Objects.hash(macAddress, macAddressRNF, macAddressRN, fixtureQRScan, fixtureQRScanRNF, fixtureQRScanRF, removalReason, resolvedIssue, resolvedComment, existingMacIfWrong, unableToRepairIssue, installStatus);
     }
 
     @Override
@@ -204,6 +256,11 @@ public class InstallMaintenanceModel {
                 ", exFixtureQRScanRF='" + exFixtureQRScanRF + '\'' +
                 ", isReplaceNode='" + isReplaceNode + '\'' +
                 ", removalReason='" + removalReason + '\'' +
+                ", resolvedIssue='" + resolvedIssue + '\'' +
+                ", resolvedComment='" + resolvedComment + '\'' +
+                ", existingMacIfWrong='" + existingMacIfWrong + '\'' +
+                ", unableToRepairIssue='" + unableToRepairIssue + '\'' +
+                ", installStatus='" + installStatus + '\'' +
                 '}';
     }
 }

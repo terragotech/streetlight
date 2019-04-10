@@ -43,25 +43,26 @@ public class InstallMaintenanceDao extends UtilDao {
         edgeMailService = new EdgeMailService();
         configs = installMaintenanceService.getConfigList();
     }
+
     private Logger logger = Logger.getLogger(InstallMaintenanceDao.class);
 
-    public void doProcess(){
+    public void doProcess() {
         Statement queryStatement = null;
         ResultSet queryResponse = null;
         CSVWriter dailyCompletedCSVWriter = null;
         List<DuplicateModel> duplicateModelList = new ArrayList<>();
         startTime = 1553576400000L;
-        logger.info("configs: "+gson.toJson(configs));
-        try{
+        logger.info("configs: " + gson.toJson(configs));
+        try {
             String fileName = Utils.getDateTime();
             String dailyReportFile = "./report/daily_report_" + fileName + ".csv";
-            String  duplicateMacAddressFile = "./report/daily_mac_dup_report_" + fileName + ".csv";
+            String duplicateMacAddressFile = "./report/daily_mac_dup_report_" + fileName + ".csv";
             queryStatement = connection.createStatement();
             FileWriter fileWriter = new FileWriter(dailyReportFile);
-            dailyCompletedCSVWriter =  initCSV(fileWriter);
-            logger.info("start time:"+startTime);
-            logger.info("readable fromat time:"+Utils.getDateTime(startTime));
-            queryResponse = queryStatement.executeQuery("select title,noteguid,parentnoteid,createddatetime from edgenote where iscurrent = true and isdeleted = false  and createddatetime >= "+startTime+"   order by createddatetime;");
+            dailyCompletedCSVWriter = initCSV(fileWriter);
+            logger.info("start time:" + startTime);
+            logger.info("readable fromat time:" + Utils.getDateTime(startTime));
+            queryResponse = queryStatement.executeQuery("select title,noteguid,parentnoteid,createddatetime from edgenote where iscurrent = true and isdeleted = false  and createddatetime >= " + startTime + "   order by createddatetime;");
 
             logger.info("query response executed");
             int i = 0;
@@ -73,42 +74,42 @@ public class InstallMaintenanceDao extends UtilDao {
                 currentNoteData.setNoteGuid(currentNoteGuid);
                 currentNoteData.setCreatedDateTime(currentNoteDateTime);
 
-                String parentNoteId =  queryResponse.getString("parentnoteid");
-                logger.info("currentNoteGuid: "+currentNoteGuid);
-                logger.info("parentNoteId: "+parentNoteId);
+                String parentNoteId = queryResponse.getString("parentnoteid");
+                logger.info("currentNoteGuid: " + currentNoteGuid);
+                logger.info("parentNoteId: " + parentNoteId);
 
                 List<FormData> formDatas = getCurrentNoteDetails(currentNoteGuid);
-                logger.info("current note forms count: "+formDatas.size());
+                logger.info("current note forms count: " + formDatas.size());
                 InstallMaintenanceModel currentNoteInstallForm = getInstallMaintenanceModel(formDatas);
-                if(currentNoteInstallForm.hasVal()){
+                if (currentNoteInstallForm.hasVal()) {
                     currentNoteData.setInstallMaintenanceModel(currentNoteInstallForm);
-                    compareRevisionData(parentNoteId,currentNoteData,dailyCompletedCSVWriter,duplicateModelList);
-                    logger.info("Processed item: "+i);
+                    compareRevisionData(parentNoteId, currentNoteData, dailyCompletedCSVWriter, duplicateModelList);
+                    logger.info("Processed item: " + i);
                 }
 
             }
-            writeDupCSV(duplicateModelList,duplicateMacAddressFile);
+            writeDupCSV(duplicateModelList, duplicateMacAddressFile);
             logger.info("daily install report csv file created!");
             closeCSVBuffer(dailyCompletedCSVWriter);
-            edgeMailService.sendMail(duplicateMacAddressFile,dailyReportFile);
+            edgeMailService.sendMail(duplicateMacAddressFile, dailyReportFile);
             startGeoPDFProcess(dailyReportFile);
-        }catch (Exception e){
-            logger.error("Error in doProcess",e);
+        } catch (Exception e) {
+            logger.error("Error in doProcess", e);
             closeCSVBuffer(dailyCompletedCSVWriter);
-        }finally {
+        } finally {
             closeResultSet(queryResponse);
             closeStatement(queryStatement);
         }
     }
 
 
-    public void startGeoPDFProcess(String dailyCompletedReport){
+    public void startGeoPDFProcess(String dailyCompletedReport) {
         Properties properties = PropertiesReader.getProperties();
         String destFile = properties.getProperty("dailyreport.inputfile");
         String hostString = properties.getProperty("dailyreport.geomapservice");
         /*** Apply Filter : Current Installs only ***/
         String filterFile1 = "./report/" + "dailyreport_filtered.txt";
-        try{
+        try {
             FilterNewInstallationOnly.applyOperation(dailyCompletedReport, filterFile1);
             /** End of Filter : Current Installs only ***/
             Path source = Paths.get(filterFile1);
@@ -119,8 +120,7 @@ public class InstallMaintenanceDao extends UtilDao {
             pdfReport.setHostString(hostString);
             pdfReport.setDateString(strDate);
             new Thread(pdfReport).start();
-        }
-        catch(Exception e){
+        } catch (Exception e) {
             String errorTrace = PDFExceptionUtils.getStackTrace(e);
             logger.error(e.getMessage());
             logger.error(errorTrace);
@@ -129,19 +129,19 @@ public class InstallMaintenanceDao extends UtilDao {
     }
 
 
-    private void writeDupCSV(List<DuplicateModel> duplicateModelList,String duplicateMacAddressFile){
+    private void writeDupCSV(List<DuplicateModel> duplicateModelList, String duplicateMacAddressFile) {
         logger.info("Duplicate MAC Address Writing Process starts.");
-        if(duplicateModelList.size() > 0){
+        if (duplicateModelList.size() > 0) {
             CSVWriter csvWriter = null;
-            try{
-                 csvWriter =   initMACDupCSV(duplicateMacAddressFile);
-               for(DuplicateModel duplicateModel : duplicateModelList){
-                   String titles =  StringUtils.join(duplicateModel.getTitles(),",");
-                   csvWriter.writeNext(new String[]{duplicateModel.getTitle(),duplicateModel.getMacAddress(),titles});
-               }
-            }catch (Exception e){
-                logger.error("Error in writeDupCSV",e);
-            }finally {
+            try {
+                csvWriter = initMACDupCSV(duplicateMacAddressFile);
+                for (DuplicateModel duplicateModel : duplicateModelList) {
+                    String titles = StringUtils.join(duplicateModel.getTitles(), ",");
+                    csvWriter.writeNext(new String[]{duplicateModel.getTitle(), duplicateModel.getMacAddress(), titles});
+                }
+            } catch (Exception e) {
+                logger.error("Error in writeDupCSV", e);
+            } finally {
                 closeCSVBuffer(csvWriter);
             }
 
@@ -150,83 +150,83 @@ public class InstallMaintenanceDao extends UtilDao {
     }
 
 
-    private void compareRevisionData(String parentNoteId,NoteData currentNoteData,CSVWriter csvWriter,List<DuplicateModel> duplicateModelList){
-        List<NoteData> allRevisionsNotes = getAllRevisionsNoteGuids(parentNoteId,currentNoteData.getNoteGuid());
+    private void compareRevisionData(String parentNoteId, NoteData currentNoteData, CSVWriter csvWriter, List<DuplicateModel> duplicateModelList) {
+        List<NoteData> allRevisionsNotes = getAllRevisionsNoteGuids(parentNoteId, currentNoteData.getNoteGuid());
 
 
-        logger.info("All Revisions notes Count: "+allRevisionsNotes.size());
+        logger.info("All Revisions notes Count: " + allRevisionsNotes.size());
         for (NoteData revisionNote : allRevisionsNotes) {
             List<FormData> revisionNoteInstallForm = getCurrentNoteDetails(revisionNote.getNoteGuid());
-            logger.info("Revision Note: "+revisionNote.getNoteGuid());
-            logger.info("child note forms count: "+revisionNoteInstallForm.size());
+            logger.info("Revision Note: " + revisionNote.getNoteGuid());
+            logger.info("child note forms count: " + revisionNoteInstallForm.size());
             InstallMaintenanceModel previousInstallForm = getInstallMaintenanceModel(revisionNoteInstallForm);
             revisionNote.setInstallMaintenanceModel(previousInstallForm);
 
-          boolean isBothNoteSame = comparator(currentNoteData,revisionNote);
-          if(isBothNoteSame){
-              currentNoteData = revisionNote;
-              boolean todaysInstall = isInstalledOnTime(currentNoteData);
-              if(!todaysInstall){
-                  break;
-              }
-          }else{
-              break;
-          }
+            boolean isBothNoteSame = comparator(currentNoteData, revisionNote);
+            if (isBothNoteSame) {
+                currentNoteData = revisionNote;
+                boolean todaysInstall = isInstalledOnTime(currentNoteData);
+                if (!todaysInstall) {
+                    break;
+                }
+            } else {
+                break;
+            }
 
 
         }
         boolean todaysInstall = isInstalledOnTime(currentNoteData);
-        logger.info("Final Note: "+currentNoteData);
-        logger.info("Final Note is within Start  Time:"+todaysInstall);
-        if(todaysInstall){
+        logger.info("Final Note: " + currentNoteData);
+        logger.info("Final Note is within Start  Time:" + todaysInstall);
+        if (todaysInstall) {
             logger.info("CSV Writing Process Starts.");
-            writeCSV(currentNoteData,csvWriter,duplicateModelList);
+            writeCSV(currentNoteData, csvWriter, duplicateModelList);
             logger.info("CSV Writing Process Ends.");
         }
     }
 
-    private void checkMACDuplicate(NoteData currentNoteData, List<DuplicateModel> duplicateModelList){
-        InstallMaintenanceModel installMaintenanceModel =  currentNoteData.getInstallMaintenanceModel();
+    private void checkMACDuplicate(NoteData currentNoteData, List<DuplicateModel> duplicateModelList) {
+        InstallMaintenanceModel installMaintenanceModel = currentNoteData.getInstallMaintenanceModel();
         String macAddress = installMaintenanceModel.getMacAddressRN();
-        if(macAddress != null && macAddress.startsWith("00135")){
-            checkMACDuplicate(macAddress,currentNoteData.getTitle(),duplicateModelList);
+        if (macAddress != null && macAddress.startsWith("00135")) {
+            checkMACDuplicate(macAddress, currentNoteData.getTitle(), duplicateModelList);
             return;
         }
         macAddress = installMaintenanceModel.getFixtureQRScanRF();
-        if(macAddress != null && macAddress.startsWith("00135")){
-            checkMACDuplicate(macAddress,currentNoteData.getTitle(),duplicateModelList);
+        if (macAddress != null && macAddress.startsWith("00135")) {
+            checkMACDuplicate(macAddress, currentNoteData.getTitle(), duplicateModelList);
             return;
         }
 
         macAddress = installMaintenanceModel.getMacAddressRNF();
-        if(macAddress != null && macAddress.startsWith("00135")){
-            checkMACDuplicate(macAddress,currentNoteData.getTitle(),duplicateModelList);
+        if (macAddress != null && macAddress.startsWith("00135")) {
+            checkMACDuplicate(macAddress, currentNoteData.getTitle(), duplicateModelList);
             return;
         }
 
         macAddress = installMaintenanceModel.getFixtureQRScanRNF();
-        if(macAddress != null && macAddress.startsWith("00135")){
-            checkMACDuplicate(macAddress,currentNoteData.getTitle(),duplicateModelList);
+        if (macAddress != null && macAddress.startsWith("00135")) {
+            checkMACDuplicate(macAddress, currentNoteData.getTitle(), duplicateModelList);
             return;
         }
 
         macAddress = installMaintenanceModel.getMacAddress();
-        if(macAddress != null && macAddress.startsWith("00135")){
-            checkMACDuplicate(macAddress,currentNoteData.getTitle(),duplicateModelList);
+        if (macAddress != null && macAddress.startsWith("00135")) {
+            checkMACDuplicate(macAddress, currentNoteData.getTitle(), duplicateModelList);
             return;
         }
 
         macAddress = installMaintenanceModel.getFixtureQRScan();
-        if(macAddress != null && macAddress.startsWith("00135")){
-            checkMACDuplicate(macAddress,currentNoteData.getTitle(),duplicateModelList);
+        if (macAddress != null && macAddress.startsWith("00135")) {
+            checkMACDuplicate(macAddress, currentNoteData.getTitle(), duplicateModelList);
             return;
         }
     }
 
 
-    private void checkMACDuplicate(String macAddress, String title, List<DuplicateModel> duplicateModelList){
-        Set<String> macAddressTitle =  isMACDuplicated(macAddress,title);
-        if(macAddressTitle.size() > 0){
+    private void checkMACDuplicate(String macAddress, String title, List<DuplicateModel> duplicateModelList) {
+        Set<String> macAddressTitle = isMACDuplicated(macAddress, title);
+        if (macAddressTitle.size() > 0) {
             DuplicateModel duplicateModel = new DuplicateModel();
             duplicateModel.setTitle(title);
             duplicateModel.setMacAddress(macAddress);
@@ -236,59 +236,56 @@ public class InstallMaintenanceDao extends UtilDao {
     }
 
 
-    private boolean isInstalledOnTime(NoteData currentNoteData){
+    private boolean isInstalledOnTime(NoteData currentNoteData) {
         return currentNoteData.getCreatedDateTime() >= startTime;
     }
 
 
-
-    private CSVWriter initCSV(FileWriter fileWriter)throws Exception{
+    private CSVWriter initCSV(FileWriter fileWriter) throws Exception {
 
         CSVWriter csvWriter = new CSVWriter(fileWriter,
                 CSVWriter.DEFAULT_SEPARATOR,
                 CSVWriter.NO_QUOTE_CHARACTER,
                 CSVWriter.NO_ESCAPE_CHARACTER,
                 CSVWriter.DEFAULT_LINE_END);
-        String[] headerRecord = {"Title", "MAC Address","User Id", "Fixture QR Scan", "Fixture Type",
-                "Context", "Lat", "Lng", "Date Time","Is ReplaceNode","Existing Node MAC Address","New Node MAC Address","Reason for removal"};
+        String[] headerRecord = {"Title", "MAC Address", "User Id", "Fixture QR Scan", "Fixture Type",
+                "Context", "Lat", "Lng", "Date Time", "Is ReplaceNode", "Existing Node MAC Address", "New Node MAC Address", "Reason for removal"};
         csvWriter.writeNext(headerRecord);
         return csvWriter;
     }
 
 
-
-    private CSVWriter initMACDupCSV(String duplicateMACFileName)throws Exception{
+    private CSVWriter initMACDupCSV(String duplicateMACFileName) throws Exception {
         FileWriter fileWriter = new FileWriter(duplicateMACFileName);
         CSVWriter csvWriter = new CSVWriter(fileWriter,
                 CSVWriter.DEFAULT_SEPARATOR,
                 CSVWriter.NO_QUOTE_CHARACTER,
                 CSVWriter.NO_ESCAPE_CHARACTER,
                 CSVWriter.DEFAULT_LINE_END);
-        String[] headerRecord = {"Title", "MAC Address","Exists In"};
+        String[] headerRecord = {"Title", "MAC Address", "Exists In"};
         csvWriter.writeNext(headerRecord);
         return csvWriter;
     }
 
-    private void closeCSVBuffer(CSVWriter csvWriter){
-        try{
-            if(csvWriter != null){
+    private void closeCSVBuffer(CSVWriter csvWriter) {
+        try {
+            if (csvWriter != null) {
                 csvWriter.flush();
                 csvWriter.close();
             }
 
-        }catch (Exception e){
-            logger.error("Error in closeCSVBuffer",e);
+        } catch (Exception e) {
+            logger.error("Error in closeCSVBuffer", e);
         }
 
     }
 
 
-
-    private void writeCSV(NoteData noteData,CSVWriter csvWriter,List<DuplicateModel> duplicateModelList){
+    private void writeCSV(NoteData noteData, CSVWriter csvWriter, List<DuplicateModel> duplicateModelList) {
         loadNotesData(noteData);
-        if(!noteData.getCreatedBy().equals("admin") && !noteData.getCreatedBy().equals("slvinterface")){
-            if(noteData.getInstallMaintenanceModel().getRemovalReason() == null){
-                checkMACDuplicate(noteData,duplicateModelList);
+        if (!noteData.getCreatedBy().equals("admin") && !noteData.getCreatedBy().equals("slvinterface")) {
+            if (noteData.getInstallMaintenanceModel().getRemovalReason() == null) {
+                checkMACDuplicate(noteData, duplicateModelList);
             }
 
             noteData.getInstallMaintenanceModel().checkReplacedDetails();
@@ -314,52 +311,52 @@ public class InstallMaintenanceDao extends UtilDao {
 
     }
 
-    private String addDoubleQuotes(String value){
-        if(value != null){
-            return "\""+value+"\"";
+    private String addDoubleQuotes(String value) {
+        if (value != null) {
+            return "\"" + value + "\"";
         }
-       return "\"\"";
+        return "\"\"";
     }
 
-    public List<FormData> getCurrentNoteDetails(String noteGuid){
+    public List<FormData> getCurrentNoteDetails(String noteGuid) {
         List<FormData> formDatas = new ArrayList<>();
         PreparedStatement queryStatement = null;
         ResultSet queryResponse = null;
-        try{
+        try {
             queryStatement = connection.prepareStatement("select formdef,formtemplateguid from edgeform where edgenoteentity_noteid in (select noteid from edgenote where noteguid = ?)");
-            queryStatement.setString(1,noteGuid);
+            queryStatement.setString(1, noteGuid);
             queryResponse = queryStatement.executeQuery();
             while (queryResponse.next()) {
                 String formDef = queryResponse.getString("formdef");
                 String formTemplateGuid = queryResponse.getString("formtemplateguid");
-                if(checkFormTemplateInConfig(formTemplateGuid)) {
+                if (checkFormTemplateInConfig(formTemplateGuid)) {
                     FormData formData = new FormData();
                     formData.setFormDef(formDef);
                     formData.setFormTemplateGuid(formTemplateGuid);
                     formDatas.add(formData);
                 }
             }
-        }catch (Exception e){
-            logger.error("error in getting forms: "+e.getMessage());
+        } catch (Exception e) {
+            logger.error("error in getting forms: " + e.getMessage());
             e.printStackTrace();
-        }finally {
+        } finally {
             closeResultSet(queryResponse);
             closeStatement(queryStatement);
         }
         return formDatas;
     }
 
-    public List<NoteData> getAllRevisionsNoteGuids(String parentNoteGuid,String currentNoteGuid){
+    public List<NoteData> getAllRevisionsNoteGuids(String parentNoteGuid, String currentNoteGuid) {
         Statement queryStatement = null;
         ResultSet queryResponse = null;
         List<NoteData> allRevisionsNoteGuid = new ArrayList<>();
-        try{
+        try {
             queryStatement = connection.createStatement();
-            queryResponse = queryStatement.executeQuery("select noteguid,createddatetime from edgenote where parentnoteid='"+parentNoteGuid+"' or noteguid='"+parentNoteGuid+"' order by createddatetime desc");
+            queryResponse = queryStatement.executeQuery("select noteguid,createddatetime from edgenote where parentnoteid='" + parentNoteGuid + "' or noteguid='" + parentNoteGuid + "' order by createddatetime desc");
             while (queryResponse.next()) {
                 String noteGuid = queryResponse.getString("noteguid");
                 Long createdDateTime = queryResponse.getLong("createddatetime");
-                if(!currentNoteGuid.equals(noteGuid)){
+                if (!currentNoteGuid.equals(noteGuid)) {
                     NoteData noteData = new NoteData();
                     noteData.setNoteGuid(noteGuid);
                     noteData.setCreatedDateTime(createdDateTime);
@@ -367,9 +364,9 @@ public class InstallMaintenanceDao extends UtilDao {
                 }
 
             }
-        }catch (Exception e){
+        } catch (Exception e) {
             e.printStackTrace();
-        }finally {
+        } finally {
             closeResultSet(queryResponse);
             closeStatement(queryStatement);
         }
@@ -378,91 +375,101 @@ public class InstallMaintenanceDao extends UtilDao {
 
     private InstallMaintenanceModel getInstallMaintenanceModel(List<FormData> formDatas) {
         InstallMaintenanceModel installMaintenanceModel = new InstallMaintenanceModel();
-        for (FormData formData : formDatas){
+        for (FormData formData : formDatas) {
             String formDef = formData.getFormDef();
             List<EdgeFormData> edgeFormDatas = gson.fromJson(formDef, new TypeToken<List<EdgeFormData>>() {
             }.getType());
-        for (Config config : configs) {
-            if (config.getFormTemplateGuid().equals(formData.getFormTemplateGuid())) {
-                //installMaintenanceModel.setInstallStatus(getValue(config.getInstallStatus(), edgeFormDatas));
-                //installMaintenanceModel.setProposedContext(getValue(config.getProposedContext(), edgeFormDatas));
-                List<Prop> props = config.getProps();
-                logger.info("config: "+gson.toJson(config));
-                for (Prop prop : props) {
-                    logger.info("prop: "+gson.toJson(prop));
-                    Ids idsList = prop.getIds();
-                    InstallMaintenanceEnum type = prop.getType();
-                    logger.info("type:"+type.toString());
-                    switch (type) {
-                        case RF:
-                            installMaintenanceModel.setFixtureQRScanRF(setValue(installMaintenanceModel.getFixtureQRScanRF(),getValue(idsList.getFix(), edgeFormDatas)));
-                            installMaintenanceModel.setExFixtureQRScanRF(setValue(installMaintenanceModel.getExFixtureQRScanRF(),getValue(idsList.getExFix(), edgeFormDatas)));
-                            break;
-                        case NEW:
-                            installMaintenanceModel.setMacAddress(setValue(installMaintenanceModel.getMacAddress(),getValue(idsList.getMac(), edgeFormDatas)));
-                            installMaintenanceModel.setFixtureQRScan(setValue(installMaintenanceModel.getFixtureQRScan(),getValue(idsList.getFix(), edgeFormDatas)));
-                            break;
-                        case RN:
-                            installMaintenanceModel.setMacAddressRN(setValue(installMaintenanceModel.getMacAddressRN(),getValue(idsList.getMac(), edgeFormDatas)));
-                            installMaintenanceModel.setExMacAddressRN(setValue(installMaintenanceModel.getExMacAddressRN(),getValue(idsList.getExMac(), edgeFormDatas)));
-                            break;
-                        case RNF:
-                            installMaintenanceModel.setMacAddressRNF(setValue(installMaintenanceModel.getMacAddressRNF(),getValue(idsList.getMac(), edgeFormDatas)));
-                            installMaintenanceModel.setExMacAddressRNF(setValue(installMaintenanceModel.getExMacAddressRNF(),getValue(idsList.getExMac(), edgeFormDatas)));
-                            installMaintenanceModel.setFixtureQRScanRNF(setValue(installMaintenanceModel.getFixtureQRScanRNF(),getValue(idsList.getFix(), edgeFormDatas)));
-                            installMaintenanceModel.setExFixtureQRScanRNF(setValue(installMaintenanceModel.getExFixtureQRScanRNF(),getValue(idsList.getExFix(), edgeFormDatas)));
-                            break;
-                        case RR:
-                            installMaintenanceModel.setRemovalReason(setValue(installMaintenanceModel.getRemovalReason(),getValue(idsList.getRemove(), edgeFormDatas)));
-                            break;
+            for (Config config : configs) {
+                if (config.getFormTemplateGuid().equals(formData.getFormTemplateGuid())) {
+                    //installMaintenanceModel.setInstallStatus(getValue(config.getInstallStatus(), edgeFormDatas));
+                    //installMaintenanceModel.setProposedContext(getValue(config.getProposedContext(), edgeFormDatas));
+                    List<Prop> props = config.getProps();
+                    logger.info("config: " + gson.toJson(config));
+                    for (Prop prop : props) {
+                        logger.info("prop: " + gson.toJson(prop));
+                        Ids idsList = prop.getIds();
+                        InstallMaintenanceEnum type = prop.getType();
+                        logger.info("type:" + type.toString());
+                        switch (type) {
+                            case RF:
+                                installMaintenanceModel.setFixtureQRScanRF(setValue(installMaintenanceModel.getFixtureQRScanRF(), getValue(idsList.getFix(), edgeFormDatas)));
+                                installMaintenanceModel.setExFixtureQRScanRF(setValue(installMaintenanceModel.getExFixtureQRScanRF(), getValue(idsList.getExFix(), edgeFormDatas)));
+                                break;
+                            case NEW:
+                                installMaintenanceModel.setMacAddress(setValue(installMaintenanceModel.getMacAddress(), getValue(idsList.getMac(), edgeFormDatas)));
+                                installMaintenanceModel.setFixtureQRScan(setValue(installMaintenanceModel.getFixtureQRScan(), getValue(idsList.getFix(), edgeFormDatas)));
+                                break;
+                            case RN:
+                                installMaintenanceModel.setMacAddressRN(setValue(installMaintenanceModel.getMacAddressRN(), getValue(idsList.getMac(), edgeFormDatas)));
+                                installMaintenanceModel.setExMacAddressRN(setValue(installMaintenanceModel.getExMacAddressRN(), getValue(idsList.getExMac(), edgeFormDatas)));
+                                break;
+                            case RNF:
+                                installMaintenanceModel.setMacAddressRNF(setValue(installMaintenanceModel.getMacAddressRNF(), getValue(idsList.getMac(), edgeFormDatas)));
+                                installMaintenanceModel.setExMacAddressRNF(setValue(installMaintenanceModel.getExMacAddressRNF(), getValue(idsList.getExMac(), edgeFormDatas)));
+                                installMaintenanceModel.setFixtureQRScanRNF(setValue(installMaintenanceModel.getFixtureQRScanRNF(), getValue(idsList.getFix(), edgeFormDatas)));
+                                installMaintenanceModel.setExFixtureQRScanRNF(setValue(installMaintenanceModel.getExFixtureQRScanRNF(), getValue(idsList.getExFix(), edgeFormDatas)));
+                                break;
+                            case RR:
+                                installMaintenanceModel.setRemovalReason(setValue(installMaintenanceModel.getRemovalReason(), getValue(idsList.getRemove(), edgeFormDatas)));
+                                break;
+                            case RS:
+                                installMaintenanceModel.setResolvedIssue(setValue(installMaintenanceModel.getResolvedIssue(), getValue(idsList.getIssue(), edgeFormDatas)));
+                                installMaintenanceModel.setResolvedComment(setValue(installMaintenanceModel.getResolvedComment(), getValue(idsList.getComment(), edgeFormDatas)));
+                                installMaintenanceModel.setExistingMacIfWrong(setValue(installMaintenanceModel.getExistingMacIfWrong(), getValue(idsList.getScanifwrong(), edgeFormDatas)));
+                                break;
+                            case UR:
+                                installMaintenanceModel.setUnableToRepairIssue(setValue(installMaintenanceModel.getUnableToRepairIssue(), getValue(idsList.getUnabletorepairissue(), edgeFormDatas)));
+                                break;
+                            case IS:
+                                installMaintenanceModel.setInstallStatus(setValue(installMaintenanceModel.getInstallStatus(), getValue(idsList.getInstallstatus(), edgeFormDatas)));
+                                break;
+                        }
                     }
                 }
             }
         }
-    }
         return installMaintenanceModel;
     }
 
-    private String getValue(int id,List<EdgeFormData> edgeFormDatas){
+    private String getValue(int id, List<EdgeFormData> edgeFormDatas) {
         EdgeFormData edgeFormData = new EdgeFormData();
         edgeFormData.setId(id);
         int pos = edgeFormDatas.indexOf(edgeFormData);
         String value = "";
-        if(pos > -1){
+        if (pos > -1) {
             value = edgeFormDatas.get(pos).getValue();
         }
         return value;
     }
 
-    private String setValue(String oldValue, String newValue){
-        if(oldValue == null || oldValue.equals("")){
+    private String setValue(String oldValue, String newValue) {
+        if (oldValue == null || oldValue.equals("")) {
             return newValue;
-        }else{
-            if(newValue == null || newValue.equals("")){
+        } else {
+            if (newValue == null || newValue.equals("")) {
                 return oldValue;
-            }else{
+            } else {
                 return newValue;
             }
         }
     }
 
-    private boolean checkFormTemplateInConfig(String formTemplateGuid){
+    private boolean checkFormTemplateInConfig(String formTemplateGuid) {
         Config config = new Config();
         config.setFormTemplateGuid(formTemplateGuid);
         return configs.contains(config);
     }
 
-    private boolean comparator(NoteData currentNoteData,NoteData previousNoteData){
-        logger.info("Current Note:"+currentNoteData.getInstallMaintenanceModel());
-        logger.info("Previous Note:"+previousNoteData.getInstallMaintenanceModel());
-        if(currentNoteData.getInstallMaintenanceModel().equals(previousNoteData.getInstallMaintenanceModel())){
+    private boolean comparator(NoteData currentNoteData, NoteData previousNoteData) {
+        logger.info("Current Note:" + currentNoteData.getInstallMaintenanceModel());
+        logger.info("Previous Note:" + previousNoteData.getInstallMaintenanceModel());
+        if (currentNoteData.getInstallMaintenanceModel().equals(previousNoteData.getInstallMaintenanceModel())) {
             return true;
-        }else{
+        } else {
             logger.info("Previous Note Not Match with Current Note.");
             return false;
         }
     }
-
 
 
     public void loadNotesData(NoteData currentNoteData) {
@@ -493,62 +500,61 @@ public class InstallMaintenanceDao extends UtilDao {
             }
         } catch (Exception e) {
             e.printStackTrace();
-        }finally {
+        } finally {
             closeResultSet(queryResponse);
             closeStatement(queryStatement);
         }
     }
 
 
-    public Set<String> isMACDuplicated(String macAddress,String currentNoteTitle){
+    public Set<String> isMACDuplicated(String macAddress, String currentNoteTitle) {
         PreparedStatement queryStatement = null;
         ResultSet queryResponse = null;
         Set<String> duplicateTitle = new HashSet<>();
         try {
             String sql = "select title,nodemacaddress,fixtureqrscan,nodemacaddressrnf,fixtureqrscanrnf,nodemacaddressrn,fixtureqrscanrf from edge_install_form_data where (lower(nodemacaddress) = ?  or lower(fixtureqrscan) = ? or lower(nodemacaddressrnf) = ? or lower(fixtureqrscanrnf) = ? or lower(nodemacaddressrn) = ? or lower(fixtureqrscanrf) = ?) and title != ?";
             queryStatement = connection.prepareStatement(sql);
-            macAddress =  macAddress.trim().toLowerCase();
-            queryStatement.setString(1,macAddress);
-            queryStatement.setString(2,macAddress);
-            queryStatement.setString(3,macAddress);
-            queryStatement.setString(4,macAddress);
-            queryStatement.setString(5,macAddress);
-            queryStatement.setString(6,macAddress);
-            queryStatement.setString(7,currentNoteTitle);
+            macAddress = macAddress.trim().toLowerCase();
+            queryStatement.setString(1, macAddress);
+            queryStatement.setString(2, macAddress);
+            queryStatement.setString(3, macAddress);
+            queryStatement.setString(4, macAddress);
+            queryStatement.setString(5, macAddress);
+            queryStatement.setString(6, macAddress);
+            queryStatement.setString(7, currentNoteTitle);
             queryResponse = queryStatement.executeQuery();
             while (queryResponse.next()) {
 
                 String nodemacaddress = queryResponse.getString("nodemacaddress");
                 String fixtureqrscan = queryResponse.getString("fixtureqrscan");
                 String nodemacaddressrnf = queryResponse.getString("nodemacaddressrnf");
-                String fixtureqrscanrnf =queryResponse.getString("fixtureqrscanrnf");
+                String fixtureqrscanrnf = queryResponse.getString("fixtureqrscanrnf");
                 String nodemacaddressrn = queryResponse.getString("nodemacaddressrn");
                 String fixtureqrscanrf = queryResponse.getString("fixtureqrscanrf");
                 String title = queryResponse.getString("title");
 
-                if(nodemacaddressrn != null && nodemacaddressrn.startsWith("00135") ){
-                    if(nodemacaddressrn.toLowerCase().equals(macAddress)){
+                if (nodemacaddressrn != null && nodemacaddressrn.startsWith("00135")) {
+                    if (nodemacaddressrn.toLowerCase().equals(macAddress)) {
                         duplicateTitle.add(title);
                     }
 
-                }else if(fixtureqrscanrf != null && fixtureqrscanrf.startsWith("00135")){
-                    if(fixtureqrscanrf.toLowerCase().equals(macAddress)){
+                } else if (fixtureqrscanrf != null && fixtureqrscanrf.startsWith("00135")) {
+                    if (fixtureqrscanrf.toLowerCase().equals(macAddress)) {
                         duplicateTitle.add(title);
                     }
-                }else  if(nodemacaddressrnf != null && nodemacaddressrnf.startsWith("00135")){
-                    if(nodemacaddressrnf.toLowerCase().equals(macAddress)){
+                } else if (nodemacaddressrnf != null && nodemacaddressrnf.startsWith("00135")) {
+                    if (nodemacaddressrnf.toLowerCase().equals(macAddress)) {
                         duplicateTitle.add(title);
                     }
-                }else  if(fixtureqrscanrnf != null && fixtureqrscanrnf.startsWith("00135")){
-                    if(fixtureqrscanrnf.toLowerCase().equals(macAddress)){
+                } else if (fixtureqrscanrnf != null && fixtureqrscanrnf.startsWith("00135")) {
+                    if (fixtureqrscanrnf.toLowerCase().equals(macAddress)) {
                         duplicateTitle.add(title);
                     }
-                }
-                else  if(fixtureqrscan != null && fixtureqrscan.startsWith("00135")){
-                    if(fixtureqrscan.toLowerCase().equals(macAddress)){
+                } else if (fixtureqrscan != null && fixtureqrscan.startsWith("00135")) {
+                    if (fixtureqrscan.toLowerCase().equals(macAddress)) {
                         duplicateTitle.add(title);
                     }
-                }else{
+                } else {
                     duplicateTitle.add(title);
                 }
 
@@ -556,7 +562,7 @@ public class InstallMaintenanceDao extends UtilDao {
             }
         } catch (Exception e) {
             e.printStackTrace();
-        }finally {
+        } finally {
             closeResultSet(queryResponse);
             closeStatement(queryStatement);
         }
