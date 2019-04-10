@@ -112,6 +112,7 @@ public abstract class AbstractProcessor {
         String proposedContextKey = properties.getProperty("streetlight.location.proposedcontext");
         String cslInstallDateKey = properties.getProperty("streetlight.csl.installdate");
         String cslLuminaireDateKey = properties.getProperty("streetlight.csl.luminairedate");
+        String serialNumberKey = properties.getProperty("streetlight.luminaire.serialnumber");
         logger.info("contextKey :" + proposedContextKey);
         logger.info("cslInstallDate :" + cslInstallDateKey);
         logger.info("cslLuminaireDate :" + cslLuminaireDateKey);
@@ -130,11 +131,14 @@ public abstract class AbstractProcessor {
                 String proposedContext = jsonObject1.get("value").getAsString();
                 contextListHashMap.put(idOnController, proposedContext);
             }
-            if (keyValue != null && keyValue.equals(cslInstallDateKey)) {
+           else if (keyValue != null && keyValue.equals(cslInstallDateKey)) {
                 nodeInstall = jsonObject1.get("value").getAsString();
             }
-            if (keyValue != null && keyValue.equals(cslLuminaireDateKey)) {
+           else if (keyValue != null && keyValue.equals(cslLuminaireDateKey)) {
                 luminaireDate = jsonObject1.get("value").getAsString();
+            }
+            else if(keyValue != null && keyValue.equals(serialNumberKey)){
+
             }
         }
         if (nodeInstall != null && !nodeInstall.trim().isEmpty() && nodeInstall.trim().length() > 7) {
@@ -713,9 +717,10 @@ public abstract class AbstractProcessor {
     }
 
 
-    public String getMACAddress(InstallMaintenanceLogModel installMaintenanceLogModel){
+    public DeviceAttributes getDeviceValues(InstallMaintenanceLogModel installMaintenanceLogModel){
         try{
             if(installMaintenanceLogModel.getDeviceId() > 0){
+                DeviceAttributes deviceAttributes = new DeviceAttributes();
                 String mainUrl = properties.getProperty("streetlight.slv.url.main");
                 String commentUrl = properties.getProperty("streetlight.slv.url.comment.get");
                 String url = mainUrl + commentUrl;
@@ -723,27 +728,47 @@ public abstract class AbstractProcessor {
                 paramsList.add("returnTimeAges=false");
                 paramsList.add("param0=" + installMaintenanceLogModel.getDeviceId());
                 paramsList.add("valueName=MacAddress");
+                paramsList.add("valueName=installStatus");
                 paramsList.add("ser=json");
                 String params = StringUtils.join(paramsList, "&");
                 url = url + "?" + params;
-                logger.info("Get MAC Address url :" + url);
+                logger.info("Get MAC Address and installStatus url :" + url);
                 ResponseEntity<String> response = restService.getRequest(url, true, null);
                 if (response.getStatusCodeValue() == 200) {
-                    logger.info("Get MAC Address Respose :"+response.getBody());
+                    logger.info("Get MAC Address and installStatus Response :"+response.getBody());
                     String responseString = response.getBody();
                     JsonArray jsonArray = (JsonArray)jsonParser.parse(responseString);
                     for(JsonElement macAddressJson : jsonArray){
                         JsonObject macAddressJsonObject = macAddressJson.getAsJsonObject();
-                        if(macAddressJsonObject.get("value") != null){
-                            String macAddress = macAddressJsonObject.get("value").getAsString();
-                            return macAddress;
+                        if(macAddressJsonObject.get("name") != null){
+                            String paramName = macAddressJsonObject.get("name").getAsString();
+                            if(paramName.equals("MacAddress")){
+                                if(macAddressJsonObject.get("value") != null){
+                                    String macAddress = macAddressJsonObject.get("value").getAsString();
+                                    if(macAddress != null && !macAddress.trim().isEmpty()){
+                                        deviceAttributes.setMacAddress(macAddress);
+                                    }
+                                }
+                            }else if(paramName.equals("installStatus")){
+                                String installStatus = macAddressJsonObject.get("value").getAsString();
+                                if(installStatus != null && !installStatus.trim().isEmpty()){
+                                    deviceAttributes.setInstallStatus(installStatus);
+                                }
+                            }
+
                         }
+
                     }
                 }
+                logger.info(deviceAttributes);
+                return deviceAttributes;
             }
         }catch (Exception e){
-            logger.error("Error in getComment",e);
+            logger.error("Error in getDeviceValues",e);
         }
         return null;
     }
+
+
+
 }

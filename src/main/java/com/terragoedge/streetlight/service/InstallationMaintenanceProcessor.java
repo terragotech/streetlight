@@ -3,10 +3,7 @@ package com.terragoedge.streetlight.service;
 import com.terragoedge.edgeserver.*;
 import com.terragoedge.streetlight.PropertiesReader;
 import com.terragoedge.streetlight.exception.*;
-import com.terragoedge.streetlight.json.model.CslpDate;
-import com.terragoedge.streetlight.json.model.DuplicateMacAddress;
-import com.terragoedge.streetlight.json.model.SLVTransactionLogs;
-import com.terragoedge.streetlight.json.model.SlvServerData;
+import com.terragoedge.streetlight.json.model.*;
 import com.terragoedge.streetlight.logging.InstallMaintenanceLogModel;
 import com.terragoedge.streetlight.logging.LoggingModel;
 import org.apache.commons.lang3.StringUtils;
@@ -933,11 +930,21 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
         }
         if(removeReason != null){
             logger.info("remove reason:"+removeReason);
+            DeviceAttributes deviceAttributes = getDeviceValues(installMaintenanceLogModel);
             switch (removeReason){
                 case "Installed on Wrong Fixture":
                     try {
-                            String macaddress = getMACAddress(installMaintenanceLogModel);
-                            logger.info("removed mac address:"+macaddress);
+                            if(deviceAttributes != null && deviceAttributes.getInstallStatus().equals("To be installed")){
+                                installMaintenanceLogModel.setStatus(MessageConstants.ERROR);
+                                installMaintenanceLogModel.setErrorDetails("Already Processed.Install Status: To be installed");
+                                return;
+                            }
+                            String macaddress = null;
+                            if(deviceAttributes != null){
+                                logger.info("removed mac address:"+deviceAttributes.getMacAddress());
+                                macaddress = deviceAttributes.getMacAddress();
+                            }
+
                             try {
                                 SLVTransactionLogs slvTransactionLogs = getSLVTransactionLogs(installMaintenanceLogModel);
                                 replaceOLC(installMaintenanceLogModel.getControllerSrtId(), installMaintenanceLogModel.getIdOnController(), "",slvTransactionLogs);
@@ -963,21 +970,31 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
                             }
 
                     }catch (Exception e){
-                        e.printStackTrace();
+                        logger.error("Error in processRemoveAction",e);
                     }
                     break;
                 case "Pole Removed":
                     try {
+                        if(deviceAttributes != null && deviceAttributes.getInstallStatus().equals("Removed")){
+                            installMaintenanceLogModel.setStatus(MessageConstants.ERROR);
+                            installMaintenanceLogModel.setErrorDetails("Already Processed.Install Status: Removed");
+                            return;
+                        }
                         clearDeviceValues(installMaintenanceLogModel.getIdOnController(),installMaintenanceLogModel.getControllerSrtId(),"Pole Removed",installMaintenanceLogModel);
                     }catch (Exception e){
-                        e.printStackTrace();
+                        logger.error("Error in processRemoveAction",e);
                     }
                     break;
                 case "Pole Knocked-Down":
                     try {
+                        if(deviceAttributes != null && deviceAttributes.getInstallStatus().equals("Pole Knocked Down")){
+                            installMaintenanceLogModel.setStatus(MessageConstants.ERROR);
+                            installMaintenanceLogModel.setErrorDetails("Already Processed.Install Status: Pole Knocked Down");
+                            return;
+                        }
                         clearDeviceValues(installMaintenanceLogModel.getIdOnController(),installMaintenanceLogModel.getControllerSrtId(),"Pole Knocked-Down",installMaintenanceLogModel);
                     }catch (Exception e){
-                        e.printStackTrace();
+                        logger.error("Error in processRemoveAction",e);
                     }
                     break;
             }
