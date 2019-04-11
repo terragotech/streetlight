@@ -79,7 +79,7 @@ public enum ConnectionDAO {
         }
     }
 
-    public void saveDeviceAttributes(DuplicateMACAddressEventLog duplicateMACAddressEventLog) {
+    public void saveMacAddressEventLog(DuplicateMACAddressEventLog duplicateMACAddressEventLog) {
         try {
             macAddressEventLogsDao.create(duplicateMACAddressEventLog);
         } catch (Exception e) {
