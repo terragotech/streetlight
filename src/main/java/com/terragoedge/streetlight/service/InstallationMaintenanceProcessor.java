@@ -134,12 +134,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
         String formatedValueNR = getNightRideFormVal(formDatas, edgeNote, installMaintenanceLogModel);
 
         boolean isInstallForm = false;
-        for(FormData formData : formDatas){
 
-            //Check if scanwrong exists in form data, and check whether MAC address already sent to SLV.
-            // If not, Process that MAC Address. Otherwise Log as error (Say, this MAC Address already sent).
-            //If Replace exists in form data and the replace MAC Address not sent already
-        }
         for (FormData formData : formDatas) {
             logger.info("Processing Form :" + formData.getFormTemplateGuid());
             if (formData.getFormTemplateGuid().equals(INSTATALLATION_AND_MAINTENANCE_GUID) || formData.getFormTemplateGuid().equals("fa47c708-fb82-4877-938c-992e870ae2a4") || formData.getFormTemplateGuid().equals("c8acc150-6228-4a27-bc7e-0fabea0e2b93")) {
