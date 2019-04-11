@@ -462,13 +462,18 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
             if (nightRideValue != null) {
                 addStreetLightData(nightRideKey, nightRideValue, paramsList);
             }
-
+            boolean isButtonPhotoCell = loggingModel.isButtonPhotoCell();
+            if(isButtonPhotoCell){
+                addStreetLightData("install.date", dateFormat(edgeNote.getCreatedDateTime()), paramsList);
+            }
             if (macAddress != null && !macAddress.trim().isEmpty() && !loggingModel.isMacAddressUsed()) {
                 boolean isNodeDatePresent = isNodeDatePresent(idOnController);
-                if (!isNodeDatePresent) {
+                if (!isNodeDatePresent && !isButtonPhotoCell) {
                     addStreetLightData("cslp.node.install.date", dateFormat(edgeNote.getCreatedDateTime()), paramsList);
                 }
-                addStreetLightData("install.date", dateFormat(edgeNote.getCreatedDateTime()), paramsList);
+                if(!isButtonPhotoCell) {
+                    addStreetLightData("install.date", dateFormat(edgeNote.getCreatedDateTime()), paramsList);
+                }
                 addStreetLightData("MacAddress", macAddress, paramsList);
             }
 
@@ -612,6 +617,8 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
                 }
 
                 return;
+            } else if(installStatusValue != null && installStatusValue.equals("Button Photocell Installation")){
+                loggingModel.setButtonPhotoCell(true);
             }
 
             // Get MAC Address

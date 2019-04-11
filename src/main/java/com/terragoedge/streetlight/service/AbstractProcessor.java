@@ -303,11 +303,13 @@ public abstract class AbstractProcessor {
             logger.info("Fixture QR scan not empty and set luminare installdate" + dateFormat(edgeNote.getCreatedDateTime()));
             logger.info("Fixture QR scan not empty and set cslp.lum.install.date" + dateFormat(edgeNote.getCreatedDateTime()));
             boolean isLumDate = isLumDatePresent(idOnContoller);
-            if (!isLumDate) {
+            boolean isButtonPhotoCelll = loggingModel.isButtonPhotoCell();
+            if (!isLumDate && !isButtonPhotoCelll) {
                 addStreetLightData("cslp.lum.install.date", dateFormat(edgeNote.getCreatedDateTime()), paramsList);
             }
-
-            addStreetLightData("luminaire.installdate", dateFormat(edgeNote.getCreatedDateTime()), paramsList);
+            if(!isButtonPhotoCelll) {
+                addStreetLightData("luminaire.installdate", dateFormat(edgeNote.getCreatedDateTime()), paramsList);
+            }
             if (macAddress == null || macAddress.trim().isEmpty()) {
                 installStatus = "Fixture Only";
             } else {
@@ -354,7 +356,7 @@ public abstract class AbstractProcessor {
             edgeNotebookName = edgeNotebookName +" Acorns";
         }*/
         if (installStatus != null) {
-            addStreetLightData("installStatus", installStatus, paramsList);
+            addStreetLightData("installStatus", loggingModel.isButtonPhotoCell() ? "Verified" : installStatus, paramsList);
         }
 
 

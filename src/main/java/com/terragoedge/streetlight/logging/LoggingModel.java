@@ -33,6 +33,7 @@ public class LoggingModel {
     private boolean isMacAddressUsed;
     private boolean isFixtureQRSame;
     private boolean isNigthRideSame;
+    private boolean isButtonPhotoCell;
 
     private String repairsOption;
 
@@ -236,6 +237,14 @@ public class LoggingModel {
         this.replacedDate = replacedDate;
     }
 
+    public boolean isButtonPhotoCell() {
+        return isButtonPhotoCell;
+    }
+
+    public void setButtonPhotoCell(boolean buttonPhotoCell) {
+        isButtonPhotoCell = buttonPhotoCell;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -274,6 +283,7 @@ public class LoggingModel {
                 ", macAddress='" + macAddress + '\'' +
                 ", isNoteAlreadySynced=" + isNoteAlreadySynced +
                 ", talqAddressnoteGuid='" + talqAddressnoteGuid + '\'' +
+                ", parentNoteId='" + parentNoteId + '\'' +
                 ", controllerSrtId='" + controllerSrtId + '\'' +
                 ", talqCreatedTime=" + talqCreatedTime +
                 ", talqAddress='" + talqAddress + '\'' +
@@ -284,6 +294,7 @@ public class LoggingModel {
                 ", isMacAddressUsed=" + isMacAddressUsed +
                 ", isFixtureQRSame=" + isFixtureQRSame +
                 ", isNigthRideSame=" + isNigthRideSame +
+                ", isButtonPhotoCell=" + isButtonPhotoCell +
                 ", repairsOption='" + repairsOption + '\'' +
                 '}';
     }
