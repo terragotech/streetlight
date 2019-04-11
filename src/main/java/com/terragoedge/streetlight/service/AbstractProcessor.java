@@ -267,11 +267,31 @@ public abstract class AbstractProcessor {
                 }
                 logger.info("isduplicate:"+isDuplicate);
                 if(isDuplicate) {
-                    DuplicateMacAddress duplicateMacAddress = new DuplicateMacAddress();
-                    duplicateMacAddress.setTitle(idOnController);
-                    duplicateMacAddress.setMacaddress(macAddress);
-                    duplicateMacAddress.setNoteguid(loggingModel.getProcessedNoteId());
-                    connectionDAO.saveDuplicateMacAddress(duplicateMacAddress);
+                    try{
+                        DuplicateMacAddress duplicateMacAddress = new DuplicateMacAddress();
+                        duplicateMacAddress.setTitle(idOnController);
+                        duplicateMacAddress.setMacaddress(macAddress);
+                        duplicateMacAddress.setNoteguid(loggingModel.getProcessedNoteId());
+                        connectionDAO.saveDuplicateMacAddress(duplicateMacAddress);
+
+                    }catch (Exception e){
+                        logger.error("Error in DuplicateMacAddress",e);
+                    }
+
+
+                    try{
+                        DuplicateMACAddressEventLog duplicateMACAddressEventLog = new DuplicateMACAddressEventLog();
+                        duplicateMACAddressEventLog.setIdOnController(idOnController);
+                        duplicateMACAddressEventLog.setMacaddress(macAddress);
+                        duplicateMACAddressEventLog.setDeviceList(stringBuilder.toString());
+                        duplicateMACAddressEventLog.setNoteGuid(loggingModel.getProcessedNoteId());
+                        duplicateMACAddressEventLog.setEventTime(System.currentTimeMillis());
+                        connectionDAO.saveMacAddressEventLog(duplicateMACAddressEventLog);
+                    }catch (Exception e){
+                        logger.error("Error in DuplicateMACAddressEventLog",e);
+                    }
+
+
                 }
             }
             loggingModel.setMacAddressUsed(true);

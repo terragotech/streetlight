@@ -8,14 +8,20 @@ import com.j256.ormlite.table.DatabaseTable;
 public class DuplicateMACAddressEventLog {
     @DatabaseField(generatedId = true)
     private int id;
-    @DatabaseField(columnName = "title")
-    private String title;
+    @DatabaseField(columnName = "idoncontroller")
+    private String idOnController;
 
     @DatabaseField(columnName = "macaddress")
     private String macaddress;
 
     @DatabaseField(columnName = "devices")
     private String deviceList;
+
+    @DatabaseField(columnName = "eventtime")
+    private long eventTime;
+
+    @DatabaseField(columnName = "noteguid")
+    private String noteGuid;
 
     public int getId() {
         return id;
@@ -25,12 +31,12 @@ public class DuplicateMACAddressEventLog {
         this.id = id;
     }
 
-    public String getTitle() {
-        return title;
+    public String getIdOnController() {
+        return idOnController;
     }
 
-    public void setTitle(String title) {
-        this.title = title;
+    public void setIdOnController(String idOnController) {
+        this.idOnController = idOnController;
     }
 
     public String getMacaddress() {
@@ -49,13 +55,31 @@ public class DuplicateMACAddressEventLog {
         this.deviceList = deviceList;
     }
 
+    public long getEventTime() {
+        return eventTime;
+    }
+
+    public void setEventTime(long eventTime) {
+        this.eventTime = eventTime;
+    }
+
+    public String getNoteGuid() {
+        return noteGuid;
+    }
+
+    public void setNoteGuid(String noteGuid) {
+        this.noteGuid = noteGuid;
+    }
+
     @Override
     public String toString() {
         return "DuplicateMACAddressEventLog{" +
                 "id=" + id +
-                ", title='" + title + '\'' +
+                ", idOnController='" + idOnController + '\'' +
                 ", macaddress='" + macaddress + '\'' +
                 ", deviceList='" + deviceList + '\'' +
+                ", eventTime=" + eventTime +
+                ", noteGuid='" + noteGuid + '\'' +
                 '}';
     }
 }
