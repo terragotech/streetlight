@@ -112,7 +112,7 @@ public abstract class AbstractProcessor {
         String proposedContextKey = properties.getProperty("streetlight.location.proposedcontext");
         String cslInstallDateKey = properties.getProperty("streetlight.csl.installdate");
         String cslLuminaireDateKey = properties.getProperty("streetlight.csl.luminairedate");
-        String serialNumberKey = properties.getProperty("streetlight.luminaire.serialnumber");
+        //String serialNumberKey = properties.getProperty("streetlight.luminaire.serialnumber");
         logger.info("contextKey :" + proposedContextKey);
         logger.info("cslInstallDate :" + cslInstallDateKey);
         logger.info("cslLuminaireDate :" + cslLuminaireDateKey);
@@ -137,9 +137,7 @@ public abstract class AbstractProcessor {
            else if (keyValue != null && keyValue.equals(cslLuminaireDateKey)) {
                 luminaireDate = jsonObject1.get("value").getAsString();
             }
-            else if(keyValue != null && keyValue.equals(serialNumberKey)){
 
-            }
         }
         if (nodeInstall != null && !nodeInstall.trim().isEmpty() && nodeInstall.trim().length() > 7) {
             cslpDate.setCslpNodeDate(nodeInstall);

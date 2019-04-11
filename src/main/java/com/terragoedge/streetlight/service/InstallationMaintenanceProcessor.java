@@ -134,10 +134,18 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
         String formatedValueNR = getNightRideFormVal(formDatas, edgeNote, installMaintenanceLogModel);
 
         boolean isInstallForm = false;
+        for(FormData formData : formDatas){
+
+            //Check if scanwrong exists in form data, and check whether MAC address already sent to SLV.
+            // If not, Process that MAC Address. Otherwise Log as error (Say, this MAC Address already sent).
+            //If Replace exists in form data and the replace MAC Address not sent already
+        }
         for (FormData formData : formDatas) {
             logger.info("Processing Form :" + formData.getFormTemplateGuid());
             if (formData.getFormTemplateGuid().equals(INSTATALLATION_AND_MAINTENANCE_GUID) || formData.getFormTemplateGuid().equals("fa47c708-fb82-4877-938c-992e870ae2a4") || formData.getFormTemplateGuid().equals("c8acc150-6228-4a27-bc7e-0fabea0e2b93")) {
+
                 isInstallForm = true;
+
                 logger.info("Install  Form  is present.");
                 installMaintenanceLogModel.setInstallFormPresent(true);
                 List<EdgeFormData> edgeFormDatas = formData.getFormDef();
@@ -189,7 +197,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
     }
 
 
-    private String getAction(List<EdgeFormData> edgeFormDatas, String idOnController, LoggingModel loggingModel, EdgeNote edgeNote) throws AlreadyUsedException {
+    private String getAction(List<EdgeFormData> edgeFormDatas, String idOnController, InstallMaintenanceLogModel loggingModel, EdgeNote edgeNote) throws AlreadyUsedException {
         try {
             String value = value(edgeFormDatas, "Action");
             if (value.equals("Repairs & Outages")) {
@@ -272,6 +280,24 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
         }
 
 
+        // Get Install status
+        String installStatusValue = null;
+        try {
+            installStatusValue = valueById(edgeFormDatas, 22);
+            logger.info("installStatus Val" + installStatusValue);
+        } catch (NoValueException e) {
+            logger.error("Error in while getting installStatusValue", e);
+        }
+
+
+        if(installStatusValue != null && installStatusValue.equals("Button Photocell Installation")){
+            DeviceAttributes deviceAttributes = getDeviceValues(loggingModel);
+            loggingModel.setButtonPhotoCell(true);
+            if(deviceAttributes.getInstallStatus().equals("Verified")){
+                loggingModel.setFixtureQRSame(true);
+            }
+        }
+
         try {
             validateValue(edgeFormDatas, idOnController, loggingModel, edgeNote, 19, 20);
             return "New";
@@ -331,7 +357,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
 
         }
 
-        if (fixerQrScanValue != null) {
+        if (fixerQrScanValue != null && !loggingModel.isButtonPhotoCell()) {
             try {
                 checkFixtureQrScan(fixerQrScanValue, edgeNote, loggingModel);
             } catch (InValidBarCodeException e) {
@@ -617,8 +643,6 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
                 }
 
                 return;
-            } else if(installStatusValue != null && installStatusValue.equals("Button Photocell Installation")){
-                loggingModel.setButtonPhotoCell(true);
             }
 
             // Get MAC Address
@@ -971,7 +995,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
                                 DuplicateMacAddress duplicateMacAddress = connectionDAO.getDuplicateMacAddress(macaddress);
                                 logger.info("duplicate mac address: "+duplicateMacAddress);
                                 if(duplicateMacAddress != null){
-                                    reSync(duplicateMacAddress.getNoteguid(),getEdgeToken(),true,utilLocId,true);
+                                    //reSync(duplicateMacAddress.getNoteguid(),getEdgeToken(),true,utilLocId,true);
                                     logger.info("resync called due to duplicate mac address");
                                 }
                             }
