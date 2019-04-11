@@ -124,6 +124,7 @@ public abstract class AbstractProcessor {
         CslpDate cslpDate = new CslpDate();
         String nodeInstall = null;
         String luminaireDate = null;
+        String macAddress = null;
         for (int i = 0; i < arr.size(); i++) {
             JsonObject jsonObject1 = arr.get(i).getAsJsonObject();
             String keyValue = jsonObject1.get("key").getAsString();
@@ -136,9 +137,13 @@ public abstract class AbstractProcessor {
             }
            else if (keyValue != null && keyValue.equals(cslLuminaireDateKey)) {
                 luminaireDate = jsonObject1.get("value").getAsString();
+            }else if(keyValue != null && keyValue.equals("userproperty.MacAddress")){
+                macAddress = jsonObject1.get("value").getAsString();
             }
 
         }
+
+        //
         if (nodeInstall != null && !nodeInstall.trim().isEmpty() && nodeInstall.trim().length() > 7) {
             cslpDate.setCslpNodeDate(nodeInstall);
         }
@@ -147,8 +152,13 @@ public abstract class AbstractProcessor {
         }
         logger.info("cslpDate :" + gson.toJson(cslpDate));
         cslpDateHashMap.put(idOnController, cslpDate);
+        DeviceAttributes deviceAttributes = new DeviceAttributes();
+        deviceAttributes.setMacAddress(macAddress);
+        deviceAttributes.setIdOnController(idOnController);
+        connectionDAO.saveDeviceAttributes(deviceAttributes);
         logger.info("processDeviceValuesJson End");
     }
+
 
 
 
@@ -260,7 +270,7 @@ public abstract class AbstractProcessor {
                     DuplicateMacAddress duplicateMacAddress = new DuplicateMacAddress();
                     duplicateMacAddress.setTitle(idOnController);
                     duplicateMacAddress.setMacaddress(macAddress);
-                    duplicateMacAddress.setNoteguid(streetlightDao.getNoteguid(idOnController));
+                    duplicateMacAddress.setNoteguid(loggingModel.getProcessedNoteId());
                     connectionDAO.saveDuplicateMacAddress(duplicateMacAddress);
                 }
             }
@@ -513,6 +523,7 @@ public abstract class AbstractProcessor {
     private void setResponseDetails(SLVTransactionLogs slvTransactionLogs,String responseString){
         slvTransactionLogs.setResponseBody(responseString);
     }
+
 
 
     /**
