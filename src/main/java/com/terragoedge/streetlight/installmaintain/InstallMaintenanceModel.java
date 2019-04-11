@@ -25,8 +25,12 @@ public class InstallMaintenanceModel {
     private String existingMacIfWrong;
     //Unable To Repair
     private String unableToRepairIssue;
+    private String unableToRepairComment;
     //Install status
     private String installStatus;
+    private String skippedFixtureReason;
+    private String skippedReason;
+    private String reasonforReplacement;
 
 
     public String getRemovalReason() {
@@ -160,6 +164,30 @@ public class InstallMaintenanceModel {
         this.installStatus = installStatus;
     }
 
+    public String getReasonforReplacement() {
+        return reasonforReplacement;
+    }
+
+    public void setReasonforReplacement(String reasonforReplacement) {
+        this.reasonforReplacement = reasonforReplacement;
+    }
+
+    public String getSkippedFixtureReason() {
+        return skippedFixtureReason;
+    }
+
+    public void setSkippedFixtureReason(String skippedFixtureReason) {
+        this.skippedFixtureReason = skippedFixtureReason;
+    }
+
+    public String getSkippedReason() {
+        return skippedReason;
+    }
+
+    public void setSkippedReason(String skippedReason) {
+        this.skippedReason = skippedReason;
+    }
+
     private void loadExistingMACAddress() {
         if (exMacAddressRN != null && !exMacAddressRN.trim().isEmpty()) {
             exMacAddressRNF = exMacAddressRN;
@@ -206,7 +234,39 @@ public class InstallMaintenanceModel {
         if (fixtureQRScanRNF != null && !fixtureQRScanRNF.trim().isEmpty()) {
             return true;
         }
+        if (resolvedIssue != null && !resolvedIssue.trim().isEmpty()) {
+            return true;
+        }
+        if (resolvedComment != null && !resolvedComment.trim().isEmpty()) {
+            return true;
+        }
+        if (existingMacIfWrong != null && !existingMacIfWrong.trim().isEmpty()) {
+            return true;
+        }
+        if (unableToRepairIssue != null && !unableToRepairIssue.trim().isEmpty()) {
+            return true;
+        }
+        if (installStatus != null && !installStatus.trim().isEmpty()) {
+            return true;
+        }
+        if (skippedFixtureReason != null && !skippedFixtureReason.trim().isEmpty()) {
+            return true;
+        }
+        if (skippedReason != null && !skippedReason.trim().isEmpty()) {
+            return true;
+        }
+        if (unableToRepairComment != null && !unableToRepairComment.trim().isEmpty()) {
+            return true;
+        }
         return false;
+    }
+
+    public String getUnableToRepairComment() {
+        return unableToRepairComment;
+    }
+
+    public void setUnableToRepairComment(String unableToRepairComment) {
+        this.unableToRepairComment = unableToRepairComment;
     }
 
     public String getIsReplaceNode() {
@@ -215,6 +275,15 @@ public class InstallMaintenanceModel {
 
     public void setIsReplaceNode(String isReplaceNode) {
         this.isReplaceNode = isReplaceNode;
+    }
+
+    public String getNewFixtureQRScan() {
+        if (fixtureQRScanRF != null && !fixtureQRScanRF.isEmpty() && !fixtureQRScanRF.contains("null")) {
+            return fixtureQRScanRF;
+        } else if (fixtureQRScanRNF != null && !fixtureQRScanRNF.isEmpty() && !fixtureQRScanRNF.contains("null")) {
+            return fixtureQRScanRNF;
+        }
+        return "";
     }
 
     @Override
@@ -233,7 +302,9 @@ public class InstallMaintenanceModel {
                 Objects.equals(resolvedComment, that.resolvedComment) &&
                 Objects.equals(existingMacIfWrong, that.existingMacIfWrong) &&
                 Objects.equals(unableToRepairIssue, that.unableToRepairIssue) &&
-                Objects.equals(installStatus, that.installStatus);
+                Objects.equals(installStatus, that.installStatus) &&
+                Objects.equals(skippedFixtureReason, that.skippedFixtureReason) &&
+                Objects.equals(skippedReason, that.skippedReason);
     }
 
     @Override

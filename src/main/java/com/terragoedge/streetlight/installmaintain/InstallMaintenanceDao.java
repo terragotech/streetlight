@@ -51,7 +51,7 @@ public class InstallMaintenanceDao extends UtilDao {
         ResultSet queryResponse = null;
         CSVWriter dailyCompletedCSVWriter = null;
         List<DuplicateModel> duplicateModelList = new ArrayList<>();
-        startTime = 1553576400000L;
+        startTime = 1554872400000L;
         logger.info("configs: " + gson.toJson(configs));
         try {
             String fileName = Utils.getDateTime();
@@ -92,7 +92,7 @@ public class InstallMaintenanceDao extends UtilDao {
             logger.info("daily install report csv file created!");
             closeCSVBuffer(dailyCompletedCSVWriter);
             edgeMailService.sendMail(duplicateMacAddressFile, dailyReportFile);
-            startGeoPDFProcess(dailyReportFile);
+           // startGeoPDFProcess(dailyReportFile);
         } catch (Exception e) {
             logger.error("Error in doProcess", e);
             closeCSVBuffer(dailyCompletedCSVWriter);
@@ -249,7 +249,7 @@ public class InstallMaintenanceDao extends UtilDao {
                 CSVWriter.NO_ESCAPE_CHARACTER,
                 CSVWriter.DEFAULT_LINE_END);
         String[] headerRecord = {"Title", "MAC Address", "User Id", "Fixture QR Scan", "Fixture Type",
-                "Context", "Lat", "Lng", "Date Time", "Is ReplaceNode", "Existing Node MAC Address", "New Node MAC Address", "Reason for removal"};
+                "Context", "Lat", "Lng", "Date Time", "Is ReplaceNode", "Existing Node MAC Address", "New Node MAC Address", "New Fixture QR Scan","Reason for Replacement","Reason for removal","Resolved Issue","Resolved Comment","Scan Existing MAC if wrong","UnableToRepair Issue","unableToRepair Comment","InstallStatus","Skipped Fixture Reason","Skipped Reason"};
         csvWriter.writeNext(headerRecord);
         return csvWriter;
     }
@@ -283,7 +283,7 @@ public class InstallMaintenanceDao extends UtilDao {
 
     private void writeCSV(NoteData noteData, CSVWriter csvWriter, List<DuplicateModel> duplicateModelList) {
         loadNotesData(noteData);
-        if (!noteData.getCreatedBy().equals("admin") && !noteData.getCreatedBy().equals("slvinterface")) {
+        if (true || (!noteData.getCreatedBy().equals("admin") && !noteData.getCreatedBy().equals("slvinterface"))) {
             if (noteData.getInstallMaintenanceModel().getRemovalReason() == null) {
                 checkMACDuplicate(noteData, duplicateModelList);
             }
@@ -303,7 +303,17 @@ public class InstallMaintenanceDao extends UtilDao {
                     noteData.getInstallMaintenanceModel().getIsReplaceNode(),
                     addDoubleQuotes(noteData.getInstallMaintenanceModel().getExMacAddressRNF()),
                     addDoubleQuotes(noteData.getInstallMaintenanceModel().getMacAddressRNF()),
-                    addDoubleQuotes(noteData.getInstallMaintenanceModel().getRemovalReason())
+                    addDoubleQuotes(noteData.getInstallMaintenanceModel().getNewFixtureQRScan()),
+                    addDoubleQuotes(noteData.getInstallMaintenanceModel().getReasonforReplacement()),
+                    addDoubleQuotes(noteData.getInstallMaintenanceModel().getRemovalReason()),
+                    addDoubleQuotes(noteData.getInstallMaintenanceModel().getResolvedIssue()),
+                    addDoubleQuotes(noteData.getInstallMaintenanceModel().getResolvedComment()),
+                    addDoubleQuotes(noteData.getInstallMaintenanceModel().getExistingMacIfWrong()),
+                    addDoubleQuotes(noteData.getInstallMaintenanceModel().getUnableToRepairIssue()),
+                    addDoubleQuotes(noteData.getInstallMaintenanceModel().getUnableToRepairComment()),
+                    addDoubleQuotes(noteData.getInstallMaintenanceModel().getInstallStatus()),
+                    addDoubleQuotes(noteData.getInstallMaintenanceModel().getSkippedFixtureReason()),
+                    addDoubleQuotes(noteData.getInstallMaintenanceModel().getSkippedReason())
 
             });
         }
@@ -394,6 +404,7 @@ public class InstallMaintenanceDao extends UtilDao {
                             case RF:
                                 installMaintenanceModel.setFixtureQRScanRF(setValue(installMaintenanceModel.getFixtureQRScanRF(), getValue(idsList.getFix(), edgeFormDatas)));
                                 installMaintenanceModel.setExFixtureQRScanRF(setValue(installMaintenanceModel.getExFixtureQRScanRF(), getValue(idsList.getExFix(), edgeFormDatas)));
+                                installMaintenanceModel.setReasonforReplacement(setValue(installMaintenanceModel.getReasonforReplacement(), getValue(idsList.getReasonForReplacement(), edgeFormDatas)));
                                 break;
                             case NEW:
                                 installMaintenanceModel.setMacAddress(setValue(installMaintenanceModel.getMacAddress(), getValue(idsList.getMac(), edgeFormDatas)));
@@ -419,9 +430,12 @@ public class InstallMaintenanceDao extends UtilDao {
                                 break;
                             case UR:
                                 installMaintenanceModel.setUnableToRepairIssue(setValue(installMaintenanceModel.getUnableToRepairIssue(), getValue(idsList.getUnabletorepairissue(), edgeFormDatas)));
+                                installMaintenanceModel.setUnableToRepairComment(setValue(installMaintenanceModel.getUnableToRepairComment(), getValue(idsList.getUnabletorepaircomment(), edgeFormDatas)));
                                 break;
                             case IS:
                                 installMaintenanceModel.setInstallStatus(setValue(installMaintenanceModel.getInstallStatus(), getValue(idsList.getInstallstatus(), edgeFormDatas)));
+                                installMaintenanceModel.setSkippedFixtureReason(setValue(installMaintenanceModel.getSkippedFixtureReason(), getValue(idsList.getSkippedfixtureReason(), edgeFormDatas)));
+                                installMaintenanceModel.setSkippedReason(setValue(installMaintenanceModel.getSkippedReason(), getValue(idsList.getSkippedReason(), edgeFormDatas)));
                                 break;
                         }
                     }
@@ -482,15 +496,17 @@ public class InstallMaintenanceDao extends UtilDao {
             while (queryResponse.next()) {
 
                 String locationDescription = queryResponse.getString("locationdescription");
-                String[] locations = locationDescription.split("\\|");
-                String groupName = "";
-                if (locations.length == 2) {
-                    locationDescription = locations[0];
-                    groupName = locations[1];
+                if(locationDescription!=null) {
+                    String[] locations = locationDescription.split("\\|");
+                    String groupName = "";
+                    if (locations.length == 2) {
+                        locationDescription = locations[0];
+                        groupName = locations[1];
+                    }
+                    currentNoteData.setFixtureType(groupName);
                 }
 
                 currentNoteData.setDescription(locationDescription);
-                currentNoteData.setFixtureType(groupName);
                 currentNoteData.setTitle(queryResponse.getString("title"));
                 currentNoteData.setCreatedBy(queryResponse.getString("createdby"));
                 currentNoteData.setCreatedDateTime(queryResponse.getLong("createddatetime"));

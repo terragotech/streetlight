@@ -58,13 +58,16 @@
       {
         "type": "UR",
         "ids": {
-          "unabletorepairissue": 106
+          "unabletorepairissue": 106,
+          "unabletorepaircomment": 121
         }
       },
       {
         "type": "IS",
         "ids": {
-          "installstatus": 22
+          "installstatus": 22,
+          "skippedfixtureReason": 23,
+          "skippedReason":42
         }
       }
     ]
