@@ -7,6 +7,7 @@ import com.j256.ormlite.stmt.DeleteBuilder;
 import com.j256.ormlite.support.ConnectionSource;
 import com.j256.ormlite.table.TableUtils;
 import com.terragoedge.streetlight.json.model.DeviceAttributes;
+import com.terragoedge.streetlight.json.model.DuplicateMACAddressEventLog;
 import com.terragoedge.streetlight.json.model.DuplicateMacAddress;
 import com.terragoedge.streetlight.json.model.SlvServerData;
 import org.apache.log4j.Logger;
@@ -23,6 +24,7 @@ public enum ConnectionDAO {
     public Dao<SlvServerData, String> slvDeviceDao = null;
     public Dao<DuplicateMacAddress, String> duplicateMacAddressDao = null;
     public Dao<DeviceAttributes, String> deviceAttributeDao = null;
+    public Dao<DuplicateMACAddressEventLog, String> macAddressEventLogsDao = null;
 
 
     ConnectionDAO() {
@@ -35,12 +37,15 @@ public enum ConnectionDAO {
             try {
                 TableUtils.createTable(connectionSource, DuplicateMacAddress.class);
                 TableUtils.createTable(connectionSource, SlvServerData.class);
+                TableUtils.createTable(connectionSource, DeviceAttributes.class);
+                TableUtils.createTable(connectionSource, DuplicateMACAddressEventLog.class);
             } catch (Exception e) {
                 e.printStackTrace();
             }
             slvDeviceDao = DaoManager.createDao(connectionSource, SlvServerData.class);
             duplicateMacAddressDao = DaoManager.createDao(connectionSource, DuplicateMacAddress.class);
             deviceAttributeDao = DaoManager.createDao(connectionSource, DeviceAttributes.class);
+            macAddressEventLogsDao= DaoManager.createDao(connectionSource, DuplicateMACAddressEventLog.class);
             System.out.println("Connected.....");
         } catch (Exception e) {
             logger.error("Error in openConnection", e);
@@ -74,6 +79,13 @@ public enum ConnectionDAO {
         }
     }
 
+    public void saveDeviceAttributes(DuplicateMACAddressEventLog duplicateMACAddressEventLog) {
+        try {
+            macAddressEventLogsDao.create(duplicateMACAddressEventLog);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
     public DuplicateMacAddress getDuplicateMacAddress(String macaddress) {
         try {
             return duplicateMacAddressDao.queryBuilder().where().eq("macaddress", macaddress).queryForFirst();
