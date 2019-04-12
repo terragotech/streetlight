@@ -1,10 +1,7 @@
 package com.terragoedge.streetlight.service;
 
 import com.google.gson.*;
-import com.terragoedge.edgeserver.DeviceMacAddress;
-import com.terragoedge.edgeserver.EdgeFormData;
-import com.terragoedge.edgeserver.EdgeNote;
-import com.terragoedge.edgeserver.Value;
+import com.terragoedge.edgeserver.*;
 import com.terragoedge.streetlight.PropertiesReader;
 import com.terragoedge.streetlight.dao.ConnectionDAO;
 import com.terragoedge.streetlight.dao.StreetlightDao;
@@ -107,7 +104,7 @@ public abstract class AbstractProcessor {
         return 0;
     }
 
-    public void processDeviceValuesJson(String deviceValuesjson, String idOnController,String noteGuid) {
+    public void processDeviceValuesJson(String deviceValuesjson, String idOnController, String noteGuid) {
         logger.info("processDeviceValuesJson called start");
         String proposedContextKey = properties.getProperty("streetlight.location.proposedcontext");
         String cslInstallDateKey = properties.getProperty("streetlight.csl.installdate");
@@ -131,13 +128,11 @@ public abstract class AbstractProcessor {
             if (keyValue != null && keyValue.equals(proposedContextKey)) {
                 String proposedContext = jsonObject1.get("value").getAsString();
                 contextListHashMap.put(idOnController, proposedContext);
-            }
-           else if (keyValue != null && keyValue.equals(cslInstallDateKey)) {
+            } else if (keyValue != null && keyValue.equals(cslInstallDateKey)) {
                 nodeInstall = jsonObject1.get("value").getAsString();
-            }
-           else if (keyValue != null && keyValue.equals(cslLuminaireDateKey)) {
+            } else if (keyValue != null && keyValue.equals(cslLuminaireDateKey)) {
                 luminaireDate = jsonObject1.get("value").getAsString();
-            }else if(keyValue != null && keyValue.equals("userproperty.MacAddress")){
+            } else if (keyValue != null && keyValue.equals("userproperty.MacAddress")) {
                 macAddress = jsonObject1.get("value").getAsString();
             }
 
@@ -161,10 +156,21 @@ public abstract class AbstractProcessor {
         logger.info("processDeviceValuesJson End");
     }
 
+    public void createEdgeAllFixture(String title, String fixerQrScanValue) {
+        EdgeAllFixtureData edgeAllFixtureData = new EdgeAllFixtureData();
+        edgeAllFixtureData.setFixtureQRScan(fixerQrScanValue);
+        edgeAllFixtureData.setTitle(title);
+        connectionDAO.saveEdgeAllFixture(edgeAllFixtureData);
+    }
 
+    public void createEdgeAllMac(String title, String macAddress) {
+        EdgeAllMacData edgeAllMacData = new EdgeAllMacData();
+        edgeAllMacData.setMacAddress(macAddress);
+        edgeAllMacData.setTitle(title);
+        connectionDAO.saveEdgeAllMac(edgeAllMacData);
+    }
 
-
-    public void loadDeviceValues(String idOnController,InstallMaintenanceLogModel installMaintenanceLogModel) throws Exception{
+    public void loadDeviceValues(String idOnController, InstallMaintenanceLogModel installMaintenanceLogModel) throws Exception {
         try {
             logger.info("loadDeviceValues called.");
             String mainUrl = properties.getProperty("streetlight.slv.url.main");
@@ -183,16 +189,16 @@ public abstract class AbstractProcessor {
             logger.info("Load Device url :" + url);
             ResponseEntity<String> response = restService.getRequest(url, true, null);
             if (response.getStatusCodeValue() == 200) {
-                logger.info("LoadDevice Respose :"+response.getBody());
+                logger.info("LoadDevice Respose :" + response.getBody());
                 String responseString = response.getBody();
                 int id = processDeviceJson(responseString);
-                logger.info("LoadDevice Id :"+id);
+                logger.info("LoadDevice Id :" + id);
 
                 if (id == 0) {
                     logger.info("csl and context hashmap are cleared");
                     cslpDateHashMap.clear();
                     contextListHashMap.clear();
-                    throw new NoValueException("Device id:["+idOnController+"] does not exists in SLV server");
+                    throw new NoValueException("Device id:[" + idOnController + "] does not exists in SLV server");
                 } else {
                     installMaintenanceLogModel.setDeviceId(id);
                     String subDeviceUrl = getDeviceUrl(id);
@@ -200,11 +206,11 @@ public abstract class AbstractProcessor {
                     ResponseEntity<String> responseEntity = restService.getRequest(subDeviceUrl, true, null);
                     if (response.getStatusCodeValue() == 200) {
                         String deviceResponse = responseEntity.getBody();
-                        processDeviceValuesJson(deviceResponse, idOnController,installMaintenanceLogModel.getProcessedNoteId());
+                        processDeviceValuesJson(deviceResponse, idOnController, installMaintenanceLogModel.getProcessedNoteId());
                     }
                 }
             }
-        } catch ( Exception e) {
+        } catch (Exception e) {
 
             throw new Exception(e);
         }
@@ -230,6 +236,11 @@ public abstract class AbstractProcessor {
      */
     public boolean checkMacAddressExists(String macAddress, String idOnController, String nightRideKey, String nightRideValue, LoggingModel loggingModel)
             throws QRCodeAlreadyUsedException, Exception {
+        boolean isExistMacAddress = connectionDAO.isExistMacAddress(idOnController,macAddress);
+        if(isExistMacAddress){
+            loggingModel.setMacAddressUsed(true);
+            throw new QRCodeAlreadyUsedException("MacAddress Already present in edge_all_mac", macAddress);
+        }
         logger.info("Getting Mac Address from SLV.");
         String mainUrl = properties.getProperty("streetlight.slv.url.main");
         String updateDeviceValues = properties.getProperty("streetlight.slv.url.search.device");
@@ -251,37 +262,37 @@ public abstract class AbstractProcessor {
             DeviceMacAddress deviceMacAddress = gson.fromJson(responseString, DeviceMacAddress.class);
             List<Value> values = deviceMacAddress.getValue();
             StringBuilder stringBuilder = new StringBuilder();
-            logger.info("check mac address exist values:"+values);
+            logger.info("check mac address exist values:" + values);
             if (values == null || values.size() == 0) {
                 loggingModel.setMacAddressUsed(false);
                 return false;
             } else {
                 boolean isDuplicate = false;
                 for (Value value : values) {
-                    if(!value.getIdOnController().equals(idOnController)){
+                    if (!value.getIdOnController().equals(idOnController)) {
                         isDuplicate = true;
                     }
                     if (value.getIdOnController().equals(idOnController) && nightRideKey != null) {
-                        sendNightRideToSLV(value.getIdOnController(), nightRideKey, nightRideValue,loggingModel);
+                        sendNightRideToSLV(value.getIdOnController(), nightRideKey, nightRideValue, loggingModel);
                     }
                     stringBuilder.append(value.getIdOnController());
                     stringBuilder.append("\n");
                 }
-                logger.info("isduplicate:"+isDuplicate);
-                if(isDuplicate) {
-                    try{
+                logger.info("isduplicate:" + isDuplicate);
+                if (isDuplicate) {
+                    try {
                         DuplicateMacAddress duplicateMacAddress = new DuplicateMacAddress();
                         duplicateMacAddress.setTitle(idOnController);
                         duplicateMacAddress.setMacaddress(macAddress);
                         duplicateMacAddress.setNoteguid(loggingModel.getProcessedNoteId());
                         connectionDAO.saveDuplicateMacAddress(duplicateMacAddress);
 
-                    }catch (Exception e){
-                        logger.error("Error in DuplicateMacAddress",e);
+                    } catch (Exception e) {
+                        logger.error("Error in DuplicateMacAddress", e);
                     }
 
 
-                    try{
+                    try {
                         DuplicateMACAddressEventLog duplicateMACAddressEventLog = new DuplicateMACAddressEventLog();
                         duplicateMACAddressEventLog.setIdOnController(idOnController);
                         duplicateMACAddressEventLog.setMacaddress(macAddress);
@@ -289,8 +300,8 @@ public abstract class AbstractProcessor {
                         duplicateMACAddressEventLog.setNoteGuid(loggingModel.getProcessedNoteId());
                         duplicateMACAddressEventLog.setEventTime(System.currentTimeMillis());
                         connectionDAO.saveMacAddressEventLog(duplicateMACAddressEventLog);
-                    }catch (Exception e){
-                        logger.error("Error in DuplicateMACAddressEventLog",e);
+                    } catch (Exception e) {
+                        logger.error("Error in DuplicateMACAddressEventLog", e);
                     }
 
 
@@ -320,7 +331,7 @@ public abstract class AbstractProcessor {
 
 
     public boolean isNodeDatePresent(String idOnContoller) {
-        logger.info("isNodePresent Json:"+gson.toJson(cslpDateHashMap));
+        logger.info("isNodePresent Json:" + gson.toJson(cslpDateHashMap));
         CslpDate cslpDate = cslpDateHashMap.get(idOnContoller);
         return cslpDate != null && cslpDate.getCslpNodeDate() != null;
     }
@@ -337,7 +348,7 @@ public abstract class AbstractProcessor {
             if (!isLumDate && !isButtonPhotoCelll) {
                 addStreetLightData("cslp.lum.install.date", dateFormat(edgeNote.getCreatedDateTime()), paramsList);
             }
-            if(!isButtonPhotoCelll) {
+            if (!isButtonPhotoCelll) {
                 addStreetLightData("luminaire.installdate", dateFormat(edgeNote.getCreatedDateTime()), paramsList);
             }
             if (macAddress == null || macAddress.trim().isEmpty()) {
@@ -421,18 +432,17 @@ public abstract class AbstractProcessor {
         return s.substring(0, pos) + c + s.substring(pos + 1).trim();
     }
 
-    public boolean stringContainsNumber( String s )
-    {
-        if(s != null && !s.trim().isEmpty()){
-            Pattern p = Pattern.compile( "[0-9]" );
-            Matcher m = p.matcher( s );
+    public boolean stringContainsNumber(String s) {
+        if (s != null && !s.trim().isEmpty()) {
+            Pattern p = Pattern.compile("[0-9]");
+            Matcher m = p.matcher(s);
 
             return m.find();
         }
         return false;
     }
 
-    public void buildFixtureStreetLightData(String data, List<Object> paramsList, EdgeNote edgeNote, SlvServerData slvServerData,LoggingModel loggingModel)
+    public void buildFixtureStreetLightData(String data, List<Object> paramsList, EdgeNote edgeNote, SlvServerData slvServerData, LoggingModel loggingModel)
             throws InValidBarCodeException {
         String[] fixtureInfo = data.split(",");
         logger.info("Fixture QR Scan Val length" + fixtureInfo.length);
@@ -455,12 +465,12 @@ public abstract class AbstractProcessor {
              */
             String model = fixtureInfo[1].trim();
             String partNumber = fixtureInfo[2].trim();
-            logger.info("luminaire.brand "+fixtureInfo[0]);
+            logger.info("luminaire.brand " + fixtureInfo[0]);
             if (fixtureInfo[1].trim().length() > fixtureInfo[2].trim().length() && !fixtureInfo[0].trim().contains("LV Manufacturing")) {
                 model = fixtureInfo[2].trim();
                 partNumber = fixtureInfo[1].trim();
-                logger.info("device.luminaire.partnumber "+partNumber);
-                logger.info("luminaire.model "+model);
+                logger.info("device.luminaire.partnumber " + partNumber);
+                logger.info("luminaire.model " + model);
             }
             addStreetLightData("device.luminaire.partnumber", partNumber, paramsList);
             slvServerData.setLuminairePartNumber(partNumber);
@@ -477,13 +487,13 @@ public abstract class AbstractProcessor {
             addStreetLightData("power", powerVal, paramsList);
 
             String dimmingGroupName = contextListHashMap.get(loggingModel.getIdOnController());
-            if(dimmingGroupName != null && stringContainsNumber(fixtureInfo[5]) && (dimmingGroupName.startsWith("3") || dimmingGroupName.startsWith("11") || dimmingGroupName.startsWith("12"))){
+            if (dimmingGroupName != null && stringContainsNumber(fixtureInfo[5]) && (dimmingGroupName.startsWith("3") || dimmingGroupName.startsWith("11") || dimmingGroupName.startsWith("12"))) {
                 fixtureInfo[5] = "LED";
             }
 
             //luminaire.type
             addStreetLightData("luminaire.type", fixtureInfo[5], paramsList);
-           // addStreetLightData("comed.litetype", fixtureInfo[5], paramsList);
+            // addStreetLightData("comed.litetype", fixtureInfo[5], paramsList);
             // dailyReportCSV.setFixtureType(fixtureInfo[5]);
 
 
@@ -509,9 +519,9 @@ public abstract class AbstractProcessor {
     }
 
 
-    protected int setDeviceValues(List<Object> paramsList,SLVTransactionLogs slvTransactionLogs) {
+    protected int setDeviceValues(List<Object> paramsList, SLVTransactionLogs slvTransactionLogs) {
         int errorCode = -1;
-        try{
+        try {
             String mainUrl = properties.getProperty("streetlight.slv.url.main");
             String updateDeviceValues = properties.getProperty("streetlight.slv.url.updatedevice");
             String url = mainUrl + updateDeviceValues;
@@ -520,32 +530,31 @@ public abstract class AbstractProcessor {
             String params = StringUtils.join(paramsList, "&");
             url = url + "&" + params;
             logger.info("SetDevice method called");
-            logger.info("SetDevice url:"+url);
-            setSLVTransactionLogs(slvTransactionLogs,url,CallType.SET_DEVICE);
+            logger.info("SetDevice url:" + url);
+            setSLVTransactionLogs(slvTransactionLogs, url, CallType.SET_DEVICE);
             ResponseEntity<String> response = restService.getPostRequest(url, null);
             String responseString = response.getBody();
-            setResponseDetails(slvTransactionLogs,responseString);
+            setResponseDetails(slvTransactionLogs, responseString);
             JsonObject replaceOlcResponse = (JsonObject) jsonParser.parse(responseString);
             errorCode = replaceOlcResponse.get("errorCode").getAsInt();
-       }catch (Exception e){
-            setResponseDetails(slvTransactionLogs,"Error in setDeviceValues:"+e.getMessage());
-           logger.error("Error in setDeviceValues",e);
-       }finally {
-           streetlightDao.insertTransactionLogs(slvTransactionLogs);
-       }
+        } catch (Exception e) {
+            setResponseDetails(slvTransactionLogs, "Error in setDeviceValues:" + e.getMessage());
+            logger.error("Error in setDeviceValues", e);
+        } finally {
+            streetlightDao.insertTransactionLogs(slvTransactionLogs);
+        }
 
         return errorCode;
     }
 
-    private void setSLVTransactionLogs(SLVTransactionLogs slvTransactionLogs, String request,CallType  callType){
+    private void setSLVTransactionLogs(SLVTransactionLogs slvTransactionLogs, String request, CallType callType) {
         slvTransactionLogs.setRequestDetails(request);
         slvTransactionLogs.setTypeOfCall(callType);
     }
 
-    private void setResponseDetails(SLVTransactionLogs slvTransactionLogs,String responseString){
+    private void setResponseDetails(SLVTransactionLogs slvTransactionLogs, String responseString) {
         slvTransactionLogs.setResponseBody(responseString);
     }
-
 
 
     /**
@@ -553,9 +562,9 @@ public abstract class AbstractProcessor {
      *
      * @throws ReplaceOLCFailedException
      */
-    public void replaceOLC(String controllerStrIdValue, String idOnController, String macAddress,SLVTransactionLogs slvTransactionLogs)
+    public void replaceOLC(String controllerStrIdValue, String idOnController, String macAddress, SLVTransactionLogs slvTransactionLogs)
             throws ReplaceOLCFailedException {
-       try {
+        try {
             // String newNetworkId = slvSyncDataEntity.getMacAddress();
             String newNetworkId = macAddress;
 
@@ -573,10 +582,10 @@ public abstract class AbstractProcessor {
             paramsList.add("ser=json");
             String params = StringUtils.join(paramsList, "&");
             url = url + "?" + params;
-            setSLVTransactionLogs(slvTransactionLogs,url,CallType.REPLACE_OLC);
+            setSLVTransactionLogs(slvTransactionLogs, url, CallType.REPLACE_OLC);
             ResponseEntity<String> response = restService.getPostRequest(url, null);
             String responseString = response.getBody();
-            setResponseDetails(slvTransactionLogs,responseString);
+            setResponseDetails(slvTransactionLogs, responseString);
             JsonObject replaceOlcResponse = (JsonObject) jsonParser.parse(responseString);
             String errorStatus = replaceOlcResponse.get("status").getAsString();
             logger.info("Replace OLC Process End.");
@@ -585,7 +594,7 @@ public abstract class AbstractProcessor {
                 String value = replaceOlcResponse.get("value").getAsString();
                 throw new ReplaceOLCFailedException(value);
             } else {
-
+                createEdgeAllMac(idOnController, macAddress);
                 if (macAddress != null) {
                     logger.info("Clear device process starts.");
                     logger.info("Clear device process End.");
@@ -596,12 +605,11 @@ public abstract class AbstractProcessor {
         } catch (Exception e) {
             logger.error("Error in replaceOLC", e);
             throw new ReplaceOLCFailedException(e.getMessage());
-        }finally {
-           streetlightDao.insertTransactionLogs(slvTransactionLogs);
-       }
+        } finally {
+            streetlightDao.insertTransactionLogs(slvTransactionLogs);
+        }
 
     }
-
 
 
     protected String getUtilLocationId(String errorDetails) {
@@ -621,7 +629,7 @@ public abstract class AbstractProcessor {
         loggingModel.setControllerSrtId(controllerStrId);
     }
 
-    private void sendNightRideToSLV(String idOnController, String nightRideKey, String nightRideValue,LoggingModel loggingModel) {
+    private void sendNightRideToSLV(String idOnController, String nightRideKey, String nightRideValue, LoggingModel loggingModel) {
         List<Object> paramsList = new ArrayList<>();
         String controllerStrId = properties.getProperty("streetlight.slv.controllerstrid");
         paramsList.add("idOnController=" + idOnController);
@@ -629,7 +637,7 @@ public abstract class AbstractProcessor {
         if (nightRideValue != null) {
             addStreetLightData(nightRideKey, nightRideValue, paramsList);
             SLVTransactionLogs slvTransactionLogs = getSLVTransactionLogs(loggingModel);
-            int errorCode = setDeviceValues(paramsList,slvTransactionLogs);
+            int errorCode = setDeviceValues(paramsList, slvTransactionLogs);
             logger.info("Error code" + errorCode);
             if (errorCode != 0) {
                 logger.error(MessageConstants.ERROR_UPDATE_DEVICE_VAL);
@@ -642,7 +650,7 @@ public abstract class AbstractProcessor {
     }
 
 
-    public SLVTransactionLogs getSLVTransactionLogs(LoggingModel loggingModel){
+    public SLVTransactionLogs getSLVTransactionLogs(LoggingModel loggingModel) {
         SLVTransactionLogs slvTransactionLogs = new SLVTransactionLogs();
         slvTransactionLogs.setNoteGuid(loggingModel.getProcessedNoteId());
         slvTransactionLogs.setTitle(loggingModel.getNoteName());
@@ -650,7 +658,6 @@ public abstract class AbstractProcessor {
         slvTransactionLogs.setParentNoteGuid(loggingModel.getParentNoteId());
         return slvTransactionLogs;
     }
-
 
 
     private void loadColumnPos(String columnName, SlvServerDataColumnPos slvServerDataColumnPos, int pos) {
@@ -750,9 +757,9 @@ public abstract class AbstractProcessor {
     }
 
 
-    public DeviceAttributes getDeviceValues(InstallMaintenanceLogModel installMaintenanceLogModel){
-        try{
-            if(installMaintenanceLogModel.getDeviceId() > 0){
+    public DeviceAttributes getDeviceValues(InstallMaintenanceLogModel installMaintenanceLogModel) {
+        try {
+            if (installMaintenanceLogModel.getDeviceId() > 0) {
                 DeviceAttributes deviceAttributes = new DeviceAttributes();
                 String mainUrl = properties.getProperty("streetlight.slv.url.main");
                 String commentUrl = properties.getProperty("streetlight.slv.url.comment.get");
@@ -768,23 +775,23 @@ public abstract class AbstractProcessor {
                 logger.info("Get MAC Address and installStatus url :" + url);
                 ResponseEntity<String> response = restService.getRequest(url, true, null);
                 if (response.getStatusCodeValue() == 200) {
-                    logger.info("Get MAC Address and installStatus Response :"+response.getBody());
+                    logger.info("Get MAC Address and installStatus Response :" + response.getBody());
                     String responseString = response.getBody();
-                    JsonArray jsonArray = (JsonArray)jsonParser.parse(responseString);
-                    for(JsonElement macAddressJson : jsonArray){
+                    JsonArray jsonArray = (JsonArray) jsonParser.parse(responseString);
+                    for (JsonElement macAddressJson : jsonArray) {
                         JsonObject macAddressJsonObject = macAddressJson.getAsJsonObject();
-                        if(macAddressJsonObject.get("name") != null){
+                        if (macAddressJsonObject.get("name") != null) {
                             String paramName = macAddressJsonObject.get("name").getAsString();
-                            if(paramName.equals("MacAddress")){
-                                if(macAddressJsonObject.get("value") != null){
+                            if (paramName.equals("MacAddress")) {
+                                if (macAddressJsonObject.get("value") != null) {
                                     String macAddress = macAddressJsonObject.get("value").getAsString();
-                                    if(macAddress != null && !macAddress.trim().isEmpty()){
+                                    if (macAddress != null && !macAddress.trim().isEmpty()) {
                                         deviceAttributes.setMacAddress(macAddress);
                                     }
                                 }
-                            }else if(paramName.equals("installStatus")){
+                            } else if (paramName.equals("installStatus")) {
                                 String installStatus = macAddressJsonObject.get("value").getAsString();
-                                if(installStatus != null && !installStatus.trim().isEmpty()){
+                                if (installStatus != null && !installStatus.trim().isEmpty()) {
                                     deviceAttributes.setInstallStatus(installStatus);
                                 }
                             }
@@ -796,12 +803,11 @@ public abstract class AbstractProcessor {
                 logger.info(deviceAttributes);
                 return deviceAttributes;
             }
-        }catch (Exception e){
-            logger.error("Error in getDeviceValues",e);
+        } catch (Exception e) {
+            logger.error("Error in getDeviceValues", e);
         }
         return null;
     }
-
 
 
 }

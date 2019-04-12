@@ -10,7 +10,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 import org.springframework.http.ResponseEntity;
 
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -97,7 +96,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
                         paramsList.add("controllerStrId=" + installMaintenanceLogModel.getControllerSrtId());
                         addStreetLightData(nightRideKey, nightRideValue, paramsList);
                         SLVTransactionLogs slvTransactionLogs = getSLVTransactionLogs(installMaintenanceLogModel);
-                        int errorCode = setDeviceValues(paramsList,slvTransactionLogs);
+                        int errorCode = setDeviceValues(paramsList, slvTransactionLogs);
                         if (errorCode != 0) {
                             installMaintenanceLogModel.setErrorDetails(MessageConstants.ERROR_NIGHTRIDE_FORM_VAL);
                             installMaintenanceLogModel.setStatus(MessageConstants.ERROR);
@@ -161,7 +160,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
                     if (value != null) {
                         switch (value) {
                             case "New":
-                                processNewGroup(edgeFormDatas, edgeNote, installMaintenanceLogModel, isReSync,  utilLocId, nightRideKey, formatedValueNR);
+                                processNewGroup(edgeFormDatas, edgeNote, installMaintenanceLogModel, isReSync, utilLocId, nightRideKey, formatedValueNR);
                                 installMaintenanceLogModel.setInstalledDate(edgeNote.getCreatedDateTime());
                                 break;
                             case "Repairs & Outages":
@@ -170,7 +169,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
                                 break;
                             case "Remove":
                                 logger.info("entered remove action");
-                                processRemoveAction(edgeFormDatas,utilLocId,installMaintenanceLogModel);
+                                processRemoveAction(edgeFormDatas, utilLocId, installMaintenanceLogModel);
                                 break;
                             case "Other Task":
                                 // processOtherTask(edgeFormDatas, edgeNote, installMaintenanceLogModel, nightRideKey, formatedValueNR);
@@ -213,7 +212,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
                     loggingModel.setErrorDetails("Repairs & Outages options are not selected.");
                 }
 
-            }else if(value.equals("Remove")){
+            } else if (value.equals("Remove")) {
                 return value;
             }
         } catch (NoValueException e) {
@@ -285,10 +284,10 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
         }
 
 
-        if(installStatusValue != null && installStatusValue.equals("Button Photocell Installation")){
+        if (installStatusValue != null && installStatusValue.equals("Button Photocell Installation")) {
             DeviceAttributes deviceAttributes = getDeviceValues(loggingModel);
             loggingModel.setButtonPhotoCell(true);
-            if(deviceAttributes.getInstallStatus().equals("Verified")){
+            if (deviceAttributes.getInstallStatus().equals("Verified")) {
                 loggingModel.setFixtureQRSame(true);
             }
         }
@@ -335,7 +334,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
 
 
         //Suppose fixtureqrscan value has mac address but MAC Address is empty
-        if(newNodeMacAddress == null &&  (fixerQrScanValue != null && fixerQrScanValue.startsWith("00"))){
+        if (newNodeMacAddress == null && (fixerQrScanValue != null && fixerQrScanValue.startsWith("00"))) {
             newNodeMacAddress = fixerQrScanValue;
             fixerQrScanValue = null;
             loggingModel.setFixtureQRSame(true);
@@ -376,8 +375,15 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
         List<Object> paramsList = new ArrayList<>();
         SlvServerData slvServerData = new SlvServerData();
         try {
+            // check given macaddress exist or not in edge_all_fix table
+            boolean isExistFixture = connectionDAO.isExistFixture(edgeNote.getTitle(), fixtureQrScan);
+            if (isExistFixture) {
+                logger.info("Fixture QR is present edge_all_fix table.");
+                loggingModel.setFixtureQRSame(true);
+                return;
+            }
             logger.info("Fixture QR Scan Validation Starts.");
-            buildFixtureStreetLightData(fixtureQrScan, paramsList, edgeNote, slvServerData,loggingModel);
+            buildFixtureStreetLightData(fixtureQrScan, paramsList, edgeNote, slvServerData, loggingModel);
             paramsList.clear();
             slvServerData.setIdOnController(edgeNote.getTitle());
 
@@ -422,7 +428,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
         } catch (InValidBarCodeException e) {
             loggingModel.setFixtureQRSame(true);
             throw new InValidBarCodeException(e.getMessage());
-        }catch (Exception e){
+        } catch (Exception e) {
             loggingModel.setFixtureQRSame(true);
             throw new InValidBarCodeException(e.getMessage());
 
@@ -459,12 +465,12 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
         }
         addStreetLightData("installStatus", installStatus, paramsList);
         SLVTransactionLogs slvTransactionLogs = getSLVTransactionLogs(loggingModel);
-        int errorCode = setDeviceValues(paramsList,slvTransactionLogs);
+        int errorCode = setDeviceValues(paramsList, slvTransactionLogs);
         logger.info("Error code" + errorCode);
         return errorCode;
     }
 
-    private void sync2Slv(String macAddress, String fixerQrScanValue, EdgeNote edgeNote, InstallMaintenanceLogModel loggingModel, String idOnController, String controllerStrIdValue,  String utilLocId, boolean isNew, String nightRideKey, String nightRideValue) {
+    private void sync2Slv(String macAddress, String fixerQrScanValue, EdgeNote edgeNote, InstallMaintenanceLogModel loggingModel, String idOnController, String controllerStrIdValue, String utilLocId, boolean isNew, String nightRideKey, String nightRideValue) {
         try {
 
             List<Object> paramsList = new ArrayList<>();
@@ -476,7 +482,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
             addOtherParams(edgeNote, paramsList, idOnController, utilLocId, isNew, fixerQrScanValue, macAddress, loggingModel);
 
             if (fixerQrScanValue != null && !loggingModel.isFixtureQRSame()) {
-                buildFixtureStreetLightData(fixerQrScanValue, paramsList, edgeNote, slvServerData,loggingModel);//update fixer qrscan value
+                buildFixtureStreetLightData(fixerQrScanValue, paramsList, edgeNote, slvServerData, loggingModel);//update fixer qrscan value
             }
 
 
@@ -484,7 +490,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
                 addStreetLightData(nightRideKey, nightRideValue, paramsList);
             }
             boolean isButtonPhotoCell = loggingModel.isButtonPhotoCell();
-            if(isButtonPhotoCell){
+            if (isButtonPhotoCell) {
                 addStreetLightData("install.date", dateFormat(edgeNote.getCreatedDateTime()), paramsList);
             }
             if (macAddress != null && !macAddress.trim().isEmpty() && !loggingModel.isMacAddressUsed()) {
@@ -492,20 +498,23 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
                 if (!isNodeDatePresent && !isButtonPhotoCell) {
                     addStreetLightData("cslp.node.install.date", dateFormat(edgeNote.getCreatedDateTime()), paramsList);
                 }
-                if(!isButtonPhotoCell) {
+                if (!isButtonPhotoCell) {
                     addStreetLightData("install.date", dateFormat(edgeNote.getCreatedDateTime()), paramsList);
                 }
                 addStreetLightData("MacAddress", macAddress, paramsList);
             }
 
             SLVTransactionLogs slvTransactionLogs = getSLVTransactionLogs(loggingModel);
-            int errorCode = setDeviceValues(paramsList,slvTransactionLogs);
+            int errorCode = setDeviceValues(paramsList, slvTransactionLogs);
             logger.info("Error code" + errorCode);
             if (errorCode != 0) {
                 loggingModel.setErrorDetails(MessageConstants.ERROR_UPDATE_DEVICE_VAL);
                 loggingModel.setStatus(MessageConstants.ERROR);
                 return;
             } else {
+                if (fixerQrScanValue != null && !fixerQrScanValue.trim().isEmpty()) {
+                    createEdgeAllFixture(idOnController, fixerQrScanValue);
+                }
                 logger.info("Replace OLC called");
                 // replace OlC
                 System.out.println("New :" + isNew + " \nmacAddress :" + macAddress);
@@ -516,7 +525,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
                 } else {
                     if (!loggingModel.isMacAddressUsed()) {
                         slvTransactionLogs = getSLVTransactionLogs(loggingModel);
-                        replaceOLC(controllerStrIdValue, idOnController, macAddress,slvTransactionLogs);// insert mac address
+                        replaceOLC(controllerStrIdValue, idOnController, macAddress, slvTransactionLogs);// insert mac address
                     }
 
                 }
@@ -537,7 +546,6 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
 
         }
     }
-
 
     private String getIdOnController(List<EdgeFormData> fixtureFromDef) {
         // Get IdOnController value
@@ -590,7 +598,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
             addStreetLightData(Key, formatedValue, paramsList);
         }
         SLVTransactionLogs slvTransactionLogs = getSLVTransactionLogs(loggingModel);
-        int errorCode = setDeviceValues(paramsList,slvTransactionLogs);
+        int errorCode = setDeviceValues(paramsList, slvTransactionLogs);
         if (errorCode != 0) {
             logger.info("CDOT issue value serDevice error");
             loggingModel.setErrorDetails(MessageConstants.ERROR_OTHERTASK_DEVICE_VAL);
@@ -604,7 +612,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
     }
 
 
-    private void processNewGroup(List<EdgeFormData> edgeFormDatas, EdgeNote edgeNote, InstallMaintenanceLogModel loggingModel, boolean isResync,  String utilLocId, String nightRideKey, String nightRideValue) {
+    private void processNewGroup(List<EdgeFormData> edgeFormDatas, EdgeNote edgeNote, InstallMaintenanceLogModel loggingModel, boolean isResync, String utilLocId, String nightRideKey, String nightRideValue) {
         try {
 
             // Get Install status
@@ -682,7 +690,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
             }
 
             //Suppose fixtureqrscan value has mac address but MAC Address is empty
-            if(nodeMacValue == null &&  (fixerQrScanValue != null && fixerQrScanValue.startsWith("00"))){
+            if (nodeMacValue == null && (fixerQrScanValue != null && fixerQrScanValue.startsWith("00"))) {
                 nodeMacValue = fixerQrScanValue;
                 fixerQrScanValue = null;
                 loggingModel.setFixtureQRSame(true);
@@ -697,7 +705,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
             if (isResync) {
                 try {
                     SLVTransactionLogs slvTransactionLogs = getSLVTransactionLogs(loggingModel);
-                    replaceOLC(loggingModel.getControllerSrtId(), loggingModel.getIdOnController(), "",slvTransactionLogs);
+                    replaceOLC(loggingModel.getControllerSrtId(), loggingModel.getIdOnController(), "", slvTransactionLogs);
                 } catch (Exception e) {
                     String message = e.getMessage();
                 }
@@ -706,8 +714,9 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
 
             // Check Whether MAC Address is already assigned to other fixtures or not.
             try {
-                if (nodeMacValue != null)
+                if (nodeMacValue != null) {
                     checkMacAddressExists(nodeMacValue, loggingModel.getIdOnController(), nightRideKey, nightRideValue, loggingModel);
+                }
             } catch (QRCodeAlreadyUsedException e1) {
                 logger.error("MacAddress (" + e1.getMacAddress()
                         + ")  - Already in use. So this pole is not synced with SLV. Note Title :[" + edgeNote.getTitle()
@@ -777,7 +786,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
     }
 
 
-    private void replaceNodeFixture(List<EdgeFormData> edgeFormDatas, EdgeNote edgeNote, InstallMaintenanceLogModel loggingModel,  String utilLocId, String nightRideKey, String nightRideValue) {
+    private void replaceNodeFixture(List<EdgeFormData> edgeFormDatas, EdgeNote edgeNote, InstallMaintenanceLogModel loggingModel, String utilLocId, String nightRideKey, String nightRideValue) {
         try {
             String existingNodeMacAddress = null;
             String newNodeMacAddress = null;
@@ -822,7 +831,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
             }
 
             //Suppose fixtureqrscan value has mac address but MAC Address is empty
-            if(newNodeMacAddress == null &&  (fixerQrScanValue != null && fixerQrScanValue.startsWith("00"))){
+            if (newNodeMacAddress == null && (fixerQrScanValue != null && fixerQrScanValue.startsWith("00"))) {
                 newNodeMacAddress = fixerQrScanValue;
                 fixerQrScanValue = null;
                 loggingModel.setFixtureQRSame(true);
@@ -832,8 +841,6 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
 
 
             String controllerStrIdValue = loggingModel.getControllerSrtId();
-
-
 
 
             if (newNodeMacAddress != null && !newNodeMacAddress.isEmpty()) {
@@ -852,7 +859,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
             try {
                 if (!loggingModel.isMacAddressUsed()) {
                     SLVTransactionLogs slvTransactionLogs = getSLVTransactionLogs(loggingModel);
-                    replaceOLC(controllerStrIdValue, idOnController, "",slvTransactionLogs);
+                    replaceOLC(controllerStrIdValue, idOnController, "", slvTransactionLogs);
                     statusDescription.append(MessageConstants.EMPTY_REPLACE_OLC_SUCCESS);
                 }
 
@@ -861,8 +868,6 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
                 statusDescription.append(e.getMessage());
                 e.printStackTrace();
             }
-
-
 
 
             sync2Slv(newNodeMacAddress, fixerQrScanValue, edgeNote, loggingModel, idOnController, controllerStrIdValue, utilLocId, false, nightRideKey, nightRideValue);
@@ -878,7 +883,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
     }
 
 
-    private void replaceNodeOnly(List<EdgeFormData> edgeFormDatas, EdgeNote edgeNote, InstallMaintenanceLogModel loggingModel,  String utilLocId, String nightRideKey, String nightRideValue) {
+    private void replaceNodeOnly(List<EdgeFormData> edgeFormDatas, EdgeNote edgeNote, InstallMaintenanceLogModel loggingModel, String utilLocId, String nightRideKey, String nightRideValue) {
         try {
             String existingNodeMacAddress = null;
             String newNodeMacAddress = null;
@@ -907,8 +912,6 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
             String controllerStrIdValue = loggingModel.getControllerSrtId();
 
 
-
-
             try {
                 checkMacAddressExists(newNodeMacAddress, idOnController, nightRideKey, nightRideValue, loggingModel);
             } catch (QRCodeAlreadyUsedException e1) {
@@ -927,14 +930,12 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
             try {
                 if (!loggingModel.isMacAddressUsed()) {
                     SLVTransactionLogs slvTransactionLogs = getSLVTransactionLogs(loggingModel);
-                    replaceOLC(controllerStrIdValue, idOnController, "",slvTransactionLogs);
+                    replaceOLC(controllerStrIdValue, idOnController, "", slvTransactionLogs);
                 }
 
             } catch (ReplaceOLCFailedException e) {
                 e.printStackTrace();
             }
-
-
 
 
             sync2Slv(newNodeMacAddress, null, edgeNote, loggingModel, idOnController, controllerStrIdValue, utilLocId, false, nightRideKey, nightRideValue);
@@ -947,95 +948,95 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
         }
     }
 
-    private void processRemoveAction(List<EdgeFormData> edgeFormDatas,String utilLocId,InstallMaintenanceLogModel installMaintenanceLogModel){
+    private void processRemoveAction(List<EdgeFormData> edgeFormDatas, String utilLocId, InstallMaintenanceLogModel installMaintenanceLogModel) {
         String removeReason = null;
         try {
             removeReason = valueById(edgeFormDatas, 35);
-        }catch (Exception e){
+        } catch (Exception e) {
             e.printStackTrace();
         }
-        if(removeReason != null){
-            logger.info("remove reason:"+removeReason);
+        if (removeReason != null) {
+            logger.info("remove reason:" + removeReason);
             DeviceAttributes deviceAttributes = getDeviceValues(installMaintenanceLogModel);
-            switch (removeReason){
+            switch (removeReason) {
                 case "Installed on Wrong Fixture":
                     try {
-                            if(deviceAttributes != null && deviceAttributes.getInstallStatus().equals("To be installed")){
-                                installMaintenanceLogModel.setStatus(MessageConstants.ERROR);
-                                installMaintenanceLogModel.setErrorDetails("Already Processed.Install Status: To be installed");
-                                return;
-                            }
-                            String macaddress = null;
-                            if(deviceAttributes != null){
-                                logger.info("removed mac address:"+deviceAttributes.getMacAddress());
-                                macaddress = deviceAttributes.getMacAddress();
-                            }
+                        if (deviceAttributes != null && deviceAttributes.getInstallStatus().equals("To be installed")) {
+                            installMaintenanceLogModel.setStatus(MessageConstants.ERROR);
+                            installMaintenanceLogModel.setErrorDetails("Already Processed.Install Status: To be installed");
+                            return;
+                        }
+                        String macaddress = null;
+                        if (deviceAttributes != null) {
+                            logger.info("removed mac address:" + deviceAttributes.getMacAddress());
+                            macaddress = deviceAttributes.getMacAddress();
+                        }
 
-                            try {
-                                SLVTransactionLogs slvTransactionLogs = getSLVTransactionLogs(installMaintenanceLogModel);
-                                replaceOLC(installMaintenanceLogModel.getControllerSrtId(), installMaintenanceLogModel.getIdOnController(), "",slvTransactionLogs);
-                            }catch (Exception e){
-                                e.printStackTrace();
-                                logger.error("error in replace OLC:"+e.getMessage());
+                        try {
+                            SLVTransactionLogs slvTransactionLogs = getSLVTransactionLogs(installMaintenanceLogModel);
+                            replaceOLC(installMaintenanceLogModel.getControllerSrtId(), installMaintenanceLogModel.getIdOnController(), "", slvTransactionLogs);
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                            logger.error("error in replace OLC:" + e.getMessage());
+                        }
+                        logger.info("empty replaceOLC called");
+                        try {
+                            clearDeviceValues(installMaintenanceLogModel.getIdOnController(), installMaintenanceLogModel.getControllerSrtId(), "Installed on Wrong Fixture", installMaintenanceLogModel);
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                            logger.error("Error in clear device values:" + e.getMessage());
+                        }
+                        logger.info("cleared divice value");
+                        if (macaddress != null) {
+                            DuplicateMacAddress duplicateMacAddress = connectionDAO.getDuplicateMacAddress(macaddress);
+                            logger.info("duplicate mac address: " + duplicateMacAddress);
+                            if (duplicateMacAddress != null) {
+                                //reSync(duplicateMacAddress.getNoteguid(),getEdgeToken(),true,utilLocId,true);
+                                logger.info("resync called due to duplicate mac address");
                             }
-                            logger.info("empty replaceOLC called");
-                            try {
-                                clearDeviceValues(installMaintenanceLogModel.getIdOnController(), installMaintenanceLogModel.getControllerSrtId(), "Installed on Wrong Fixture",installMaintenanceLogModel);
-                            }catch (Exception e){
-                                e.printStackTrace();
-                                logger.error("Error in clear device values:"+e.getMessage());
-                            }
-                            logger.info("cleared divice value");
-                            if(macaddress != null){
-                                DuplicateMacAddress duplicateMacAddress = connectionDAO.getDuplicateMacAddress(macaddress);
-                                logger.info("duplicate mac address: "+duplicateMacAddress);
-                                if(duplicateMacAddress != null){
-                                    //reSync(duplicateMacAddress.getNoteguid(),getEdgeToken(),true,utilLocId,true);
-                                    logger.info("resync called due to duplicate mac address");
-                                }
-                            }
+                        }
 
-                    }catch (Exception e){
-                        logger.error("Error in processRemoveAction",e);
+                    } catch (Exception e) {
+                        logger.error("Error in processRemoveAction", e);
                     }
                     break;
                 case "Pole Removed":
                     try {
-                        if(deviceAttributes != null && deviceAttributes.getInstallStatus().equals("Removed")){
+                        if (deviceAttributes != null && deviceAttributes.getInstallStatus().equals("Removed")) {
                             installMaintenanceLogModel.setStatus(MessageConstants.ERROR);
                             installMaintenanceLogModel.setErrorDetails("Already Processed.Install Status: Removed");
                             return;
                         }
-                        clearDeviceValues(installMaintenanceLogModel.getIdOnController(),installMaintenanceLogModel.getControllerSrtId(),"Pole Removed",installMaintenanceLogModel);
-                    }catch (Exception e){
-                        logger.error("Error in processRemoveAction",e);
+                        clearDeviceValues(installMaintenanceLogModel.getIdOnController(), installMaintenanceLogModel.getControllerSrtId(), "Pole Removed", installMaintenanceLogModel);
+                    } catch (Exception e) {
+                        logger.error("Error in processRemoveAction", e);
                     }
                     break;
                 case "Pole Knocked-Down":
                     try {
-                        if(deviceAttributes != null && deviceAttributes.getInstallStatus().equals("Pole Knocked Down")){
+                        if (deviceAttributes != null && deviceAttributes.getInstallStatus().equals("Pole Knocked Down")) {
                             installMaintenanceLogModel.setStatus(MessageConstants.ERROR);
                             installMaintenanceLogModel.setErrorDetails("Already Processed.Install Status: Pole Knocked Down");
                             return;
                         }
-                        clearDeviceValues(installMaintenanceLogModel.getIdOnController(),installMaintenanceLogModel.getControllerSrtId(),"Pole Knocked-Down",installMaintenanceLogModel);
-                    }catch (Exception e){
-                        logger.error("Error in processRemoveAction",e);
+                        clearDeviceValues(installMaintenanceLogModel.getIdOnController(), installMaintenanceLogModel.getControllerSrtId(), "Pole Knocked-Down", installMaintenanceLogModel);
+                    } catch (Exception e) {
+                        logger.error("Error in processRemoveAction", e);
                     }
                     break;
             }
         }
     }
 
-    private void clearDeviceValues(String idOnController,String controllerStrIdValue,String type,InstallMaintenanceLogModel loggingModel){
+    private void clearDeviceValues(String idOnController, String controllerStrIdValue, String type, InstallMaintenanceLogModel loggingModel) {
         List<Object> paramsList = new ArrayList<>();
         paramsList.add("idOnController=" + idOnController);
         paramsList.add("controllerStrId=" + controllerStrIdValue);
-        switch (type){
+        switch (type) {
             case "Installed on Wrong Fixture":
                 clearFixtureValues(paramsList);
                 addStreetLightData("cslp.lum.install.date", "", paramsList);
-                addStreetLightData("luminaire.installdate","", paramsList);
+                addStreetLightData("luminaire.installdate", "", paramsList);
                 addStreetLightData("cslp.node.install.date", "", paramsList);
                 addStreetLightData("install.date", "", paramsList);
                 addStreetLightData("installStatus", "To be installed", paramsList);
@@ -1043,28 +1044,28 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
             case "Pole Removed":
                 clearFixtureValues(paramsList);
                 addStreetLightData("install.date", "", paramsList);
-                addStreetLightData("luminaire.installdate","", paramsList);
+                addStreetLightData("luminaire.installdate", "", paramsList);
                 addStreetLightData("installStatus", "Removed", paramsList);
                 addStreetLightData("luminaire.type", "HPS", paramsList);
                 break;
             case "Pole Knocked-Down":
                 clearFixtureValues(paramsList);
                 addStreetLightData("install.date", "", paramsList);
-                addStreetLightData("luminaire.installdate","", paramsList);
+                addStreetLightData("luminaire.installdate", "", paramsList);
                 addStreetLightData("installStatus", "Pole Knocked Down", paramsList);
                 addStreetLightData("luminaire.type", "HPS", paramsList);
                 break;
         }
         SLVTransactionLogs slvTransactionLogs = getSLVTransactionLogs(loggingModel);
-        int errorCode = setDeviceValues(paramsList,slvTransactionLogs);
-        if(errorCode == 0){
-            logger.info("clearing device values completed: "+idOnController);
-        }else{
+        int errorCode = setDeviceValues(paramsList, slvTransactionLogs);
+        if (errorCode == 0) {
+            logger.info("clearing device values completed: " + idOnController);
+        } else {
             logger.error("Error in clearDeviceValues");
         }
     }
 
-    private void clearFixtureValues(List<Object> paramsList){
+    private void clearFixtureValues(List<Object> paramsList) {
         addStreetLightData("luminaire.brand", "", paramsList);
         addStreetLightData("device.luminaire.partnumber", "", paramsList);
         addStreetLightData("luminaire.model", "", paramsList);
@@ -1079,7 +1080,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
         addStreetLightData("ballast.dimmingtype", "", paramsList);
     }
 
-    public void reSync(String noteGuid, String accessToken, boolean isResync, String utilLocId,boolean isFromRemoveAction)throws Exception {
+    public void reSync(String noteGuid, String accessToken, boolean isResync, String utilLocId, boolean isFromRemoveAction) throws Exception {
         logger.info("resync method called ");
         // Get Edge Server Url from properties
         String url = PropertiesReader.getProperties().getProperty("streetlight.edge.url.main");
@@ -1108,14 +1109,14 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
             installMaintenanceLogModel.setParentNoteId(edgeNote.getBaseParentNoteId());
             installMaintenanceLogModel.setCreatedDatetime(String.valueOf(edgeNote.getCreatedDateTime()));
             loadDefaultVal(edgeNote, installMaintenanceLogModel);
-            loadDeviceValues(installMaintenanceLogModel.getIdOnController(),installMaintenanceLogModel);
+            loadDeviceValues(installMaintenanceLogModel.getIdOnController(), installMaintenanceLogModel);
             logger.info("going to call processnew action");
             processNewAction(edgeNote, installMaintenanceLogModel, isResync, utilLocId);
 
             //updateSlvStatusToEdge(installMaintenanceLogModel, edgeNote);
             LoggingModel loggingModel = installMaintenanceLogModel;
             streetlightDao.insertProcessedNotes(loggingModel, installMaintenanceLogModel);
-            if(isFromRemoveAction) {
+            if (isFromRemoveAction) {
                 connectionDAO.deleteDuplicateMacAddress(noteGuid);
             }
             //  }

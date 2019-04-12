@@ -143,7 +143,7 @@ public enum ConnectionDAO {
     public boolean isExistMacAddress(String idOncontroller, String macaddress) {
         EdgeAllMacData edgeAllMacData = null;
         try {
-            edgeAllMacDataDao.queryBuilder().where().eq("", idOncontroller).and().eq("", macaddress).queryForFirst();
+            edgeAllMacData = edgeAllMacDataDao.queryBuilder().where().eq("title", idOncontroller).and().eq("macaddress", macaddress).queryForFirst();
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -157,6 +157,7 @@ public enum ConnectionDAO {
             e.printStackTrace();
         }
     }
+
     public void saveEdgeAllFixture(EdgeAllFixtureData edgeAllFixtureData) {
         try {
             edgeAllFixtureDataDao.create(edgeAllFixtureData);
@@ -164,7 +165,15 @@ public enum ConnectionDAO {
             e.printStackTrace();
         }
     }
-
+    public boolean isExistFixture(String idOncontroller, String fixtureQrScan) {
+        EdgeAllFixtureData edgeAllFixtureData = null;
+        try {
+            edgeAllFixtureData = edgeAllFixtureDataDao.queryBuilder().where().eq("title", idOncontroller).and().eq("fixtureqrscan", fixtureQrScan).queryForFirst();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return (edgeAllFixtureData != null) ? true : false;
+    }
     public void closeConnection() {
         if (connectionSource != null) {
             try {
