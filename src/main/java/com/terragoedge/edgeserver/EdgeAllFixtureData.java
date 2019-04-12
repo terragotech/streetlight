@@ -1,7 +1,13 @@
 package com.terragoedge.edgeserver;
 
+import com.j256.ormlite.field.DatabaseField;
+import com.j256.ormlite.table.DatabaseTable;
+
+@DatabaseTable(tableName = "edge_all_fix")
 public class EdgeAllFixtureData {
+    @DatabaseField(columnName = "title")
     private String title;
+    @DatabaseField(columnName = "fixtureqrscan")
     private String fixtureQRScan;
 
     public String getTitle() {

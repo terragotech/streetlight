@@ -35,12 +35,30 @@ public enum ConnectionDAO {
         try {
             connectionSource = new JdbcConnectionSource(DATABASE_URL);
             try {
-                TableUtils.createTable(connectionSource, DuplicateMacAddress.class);
-                TableUtils.createTable(connectionSource, SlvServerData.class);
-                TableUtils.createTable(connectionSource, DeviceAttributes.class);
-                TableUtils.createTable(connectionSource, DuplicateMACAddressEventLog.class);
+                TableUtils.createTableIfNotExists(connectionSource, DuplicateMacAddress.class);
+
             } catch (Exception e) {
-                e.printStackTrace();
+                logger.error("Error in openConnection", e);
+            }
+
+            try{
+                TableUtils.createTableIfNotExists(connectionSource, SlvServerData.class);
+
+            }catch (Exception e){
+                logger.error("Error in openConnection", e);
+            }
+
+            try{
+                TableUtils.createTableIfNotExists(connectionSource, DeviceAttributes.class);
+
+            }catch (Exception e){
+                logger.error("Error in openConnection", e);
+            }
+
+            try{
+                TableUtils.createTableIfNotExists(connectionSource, DuplicateMACAddressEventLog.class);
+            }catch (Exception e){
+                logger.error("Error in openConnection", e);
             }
             slvDeviceDao = DaoManager.createDao(connectionSource, SlvServerData.class);
             duplicateMacAddressDao = DaoManager.createDao(connectionSource, DuplicateMacAddress.class);

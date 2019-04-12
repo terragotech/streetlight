@@ -13,6 +13,26 @@ public class DeviceAttributes {
     private String macAddress;
     @DatabaseField(columnName = "installstatus")
     private String installStatus;
+    @DatabaseField(columnName = "noteguid")
+    private String noteGuid;
+    @DatabaseField(columnName = "eventtime")
+    private long eventTime;
+
+    public String getNoteGuid() {
+        return noteGuid;
+    }
+
+    public void setNoteGuid(String noteGuid) {
+        this.noteGuid = noteGuid;
+    }
+
+    public long getEventTime() {
+        return eventTime;
+    }
+
+    public void setEventTime(long eventTime) {
+        this.eventTime = eventTime;
+    }
 
     public String getMacAddress() {
         return macAddress;
@@ -53,6 +73,8 @@ public class DeviceAttributes {
                 ", idOnController='" + idOnController + '\'' +
                 ", macAddress='" + macAddress + '\'' +
                 ", installStatus='" + installStatus + '\'' +
+                ", noteGuid='" + noteGuid + '\'' +
+                ", eventTime=" + eventTime +
                 '}';
     }
 }

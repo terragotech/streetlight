@@ -1,8 +1,15 @@
 package com.terragoedge.edgeserver;
 
+
+import com.j256.ormlite.field.DatabaseField;
+import com.j256.ormlite.table.DatabaseTable;
+
+@DatabaseTable(tableName = "edge_all_mac")
 public class EdgeAllMacData {
 
+    @DatabaseField(columnName = "title")
     private String title;
+    @DatabaseField(columnName = "macaddress")
     private String macAddress;
 
     public String getTitle() {

@@ -107,7 +107,7 @@ public abstract class AbstractProcessor {
         return 0;
     }
 
-    public void processDeviceValuesJson(String deviceValuesjson, String idOnController) {
+    public void processDeviceValuesJson(String deviceValuesjson, String idOnController,String noteGuid) {
         logger.info("processDeviceValuesJson called start");
         String proposedContextKey = properties.getProperty("streetlight.location.proposedcontext");
         String cslInstallDateKey = properties.getProperty("streetlight.csl.installdate");
@@ -155,6 +155,8 @@ public abstract class AbstractProcessor {
         DeviceAttributes deviceAttributes = new DeviceAttributes();
         deviceAttributes.setMacAddress(macAddress);
         deviceAttributes.setIdOnController(idOnController);
+        deviceAttributes.setEventTime(System.currentTimeMillis());
+        deviceAttributes.setNoteGuid(noteGuid);
         connectionDAO.saveDeviceAttributes(deviceAttributes);
         logger.info("processDeviceValuesJson End");
     }
@@ -198,7 +200,7 @@ public abstract class AbstractProcessor {
                     ResponseEntity<String> responseEntity = restService.getRequest(subDeviceUrl, true, null);
                     if (response.getStatusCodeValue() == 200) {
                         String deviceResponse = responseEntity.getBody();
-                        processDeviceValuesJson(deviceResponse, idOnController);
+                        processDeviceValuesJson(deviceResponse, idOnController,installMaintenanceLogModel.getProcessedNoteId());
                     }
                 }
             }
