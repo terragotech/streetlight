@@ -38,7 +38,8 @@
           "mac": -1,
           "fix": 39,
           "exMac": -1,
-          "exFix": 41
+          "exFix": 41,
+          "reasonforreplacement":40
         }
       },
       {

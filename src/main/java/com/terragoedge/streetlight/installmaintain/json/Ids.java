@@ -11,6 +11,10 @@ public class Ids {
     private int scanifwrong;
     private int unabletorepairissue;
     private int installstatus;
+    private int skippedReason;
+    private int skippedfixtureReason;
+    private int unabletorepaircomment;
+    private int reasonforreplacement;
 
 
     public int getRemove() {
@@ -93,6 +97,38 @@ public class Ids {
         this.installstatus = installstatus;
     }
 
+    public int getSkippedReason() {
+        return skippedReason;
+    }
+
+    public void setSkippedReason(int skippedReason) {
+        this.skippedReason = skippedReason;
+    }
+
+    public int getSkippedfixtureReason() {
+        return skippedfixtureReason;
+    }
+
+    public void setSkippedfixtureReason(int skippedfixtureReason) {
+        this.skippedfixtureReason = skippedfixtureReason;
+    }
+
+    public int getUnabletorepaircomment() {
+        return unabletorepaircomment;
+    }
+
+    public void setUnabletorepaircomment(int unabletorepaircomment) {
+        this.unabletorepaircomment = unabletorepaircomment;
+    }
+
+    public int getReasonforreplacement() {
+        return reasonforreplacement;
+    }
+
+    public void setReasonforreplacement(int reasonforreplacement) {
+        this.reasonforreplacement = reasonforreplacement;
+    }
+
     @Override
     public String toString() {
         return "Ids{" +
@@ -106,6 +142,9 @@ public class Ids {
                 ", scanifwrong=" + scanifwrong +
                 ", unabletorepairissue=" + unabletorepairissue +
                 ", installstatus=" + installstatus +
+                ", skippedReason=" + skippedReason +
+                ", skippedfixtureReason=" + skippedfixtureReason +
+                ", unabletorepaircomment=" + unabletorepaircomment +
                 '}';
     }
 }
