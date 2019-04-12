@@ -6,6 +6,8 @@ import com.j256.ormlite.jdbc.JdbcConnectionSource;
 import com.j256.ormlite.stmt.DeleteBuilder;
 import com.j256.ormlite.support.ConnectionSource;
 import com.j256.ormlite.table.TableUtils;
+import com.terragoedge.edgeserver.EdgeAllFixtureData;
+import com.terragoedge.edgeserver.EdgeAllMacData;
 import com.terragoedge.streetlight.json.model.DeviceAttributes;
 import com.terragoedge.streetlight.json.model.DuplicateMACAddressEventLog;
 import com.terragoedge.streetlight.json.model.DuplicateMacAddress;
@@ -25,6 +27,8 @@ public enum ConnectionDAO {
     public Dao<DuplicateMacAddress, String> duplicateMacAddressDao = null;
     public Dao<DeviceAttributes, String> deviceAttributeDao = null;
     public Dao<DuplicateMACAddressEventLog, String> macAddressEventLogsDao = null;
+    public Dao<EdgeAllMacData, String> edgeAllMacDataDao = null;
+    public Dao<EdgeAllFixtureData, String> edgeAllFixtureDataDao = null;
 
 
     ConnectionDAO() {
@@ -41,29 +45,41 @@ public enum ConnectionDAO {
                 logger.error("Error in openConnection", e);
             }
 
-            try{
+            try {
                 TableUtils.createTableIfNotExists(connectionSource, SlvServerData.class);
 
-            }catch (Exception e){
+            } catch (Exception e) {
                 logger.error("Error in openConnection", e);
             }
 
-            try{
+            try {
                 TableUtils.createTableIfNotExists(connectionSource, DeviceAttributes.class);
 
-            }catch (Exception e){
+            } catch (Exception e) {
                 logger.error("Error in openConnection", e);
             }
 
-            try{
+            try {
                 TableUtils.createTableIfNotExists(connectionSource, DuplicateMACAddressEventLog.class);
-            }catch (Exception e){
+            } catch (Exception e) {
+                logger.error("Error in openConnection", e);
+            }
+            try {
+                TableUtils.createTableIfNotExists(connectionSource, EdgeAllFixtureData.class);
+            } catch (Exception e) {
+                logger.error("Error in openConnection", e);
+            }
+            try {
+                TableUtils.createTableIfNotExists(connectionSource, EdgeAllMacData.class);
+            } catch (Exception e) {
                 logger.error("Error in openConnection", e);
             }
             slvDeviceDao = DaoManager.createDao(connectionSource, SlvServerData.class);
             duplicateMacAddressDao = DaoManager.createDao(connectionSource, DuplicateMacAddress.class);
             deviceAttributeDao = DaoManager.createDao(connectionSource, DeviceAttributes.class);
-            macAddressEventLogsDao= DaoManager.createDao(connectionSource, DuplicateMACAddressEventLog.class);
+            macAddressEventLogsDao = DaoManager.createDao(connectionSource, DuplicateMACAddressEventLog.class);
+            edgeAllMacDataDao = DaoManager.createDao(connectionSource, EdgeAllMacData.class);
+            edgeAllFixtureDataDao = DaoManager.createDao(connectionSource, EdgeAllFixtureData.class);
             System.out.println("Connected.....");
         } catch (Exception e) {
             logger.error("Error in openConnection", e);
@@ -104,6 +120,7 @@ public enum ConnectionDAO {
             e.printStackTrace();
         }
     }
+
     public DuplicateMacAddress getDuplicateMacAddress(String macaddress) {
         try {
             return duplicateMacAddressDao.queryBuilder().where().eq("macaddress", macaddress).queryForFirst();
@@ -118,6 +135,31 @@ public enum ConnectionDAO {
             DeleteBuilder<DuplicateMacAddress, String> deleteBuilder = duplicateMacAddressDao.deleteBuilder();
             deleteBuilder.where().eq("noteguid", noteguid);
             deleteBuilder.delete();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    public boolean isExistMacAddress(String idOncontroller, String macaddress) {
+        EdgeAllMacData edgeAllMacData = null;
+        try {
+            edgeAllMacDataDao.queryBuilder().where().eq("", idOncontroller).and().eq("", macaddress).queryForFirst();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return (edgeAllMacData != null) ? true : false;
+    }
+
+    public void saveEdgeAllMac(EdgeAllMacData edgeAllMacData) {
+        try {
+            edgeAllMacDataDao.create(edgeAllMacData);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+    public void saveEdgeAllFixture(EdgeAllFixtureData edgeAllFixtureData) {
+        try {
+            edgeAllFixtureDataDao.create(edgeAllFixtureData);
         } catch (Exception e) {
             e.printStackTrace();
         }
