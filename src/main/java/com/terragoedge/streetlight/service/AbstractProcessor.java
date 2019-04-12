@@ -597,8 +597,8 @@ public abstract class AbstractProcessor {
                 String value = replaceOlcResponse.get("value").getAsString();
                 throw new ReplaceOLCFailedException(value);
             } else {
-                createEdgeAllMac(idOnController, macAddress);
-                if (macAddress != null) {
+                if (macAddress != null && !macAddress.trim().isEmpty()) {
+                    createEdgeAllMac(idOnController, macAddress);
                     logger.info("Clear device process starts.");
                     logger.info("Clear device process End.");
                 }
