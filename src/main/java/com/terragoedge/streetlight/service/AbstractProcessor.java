@@ -237,7 +237,10 @@ public abstract class AbstractProcessor {
     public boolean checkMacAddressExists(String macAddress, String idOnController, String nightRideKey, String nightRideValue, LoggingModel loggingModel)
             throws QRCodeAlreadyUsedException, Exception {
         boolean isExistMacAddress = connectionDAO.isExistMacAddress(idOnController,macAddress);
+        logger.info("given idoncontroller :"+idOnController);
+        logger.info("given macaddress is :"+macAddress);
         if(isExistMacAddress){
+            logger.info("Already mac address exist in local table");
             loggingModel.setMacAddressUsed(true);
             throw new QRCodeAlreadyUsedException("MacAddress Already present in edge_all_mac", macAddress);
         }

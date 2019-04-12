@@ -377,6 +377,8 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
         try {
             // check given macaddress exist or not in edge_all_fix table
             boolean isExistFixture = connectionDAO.isExistFixture(edgeNote.getTitle(), fixtureQrScan);
+            logger.info("given fixture idoncontroller :"+edgeNote.getTitle());
+            logger.info("Given fixture fixturequrscan:"+fixtureQrScan);
             if (isExistFixture) {
                 logger.info("Fixture QR is present edge_all_fix table.");
                 loggingModel.setFixtureQRSame(true);
