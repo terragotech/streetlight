@@ -67,7 +67,7 @@ public class SlvService extends AbstractSlvService {
             deleteDevice(jpsWorkflowModel);
         }*/
         processDeviceValues(jpsWorkflowModel, true, edgeNote);
-        processMacAddress(jpsWorkflowModel, edgeNote, deviceId);
+        //processMacAddress(jpsWorkflowModel, edgeNote, deviceId);
         logger.info("Going to call delete device");
     }
 

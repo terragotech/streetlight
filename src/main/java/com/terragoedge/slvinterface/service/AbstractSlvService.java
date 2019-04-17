@@ -294,9 +294,14 @@ public abstract class AbstractSlvService extends EdgeService {
             logger.info("Create Geozone Response : "+geozoneResponse);
             geozoneModels = gson.fromJson(geozoneResponse, new TypeToken<List<GeozoneModel>>() {
             }.getType());
-            if (geozoneModels.size() > 0) {
-                return geozoneModels.get(0);
+            for(GeozoneModel geozoneModel : geozoneModels){
+                if(parentId == geozoneModel.getParentId()){
+                    return geozoneModel;
+                }
             }
+            /*if (geozoneModels.size() > 0) {
+                return geozoneModels.get(0);
+            }*/
         }
         return null;
     }

@@ -64,7 +64,7 @@ public enum ConnectionDAO {
 
     public List<String> getEdgeNoteGuid(String formTemplateGuid,String notebookGuid) {
         try {
-            List<String> noteGuids = slvSyncDetailsDao.queryRaw("select noteguid from edgenote, edgeform, edgenotebook ed where edgenote.isdeleted = false and edgenote.iscurrent = true and ed.notebookguid='"+notebookGuid+"' and ed.notebookid=edgenote.notebookid and edgenote.noteid = edgeform.edgenoteentity_noteid and edgeform.formtemplateguid = '" + formTemplateGuid + "' and edgenote.noteguid not in(select noteguid from slvsyncdetails);", new RawRowMapper<String>() {
+            List<String> noteGuids = slvSyncDetailsDao.queryRaw("select noteguid from edgenote, edgeform where edgenote.isdeleted = false and edgenote.iscurrent = true and edgenote.noteid = edgeform.edgenoteentity_noteid and edgeform.formtemplateguid = '" + formTemplateGuid + "' and edgenote.noteid in(select noteid from tobe_send_slv_form2);", new RawRowMapper<String>() {
                 @Override
                 public String mapRow(String[] columnNames, String[] resultColumns) throws SQLException {
                     return resultColumns[0];
