@@ -22,4 +22,11 @@ public class MessageConstants {
 	public static String ERROR_OTHERTASK_DEVICE_VAL ="Error while processing OtherTask device value. Corresponding error code is ";
 	public static String ERROR_NIGHTRIDE_FORM_VAL ="Error while processing NightRides formValue. Corresponding error code is ";
 	public static String NOVALUE_NIGHTRIDE_FORM ="Night Ride form is empty.";
+
+	public static String EDGE_VALIDATION_ERROR = "Edge Validation Error";
+	public static String SLV_VALIDATION_ERROR="Slv Validation Error";
+	public static String NO_MACADDRESS_NO_FIXTURE="No MacAddress and FixtureQrScan";
+	public static String REPLACEOLC = "ReplaceOlc";
+	public static String SETDEVICE="SetDevice";
+
 }

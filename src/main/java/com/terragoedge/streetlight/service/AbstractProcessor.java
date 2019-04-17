@@ -234,7 +234,7 @@ public abstract class AbstractProcessor {
      *
      * @throws Exception
      */
-    public boolean checkMacAddressExists(String macAddress, String idOnController, String nightRideKey, String nightRideValue, LoggingModel loggingModel)
+    public boolean checkMacAddressExists(String macAddress, String idOnController, String nightRideKey, String nightRideValue, LoggingModel loggingModel,SlvInterfaceLogEntity slvInterfaceLogEntity)
             throws QRCodeAlreadyUsedException, Exception {
         boolean isExistMacAddress = connectionDAO.isExistMacAddress(idOnController,macAddress);
         logger.info("given idoncontroller :"+idOnController);
@@ -242,6 +242,8 @@ public abstract class AbstractProcessor {
         if(isExistMacAddress){
             logger.info("Already mac address exist in local table");
             loggingModel.setMacAddressUsed(true);
+            slvInterfaceLogEntity.setErrorcategory(MessageConstants.EDGE_VALIDATION_ERROR);
+            slvInterfaceLogEntity.setErrordetails("Already mac address exist in local table");
             throw new QRCodeAlreadyUsedException("MacAddress Already present in edge_all_mac", macAddress);
         }
         logger.info("Getting Mac Address from SLV.");
@@ -284,6 +286,8 @@ public abstract class AbstractProcessor {
                 logger.info("isduplicate:" + isDuplicate);
                 if (isDuplicate) {
                     try {
+                        slvInterfaceLogEntity.setErrorcategory(MessageConstants.SLV_VALIDATION_ERROR);
+                        slvInterfaceLogEntity.setErrordetails("Already MacAddress Assigned another fixture.");
                         DuplicateMacAddress duplicateMacAddress = new DuplicateMacAddress();
                         duplicateMacAddress.setTitle(idOnController);
                         duplicateMacAddress.setMacaddress(macAddress);
@@ -565,7 +569,7 @@ public abstract class AbstractProcessor {
      *
      * @throws ReplaceOLCFailedException
      */
-    public void replaceOLC(String controllerStrIdValue, String idOnController, String macAddress, SLVTransactionLogs slvTransactionLogs)
+    public void replaceOLC(String controllerStrIdValue, String idOnController, String macAddress, SLVTransactionLogs slvTransactionLogs,SlvInterfaceLogEntity slvInterfaceLogEntity)
             throws ReplaceOLCFailedException {
         try {
             // String newNetworkId = slvSyncDataEntity.getMacAddress();
@@ -598,6 +602,8 @@ public abstract class AbstractProcessor {
                 throw new ReplaceOLCFailedException(value);
             } else {
                 if (macAddress != null && !macAddress.trim().isEmpty()) {
+                    slvInterfaceLogEntity.setReplaceOlc(MessageConstants.REPLACEOLC);
+                    slvInterfaceLogEntity.setStatus(MessageConstants.SUCCESS);
                     createEdgeAllMac(idOnController, macAddress);
                     logger.info("Clear device process starts.");
                     logger.info("Clear device process End.");
@@ -607,6 +613,9 @@ public abstract class AbstractProcessor {
 
         } catch (Exception e) {
             logger.error("Error in replaceOLC", e);
+            slvInterfaceLogEntity.setStatus(MessageConstants.ERROR);
+            slvInterfaceLogEntity.setErrorcategory(MessageConstants.SLV_VALIDATION_ERROR);
+            slvInterfaceLogEntity.setErrordetails("ReplaceOlc Failed :"+e.getMessage());
             throw new ReplaceOLCFailedException(e.getMessage());
         } finally {
             streetlightDao.insertTransactionLogs(slvTransactionLogs);

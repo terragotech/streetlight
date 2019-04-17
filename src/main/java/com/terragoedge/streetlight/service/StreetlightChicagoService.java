@@ -9,6 +9,7 @@ import com.terragoedge.streetlight.edgeinterface.SlvData;
 import com.terragoedge.streetlight.edgeinterface.SlvToEdgeService;
 import com.terragoedge.streetlight.json.model.ContextList;
 import com.terragoedge.streetlight.json.model.CslpDate;
+import com.terragoedge.streetlight.json.model.SlvInterfaceLogEntity;
 import com.terragoedge.streetlight.logging.InstallMaintenanceLogModel;
 import com.terragoedge.streetlight.logging.LoggingModel;
 import org.apache.log4j.Logger;
@@ -175,10 +176,15 @@ public class StreetlightChicagoService extends AbstractProcessor {
                                    installMaintenanceLogModel.setParentNoteId(edgeNote.getBaseParentNoteId());
                                    loadDefaultVal(edgeNote, installMaintenanceLogModel);
                                    loadDeviceValues(edgeNote.getTitle(),installMaintenanceLogModel);
-                                   installationMaintenanceProcessor.processNewAction(edgeNote, installMaintenanceLogModel, false, null);
+                                   SlvInterfaceLogEntity slvInterfaceLogEntity = new SlvInterfaceLogEntity();
+                                   slvInterfaceLogEntity.setIdOnController(edgeNote.getTitle());
+                                   slvInterfaceLogEntity.setCreateddatetime(System.currentTimeMillis());
+                                   slvInterfaceLogEntity.setResync(false);
+                                   installationMaintenanceProcessor.processNewAction(edgeNote, installMaintenanceLogModel, false, null,slvInterfaceLogEntity);
                                    //updateSlvStatusToEdge(installMaintenanceLogModel, edgeNote);
                                    LoggingModel loggingModel = installMaintenanceLogModel;
                                    streetlightDao.insertProcessedNotes(loggingModel, installMaintenanceLogModel);
+                                   connectionDAO.saveSlvInterfaceLog(slvInterfaceLogEntity);
                                }
                            }catch (Exception e){
                                 logger.error("Error in run",e);

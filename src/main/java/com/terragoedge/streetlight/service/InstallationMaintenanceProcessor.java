@@ -10,6 +10,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 import org.springframework.http.ResponseEntity;
 
+import java.rmi.MarshalException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -80,7 +81,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
         return null;
     }
 
-    private void syncNightRideFormAlone(List<FormData> formDataList, InstallMaintenanceLogModel installMaintenanceLogModel, EdgeNote edgeNote) {
+    private void syncNightRideFormAlone(List<FormData> formDataList, InstallMaintenanceLogModel installMaintenanceLogModel, EdgeNote edgeNote, SlvInterfaceLogEntity slvInterfaceLogEntity) {
         try {
             String nightRideKey = properties.getProperty("amerescousa.night.ride.key_for_slv");
             try {
@@ -100,13 +101,20 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
                         if (errorCode != 0) {
                             installMaintenanceLogModel.setErrorDetails(MessageConstants.ERROR_NIGHTRIDE_FORM_VAL);
                             installMaintenanceLogModel.setStatus(MessageConstants.ERROR);
+                            slvInterfaceLogEntity.setErrorcategory(MessageConstants.SLV_VALIDATION_ERROR);
+                            slvInterfaceLogEntity.setStatus(MessageConstants.ERROR);
+                            slvInterfaceLogEntity.setErrordetails(MessageConstants.ERROR_NIGHTRIDE_FORM_VAL);
                             return;
                         } else {
                             logger.info("Night ride value successfully updated");
                             installMaintenanceLogModel.setStatus(MessageConstants.SUCCESS);
+                            slvInterfaceLogEntity.setStatus(MessageConstants.SUCCESS);
                             logger.info("Status Changed. to Success");
                         }
                     } else {
+                        slvInterfaceLogEntity.setErrorcategory(MessageConstants.EDGE_VALIDATION_ERROR);
+                        slvInterfaceLogEntity.setStatus(MessageConstants.ERROR);
+                        slvInterfaceLogEntity.setErrordetails(MessageConstants.NOVALUE_NIGHTRIDE_FORM);
                         installMaintenanceLogModel.setErrorDetails(MessageConstants.NOVALUE_NIGHTRIDE_FORM);
                         installMaintenanceLogModel.setStatus(MessageConstants.ERROR);
                     }
@@ -116,17 +124,25 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
                 logger.error("Error in while getting nightRideValue's value : ", e);
                 installMaintenanceLogModel.setErrorDetails("Error while syncing Night Ride value.");
                 installMaintenanceLogModel.setStatus(MessageConstants.ERROR);
+                slvInterfaceLogEntity.setErrorcategory(MessageConstants.SLV_VALIDATION_ERROR);
+                slvInterfaceLogEntity.setStatus(MessageConstants.ERROR);
+                slvInterfaceLogEntity.setErrordetails("Error in while getting nightRideValue's value : " + e);
             }
         } catch (Exception e) {
             e.printStackTrace();
             logger.error("Error in while getting nightRideValue's value : ", e);
             installMaintenanceLogModel.setErrorDetails("Error while syncing Night Ride value.");
             installMaintenanceLogModel.setStatus(MessageConstants.ERROR);
+            slvInterfaceLogEntity.setStatus(MessageConstants.ERROR);
+            slvInterfaceLogEntity.setErrorcategory(MessageConstants.EDGE_VALIDATION_ERROR);
+            slvInterfaceLogEntity.setErrordetails("Error in while getting nightRideValue's value : " + e);
         }
     }
 
-    public void processNewAction(EdgeNote edgeNote, InstallMaintenanceLogModel installMaintenanceLogModel, boolean isReSync, String utilLocId) {
+    public void processNewAction(EdgeNote edgeNote, InstallMaintenanceLogModel installMaintenanceLogModel, boolean isReSync, String utilLocId, SlvInterfaceLogEntity slvInterfaceLogEntity) {
+        slvInterfaceLogEntity.setParentnoteid((edgeNote.getBaseParentNoteId() == null) ? edgeNote.getNoteGuid() : edgeNote.getBaseParentNoteId());
         logger.info("processNewAction");
+        slvInterfaceLogEntity.setIdOnController(edgeNote.getTitle());
         List<FormData> formDatas = edgeNote.getFormData();
 
         String nightRideKey = properties.getProperty("amerescousa.night.ride.key_for_slv");
@@ -147,7 +163,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
                     logger.info("before Action Val");
                     String value = null;
                     try {
-                        value = getAction(edgeFormDatas, edgeNote.getTitle(), installMaintenanceLogModel, edgeNote);
+                        value = getAction(edgeFormDatas, edgeNote.getTitle(), installMaintenanceLogModel, edgeNote, slvInterfaceLogEntity);
                         logger.info("After Action Val");
                     } catch (AlreadyUsedException w) {
                         if (installMaintenanceLogModel.isNigthRideSame()) {
@@ -160,18 +176,22 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
                     if (value != null) {
                         switch (value) {
                             case "New":
-                                processNewGroup(edgeFormDatas, edgeNote, installMaintenanceLogModel, isReSync, utilLocId, nightRideKey, formatedValueNR);
+                                slvInterfaceLogEntity.setSelectedAction("New");
+                                processNewGroup(edgeFormDatas, edgeNote, installMaintenanceLogModel, isReSync, utilLocId, nightRideKey, formatedValueNR, slvInterfaceLogEntity);
                                 installMaintenanceLogModel.setInstalledDate(edgeNote.getCreatedDateTime());
                                 break;
                             case "Repairs & Outages":
-                                repairAndOutage(edgeFormDatas, edgeNote, installMaintenanceLogModel, utilLocId, nightRideKey, formatedValueNR, formatedValueNR);
+                                slvInterfaceLogEntity.setSelectedAction("Repairs & Outages");
+                                repairAndOutage(edgeFormDatas, edgeNote, installMaintenanceLogModel, utilLocId, nightRideKey, formatedValueNR, formatedValueNR, slvInterfaceLogEntity);
                                 installMaintenanceLogModel.setReplacedDate(edgeNote.getCreatedDateTime());
                                 break;
                             case "Remove":
+                                slvInterfaceLogEntity.setSelectedAction("Remove");
                                 logger.info("entered remove action");
-                                processRemoveAction(edgeFormDatas, utilLocId, installMaintenanceLogModel);
+                                processRemoveAction(edgeFormDatas, utilLocId, installMaintenanceLogModel, slvInterfaceLogEntity);
                                 break;
                             case "Other Task":
+                                slvInterfaceLogEntity.setSelectedAction("Other Task");
                                 // processOtherTask(edgeFormDatas, edgeNote, installMaintenanceLogModel, nightRideKey, formatedValueNR);
                                 break;
                         }
@@ -179,19 +199,20 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
 
                 } catch (Exception e) {
                     logger.error("error in processNewAction method", e);
-                    installMaintenanceLogModel.setErrorDetails(MessageConstants.ACTION_NO_VAL);
-                    installMaintenanceLogModel.setStatus(MessageConstants.ERROR);
+                    slvInterfaceLogEntity.setErrorcategory(MessageConstants.SLV_VALIDATION_ERROR);
+                    slvInterfaceLogEntity.setErrordetails(MessageConstants.ACTION_NO_VAL);
+                    slvInterfaceLogEntity.setStatus(MessageConstants.ERROR);
                 }
             }
         }
 
         if (!isInstallForm) {
-            syncNightRideFormAlone(formDatas, installMaintenanceLogModel, edgeNote);
+            syncNightRideFormAlone(formDatas, installMaintenanceLogModel, edgeNote, slvInterfaceLogEntity);
         }
     }
 
 
-    private String getAction(List<EdgeFormData> edgeFormDatas, String idOnController, InstallMaintenanceLogModel loggingModel, EdgeNote edgeNote) throws AlreadyUsedException {
+    private String getAction(List<EdgeFormData> edgeFormDatas, String idOnController, InstallMaintenanceLogModel loggingModel, EdgeNote edgeNote, SlvInterfaceLogEntity slvInterfaceLogEntity) throws AlreadyUsedException {
         try {
             String value = value(edgeFormDatas, "Action");
             if (value.equals("Repairs & Outages")) {
@@ -224,7 +245,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
         String newFixtureQrScanValue = null;
         try {
             newFixtureQrScanValue = valueById(edgeFormDatas, 39);
-            checkFixtureQrScan(newFixtureQrScanValue, edgeNote, loggingModel);
+            checkFixtureQrScan(newFixtureQrScanValue, edgeNote, loggingModel, slvInterfaceLogEntity);
         } catch (NoValueException e) {
 
         } catch (InValidBarCodeException e) {
@@ -232,11 +253,14 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
             loggingModel.setFixtureQRSame(true);
             // No need to worry, crew may be node replaced.
         }
-
+        if (loggingModel.isFixtureQRSame()) {
+            slvInterfaceLogEntity.setErrorcategory(MessageConstants.SLV_VALIDATION_ERROR);
+            slvInterfaceLogEntity.setErrordetails("Given fixtureQrScan Already exist in slv server");
+        }
         //Check Replace Node only option
         try {
             String newNodeMacAddress = valueById(edgeFormDatas, 30);
-            checkMacAddressExists(newNodeMacAddress, idOnController, null, null, loggingModel);
+            checkMacAddressExists(newNodeMacAddress, idOnController, null, null, loggingModel, slvInterfaceLogEntity);
             loggingModel.setRepairsOption("Replace Node only");
             return "Repairs & Outages";
         } catch (NoValueException e) {
@@ -264,7 +288,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
         loggingModel.setFixtureQRSame(false);
 
         try {
-            validateValue(edgeFormDatas, idOnController, loggingModel, edgeNote, 26, 38);
+            validateValue(edgeFormDatas, idOnController, loggingModel, edgeNote, 26, 38, slvInterfaceLogEntity);
             loggingModel.setRepairsOption("Replace Node and Fixture");
             return "Repairs & Outages";
         } catch (AlreadyUsedException e) {
@@ -293,7 +317,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
         }
 
         try {
-            validateValue(edgeFormDatas, idOnController, loggingModel, edgeNote, 19, 20);
+            validateValue(edgeFormDatas, idOnController, loggingModel, edgeNote, 19, 20, slvInterfaceLogEntity);
             return "New";
         } catch (AlreadyUsedException e) {
             throw new AlreadyUsedException(e.getMessage());
@@ -303,7 +327,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
     }
 
 
-    private void validateValue(List<EdgeFormData> edgeFormDatas, String idOnController, LoggingModel loggingModel, EdgeNote edgeNote, int macAddressId, int qrScanId) throws AlreadyUsedException, NoValueException {
+    private void validateValue(List<EdgeFormData> edgeFormDatas, String idOnController, LoggingModel loggingModel, EdgeNote edgeNote, int macAddressId, int qrScanId, SlvInterfaceLogEntity slvInterfaceLogEntity) throws AlreadyUsedException, NoValueException {
         //Replace Node and Fixture
         String newNodeMacAddress = null;
         try {
@@ -342,7 +366,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
 
         if (newNodeMacAddress != null) {
             try {
-                checkMacAddressExists(newNodeMacAddress, idOnController, null, null, loggingModel);
+                checkMacAddressExists(newNodeMacAddress, idOnController, null, null, loggingModel, slvInterfaceLogEntity);
             } catch (QRCodeAlreadyUsedException e) {
                 // No need to worry, Fixture QR Scan may be differ. So let's continue.
             } catch (Exception e) {
@@ -353,7 +377,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
 
         if (fixerQrScanValue != null && !loggingModel.isButtonPhotoCell()) {
             try {
-                checkFixtureQrScan(fixerQrScanValue, edgeNote, loggingModel);
+                checkFixtureQrScan(fixerQrScanValue, edgeNote, loggingModel, slvInterfaceLogEntity);
             } catch (InValidBarCodeException e) {
                 loggingModel.setFixtureQRSame(true);
                 // No need to process,bcs its invalid.
@@ -364,6 +388,8 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
         }
 
         if (loggingModel.isMacAddressUsed() && loggingModel.isFixtureQRSame()) {
+            slvInterfaceLogEntity.setErrordetails("MAC Address and QR Scan Already Used.");
+            slvInterfaceLogEntity.setStatus(MessageConstants.ERROR);
             throw new AlreadyUsedException("MAC Address and QR Scan Already Used.");
         }
 
@@ -371,15 +397,17 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
     }
 
 
-    private void checkFixtureQrScan(String fixtureQrScan, EdgeNote edgeNote, LoggingModel loggingModel) throws InValidBarCodeException {
+    private void checkFixtureQrScan(String fixtureQrScan, EdgeNote edgeNote, LoggingModel loggingModel, SlvInterfaceLogEntity slvInterfaceLogEntity) throws InValidBarCodeException {
         List<Object> paramsList = new ArrayList<>();
         SlvServerData slvServerData = new SlvServerData();
         try {
             // check given macaddress exist or not in edge_all_fix table
             boolean isExistFixture = connectionDAO.isExistFixture(edgeNote.getTitle(), fixtureQrScan);
-            logger.info("given fixture idoncontroller :"+edgeNote.getTitle());
-            logger.info("Given fixture fixturequrscan:"+fixtureQrScan);
+            logger.info("given fixture idoncontroller :" + edgeNote.getTitle());
+            logger.info("Given fixture fixturequrscan:" + fixtureQrScan);
             if (isExistFixture) {
+                slvInterfaceLogEntity.setErrorcategory(MessageConstants.EDGE_VALIDATION_ERROR);
+                slvInterfaceLogEntity.setErrordetails("Fixture QR is present edge_all_fix table.");
                 logger.info("Fixture QR is present edge_all_fix table.");
                 loggingModel.setFixtureQRSame(true);
                 return;
@@ -472,7 +500,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
         return errorCode;
     }
 
-    private void sync2Slv(String macAddress, String fixerQrScanValue, EdgeNote edgeNote, InstallMaintenanceLogModel loggingModel, String idOnController, String controllerStrIdValue, String utilLocId, boolean isNew, String nightRideKey, String nightRideValue) {
+    private void sync2Slv(String macAddress, String fixerQrScanValue, EdgeNote edgeNote, InstallMaintenanceLogModel loggingModel, String idOnController, String controllerStrIdValue, String utilLocId, boolean isNew, String nightRideKey, String nightRideValue, SlvInterfaceLogEntity slvInterfaceLogEntity) {
         try {
 
             List<Object> paramsList = new ArrayList<>();
@@ -512,8 +540,13 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
             if (errorCode != 0) {
                 loggingModel.setErrorDetails(MessageConstants.ERROR_UPDATE_DEVICE_VAL);
                 loggingModel.setStatus(MessageConstants.ERROR);
+                slvInterfaceLogEntity.setStatus(MessageConstants.ERROR);
+                slvInterfaceLogEntity.setErrorcategory(MessageConstants.SLV_VALIDATION_ERROR);
+                slvInterfaceLogEntity.setErrordetails(MessageConstants.ERROR_UPDATE_DEVICE_VAL);
                 return;
             } else {
+                slvInterfaceLogEntity.setSetDevice(MessageConstants.SETDEVICE);
+                slvInterfaceLogEntity.setStatus(MessageConstants.SUCCESS);
                 if (fixerQrScanValue != null && !fixerQrScanValue.trim().isEmpty()) {
                     createEdgeAllFixture(idOnController, fixerQrScanValue);
                 }
@@ -527,21 +560,28 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
                 } else {
                     if (!loggingModel.isMacAddressUsed()) {
                         slvTransactionLogs = getSLVTransactionLogs(loggingModel);
-                        replaceOLC(controllerStrIdValue, idOnController, macAddress, slvTransactionLogs);// insert mac address
+                        replaceOLC(controllerStrIdValue, idOnController, macAddress, slvTransactionLogs, slvInterfaceLogEntity);// insert mac address
                     }
 
                 }
                 logger.info("Replace OLC End");
                 loggingModel.setStatus(MessageConstants.SUCCESS);
+                slvInterfaceLogEntity.setStatus(MessageConstants.SUCCESS);
                 logger.info("Status Changed. to Success");
             }
 
         } catch (InValidBarCodeException e) {
             logger.error("Error in processNewGroup", e);
             loggingModel.setStatus(MessageConstants.ERROR);
+            slvInterfaceLogEntity.setErrorcategory(MessageConstants.SLV_VALIDATION_ERROR);
             loggingModel.setErrorDetails(e.getMessage());
+            slvInterfaceLogEntity.setStatus(MessageConstants.ERROR);
+            slvInterfaceLogEntity.setErrordetails(e.getMessage());
 
         } catch (Exception e) {
+            slvInterfaceLogEntity.setStatus(MessageConstants.ERROR);
+            slvInterfaceLogEntity.setErrorcategory(MessageConstants.SLV_VALIDATION_ERROR);
+            slvInterfaceLogEntity.setErrordetails(e.getMessage());
             logger.error("Error in processNewGroup", e);
             loggingModel.setStatus(MessageConstants.ERROR);
             loggingModel.setErrorDetails(e.getMessage());
@@ -571,7 +611,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
         return controllerStrId;
     }
 
-    public void processOtherTask(List<EdgeFormData> edgeFormDatas, EdgeNote edgeNote, InstallMaintenanceLogModel loggingModel, String nightRideKey, String nightRideValue) {
+    public void processOtherTask(List<EdgeFormData> edgeFormDatas, EdgeNote edgeNote, InstallMaintenanceLogModel loggingModel, String nightRideKey, String nightRideValue, SlvInterfaceLogEntity slvInterfaceLogEntity) {
         logger.info("Other task value processed");
         String Key = properties.getProperty("amerescousa.night.ride.key_for_slv");
         logger.info("key :" + Key);
@@ -584,6 +624,9 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
             logger.error("Error in while getting cdotIssue's issue", e);
             loggingModel.setErrorDetails("Value is not selected");
             loggingModel.setStatus(MessageConstants.ERROR);
+            slvInterfaceLogEntity.setErrorcategory(MessageConstants.EDGE_VALIDATION_ERROR);
+            slvInterfaceLogEntity.setErrordetails("Error in while getting cdotIssue's issue:" + e);
+            slvInterfaceLogEntity.setStatus(MessageConstants.ERROR);
             return;
         }
         logger.info("value :" + cdotIssue);
@@ -607,6 +650,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
             loggingModel.setStatus(MessageConstants.ERROR);
             return;
         } else {
+            slvInterfaceLogEntity.setStatus(MessageConstants.SUCCESS);
             logger.info("OtherTask's value updated successfully in SLV");
             loggingModel.setStatus(MessageConstants.SUCCESS);
             logger.info("Status Changed. to Success");
@@ -614,13 +658,14 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
     }
 
 
-    private void processNewGroup(List<EdgeFormData> edgeFormDatas, EdgeNote edgeNote, InstallMaintenanceLogModel loggingModel, boolean isResync, String utilLocId, String nightRideKey, String nightRideValue) {
+    private void processNewGroup(List<EdgeFormData> edgeFormDatas, EdgeNote edgeNote, InstallMaintenanceLogModel loggingModel, boolean isResync, String utilLocId, String nightRideKey, String nightRideValue, SlvInterfaceLogEntity slvInterfaceLogEntity) {
         try {
 
             // Get Install status
             String installStatusValue = null;
             try {
                 installStatusValue = valueById(edgeFormDatas, 22);
+                slvInterfaceLogEntity.setInstallStatus(installStatusValue);
                 logger.info("installStatus Val" + installStatusValue);
             } catch (NoValueException e) {
                 logger.error("Error in while getting installStatusValue", e);
@@ -642,9 +687,13 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
                 if (errorCode != 0) {
                     loggingModel.setErrorDetails("Error while updating Could not complete install status.Corresponding Error code :" + errorCode);
                     loggingModel.setStatus(MessageConstants.ERROR);
+                    slvInterfaceLogEntity.setErrordetails("Error while updating Could not complete install status.Corresponding Error code :" + errorCode);
+                    slvInterfaceLogEntity.setStatus(MessageConstants.ERROR);
                 } else {
                     loggingModel.setErrorDetails(MessageConstants.COULD_NOT_COMPLETE_SUCCESS_MSG);
                     loggingModel.setStatus(MessageConstants.SUCCESS);
+                    slvInterfaceLogEntity.setErrordetails(MessageConstants.COULD_NOT_COMPLETE_SUCCESS_MSG);
+                    slvInterfaceLogEntity.setStatus(MessageConstants.SUCCESS);
                 }
 
                 return;
@@ -683,6 +732,9 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
             if ((nodeMacValue == null && fixerQrScanValue == null) || ((nodeMacValue != null && nodeMacValue.isEmpty()) && (fixerQrScanValue != null && fixerQrScanValue.isEmpty()))) {
                 loggingModel.setStatus(MessageConstants.ERROR);
                 loggingModel.setErrorDetails("No MacAddress and FixtureQrScan");
+                slvInterfaceLogEntity.setErrorcategory(MessageConstants.EDGE_VALIDATION_ERROR);
+                slvInterfaceLogEntity.setStatus(MessageConstants.ERROR);
+                slvInterfaceLogEntity.setErrordetails(MessageConstants.NO_MACADDRESS_NO_FIXTURE);
                 return;
             }
             if (nodeMacValue != null && !nodeMacValue.startsWith("00") && (fixerQrScanValue != null && fixerQrScanValue.startsWith("00"))) {
@@ -707,7 +759,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
             if (isResync) {
                 try {
                     SLVTransactionLogs slvTransactionLogs = getSLVTransactionLogs(loggingModel);
-                    replaceOLC(loggingModel.getControllerSrtId(), loggingModel.getIdOnController(), "", slvTransactionLogs);
+                    replaceOLC(loggingModel.getControllerSrtId(), loggingModel.getIdOnController(), "", slvTransactionLogs, slvInterfaceLogEntity);
                 } catch (Exception e) {
                     String message = e.getMessage();
                 }
@@ -717,7 +769,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
             // Check Whether MAC Address is already assigned to other fixtures or not.
             try {
                 if (nodeMacValue != null) {
-                    checkMacAddressExists(nodeMacValue, loggingModel.getIdOnController(), nightRideKey, nightRideValue, loggingModel);
+                    checkMacAddressExists(nodeMacValue, loggingModel.getIdOnController(), nightRideKey, nightRideValue, loggingModel, slvInterfaceLogEntity);
                 }
             } catch (QRCodeAlreadyUsedException e1) {
                 logger.error("MacAddress (" + e1.getMacAddress()
@@ -725,7 +777,9 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
                         + " ]");
             }
             loggingModel.setMacAddress(nodeMacValue);
-            sync2Slv(nodeMacValue, fixerQrScanValue, edgeNote, loggingModel, loggingModel.getIdOnController(), loggingModel.getControllerSrtId(), utilLocId, true, nightRideKey, nightRideValue);
+            slvInterfaceLogEntity.setMacAddress(nodeMacValue);
+            slvInterfaceLogEntity.setFixtureqrscan(fixerQrScanValue);
+            sync2Slv(nodeMacValue, fixerQrScanValue, edgeNote, loggingModel, loggingModel.getIdOnController(), loggingModel.getControllerSrtId(), utilLocId, true, nightRideKey, nightRideValue, slvInterfaceLogEntity);
         } catch (NoValueException e) {
             logger.error("Error no value", e);
             loggingModel.setErrorDetails(e.getMessage());
@@ -740,7 +794,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
     }
 
 
-    public void repairAndOutage(List<EdgeFormData> edgeFormDatas, EdgeNote edgeNote, InstallMaintenanceLogModel loggingModel, String utilLocId, String nightRideKey, String nightRideValue, String formatedValueNR) {
+    public void repairAndOutage(List<EdgeFormData> edgeFormDatas, EdgeNote edgeNote, InstallMaintenanceLogModel loggingModel, String utilLocId, String nightRideKey, String nightRideValue, String formatedValueNR, SlvInterfaceLogEntity slvInterfaceLogEntity) {
 
         String repairsOutagesValue = loggingModel.getRepairsOption();
         /*try {
@@ -754,41 +808,47 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
         System.out.println(repairsOutagesValue);
         switch (repairsOutagesValue) {
             case "Replace Node and Fixture":
-                replaceNodeFixture(edgeFormDatas, edgeNote, loggingModel, utilLocId, nightRideKey, nightRideValue);
+                slvInterfaceLogEntity.setSelectedReplace("Replace Node and Fixture");
+                replaceNodeFixture(edgeFormDatas, edgeNote, loggingModel, utilLocId, nightRideKey, nightRideValue, slvInterfaceLogEntity);
                 break;
             case "Replace Node only":
-                replaceNodeOnly(edgeFormDatas, edgeNote, loggingModel, utilLocId, nightRideKey, nightRideValue);
+                slvInterfaceLogEntity.setSelectedReplace("Replace Node only");
+                replaceNodeOnly(edgeFormDatas, edgeNote, loggingModel, utilLocId, nightRideKey, nightRideValue, slvInterfaceLogEntity);
                 break;
             case "Replace Fixture only":
-
+                slvInterfaceLogEntity.setSelectedReplace("Replace Fixture only");
                 String fixerQrScanValue = null;
                 try {
                     fixerQrScanValue = valueById(edgeFormDatas, 39);
                     String idOnController = loggingModel.getIdOnController();
                     String controllerStrIdValue = loggingModel.getControllerSrtId();
-                    sync2Slv(null, fixerQrScanValue, edgeNote, loggingModel, idOnController, controllerStrIdValue, utilLocId, false, nightRideKey, nightRideValue);
+                    sync2Slv(null, fixerQrScanValue, edgeNote, loggingModel, idOnController, controllerStrIdValue, utilLocId, false, nightRideKey, nightRideValue, slvInterfaceLogEntity);
                     break;
                 } catch (NoValueException e) {
-                    loggingModel.setStatus(MessageConstants.ERROR);
-                    loggingModel.setErrorDetails("Fixture QR Scan value is empty");
+                    slvInterfaceLogEntity.setStatus(MessageConstants.ERROR);
+                    slvInterfaceLogEntity.setErrordetails("Fixture QR Scan value is empty");
+                    slvInterfaceLogEntity.setErrorcategory(MessageConstants.EDGE_VALIDATION_ERROR);
                 }
 
 
             case "Power Issue":
                 loggingModel.setStatus(MessageConstants.ERROR);
                 loggingModel.setErrorDetails("SLV Interface Doest not support this(Power Issue option is selected).");
+                slvInterfaceLogEntity.setErrorcategory(MessageConstants.EDGE_VALIDATION_ERROR);
+                slvInterfaceLogEntity.setSelectedReplace("Power Issue");
                 break;
             case "Unable to Repair(CDOT Issue)":
                 logger.info("Processed Unable to Repair option :" + edgeNote.getTitle());
                 logger.info("Processed NoteGuid :" + edgeNote.getNoteGuid());
+                slvInterfaceLogEntity.setSelectedReplace("Unable to Repair(CDOT Issue)");
                 //  String nightRideKey = properties.getProperty("amerescousa.night.ride.key_for_slv");
-                processOtherTask(edgeFormDatas, edgeNote, loggingModel, nightRideKey, formatedValueNR);
+                processOtherTask(edgeFormDatas, edgeNote, loggingModel, nightRideKey, formatedValueNR, slvInterfaceLogEntity);
                 break;
         }
     }
 
 
-    private void replaceNodeFixture(List<EdgeFormData> edgeFormDatas, EdgeNote edgeNote, InstallMaintenanceLogModel loggingModel, String utilLocId, String nightRideKey, String nightRideValue) {
+    private void replaceNodeFixture(List<EdgeFormData> edgeFormDatas, EdgeNote edgeNote, InstallMaintenanceLogModel loggingModel, String utilLocId, String nightRideKey, String nightRideValue, SlvInterfaceLogEntity slvInterfaceLogEntity) {
         try {
             String existingNodeMacAddress = null;
             String newNodeMacAddress = null;
@@ -800,6 +860,9 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
             } catch (NoValueException e) {
                 loggingModel.setErrorDetails(MessageConstants.NEW_MAC_ADDRESS_NOT_AVAILABLE);
                 loggingModel.setStatus(MessageConstants.ERROR);
+                slvInterfaceLogEntity.setErrorcategory(MessageConstants.EDGE_VALIDATION_ERROR);
+                slvInterfaceLogEntity.setErrordetails(MessageConstants.NEW_MAC_ADDRESS_NOT_AVAILABLE);
+                slvInterfaceLogEntity.setStatus(MessageConstants.ERROR);
             }
 
             // Get Existing Node MAC Address value
@@ -847,7 +910,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
 
             if (newNodeMacAddress != null && !newNodeMacAddress.isEmpty()) {
                 try {
-                    checkMacAddressExists(newNodeMacAddress, idOnController, nightRideKey, nightRideValue, loggingModel);
+                    checkMacAddressExists(newNodeMacAddress, idOnController, nightRideKey, nightRideValue, loggingModel, slvInterfaceLogEntity);
                 } catch (QRCodeAlreadyUsedException e1) {
                     logger.error("MacAddress (" + e1.getMacAddress()
                             + ")  - Already in use. So this pole is not synced with SLV. Note Title :[" + edgeNote.getTitle()
@@ -861,7 +924,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
             try {
                 if (!loggingModel.isMacAddressUsed()) {
                     SLVTransactionLogs slvTransactionLogs = getSLVTransactionLogs(loggingModel);
-                    replaceOLC(controllerStrIdValue, idOnController, "", slvTransactionLogs);
+                    replaceOLC(controllerStrIdValue, idOnController, "", slvTransactionLogs, slvInterfaceLogEntity);
                     statusDescription.append(MessageConstants.EMPTY_REPLACE_OLC_SUCCESS);
                 }
 
@@ -872,20 +935,23 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
             }
 
 
-            sync2Slv(newNodeMacAddress, fixerQrScanValue, edgeNote, loggingModel, idOnController, controllerStrIdValue, utilLocId, false, nightRideKey, nightRideValue);
+            sync2Slv(newNodeMacAddress, fixerQrScanValue, edgeNote, loggingModel, idOnController, controllerStrIdValue, utilLocId, false, nightRideKey, nightRideValue, slvInterfaceLogEntity);
             if (isError) {
                 loggingModel.setErrorDetails(loggingModel.getErrorDetails() + statusDescription.toString());
             }
         } catch (Exception e) {
             loggingModel.setErrorDetails(e.getMessage());
             loggingModel.setStatus(MessageConstants.ERROR);
+            slvInterfaceLogEntity.setErrorcategory(MessageConstants.SLV_VALIDATION_ERROR);
+            slvInterfaceLogEntity.setErrordetails("Replace Olc Error :" + e.getMessage());
+            slvInterfaceLogEntity.setStatus(MessageConstants.ERROR);
             return;
         }
 
     }
 
 
-    private void replaceNodeOnly(List<EdgeFormData> edgeFormDatas, EdgeNote edgeNote, InstallMaintenanceLogModel loggingModel, String utilLocId, String nightRideKey, String nightRideValue) {
+    private void replaceNodeOnly(List<EdgeFormData> edgeFormDatas, EdgeNote edgeNote, InstallMaintenanceLogModel loggingModel, String utilLocId, String nightRideKey, String nightRideValue, SlvInterfaceLogEntity slvInterfaceLogEntity) {
         try {
             String existingNodeMacAddress = null;
             String newNodeMacAddress = null;
@@ -896,6 +962,9 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
             } catch (NoValueException e) {
                 loggingModel.setErrorDetails(MessageConstants.NEW_MAC_ADDRESS_NOT_AVAILABLE);
                 loggingModel.setStatus(MessageConstants.ERROR);
+                slvInterfaceLogEntity.setStatus(MessageConstants.ERROR);
+                slvInterfaceLogEntity.setErrorcategory(MessageConstants.EDGE_VALIDATION_ERROR);
+                slvInterfaceLogEntity.setErrordetails(MessageConstants.NEW_MAC_ADDRESS_NOT_AVAILABLE);
                 return;
             }
 
@@ -915,8 +984,11 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
 
 
             try {
-                checkMacAddressExists(newNodeMacAddress, idOnController, nightRideKey, nightRideValue, loggingModel);
+                checkMacAddressExists(newNodeMacAddress, idOnController, nightRideKey, nightRideValue, loggingModel, slvInterfaceLogEntity);
             } catch (QRCodeAlreadyUsedException e1) {
+                slvInterfaceLogEntity.setStatus(MessageConstants.ERROR);
+                slvInterfaceLogEntity.setErrordetails("MacAddress Already use. So this pole not synced with slv");
+                slvInterfaceLogEntity.setErrorcategory(MessageConstants.EDGE_VALIDATION_ERROR);
                 logger.error("MacAddress (" + e1.getMacAddress()
                         + ")  - Already in use. So this pole is not synced with SLV. Note Title :[" + edgeNote.getTitle()
                         + " ]");
@@ -932,7 +1004,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
             try {
                 if (!loggingModel.isMacAddressUsed()) {
                     SLVTransactionLogs slvTransactionLogs = getSLVTransactionLogs(loggingModel);
-                    replaceOLC(controllerStrIdValue, idOnController, "", slvTransactionLogs);
+                    replaceOLC(controllerStrIdValue, idOnController, "", slvTransactionLogs, slvInterfaceLogEntity);
                 }
 
             } catch (ReplaceOLCFailedException e) {
@@ -940,17 +1012,20 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
             }
 
 
-            sync2Slv(newNodeMacAddress, null, edgeNote, loggingModel, idOnController, controllerStrIdValue, utilLocId, false, nightRideKey, nightRideValue);
+            sync2Slv(newNodeMacAddress, null, edgeNote, loggingModel, idOnController, controllerStrIdValue, utilLocId, false, nightRideKey, nightRideValue, slvInterfaceLogEntity);
 
 
         } catch (Exception e) {
+            slvInterfaceLogEntity.setErrorcategory(MessageConstants.EDGE_VALIDATION_ERROR);
+            slvInterfaceLogEntity.setStatus(MessageConstants.ERROR);
+            slvInterfaceLogEntity.setErrordetails("replaceNodeOnly failure" + e.getMessage());
             loggingModel.setErrorDetails(e.getMessage());
             loggingModel.setStatus(MessageConstants.ERROR);
             return;
         }
     }
 
-    private void processRemoveAction(List<EdgeFormData> edgeFormDatas, String utilLocId, InstallMaintenanceLogModel installMaintenanceLogModel) {
+    private void processRemoveAction(List<EdgeFormData> edgeFormDatas, String utilLocId, InstallMaintenanceLogModel installMaintenanceLogModel, SlvInterfaceLogEntity slvInterfaceLogEntity) {
         String removeReason = null;
         try {
             removeReason = valueById(edgeFormDatas, 35);
@@ -966,6 +1041,9 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
                         if (deviceAttributes != null && deviceAttributes.getInstallStatus().equals("To be installed")) {
                             installMaintenanceLogModel.setStatus(MessageConstants.ERROR);
                             installMaintenanceLogModel.setErrorDetails("Already Processed.Install Status: To be installed");
+                            slvInterfaceLogEntity.setErrorcategory(MessageConstants.SLV_VALIDATION_ERROR);
+                            slvInterfaceLogEntity.setErrordetails("Already Processed.Install Status: To be installed");
+                            slvInterfaceLogEntity.setStatus(MessageConstants.ERROR);
                             return;
                         }
                         String macaddress = null;
@@ -976,7 +1054,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
 
                         try {
                             SLVTransactionLogs slvTransactionLogs = getSLVTransactionLogs(installMaintenanceLogModel);
-                            replaceOLC(installMaintenanceLogModel.getControllerSrtId(), installMaintenanceLogModel.getIdOnController(), "", slvTransactionLogs);
+                            replaceOLC(installMaintenanceLogModel.getControllerSrtId(), installMaintenanceLogModel.getIdOnController(), "", slvTransactionLogs, slvInterfaceLogEntity);
                         } catch (Exception e) {
                             e.printStackTrace();
                             logger.error("error in replace OLC:" + e.getMessage());
@@ -1006,10 +1084,14 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
                     try {
                         if (deviceAttributes != null && deviceAttributes.getInstallStatus().equals("Removed")) {
                             installMaintenanceLogModel.setStatus(MessageConstants.ERROR);
-                            installMaintenanceLogModel.setErrorDetails("Already Processed.Install Status: Removed");
+                            installMaintenanceLogModel.setErrorDetails("Already Processed.Install Status: Pole Removed");
+                            slvInterfaceLogEntity.setErrorcategory(MessageConstants.SLV_VALIDATION_ERROR);
+                            slvInterfaceLogEntity.setErrordetails("Already Processed.Install Status: Removed");
+                            slvInterfaceLogEntity.setStatus(MessageConstants.ERROR);
                             return;
                         }
                         clearDeviceValues(installMaintenanceLogModel.getIdOnController(), installMaintenanceLogModel.getControllerSrtId(), "Pole Removed", installMaintenanceLogModel);
+                        slvInterfaceLogEntity.setStatus(MessageConstants.SUCCESS);
                     } catch (Exception e) {
                         logger.error("Error in processRemoveAction", e);
                     }
@@ -1019,9 +1101,13 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
                         if (deviceAttributes != null && deviceAttributes.getInstallStatus().equals("Pole Knocked Down")) {
                             installMaintenanceLogModel.setStatus(MessageConstants.ERROR);
                             installMaintenanceLogModel.setErrorDetails("Already Processed.Install Status: Pole Knocked Down");
+                            slvInterfaceLogEntity.setErrorcategory(MessageConstants.SLV_VALIDATION_ERROR);
+                            slvInterfaceLogEntity.setErrordetails("Already Processed.Install Status: Pole Knocked Down");
+                            slvInterfaceLogEntity.setStatus(MessageConstants.ERROR);
                             return;
                         }
                         clearDeviceValues(installMaintenanceLogModel.getIdOnController(), installMaintenanceLogModel.getControllerSrtId(), "Pole Knocked-Down", installMaintenanceLogModel);
+                        slvInterfaceLogEntity.setStatus(MessageConstants.SUCCESS);
                     } catch (Exception e) {
                         logger.error("Error in processRemoveAction", e);
                     }
@@ -1101,10 +1187,10 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
             logger.info("rest service data:" + notesData);
             EdgeNote edgeNote = gson.fromJson(notesData, EdgeNote.class);
             //   if(!edgeNote.getCreatedBy().contains("admin")){
-
+            SlvInterfaceLogEntity slvInterfaceLogEntity = new SlvInterfaceLogEntity();
             InstallMaintenanceLogModel installMaintenanceLogModel = new InstallMaintenanceLogModel();
-
-
+            slvInterfaceLogEntity.setCreateddatetime(System.currentTimeMillis());
+            slvInterfaceLogEntity.setResync(true);
             installMaintenanceLogModel.setLastSyncTime(edgeNote.getSyncTime());
             installMaintenanceLogModel.setProcessedNoteId(edgeNote.getNoteGuid());
             installMaintenanceLogModel.setNoteName(edgeNote.getTitle());
@@ -1113,7 +1199,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
             loadDefaultVal(edgeNote, installMaintenanceLogModel);
             loadDeviceValues(installMaintenanceLogModel.getIdOnController(), installMaintenanceLogModel);
             logger.info("going to call processnew action");
-            processNewAction(edgeNote, installMaintenanceLogModel, isResync, utilLocId);
+            processNewAction(edgeNote, installMaintenanceLogModel, isResync, utilLocId, slvInterfaceLogEntity);
 
             //updateSlvStatusToEdge(installMaintenanceLogModel, edgeNote);
             LoggingModel loggingModel = installMaintenanceLogModel;

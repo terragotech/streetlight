@@ -8,10 +8,7 @@ import com.j256.ormlite.support.ConnectionSource;
 import com.j256.ormlite.table.TableUtils;
 import com.terragoedge.edgeserver.EdgeAllFixtureData;
 import com.terragoedge.edgeserver.EdgeAllMacData;
-import com.terragoedge.streetlight.json.model.DeviceAttributes;
-import com.terragoedge.streetlight.json.model.DuplicateMACAddressEventLog;
-import com.terragoedge.streetlight.json.model.DuplicateMacAddress;
-import com.terragoedge.streetlight.json.model.SlvServerData;
+import com.terragoedge.streetlight.json.model.*;
 import org.apache.log4j.Logger;
 
 public enum ConnectionDAO {
@@ -29,6 +26,7 @@ public enum ConnectionDAO {
     public Dao<DuplicateMACAddressEventLog, String> macAddressEventLogsDao = null;
     public Dao<EdgeAllMacData, String> edgeAllMacDataDao = null;
     public Dao<EdgeAllFixtureData, String> edgeAllFixtureDataDao = null;
+    public Dao<SlvInterfaceLogEntity, String> slvInterfaceLogDao = null;
 
 
     ConnectionDAO() {
@@ -74,12 +72,18 @@ public enum ConnectionDAO {
             } catch (Exception e) {
                 logger.error("Error in openConnection", e);
             }
+            try {
+                TableUtils.createTableIfNotExists(connectionSource, SlvInterfaceLogEntity.class);
+            } catch (Exception e) {
+                logger.error("Error in openConnection", e);
+            }
             slvDeviceDao = DaoManager.createDao(connectionSource, SlvServerData.class);
             duplicateMacAddressDao = DaoManager.createDao(connectionSource, DuplicateMacAddress.class);
             deviceAttributeDao = DaoManager.createDao(connectionSource, DeviceAttributes.class);
             macAddressEventLogsDao = DaoManager.createDao(connectionSource, DuplicateMACAddressEventLog.class);
             edgeAllMacDataDao = DaoManager.createDao(connectionSource, EdgeAllMacData.class);
             edgeAllFixtureDataDao = DaoManager.createDao(connectionSource, EdgeAllFixtureData.class);
+            slvInterfaceLogDao = DaoManager.createDao(connectionSource, SlvInterfaceLogEntity.class);
             System.out.println("Connected.....");
         } catch (Exception e) {
             logger.error("Error in openConnection", e);
@@ -165,6 +169,7 @@ public enum ConnectionDAO {
             e.printStackTrace();
         }
     }
+
     public boolean isExistFixture(String idOncontroller, String fixtureQrScan) {
         EdgeAllFixtureData edgeAllFixtureData = null;
         try {
@@ -174,6 +179,15 @@ public enum ConnectionDAO {
         }
         return (edgeAllFixtureData != null) ? true : false;
     }
+
+    public void saveSlvInterfaceLog(SlvInterfaceLogEntity slvInterfaceLogEntity) {
+        try {
+            slvInterfaceLogDao.create(slvInterfaceLogEntity);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
     public void closeConnection() {
         if (connectionSource != null) {
             try {
