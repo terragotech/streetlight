@@ -1,6 +1,8 @@
 package com.terragoedge.slvinterface.service;
 
 import com.google.gson.Gson;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.reflect.TypeToken;
 import com.terragoedge.slvinterface.dao.ConnectionDAO;
@@ -20,6 +22,7 @@ import com.terragoedge.slvinterface.model.EdgeNote;
 import com.terragoedge.slvinterface.model.FormData;
 import com.terragoedge.slvinterface.utils.PropertiesReader;
 import com.terragoedge.slvinterface.utils.ResourceDetails;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 import org.springframework.http.ResponseEntity;
 
@@ -128,7 +131,7 @@ public abstract class SlvInterfaceService extends AbstractSlvService {
                         for (EdgeNote edgenote : edgeNoteList) {
                             logger.info("ProcessNoteTitle is :" + edgenote.getTitle());
                             String geozoneId = getGeoZoneValue(edgenote.getTitle());
-                            processEdgeNote(edgenote, noteGuids, formTemplateGuid, geozoneId, controllerStrIdValue,false);
+                            processEdgeNote(edgenote, noteGuids, formTemplateGuid, geozoneId, controllerStrIdValue, false);
                         }
                     }
                 }
@@ -141,7 +144,7 @@ public abstract class SlvInterfaceService extends AbstractSlvService {
 
     }
 
-    private void processEdgeNote(EdgeNote edgeNote, List<String> noteGuids, String formTemplateGuid, String geozoneId, String controllerStrid,boolean isResync) {
+    private void processEdgeNote(EdgeNote edgeNote, List<String> noteGuids, String formTemplateGuid, String geozoneId, String controllerStrid, boolean isResync) {
         System.out.println("processEdgeNote :" + edgeNote.getTitle());
         try {
             // Check whether this note is already processed or not.
@@ -175,11 +178,11 @@ public abstract class SlvInterfaceService extends AbstractSlvService {
                             updateFormTemplateValues(edgeFormDataList, canadaFormModel);
                             logger.info(gson.toJson(edgeFormDataList));
                             logger.info("-----------------processedform end---------");
-                          //  processSingleForm(edgeFormDataList, edgeNote, slvSyncDetailsError, paramsList, configurationJsonList, geozoneId, controllerStrid);
+                            //  processSingleForm(edgeFormDataList, edgeNote, slvSyncDetailsError, paramsList, configurationJsonList, geozoneId, controllerStrid);
                         }
                         System.out.println("Field Activity Present");
 
-                        processSingleForm(edgeFormDataList, edgeNote, slvSyncDetailsError, paramsList, configurationJsonList, geozoneId, controllerStrid,isResync);
+                        processSingleForm(edgeFormDataList, edgeNote, slvSyncDetailsError, paramsList, configurationJsonList, geozoneId, controllerStrid, isResync);
                     } else {
                         System.out.println("wrong formtemplate");
                         slvSyncDetailsError.setErrorDetails("Form Template [" + formTemplateGuid + "] is not present in this note.");
@@ -206,7 +209,7 @@ public abstract class SlvInterfaceService extends AbstractSlvService {
      * @param paramsList
      * @param configurationJsonList
      */
-    public void processSingleForm(List<EdgeFormData> edgeFormDataList, EdgeNote edgeNote, SlvSyncDetails slvSyncDetail, List<Object> paramsList, List<ConfigurationJson> configurationJsonList, String geozoneId, String controllerStrIdValue,boolean isReSync) {
+    public void processSingleForm(List<EdgeFormData> edgeFormDataList, EdgeNote edgeNote, SlvSyncDetails slvSyncDetail, List<Object> paramsList, List<ConfigurationJson> configurationJsonList, String geozoneId, String controllerStrIdValue, boolean isReSync) {
         try {
             for (ConfigurationJson configurationJson : configurationJsonList) {
                 List<Action> actionList = configurationJson.getAction();
@@ -226,7 +229,7 @@ public abstract class SlvInterfaceService extends AbstractSlvService {
                                 createDevice(edgeNote, slvSyncDetail, geozoneId, edgeFormDataList);
                                 System.out.println("Device created");
                             }
-                            if(isReSync){
+                            if (isReSync) {
                                 replaceOLC(controllerStrIdValue, edgeNote.getTitle(), "");
                             }
                             processSetDevice(edgeFormDataList, configurationJson, edgeNote, paramsList, slvSyncDetail, controllerStrIdValue);
@@ -262,7 +265,7 @@ public abstract class SlvInterfaceService extends AbstractSlvService {
         } catch (ReplaceOLCFailedException | NoValueException | QRCodeAlreadyUsedException e) {
             slvSyncDetail.setErrorDetails(e.getMessage());
             slvSyncDetail.setStatus(Status.Failure.toString());
-        } catch (DeviceUpdationFailedException | DeviceCreationFailedException  e) {
+        } catch (DeviceUpdationFailedException | DeviceCreationFailedException e) {
             slvSyncDetail.setStatus(Status.Failure.toString());
         } catch (MacAddressProcessedException macException) {
             slvSyncDetail.setErrorDetails(macException.getMessage());
@@ -276,10 +279,60 @@ public abstract class SlvInterfaceService extends AbstractSlvService {
 
     }
 
+   /* public boolean isAvailableDevice(String idOnController) {
+        SlvDevice slvDevice = connectionDAO.getSlvDevices(idOnController);
+        return slvDevice != null;
+       // return true;
+    }
+*/
+
     public boolean isAvailableDevice(String idOnController) {
-       // SlvDevice slvDevice = connectionDAO.getSlvDevices(idOnController);
-       // return slvDevice != null;
-        return true;
+        try {
+            logger.info("loadDeviceValues called.");
+            String mainUrl = properties.getProperty("streetlight.slv.url.main");
+            String deviceUrl = properties.getProperty("streetlight.slv.url.search.device");
+            String url = mainUrl + deviceUrl;
+            List<String> paramsList = new ArrayList<>();
+            paramsList.add("attributeName=idOnController");
+            paramsList.add("attributeValue=" + idOnController);
+            paramsList.add("recurse=true");
+            paramsList.add("returnedInfo=lightDevicesList");
+            paramsList.add("attributeOperator=eq-i");
+            paramsList.add("maxResults=1");
+            paramsList.add("ser=json");
+            String params = StringUtils.join(paramsList, "&");
+            url = url + "?" + params;
+            logger.info("Load Device url :" + url);
+            ResponseEntity<String> response = slvRestService.getRequest(url, true, null);
+            if (response.getStatusCodeValue() == 200) {
+                logger.info("LoadDevice Respose :" + response.getBody());
+                String responseString = response.getBody();
+                int id = processDeviceJson(responseString);
+                logger.info("LoadDevice Id :" + id);
+
+                if (id == 0) {
+                    return false;
+                } else {
+                    return true;
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+
+    public int processDeviceJson(String deviceJson) {
+        JsonObject jsonObject = new JsonParser().parse(deviceJson).getAsJsonObject();
+        logger.info("Device request json:" + gson.toJson(jsonObject));
+        JsonArray arr = jsonObject.getAsJsonArray("value");
+        for (int i = 0; i < arr.size(); i++) {
+            int id = arr.get(i).getAsJsonObject().get("id").getAsInt();
+            logger.info("Device id value :" + id);
+            System.out.println(id);
+            return id;
+        }
+        return 0;
     }
 
     public void createDevice(EdgeNote edgeNote, SlvSyncDetails slvSyncDetails, String geoZoneId, List<EdgeFormData> edgeFormDataList) throws DeviceCreationFailedException {
@@ -409,7 +462,7 @@ public abstract class SlvInterfaceService extends AbstractSlvService {
         if (pos != -1) {
             EdgeFormData edgeFormData = edgeFormDatas.get(pos);
             String value = edgeFormData.getValue();
-            logger.info("edgeFormData value:"+value);
+            logger.info("edgeFormData value:" + value);
             if (value == null || value.trim().isEmpty()) {
                 return "";
                 //throw new NoValueException("Value is Empty or null." + value);
@@ -442,7 +495,7 @@ public abstract class SlvInterfaceService extends AbstractSlvService {
                 if (newNodeMacAddress == null || newNodeMacAddress.isEmpty()) {
                     System.out.println("process validation method interchange mac as fixture");
                     Id fixureID = getIDByType(idList, EdgeComponentType.FIXTURE.toString());
-                    if(fixureID != null){
+                    if (fixureID != null) {
                         String fixture = valueById(edgeFormDataList, fixureID.getId());
                         if (fixture != null && fixture.startsWith("00")) {
                             newNodeMacAddress = fixture;
@@ -557,10 +610,10 @@ public abstract class SlvInterfaceService extends AbstractSlvService {
             //  List<EdgeNote> edgeNoteList = gson.fromJson(notesData, listType);
             for (EdgeNote edgenote : edgeNoteList) {
                 logger.info("ProcessNoteTitle is :" + edgenote.getTitle());
-               // geozoneId = getGeoZoneValue(edgenote.getTitle());
-                geozoneId=null;
+                // geozoneId = getGeoZoneValue(edgenote.getTitle());
+                geozoneId = null;
                 System.out.print("geozoneId :" + geozoneId);
-                processEdgeNote(edgenote, noteGuids, formTemplateGuid, geozoneId, controllerStrIdValue,isResync);
+                processEdgeNote(edgenote, noteGuids, formTemplateGuid, geozoneId, controllerStrIdValue, isResync);
             }
         }
     }
