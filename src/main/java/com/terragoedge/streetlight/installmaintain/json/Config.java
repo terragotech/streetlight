@@ -12,6 +12,16 @@ public class Config {
     private String name;
     private int installStatus;
     private int proposedContext;
+    private int action;
+
+    public int getAction() {
+        return action;
+    }
+
+    public void setAction(int action) {
+        this.action = action;
+    }
+
     private List<Prop> props = new ArrayList<>();
 
 

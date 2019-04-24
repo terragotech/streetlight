@@ -3,6 +3,7 @@ package com.terragoedge.streetlight.installmaintain;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import com.opencsv.CSVWriter;
+import com.sun.tools.javac.code.Attribute;
 import com.terragoedge.edgeserver.EdgeFormData;
 import com.terragoedge.streetlight.PropertiesReader;
 import com.terragoedge.streetlight.dao.FormData;
@@ -11,6 +12,7 @@ import com.terragoedge.streetlight.dao.UtilDao;
 import com.terragoedge.streetlight.installmaintain.json.Config;
 import com.terragoedge.streetlight.installmaintain.json.Ids;
 import com.terragoedge.streetlight.installmaintain.json.Prop;
+import com.terragoedge.streetlight.installmaintain.utills.Constants;
 import com.terragoedge.streetlight.installmaintain.utills.Utils;
 import com.terragoedge.streetlight.pdfreport.FilterNewInstallationOnly;
 import com.terragoedge.streetlight.pdfreport.PDFExceptionUtils;
@@ -402,33 +404,40 @@ public class InstallMaintenanceDao extends UtilDao {
                         logger.info("type:" + type.toString());
                         switch (type) {
                             case RF:
+                                installMaintenanceModel.setAction(Constants.REPLACE_FIXTURE_ONLY);
                                 installMaintenanceModel.setFixtureQRScanRF(setValue(installMaintenanceModel.getFixtureQRScanRF(), getValue(idsList.getFix(), edgeFormDatas)));
                                 installMaintenanceModel.setExFixtureQRScanRF(setValue(installMaintenanceModel.getExFixtureQRScanRF(), getValue(idsList.getExFix(), edgeFormDatas)));
                                 installMaintenanceModel.setReasonforReplacement(setValue(installMaintenanceModel.getReasonforReplacement(), getValue(idsList.getReasonforreplacement(), edgeFormDatas)));
                                 break;
                             case NEW:
+                                installMaintenanceModel.setAction("New");
                                 installMaintenanceModel.setMacAddress(setValue(installMaintenanceModel.getMacAddress(), getValue(idsList.getMac(), edgeFormDatas)));
                                 installMaintenanceModel.setFixtureQRScan(setValue(installMaintenanceModel.getFixtureQRScan(), getValue(idsList.getFix(), edgeFormDatas)));
                                 break;
                             case RN:
+                                installMaintenanceModel.setAction(Constants.REPLACE_NODE_ONLY);
                                 installMaintenanceModel.setMacAddressRN(setValue(installMaintenanceModel.getMacAddressRN(), getValue(idsList.getMac(), edgeFormDatas)));
                                 installMaintenanceModel.setExMacAddressRN(setValue(installMaintenanceModel.getExMacAddressRN(), getValue(idsList.getExMac(), edgeFormDatas)));
                                 break;
                             case RNF:
+                                installMaintenanceModel.setAction(Constants.REPLACE_NODE_FIXTURE);
                                 installMaintenanceModel.setMacAddressRNF(setValue(installMaintenanceModel.getMacAddressRNF(), getValue(idsList.getMac(), edgeFormDatas)));
                                 installMaintenanceModel.setExMacAddressRNF(setValue(installMaintenanceModel.getExMacAddressRNF(), getValue(idsList.getExMac(), edgeFormDatas)));
                                 installMaintenanceModel.setFixtureQRScanRNF(setValue(installMaintenanceModel.getFixtureQRScanRNF(), getValue(idsList.getFix(), edgeFormDatas)));
                                 installMaintenanceModel.setExFixtureQRScanRNF(setValue(installMaintenanceModel.getExFixtureQRScanRNF(), getValue(idsList.getExFix(), edgeFormDatas)));
                                 break;
                             case RR:
+                                installMaintenanceModel.setAction(Constants.REMOVE);
                                 installMaintenanceModel.setRemovalReason(setValue(installMaintenanceModel.getRemovalReason(), getValue(idsList.getRemove(), edgeFormDatas)));
                                 break;
                             case RS:
+                                installMaintenanceModel.setAction(Constants.REPLACE_NODE_FIXTURE);
                                 installMaintenanceModel.setResolvedIssue(setValue(installMaintenanceModel.getResolvedIssue(), getValue(idsList.getIssue(), edgeFormDatas)));
                                 installMaintenanceModel.setResolvedComment(setValue(installMaintenanceModel.getResolvedComment(), getValue(idsList.getComment(), edgeFormDatas)));
                                 installMaintenanceModel.setExistingMacIfWrong(setValue(installMaintenanceModel.getExistingMacIfWrong(), getValue(idsList.getScanifwrong(), edgeFormDatas)));
                                 break;
                             case UR:
+                                installMaintenanceModel.setAction(Constants.UNABLE_TO_REPAIR);
                                 installMaintenanceModel.setUnableToRepairIssue(setValue(installMaintenanceModel.getUnableToRepairIssue(), getValue(idsList.getUnabletorepairissue(), edgeFormDatas)));
                                 installMaintenanceModel.setUnableToRepairComment(setValue(installMaintenanceModel.getUnableToRepairComment(), getValue(idsList.getUnabletorepaircomment(), edgeFormDatas)));
                                 break;

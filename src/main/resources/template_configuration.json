@@ -4,6 +4,7 @@
     "name": "Installation and Maintenance",
     "installStatus": 22,
     "proposedContext": 16,
+    "action": 17,
     "props": [
       {
         "type": "NEW",

@@ -1,5 +1,7 @@
 package com.terragoedge.streetlight.installmaintain;
 
+import com.terragoedge.streetlight.installmaintain.utills.Constants;
+
 import java.util.Objects;
 
 public class InstallMaintenanceModel {
@@ -31,6 +33,7 @@ public class InstallMaintenanceModel {
     private String skippedFixtureReason;
     private String skippedReason;
     private String reasonforReplacement;
+    private String action;
 
 
     public String getRemovalReason() {
@@ -42,6 +45,14 @@ public class InstallMaintenanceModel {
             this.removalReason = removalReason;
         }
 
+    }
+
+    public String getAction() {
+        return action;
+    }
+
+    public void setAction(String action) {
+        this.action = action;
     }
 
     public String getMacAddress() {
@@ -212,6 +223,15 @@ public class InstallMaintenanceModel {
             loadExistingMACAddress();
             return;
         }
+
+    }
+
+    public void checkCouldNotComplete(){
+        if(installStatus!=null && !installStatus.equals(Constants.COULD_NOT_COMPLETE)){
+            skippedFixtureReason="";
+        }
+    }
+    public void checkResolved(){
 
     }
 

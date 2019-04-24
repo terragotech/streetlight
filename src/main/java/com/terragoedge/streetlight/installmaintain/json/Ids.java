@@ -20,7 +20,6 @@ public class Ids {
     public int getRemove() {
         return remove;
     }
-
     public void setRemove(int remove) {
         this.remove = remove;
     }
