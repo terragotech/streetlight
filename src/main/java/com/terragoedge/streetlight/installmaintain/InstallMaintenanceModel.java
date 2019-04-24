@@ -172,6 +172,7 @@ public class InstallMaintenanceModel {
     }
 
     public void setInstallStatus(String installStatus) {
+        if(installStatus!=null && !installStatus.equals("Select From Below"))
         this.installStatus = installStatus;
     }
 
@@ -226,13 +227,24 @@ public class InstallMaintenanceModel {
 
     }
 
-    public void checkCouldNotComplete(){
-        if(installStatus!=null && !installStatus.equals(Constants.COULD_NOT_COMPLETE)){
-            skippedFixtureReason="";
+    public void checkCouldNotComplete() {
+        if (installStatus != null && !installStatus.equals(Constants.COULD_NOT_COMPLETE)) {
+            skippedFixtureReason = "";
         }
     }
-    public void checkResolved(){
 
+    public void checkReplaceAndRemoval() {
+        if (action != null) {
+            if (!action.equals(Constants.RESOLVED_OTHER)) {
+                resolvedIssue = "";
+                resolvedComment = "";
+                existingMacIfWrong = "";
+            }
+            if (!action.equals(Constants.UNABLE_TO_REPAIR)) {
+                unableToRepairIssue = "";
+                unableToRepairComment="";
+            }
+        }
     }
 
     public boolean hasVal() {

@@ -3,7 +3,6 @@ package com.terragoedge.streetlight.installmaintain;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import com.opencsv.CSVWriter;
-import com.sun.tools.javac.code.Attribute;
 import com.terragoedge.edgeserver.EdgeFormData;
 import com.terragoedge.streetlight.PropertiesReader;
 import com.terragoedge.streetlight.dao.FormData;
@@ -12,7 +11,6 @@ import com.terragoedge.streetlight.dao.UtilDao;
 import com.terragoedge.streetlight.installmaintain.json.Config;
 import com.terragoedge.streetlight.installmaintain.json.Ids;
 import com.terragoedge.streetlight.installmaintain.json.Prop;
-import com.terragoedge.streetlight.installmaintain.utills.Constants;
 import com.terragoedge.streetlight.installmaintain.utills.Utils;
 import com.terragoedge.streetlight.pdfreport.FilterNewInstallationOnly;
 import com.terragoedge.streetlight.pdfreport.PDFExceptionUtils;
@@ -54,6 +52,7 @@ public class InstallMaintenanceDao extends UtilDao {
         CSVWriter dailyCompletedCSVWriter = null;
         List<DuplicateModel> duplicateModelList = new ArrayList<>();
         startTime = 1554921000000L;
+        startTime = Long.parseLong(PropertiesReader.getProperties().getProperty("amerescousa.report.from"));
         logger.info("configs: " + gson.toJson(configs));
         try {
             String fileName = Utils.getDateTime();
@@ -94,7 +93,7 @@ public class InstallMaintenanceDao extends UtilDao {
             logger.info("daily install report csv file created!");
             closeCSVBuffer(dailyCompletedCSVWriter);
             edgeMailService.sendMail(duplicateMacAddressFile, dailyReportFile);
-           // startGeoPDFProcess(dailyReportFile);
+            // startGeoPDFProcess(dailyReportFile);
         } catch (Exception e) {
             logger.error("Error in doProcess", e);
             closeCSVBuffer(dailyCompletedCSVWriter);
@@ -250,8 +249,8 @@ public class InstallMaintenanceDao extends UtilDao {
                 CSVWriter.NO_QUOTE_CHARACTER,
                 CSVWriter.NO_ESCAPE_CHARACTER,
                 CSVWriter.DEFAULT_LINE_END);
-        String[] headerRecord = {"Title", "MAC Address", "User Id", "Fixture QR Scan", "Fixture Type",
-                "Context", "Lat", "Lng", "Date Time", "Is ReplaceNode", "Existing Node MAC Address", "New Node MAC Address", "New Fixture QR Scan","Reason for Replacement","Reason for removal","Resolved Issue","Resolved Comment","Scan Existing MAC if wrong","UnableToRepair Issue","unableToRepair Comment","InstallStatus","Skipped Fixture Reason","Skipped Reason"};
+        String[] headerRecord = {"Title", "Action","MAC Address", "User Id", "Fixture QR Scan", "Fixture Type",
+                "Context", "Lat", "Lng", "Date Time", "Is ReplaceNode", "Existing Node MAC Address", "New Node MAC Address", "New Fixture QR Scan", "Reason for Replacement", "Reason for removal", "Resolved Issue", "Resolved Comment", "Scan Existing MAC if wrong", "UnableToRepair Issue", "unableToRepair Comment", "InstallStatus", "Skipped Fixture Reason", "Skipped Reason"};
         csvWriter.writeNext(headerRecord);
         return csvWriter;
     }
@@ -294,6 +293,7 @@ public class InstallMaintenanceDao extends UtilDao {
             logger.info(noteData);
             csvWriter.writeNext(new String[]{
                     noteData.getTitle(),
+                    addDoubleQuotes(noteData.getInstallMaintenanceModel().getAction()),
                     addDoubleQuotes(noteData.getInstallMaintenanceModel().getMacAddress()),
                     noteData.getCreatedBy(),
                     addDoubleQuotes(noteData.getInstallMaintenanceModel().getFixtureQRScan()),
@@ -391,6 +391,13 @@ public class InstallMaintenanceDao extends UtilDao {
             String formDef = formData.getFormDef();
             List<EdgeFormData> edgeFormDatas = gson.fromJson(formDef, new TypeToken<List<EdgeFormData>>() {
             }.getType());
+            String action = getValue(17, edgeFormDatas);
+            logger.info("selected new action:" + action);
+            if (action.contains("Repairs")) {
+                action = getValue(24, edgeFormDatas);
+                logger.info("selected ReplaceAction :" + action);
+            }
+            installMaintenanceModel.setAction(action);
             for (Config config : configs) {
                 if (config.getFormTemplateGuid().equals(formData.getFormTemplateGuid())) {
                     //installMaintenanceModel.setInstallStatus(getValue(config.getInstallStatus(), edgeFormDatas));
@@ -404,40 +411,40 @@ public class InstallMaintenanceDao extends UtilDao {
                         logger.info("type:" + type.toString());
                         switch (type) {
                             case RF:
-                                installMaintenanceModel.setAction(Constants.REPLACE_FIXTURE_ONLY);
+                               // installMaintenanceModel.setAction(Constants.REPLACE_FIXTURE_ONLY);
                                 installMaintenanceModel.setFixtureQRScanRF(setValue(installMaintenanceModel.getFixtureQRScanRF(), getValue(idsList.getFix(), edgeFormDatas)));
                                 installMaintenanceModel.setExFixtureQRScanRF(setValue(installMaintenanceModel.getExFixtureQRScanRF(), getValue(idsList.getExFix(), edgeFormDatas)));
                                 installMaintenanceModel.setReasonforReplacement(setValue(installMaintenanceModel.getReasonforReplacement(), getValue(idsList.getReasonforreplacement(), edgeFormDatas)));
                                 break;
                             case NEW:
-                                installMaintenanceModel.setAction("New");
+                               // installMaintenanceModel.setAction("New");
                                 installMaintenanceModel.setMacAddress(setValue(installMaintenanceModel.getMacAddress(), getValue(idsList.getMac(), edgeFormDatas)));
                                 installMaintenanceModel.setFixtureQRScan(setValue(installMaintenanceModel.getFixtureQRScan(), getValue(idsList.getFix(), edgeFormDatas)));
                                 break;
                             case RN:
-                                installMaintenanceModel.setAction(Constants.REPLACE_NODE_ONLY);
+                               // installMaintenanceModel.setAction(Constants.REPLACE_NODE_ONLY);
                                 installMaintenanceModel.setMacAddressRN(setValue(installMaintenanceModel.getMacAddressRN(), getValue(idsList.getMac(), edgeFormDatas)));
                                 installMaintenanceModel.setExMacAddressRN(setValue(installMaintenanceModel.getExMacAddressRN(), getValue(idsList.getExMac(), edgeFormDatas)));
                                 break;
                             case RNF:
-                                installMaintenanceModel.setAction(Constants.REPLACE_NODE_FIXTURE);
+                               // installMaintenanceModel.setAction(Constants.REPLACE_NODE_FIXTURE);
                                 installMaintenanceModel.setMacAddressRNF(setValue(installMaintenanceModel.getMacAddressRNF(), getValue(idsList.getMac(), edgeFormDatas)));
                                 installMaintenanceModel.setExMacAddressRNF(setValue(installMaintenanceModel.getExMacAddressRNF(), getValue(idsList.getExMac(), edgeFormDatas)));
                                 installMaintenanceModel.setFixtureQRScanRNF(setValue(installMaintenanceModel.getFixtureQRScanRNF(), getValue(idsList.getFix(), edgeFormDatas)));
                                 installMaintenanceModel.setExFixtureQRScanRNF(setValue(installMaintenanceModel.getExFixtureQRScanRNF(), getValue(idsList.getExFix(), edgeFormDatas)));
                                 break;
                             case RR:
-                                installMaintenanceModel.setAction(Constants.REMOVE);
+                                //installMaintenanceModel.setAction(Constants.REMOVE);
                                 installMaintenanceModel.setRemovalReason(setValue(installMaintenanceModel.getRemovalReason(), getValue(idsList.getRemove(), edgeFormDatas)));
                                 break;
                             case RS:
-                                installMaintenanceModel.setAction(Constants.REPLACE_NODE_FIXTURE);
+                               // installMaintenanceModel.setAction(Constants.REPLACE_NODE_FIXTURE);
                                 installMaintenanceModel.setResolvedIssue(setValue(installMaintenanceModel.getResolvedIssue(), getValue(idsList.getIssue(), edgeFormDatas)));
                                 installMaintenanceModel.setResolvedComment(setValue(installMaintenanceModel.getResolvedComment(), getValue(idsList.getComment(), edgeFormDatas)));
                                 installMaintenanceModel.setExistingMacIfWrong(setValue(installMaintenanceModel.getExistingMacIfWrong(), getValue(idsList.getScanifwrong(), edgeFormDatas)));
                                 break;
                             case UR:
-                                installMaintenanceModel.setAction(Constants.UNABLE_TO_REPAIR);
+                                // installMaintenanceModel.setAction(Constants.UNABLE_TO_REPAIR);
                                 installMaintenanceModel.setUnableToRepairIssue(setValue(installMaintenanceModel.getUnableToRepairIssue(), getValue(idsList.getUnabletorepairissue(), edgeFormDatas)));
                                 installMaintenanceModel.setUnableToRepairComment(setValue(installMaintenanceModel.getUnableToRepairComment(), getValue(idsList.getUnabletorepaircomment(), edgeFormDatas)));
                                 break;
@@ -451,6 +458,8 @@ public class InstallMaintenanceDao extends UtilDao {
                 }
             }
         }
+        installMaintenanceModel.checkCouldNotComplete();
+        installMaintenanceModel.checkReplaceAndRemoval();
         return installMaintenanceModel;
     }
 
@@ -505,7 +514,7 @@ public class InstallMaintenanceDao extends UtilDao {
             while (queryResponse.next()) {
 
                 String locationDescription = queryResponse.getString("locationdescription");
-                if(locationDescription!=null) {
+                if (locationDescription != null) {
                     String[] locations = locationDescription.split("\\|");
                     String groupName = "";
                     if (locations.length == 2) {
