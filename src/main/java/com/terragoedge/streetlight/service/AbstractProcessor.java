@@ -35,6 +35,7 @@ public abstract class AbstractProcessor {
 
     WeakHashMap<String, String> contextListHashMap = new WeakHashMap<>();
     HashMap<String, CslpDate> cslpDateHashMap = new HashMap<>();
+    HashMap<String, String> macHashMap = new HashMap<>();
 
     public AbstractProcessor() {
         this.connectionDAO = ConnectionDAO.INSTANCE;
@@ -118,6 +119,7 @@ public abstract class AbstractProcessor {
         JsonArray arr = jsonObject.getAsJsonArray("properties");
         contextListHashMap.clear();
         cslpDateHashMap.clear();
+        macHashMap.clear();
         CslpDate cslpDate = new CslpDate();
         String nodeInstall = null;
         String luminaireDate = null;
@@ -147,6 +149,7 @@ public abstract class AbstractProcessor {
         }
         logger.info("cslpDate :" + gson.toJson(cslpDate));
         cslpDateHashMap.put(idOnController, cslpDate);
+        macHashMap.put(idOnController, macAddress);
         DeviceAttributes deviceAttributes = new DeviceAttributes();
         deviceAttributes.setMacAddress(macAddress);
         deviceAttributes.setIdOnController(idOnController);
@@ -234,12 +237,12 @@ public abstract class AbstractProcessor {
      *
      * @throws Exception
      */
-    public boolean checkMacAddressExists(String macAddress, String idOnController, String nightRideKey, String nightRideValue, LoggingModel loggingModel,SlvInterfaceLogEntity slvInterfaceLogEntity)
+    public boolean checkMacAddressExists(String macAddress, String idOnController, String nightRideKey, String nightRideValue, LoggingModel loggingModel, SlvInterfaceLogEntity slvInterfaceLogEntity)
             throws QRCodeAlreadyUsedException, Exception {
-        boolean isExistMacAddress = connectionDAO.isExistMacAddress(idOnController,macAddress);
-        logger.info("given idoncontroller :"+idOnController);
-        logger.info("given macaddress is :"+macAddress);
-        if(isExistMacAddress){
+        boolean isExistMacAddress = connectionDAO.isExistMacAddress(idOnController, macAddress);
+        logger.info("given idoncontroller :" + idOnController);
+        logger.info("given macaddress is :" + macAddress);
+        if (isExistMacAddress) {
             logger.info("Already mac address exist in local table");
             loggingModel.setMacAddressUsed(true);
             slvInterfaceLogEntity.setErrorcategory(MessageConstants.EDGE_VALIDATION_ERROR);
@@ -347,6 +350,7 @@ public abstract class AbstractProcessor {
     protected void addOtherParams(EdgeNote edgeNote, List<Object> paramsList, String idOnContoller, String utilLocId, boolean isNew, String fixerQrScanValue, String macAddress, InstallMaintenanceLogModel loggingModel) {
         // luminaire.installdate - 2017-09-07 09:47:35
         String installStatus = null;
+        String slvMacAddress = macHashMap.get(idOnContoller);
         if (fixerQrScanValue != null && fixerQrScanValue.trim().length() > 0 && !loggingModel.isFixtureQRSame()) {
             logger.info("Fixture QR scan not empty and set luminare installdate" + dateFormat(edgeNote.getCreatedDateTime()));
             logger.info("Fixture QR scan not empty and set cslp.lum.install.date" + dateFormat(edgeNote.getCreatedDateTime()));
@@ -359,7 +363,11 @@ public abstract class AbstractProcessor {
                 addStreetLightData("luminaire.installdate", dateFormat(edgeNote.getCreatedDateTime()), paramsList);
             }
             if (macAddress == null || macAddress.trim().isEmpty()) {
-                installStatus = "Fixture Only";
+                if (slvMacAddress!= null || macAddress.trim().startsWith("00135")) {
+                    installStatus = "Installed";
+                } else {
+                    installStatus = "Fixture Only";
+                }
             } else {
                 installStatus = "Installed";
             }
@@ -569,7 +577,7 @@ public abstract class AbstractProcessor {
      *
      * @throws ReplaceOLCFailedException
      */
-    public void replaceOLC(String controllerStrIdValue, String idOnController, String macAddress, SLVTransactionLogs slvTransactionLogs,SlvInterfaceLogEntity slvInterfaceLogEntity)
+    public void replaceOLC(String controllerStrIdValue, String idOnController, String macAddress, SLVTransactionLogs slvTransactionLogs, SlvInterfaceLogEntity slvInterfaceLogEntity)
             throws ReplaceOLCFailedException {
         try {
             // String newNetworkId = slvSyncDataEntity.getMacAddress();
@@ -615,7 +623,7 @@ public abstract class AbstractProcessor {
             logger.error("Error in replaceOLC", e);
             slvInterfaceLogEntity.setStatus(MessageConstants.ERROR);
             slvInterfaceLogEntity.setErrorcategory(MessageConstants.SLV_VALIDATION_ERROR);
-            slvInterfaceLogEntity.setErrordetails("ReplaceOlc Failed :"+e.getMessage());
+            slvInterfaceLogEntity.setErrordetails("ReplaceOlc Failed :" + e.getMessage());
             throw new ReplaceOLCFailedException(e.getMessage());
         } finally {
             streetlightDao.insertTransactionLogs(slvTransactionLogs);
