@@ -149,6 +149,7 @@ public abstract class SlvInterfaceService extends AbstractSlvService {
         try {
             // Check whether this note is already processed or not.
             if (!noteGuids.contains(edgeNote.getNoteGuid())) {
+                logger.info("going to sync given note");
                 SlvSyncDetails slvSyncDetailsError = new SlvSyncDetails();
                 List<FormData> formDataList = new ArrayList<>();
                 try {
@@ -193,6 +194,8 @@ public abstract class SlvInterfaceService extends AbstractSlvService {
                     connectionDAO.saveSlvSyncDetails(slvSyncDetailsError);
                 }
 
+            }else {
+                logger.info("Already slvsynctable has record,its not process");
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -219,6 +222,7 @@ public abstract class SlvInterfaceService extends AbstractSlvService {
                         case NEW_DEVICE:
                             logger.info("User New Device option is seleted.");
                             String macAddress = validateMACAddress(configurationJson, edgeFormDataList, edgeNote, paramsList);
+                            logger.info("validate macaddress is "+macAddress);
                             slvSyncDetail.setMacAddress(macAddress);
                             slvSyncDetail.setSelectedAction(SLVProcess.NEW_DEVICE.toString());
                             boolean isDeviceExist = isAvailableDevice(edgeNote.getTitle());
@@ -230,9 +234,12 @@ public abstract class SlvInterfaceService extends AbstractSlvService {
                                 System.out.println("Device created");
                             }
                             if (isReSync) {
+                                logger.info(" empty Replace olc called");
                                 replaceOLC(controllerStrIdValue, edgeNote.getTitle(), "");
                             }
+                            logger.info("going to call setdevice values"+gson.toJson(paramsList));
                             processSetDevice(edgeFormDataList, configurationJson, edgeNote, paramsList, slvSyncDetail, controllerStrIdValue);
+                            logger.info("going to cal replace olc");
                             replaceOLC(controllerStrIdValue, edgeNote.getTitle(), slvSyncDetail.getMacAddress());
                             slvSyncDetail.setStatus("Success");
                             System.out.println("new device end");
@@ -514,6 +521,7 @@ public abstract class SlvInterfaceService extends AbstractSlvService {
                     throw new MacAddressProcessedException("Already mac address processed" + edgeNote.getTitle(), newNodeMacAddress);
                 }
                 checkMacAddressExists(newNodeMacAddress, edgeNote.getTitle());
+                logger.info("before addding macaddress :"+gson.toJson(paramsList));
                 addStreetLightData("MacAddress", newNodeMacAddress, paramsList);
                 return newNodeMacAddress;
             } catch (NoValueException e) {
@@ -599,8 +607,8 @@ public abstract class SlvInterfaceService extends AbstractSlvService {
 
         if (responseEntity.getStatusCode().is2xxSuccessful()) {
             String notesData = responseEntity.getBody();
-            logger.info("notes response from server :" + notesData);
-            System.out.println(notesData);
+           // logger.info("notes response from server :" + notesData);
+          //  System.out.println(notesData);
             // Convert notes Json to List of notes object
             Type listType = new TypeToken<ArrayList<EdgeNote>>() {
             }.getType();

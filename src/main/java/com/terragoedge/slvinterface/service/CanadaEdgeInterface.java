@@ -95,8 +95,11 @@ public class CanadaEdgeInterface extends SlvInterfaceService {
         paramsList.add("idOnController=" + edgeNote.getTitle());
         addStreetLightData("idOnController", edgeNote.getTitle(), paramsList);
         paramsList.add("controllerStrId=" + controllerStrIdValue);
+        logger.info("processSetvalue 1"+gson.toJson(paramsList));
         addOtherParams(edgeNote, paramsList);
+        logger.info("processSetvalue 2"+gson.toJson(paramsList));
         updateDeviceValues(paramsList, edgeNote, edgeFormDataList);
+        logger.info("processSetvalue 3"+gson.toJson(paramsList));
         setDeviceValues(paramsList, slvSyncDetails);
     }
 
@@ -424,6 +427,7 @@ public class CanadaEdgeInterface extends SlvInterfaceService {
         String url = mainUrl + updateDeviceValues;
         ResponseEntity<String> response = slvRestService.getRequest(url, false);
         String responseString = response.getBody();
+        logger.info("getgeozone response"+responseString);
 
         Type listType = new TypeToken<ArrayList<GeoZoneDetails>>() {
         }.getType();

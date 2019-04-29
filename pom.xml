@@ -134,7 +134,7 @@
                             <goal>single</goal>
                         </goals>
                         <configuration>
-                            <finalName>uc_slvinterface</finalName>
+                            <finalName>canada_slvinterface_v23</finalName>
                             <archive>
                                 <manifest>
                                     <mainClass>

@@ -231,6 +231,7 @@ public abstract class AbstractSlvService extends EdgeService {
         String responseString = response.getBody();
         JsonObject replaceOlcResponse = (JsonObject) jsonParser.parse(responseString);
         int errorCode = replaceOlcResponse.get("errorCode").getAsInt();
+        logger.info("setDevice value :"+errorCode);
         if (errorCode != 0) {
             slvSyncDetails.setErrorDetails(gson.toJson(replaceOlcResponse));
             slvSyncDetails.setStatus(Status.Failure.toString());
@@ -329,7 +330,7 @@ public abstract class AbstractSlvService extends EdgeService {
 
     public void replaceOLC(String controllerStrIdValue, String idOnController, String macAddress)
             throws ReplaceOLCFailedException {
-        /*try {
+        try {
             // Get Url detail from properties
             String mainUrl = properties.getProperty("streetlight.slv.url.main");
             String dataUrl = properties.getProperty("streetlight.url.replaceolc");
@@ -352,6 +353,7 @@ public abstract class AbstractSlvService extends EdgeService {
             String errorStatus = replaceOlcResponse.get("status").getAsString();
             // As per doc, errorcode is 0 for success. Otherwise, its not success.
             if (errorStatus.equals("ERROR")) {
+                logger.info("Replace Olc error is :"+errorStatus);
                 String value = replaceOlcResponse.get("value").getAsString();
                 throw new ReplaceOLCFailedException(value);
             }
@@ -360,7 +362,7 @@ public abstract class AbstractSlvService extends EdgeService {
             logger.error("Error in replaceOLC", e);
             throw new ReplaceOLCFailedException(e.getMessage());
         }
-*/
+
     }
 
 
