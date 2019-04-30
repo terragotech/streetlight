@@ -137,6 +137,7 @@ public class EdgeService {
         edgeJsonObject.add("formData", serverEdgeFormJsonArray);
         edgeJsonObject.addProperty("createdDateTime", System.currentTimeMillis());
         edgeJsonObject.addProperty("noteGuid", UUID.randomUUID().toString());
+        edgeJsonObject.addProperty("createdBy", "slvinterface");
 
         List<Dictionary> dictionaryList = edgeNote.getDictionary();
         boolean isDictionaryExist = false;
