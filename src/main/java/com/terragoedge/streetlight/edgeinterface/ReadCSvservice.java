@@ -30,8 +30,12 @@ public class ReadCSvservice {
        // String filePath = "D:/Report/input.csv";
         List<SlvData> slvDataList = getSlvDataFromCSV(filePath);
         try {
+            int i=0;
+            System.out.println(slvDataList.size());
             for (SlvData slvData : slvDataList) {
                     try {
+                        i++;
+                        System.out.println("processed count :"+i);
                         slvToEdgeService.run(slvData);
                     } catch (Exception e) {
                         slvData.setStatus("Failure");

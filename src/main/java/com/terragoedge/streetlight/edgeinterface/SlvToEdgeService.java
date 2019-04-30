@@ -36,6 +36,7 @@ public class SlvToEdgeService extends EdgeService {
             return;
         }
         EdgeNote edgeNote = gson.fromJson(notesJson, EdgeNote.class);
+        System.out.println("processing note : "+edgeNote.getTitle());
         process(edgeNote, formTemplateGuid, slvData);
 
     }
