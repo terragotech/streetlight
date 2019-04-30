@@ -139,7 +139,7 @@ public class EdgeService {
         edgeJsonObject.addProperty("noteGuid", UUID.randomUUID().toString());
 
         List<Dictionary> dictionaryList = edgeNote.getDictionary();
-        /*boolean isDictionaryExist = false;
+        boolean isDictionaryExist = false;
         for (Dictionary dictionary : dictionaryList) {
             if (dictionary.getKey().equals("groupGuid") && !dictionary.getValue().equals(layerGuid)) {
                 isDictionaryExist = true;
@@ -152,7 +152,7 @@ public class EdgeService {
             dictionary.setValue(layerGuid);
             dictionaryList.add(dictionary);
         }
-        edgeJsonObject.add("dictionary", gson.toJsonTree(dictionaryList));*/
+        edgeJsonObject.add("dictionary", gson.toJsonTree(dictionaryList));
         return edgeJsonObject;
     }
 
