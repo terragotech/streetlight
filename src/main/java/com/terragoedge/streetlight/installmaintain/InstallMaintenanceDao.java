@@ -284,7 +284,7 @@ public class InstallMaintenanceDao extends UtilDao {
 
     private void writeCSV(NoteData noteData, CSVWriter csvWriter, List<DuplicateModel> duplicateModelList) {
         loadNotesData(noteData);
-        if (true || (!noteData.getCreatedBy().equals("admin") && !noteData.getCreatedBy().equals("slvinterface"))) {
+        if ((!noteData.getCreatedBy().equals("admin") && !noteData.getCreatedBy().equals("slvinterface"))) {
             if (noteData.getInstallMaintenanceModel().getRemovalReason() == null) {
                 checkMACDuplicate(noteData, duplicateModelList);
             }
