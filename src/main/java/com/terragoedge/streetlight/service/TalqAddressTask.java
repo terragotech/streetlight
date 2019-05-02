@@ -5,6 +5,7 @@ import com.google.gson.reflect.TypeToken;
 import com.terragoedge.edgeserver.EdgeFormData;
 import com.terragoedge.edgeserver.EdgeNote;
 import com.terragoedge.streetlight.PropertiesReader;
+import com.terragoedge.streetlight.dao.ConnectionDAO;
 import com.terragoedge.streetlight.dao.StreetlightDao;
 import com.terragoedge.streetlight.exception.NotesNotFoundException;
 import com.terragoedge.streetlight.logging.LoggingModel;
@@ -23,6 +24,7 @@ public class TalqAddressTask extends AbstractService implements Runnable {
     private JsonParser jsonParser = null;
     private Properties properties = null;
     private RestService restService = null;
+    private ConnectionDAO connectionDAO;
     private StreetlightDao streetlightDao = null;
     private Logger logger = Logger.getLogger(TalkAddressService.class);
 
@@ -108,6 +110,14 @@ public class TalqAddressTask extends AbstractService implements Runnable {
                 setGroupValue(dictionaryList,talqAddressGuid, jsonObject);
             } else if (loggingModel.getLayerType().equals("Complete")) {
                 setGroupValue(dictionaryList,completeLayerGuid, jsonObject);
+            }else{
+                String layerguid = streetlightDao.getGroupGuid(loggingModel.getLayerType());
+                if(layerguid == null){
+                    logger.error("layer guid not present for giver layer: "+loggingModel.getLayerType());
+                    return false;
+                }else{
+                    setGroupValue(dictionaryList,layerguid,jsonObject);
+                }
             }
         }
 
