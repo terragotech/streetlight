@@ -411,6 +411,8 @@ public class InstallMaintenanceDao extends UtilDao {
                         logger.info("type:" + type.toString());
                         switch (type) {
                             case RF:
+
+                                //To be installed To be  installed
                                // installMaintenanceModel.setAction(Constants.REPLACE_FIXTURE_ONLY);
                                 installMaintenanceModel.setFixtureQRScanRF(setValue(installMaintenanceModel.getFixtureQRScanRF(), getValue(idsList.getFix(), edgeFormDatas)));
                                 installMaintenanceModel.setExFixtureQRScanRF(setValue(installMaintenanceModel.getExFixtureQRScanRF(), getValue(idsList.getExFix(), edgeFormDatas)));
