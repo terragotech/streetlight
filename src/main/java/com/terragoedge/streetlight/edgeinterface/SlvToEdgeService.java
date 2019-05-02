@@ -30,15 +30,19 @@ public class SlvToEdgeService extends EdgeService {
         logger.info("-----SLV to Edge Sync Process------------");
         logger.info(slvData.toString());
         String formTemplateGuid = PropertiesReader.getProperties().getProperty("amerescousa.edge.formtemplateGuid");
-        String notesJson = getNoteDetails(slvData.getNoteGuid());
-        if (notesJson == null) {
-            logger.info("Note not in Milhouse.");
-            return;
-        }
-        EdgeNote edgeNote = gson.fromJson(notesJson, EdgeNote.class);
-        System.out.println("processing note : "+edgeNote.getTitle());
-        process(edgeNote, formTemplateGuid, slvData);
+        List<com.terragoedge.edgeserver.SlvData> noteGuidList = streetlightDao.getNoteDetails(slvData.getNoteTitle());
+        for (com.terragoedge.edgeserver.SlvData dbSLVData : noteGuidList) {
+            logger.info("Note not in AmerescoUSA.");
+            slvData.setNoteGuid(dbSLVData.getGuid().trim());
+            String notesJson = getNoteDetails(slvData.getNoteGuid());
+            if (notesJson == null) {
+                logger.info("Note not in AmerescoUSA.");
+                return;
+            }
+            EdgeNote edgeNote = gson.fromJson(notesJson, EdgeNote.class);
+            process(edgeNote, formTemplateGuid, slvData);
 
+        }
     }
 
 
@@ -50,7 +54,7 @@ public class SlvToEdgeService extends EdgeService {
                 long createddatetime = edgeNote.getCreatedDateTime();
                 SlvData resultSlvData = processInstallationForm(edgeNote, formData, formTemplateGuid, slvData);
                 if (resultSlvData.getStatus().equals("Success")) {
-                  //  streetlightDao.updateNoteDetails(createddatetime + 1000, "slvinterface", resultSlvData.getNewNoteGuid());
+                    //  streetlightDao.updateNoteDetails(createddatetime + 1000, "slvinterface", resultSlvData.getNewNoteGuid());
                     logger.info("------------------Success---------------------");
                     logger.info("Processed notetitle: " + edgeNote.getTitle());
                 } else {
