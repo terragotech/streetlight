@@ -66,6 +66,25 @@ public class StreetlightDao extends UtilDao {
         return -1;
     }
 
+    private String exceuteSqlGetValue(String sql) {
+        Statement statement = null;
+        Connection connection = null;
+        try {
+            connection = StreetlightDaoConnection.getInstance().getConnection();
+            statement = connection.createStatement();
+            ResultSet resultSet = statement.executeQuery(sql);
+            while (resultSet.next()) {
+                String res = resultSet.getString(1);
+                return res;
+            }
+        } catch (Exception e) {
+            logger.error("Error in exceuteSequence", e);
+        } finally {
+            closeStatement(statement);
+        }
+        return null;
+    }
+
     private void createStreetLightSyncTable() {
 
         String sql = "CREATE TABLE IF NOT EXISTS notesyncdetails (streetlightsyncid integer NOT NULL,"
@@ -661,6 +680,10 @@ public class StreetlightDao extends UtilDao {
     }
 
 
+    public String getGroupGuid(String groupName) {
+        String sql = "select groupid from groups where groupname='"+groupName+"';";
+        return exceuteSqlGetValue(sql);
+    }
 
 
     public void closeConnection(){
