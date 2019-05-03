@@ -47,12 +47,20 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
 
     private String getNightRideFormVal(List<FormData> formDataList, EdgeNote edgeNote, LoggingModel loggingModel) {
         String nightRideTemplateGuid = properties.getProperty("amerescousa.night.ride.formtemplateGuid");
+        logger.info("Night Ride Form TemplateGuid:"+nightRideTemplateGuid);
         int pos = formDataList.indexOf(nightRideTemplateGuid);
         if (pos != -1) {
+            logger.info("Night Ride Form is Present");
             FormData formData = formDataList.get(pos);
             List<EdgeFormData> edgeFormDatas = formData.getFormDef();
             try {
                 String nightRideValue = valueById(edgeFormDatas, 1);
+                logger.info("Night Ride Form Val:"+nightRideValue);
+                if(loggingModel.getSlvLuminaireSerialNumber() != null && nightRideValue.contains(loggingModel.getSlvLuminaireSerialNumber())){
+                    logger.info("SlvLuminaireSerialNumber Val:"+loggingModel.getSlvLuminaireSerialNumber());
+                    logger.info("SLV LuminaireSerialNumber and Night Ride Values are same.");
+                    return null;
+                }
                 try {
                     SlvServerData dbSlvServerData = streetlightDao.getSlvServerData(edgeNote.getTitle());
                     if (dbSlvServerData != null && dbSlvServerData.getSerialNumber() != null) {
@@ -314,6 +322,14 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
             if (deviceAttributes.getInstallStatus().equals("Verified")) {
                 loggingModel.setFixtureQRSame(true);
             }
+        } else  if(installStatusValue != null && installStatusValue.equals("Could not complete")){
+            DeviceAttributes deviceAttributes = getDeviceValues(loggingModel);
+            String installStatus = properties.getProperty("could_note_complete_install_status");
+            if (deviceAttributes.getInstallStatus().equals(installStatus)) {
+                logger.info("Current edge and SLV Install Status is same (Could not be installed)");
+                loggingModel.setCouldNotComplete(true);
+            }
+            return "New";
         }
 
         try {
@@ -515,7 +531,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
                 buildFixtureStreetLightData(fixerQrScanValue, paramsList, edgeNote, slvServerData, loggingModel);//update fixer qrscan value
             }
 
-
+            logger.info("Night Ride Val in Set Device"+nightRideValue);
             if (nightRideValue != null) {
                 addStreetLightData(nightRideKey, nightRideValue, paramsList);
             }
@@ -629,17 +645,25 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
             slvInterfaceLogEntity.setStatus(MessageConstants.ERROR);
             return;
         }
-        logger.info("value :" + cdotIssue);
+        logger.info("cdotIssue :" + cdotIssue);
         String controllerStarId = getControllerStrId(edgeFormDatas);
         String idOnController = loggingModel.getIdOnController();
         paramsList.add("idOnController=" + idOnController);
         paramsList.add("controllerStrId=" + controllerStarId);
-        String formatedValue = dateFormat(edgeNote.getCreatedDateTime()) + " :" + cdotIssue;
 
         if (nightRideValue != null) {
             nightRideValue = nightRideValue + "," + cdotIssue;
             addStreetLightData(nightRideKey, nightRideValue, paramsList);
         } else {
+
+            if(loggingModel.getSlvLuminaireSerialNumber() != null && loggingModel.getSlvLuminaireSerialNumber().contains(cdotIssue)){
+                logger.info("SLV Install Status is already Could not Complete and cdotIssue Value also already Synced");
+                slvInterfaceLogEntity.setErrordetails("SLV Install Status is already Could not Complete and cdotIssue Value also already Synced");
+                slvInterfaceLogEntity.setStatus(MessageConstants.ERROR);
+                return;
+            }
+
+            String formatedValue = dateFormat(edgeNote.getCreatedDateTime()) + " :" + cdotIssue;
             addStreetLightData(Key, formatedValue, paramsList);
         }
         SLVTransactionLogs slvTransactionLogs = getSLVTransactionLogs(loggingModel);
@@ -673,14 +697,29 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
             if (installStatusValue != null && installStatusValue.equals("Could not complete")) {
                 try {
                     String skippedFixtureReasonVal = valueById(edgeFormDatas, 23);
-                    logger.info("Skipped Fixture Reason Val" + installStatusValue);
+                    logger.info("Skipped Fixture Reason Val" + skippedFixtureReasonVal);
                     if (nightRideValue != null && !nightRideValue.trim().isEmpty()) {
                         nightRideValue = nightRideValue + "," + skippedFixtureReasonVal;
                     } else {
+                        logger.info("SLV Install Status is Could Not Complete"+loggingModel.isCouldNotComplete());
+                        logger.info("SLV Luminaire SerialNumber"+loggingModel.getSlvLuminaireSerialNumber());
+                        if(loggingModel.isCouldNotComplete() && loggingModel.getSlvLuminaireSerialNumber() != null && loggingModel.getSlvLuminaireSerialNumber().contains(skippedFixtureReasonVal)){
+                            logger.info("SLV Install Status is already Could not Complete and Skipped Fixture Reason Value also already Synced");
+                            slvInterfaceLogEntity.setErrordetails("SLV Install Status is already Could not Complete and Skipped Fixture Reason Value also already Synced");
+                            slvInterfaceLogEntity.setStatus(MessageConstants.ERROR);
+                            return;
+                        }
                         nightRideValue = dateFormat(edgeNote.getCreatedDateTime()) + " :" + skippedFixtureReasonVal;
                     }
                 } catch (NoValueException e) {
                     logger.error("Error in while getting installStatusValue", e);
+
+                    if(loggingModel.isCouldNotComplete() && (nightRideValue == null || nightRideValue.trim().isEmpty())){
+                        logger.info("SLV Install Status is already Could not Complete and Skipped Fixture Reason Value also already Synced");
+                        slvInterfaceLogEntity.setErrordetails("SLV Install Status is already Could not Complete and nightRideValue Value is Empty");
+                        slvInterfaceLogEntity.setStatus(MessageConstants.ERROR);
+                        return;
+                    }
                 }
 
                 int errorCode = sync2SlvInstallStatus(loggingModel.getIdOnController(), loggingModel.getControllerSrtId(), loggingModel, nightRideKey, nightRideValue);

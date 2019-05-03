@@ -35,7 +35,39 @@ public class LoggingModel {
     private boolean isNigthRideSame;
     private boolean isButtonPhotoCell;
 
+
+    private boolean isCouldNotComplete;
+
     private String repairsOption;
+
+    private String slvLuminaireSerialNumber;
+
+    public boolean isCouldNotComplete() {
+        return isCouldNotComplete;
+    }
+
+    public void setCouldNotComplete(boolean couldNotComplete) {
+        isCouldNotComplete = couldNotComplete;
+    }
+
+    public String getSlvLuminaireSerialNumber() {
+        return slvLuminaireSerialNumber;
+    }
+
+
+
+    public void setSlvLuminaireSerialNumber(String slvLuminaireSerialNumber) {
+        int pos = slvLuminaireSerialNumber.lastIndexOf(":");
+        if(pos != -1){
+          String val =  slvLuminaireSerialNumber.substring(pos,slvLuminaireSerialNumber.length());
+          if(!val.trim().isEmpty()){
+              this.slvLuminaireSerialNumber = val.trim();
+          }
+        }else{
+            this.slvLuminaireSerialNumber = slvLuminaireSerialNumber;
+        }
+
+    }
 
     public String getParentNoteId() {
         return parentNoteId;

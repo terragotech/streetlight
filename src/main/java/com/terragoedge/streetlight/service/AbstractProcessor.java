@@ -105,7 +105,7 @@ public abstract class AbstractProcessor {
         return 0;
     }
 
-    public void processDeviceValuesJson(String deviceValuesjson, String idOnController, String noteGuid) {
+    public void processDeviceValuesJson(String deviceValuesjson, String idOnController, String noteGuid,InstallMaintenanceLogModel installMaintenanceLogModel) {
         logger.info("processDeviceValuesJson called start");
         String proposedContextKey = properties.getProperty("streetlight.location.proposedcontext");
         String cslInstallDateKey = properties.getProperty("streetlight.csl.installdate");
@@ -124,6 +124,7 @@ public abstract class AbstractProcessor {
         String nodeInstall = null;
         String luminaireDate = null;
         String macAddress = null;
+        String luminaireSerialNumber = null;
         for (int i = 0; i < arr.size(); i++) {
             JsonObject jsonObject1 = arr.get(i).getAsJsonObject();
             String keyValue = jsonObject1.get("key").getAsString();
@@ -136,6 +137,8 @@ public abstract class AbstractProcessor {
                 luminaireDate = jsonObject1.get("value").getAsString();
             } else if (keyValue != null && keyValue.equals("userproperty.MacAddress")) {
                 macAddress = jsonObject1.get("value").getAsString();
+            }else if (keyValue != null && keyValue.equals("userproperty.luminaire.serialnumber")) {
+                luminaireSerialNumber = jsonObject1.get("value").getAsString();
             }
 
         }
@@ -146,6 +149,10 @@ public abstract class AbstractProcessor {
         }
         if (luminaireDate != null && !luminaireDate.trim().isEmpty() && luminaireDate.trim().length() > 7) {
             cslpDate.setCslpLumDate(luminaireDate);
+        }
+
+        if(luminaireSerialNumber != null && !luminaireSerialNumber.trim().isEmpty() && luminaireSerialNumber.trim().length() > 3){
+            installMaintenanceLogModel.setSlvLuminaireSerialNumber(luminaireSerialNumber);
         }
         logger.info("cslpDate :" + gson.toJson(cslpDate));
         cslpDateHashMap.put(idOnController, cslpDate);
@@ -209,7 +216,7 @@ public abstract class AbstractProcessor {
                     ResponseEntity<String> responseEntity = restService.getRequest(subDeviceUrl, true, null);
                     if (response.getStatusCodeValue() == 200) {
                         String deviceResponse = responseEntity.getBody();
-                        processDeviceValuesJson(deviceResponse, idOnController, installMaintenanceLogModel.getProcessedNoteId());
+                        processDeviceValuesJson(deviceResponse, idOnController, installMaintenanceLogModel.getProcessedNoteId(),installMaintenanceLogModel);
                     }
                 }
             }
