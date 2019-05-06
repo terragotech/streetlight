@@ -1,6 +1,5 @@
 {
   "priority": [{"type":"NEW_DEVICE","order":1}],
-  "deviceCreation":[{"id":19,"conditions":"EQUALS or HAS_VAL","value":""}],
   "config": [
     {
       "type": "NEW_DEVICE",
@@ -13,6 +12,11 @@
         {
           "id": 155,
           "type": "FIXTURE",
+          "isRequired": true
+        },
+        {
+          "id": 118,
+          "type": "IDONCONTROLLER",
           "isRequired": true
         }
       ],

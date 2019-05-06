@@ -24,6 +24,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.lang.reflect.Type;
+import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
@@ -40,7 +41,7 @@ public abstract class SLVInterfaceService {
     Properties properties = null;
     SLVRestService slvRestService = null;
 
-    private static int retryCount = 0;
+    public static int retryCount = 0;
 
 
     SLVInterfaceService() throws Exception {
@@ -67,7 +68,29 @@ public abstract class SLVInterfaceService {
             return;
         }
 
-        // Get NoteList from edgeserver
+        String notesGuids = "[\"dcc7dd03-f1ad-45f1-8705-315b4596d267\"]";
+
+        JsonArray noteGuidsJsonArray = (JsonArray) jsonParser.parse(notesGuids);
+        if (noteGuidsJsonArray != null && !noteGuidsJsonArray.isJsonNull()) {
+            for (JsonElement noteGuidJson : noteGuidsJsonArray) {
+                String noteGuid = noteGuidJson.getAsString();
+                logger.info("Current NoteGuid:" + noteGuid);
+                try {
+                    run(noteGuid, accessToken);
+                } catch (DatabaseException e) {
+                    logger.error("Error while getting value from DB.Due to DB Error we are skipping other notes also", e);
+                    return;
+                } catch (SLVConnectionException e) {
+                    logger.error("Unable to connect with SLV Server.");
+                    return;
+                } catch (Exception e) {
+                    logger.error("Error while processing this note.NoteGuid:" + noteGuid);
+                }
+
+            }
+        }
+
+       /* // Get NoteList from edgeserver
         ResponseEntity<String> edgeSlvServerResponse = edgeRestService.getRequest(edgeSlvUrl, false, accessToken);
 
         // Process only response code as success
@@ -94,7 +117,7 @@ public abstract class SLVInterfaceService {
 
                 }
             }
-        }
+        } */
     }
 
 
@@ -153,12 +176,12 @@ public abstract class SLVInterfaceService {
 
     }
 
-    private void checkTokenValidity(SLVSyncTable slvSyncTable)throws SLVConnectionException{
+    public void checkTokenValidity(Edge2SLVData edge2SLVData)throws SLVConnectionException{
         try{
             logger.info("Checking Token Validity.");
             logger.info("Current RetryCount:"+retryCount);
             DeviceEntity deviceEntity = new DeviceEntity();
-            loadDeviceValues(slvSyncTable.getNoteName(),deviceEntity);
+            loadDeviceValues(edge2SLVData.getIdOnController(),deviceEntity);
             return;
         }catch (NoValueException e){
             return;
@@ -174,7 +197,7 @@ public abstract class SLVInterfaceService {
                     Thread.sleep(30000);
                 }
                 RestTemplate.INSTANCE.reConnect();
-                checkTokenValidity(slvSyncTable);
+                checkTokenValidity(edge2SLVData);
             }catch (Exception e1){
                 throw new SLVConnectionException("Unable to connect with SLV.",e);
             }
@@ -193,9 +216,6 @@ public abstract class SLVInterfaceService {
                 logger.info("Form Template is not present.");
                 return;
             }
-
-            retryCount = 0;
-            checkTokenValidity(slvSyncTable);
 
             processFormData(formDataList,slvSyncTable);
         }catch (SLVConnectionException e){
@@ -284,14 +304,16 @@ public abstract class SLVInterfaceService {
             throw new QRCodeAlreadyUsedException("QR code [" + macAddress + "] is already processed.", macAddress);
         }
         logger.info("Getting Mac Address from SLV.");
-        String mainUrl = properties.getProperty("streetlight.slv.url.main");
+        String mainUrl = properties.getProperty("streetlight.slv.base.url");
         String updateDeviceValues = properties.getProperty("streetlight.slv.url.search.device");
         String url = mainUrl + updateDeviceValues;
         List<String> paramsList = new ArrayList<String>();
-        paramsList.add("attribute=MacAddress");
-        paramsList.add("value=" + macAddress);
-        paramsList.add("operator=eq-i");
+        paramsList.add("attributeName=MacAddress");
+        paramsList.add("attributeValue=" + macAddress);
+        paramsList.add("attributeOperator=eq-i");
+        paramsList.add("geoZoneId=10453");
         paramsList.add("recurse=true");
+        paramsList.add("returnedInfo=devicesList");
         paramsList.add("ser=json");
         String params = StringUtils.join(paramsList, "&");
         url = url + "?" + params;
@@ -322,7 +344,7 @@ public abstract class SLVInterfaceService {
 
     public void loadDeviceValues(String idOnController, DeviceEntity deviceEntity) throws NoValueException,SLVUnAuthorizeException, IOException, ClientProtocolException {
         logger.info("loadDeviceValues called.");
-        String mainUrl = properties.getProperty("streetlight.slv.url.main");
+        String mainUrl = properties.getProperty("streetlight.slv.base.url");
         String deviceUrl = properties.getProperty("streetlight.slv.url.search.device");
         String url = mainUrl + deviceUrl;
         List<String> paramsList = new ArrayList<>();
@@ -354,7 +376,7 @@ public abstract class SLVInterfaceService {
                     if (httpResponse.getStatusLine().getStatusCode() == 200) {
                         String deviceResponse = slvRestService.getResponseBody(httpResponse);
                         if(deviceResponse != null){
-                            processDeviceValuesJson(deviceResponse, idOnController, deviceEntity);
+                            //processDeviceValuesJson(deviceResponse, idOnController, deviceEntity);
                         }
                     }
                 }
@@ -369,7 +391,7 @@ public abstract class SLVInterfaceService {
 
     public String getDeviceUrl(int id) {
         logger.info("getDeviceUrl url called");
-        String mainUrl = properties.getProperty("streetlight.slv.url.main");
+        String mainUrl = properties.getProperty("streetlight.slv.base.url");
         String getDeviceUrl = properties.getProperty("streetlight.slv.url.getdevice.device");
         String deviceMainUrl = mainUrl + getDeviceUrl;
         List<String> paramsList = new ArrayList<>();
@@ -382,47 +404,9 @@ public abstract class SLVInterfaceService {
 
     public void processDeviceValuesJson(String deviceValuesjson, String idOnController, DeviceEntity deviceEntity) {
         logger.info("processDeviceValuesJson called start");
-        String installStatusKey = properties.getProperty("streetlight.install.status");
-        String cslInstallDateKey = properties.getProperty("streetlight.csl.installdate");
-        String dimmingGroupKey = properties.getProperty("streetlight.dimminggroup");
-        //String serialNumberKey = properties.getProperty("streetlight.luminaire.serialnumber");
-        logger.info("installStatusKey :" + installStatusKey);
-        logger.info("cslInstallDate :" + cslInstallDateKey);
-        logger.info("cslLuminaireDate :" + dimmingGroupKey);
         JsonObject jsonObject = new JsonParser().parse(deviceValuesjson).getAsJsonObject();
         logger.info("Device request json:" + gson.toJson(jsonObject));
-        JsonArray arr = jsonObject.getAsJsonArray("properties");
-        String nodeInstall = null;
-        String luminaireDate = null;
-        String macAddress = null;
-        String installStatus = null;
-        String dimmingGroupName = null;
-        for (int i = 0; i < arr.size(); i++) {
-            JsonObject jsonObject1 = arr.get(i).getAsJsonObject();
-            String keyValue = jsonObject1.get("key").getAsString();
-            if (keyValue != null && keyValue.equals(installStatusKey)) {
-                installStatus = jsonObject1.get("value").getAsString();
-            } else if (keyValue != null && keyValue.equals(cslInstallDateKey)) {
-                nodeInstall = jsonObject1.get("value").getAsString();
-            } else if (keyValue != null && keyValue.equals("userproperty.MacAddress")) {
-                macAddress = jsonObject1.get("value").getAsString();
-            } else if (keyValue != null && keyValue.equals(dimmingGroupKey)) {
-                dimmingGroupName = jsonObject1.get("value").getAsString();
-            }
-        }
-        //
-        if (nodeInstall != null && !nodeInstall.trim().isEmpty() && nodeInstall.trim().length() > 7) {
-            deviceEntity.setInstallDate(nodeInstall);
-        }
-        if (installStatus != null && !installStatus.trim().isEmpty() && installStatus.trim().length() > 5) {
-            deviceEntity.setInstallStatus(installStatus);
-        }
 
-        if (dimmingGroupName != null && !dimmingGroupName.trim().isEmpty() && dimmingGroupName.trim().length() > 3) {
-            deviceEntity.setDimmingGroup(dimmingGroupName);
-        }
-        deviceEntity.setMacAddress(macAddress);
-        deviceEntity.setDimmingGroup(dimmingGroupName);
         logger.info("processDeviceValuesJson End");
     }
 
@@ -444,7 +428,7 @@ public abstract class SLVInterfaceService {
     protected int setDeviceValues(List<Object> paramsList, SLVTransactionLogs slvTransactionLogs) {
         int errorCode = -1;
         try {
-            String mainUrl = properties.getProperty("streetlight.slv.url.main");
+            String mainUrl = properties.getProperty("streetlight.slv.base.url");
             String updateDeviceValues = properties.getProperty("streetlight.slv.url.updatedevice");
             String url = mainUrl + updateDeviceValues;
 
@@ -481,7 +465,7 @@ public abstract class SLVInterfaceService {
             String newNetworkId = macAddress;
 
             // Get Url detail from properties
-            String mainUrl = properties.getProperty("streetlight.url.main");
+            String mainUrl = properties.getProperty("streetlight.slv.base.url");
             String dataUrl = properties.getProperty("streetlight.url.replaceolc");
             String replaceOlc = properties.getProperty("streetlight.url.replaceolc.method");
             String url = mainUrl + dataUrl;
@@ -500,6 +484,7 @@ public abstract class SLVInterfaceService {
             setResponseDetails(slvTransactionLogs, responseString);
             JsonObject replaceOlcResponse = (JsonObject) jsonParser.parse(responseString);
             String errorStatus = replaceOlcResponse.get("status").getAsString();
+            errorStatus = "Success";
             logger.info("Replace OLC Process End.");
             // As per doc, errorcode is 0 for success. Otherwise, its not success.
             if (errorStatus.equals("ERROR")) {
@@ -544,7 +529,7 @@ public abstract class SLVInterfaceService {
     }
 
 
-    public void processFormData(List<FormData> formDataList, SLVSyncTable slvSyncTable){
+    public void processFormData(List<FormData> formDataList, SLVSyncTable slvSyncTable)throws SLVConnectionException{
 
     }
 

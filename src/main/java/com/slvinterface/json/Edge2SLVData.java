@@ -6,7 +6,7 @@ public class Edge2SLVData {
 
     private String title;
     private String idOnController;
-    private String controllerStrId;
+    private String controllerStrId = "TalqBridge@TB516071244";
     private String installDate;
     private String macAddress;
     private Priority priority;

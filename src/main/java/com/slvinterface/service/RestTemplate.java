@@ -38,6 +38,7 @@ public enum RestTemplate {
             httpContext = null;
             token = null;
             e.printStackTrace();
+
         }
     }
 
@@ -70,7 +71,9 @@ public enum RestTemplate {
         httpGet.setHeader("x-csrf-token","Fetch");
         httpGet.setHeader("x-requested-with","XMLHttpRequest");
         String baseUrl = properties.getProperty("streetlight.slv.base.url");
-        httpGet.setURI(URI.create(baseUrl+"/userprofile/getCurrentUser"));
+        System.out.println(baseUrl+"/reports/api/userprofile/getCurrentUser");
+       // logger.info("Url:"+baseUrl+"/reports/api/userprofile/getCurrentUser");
+        httpGet.setURI(URI.create(baseUrl+"/reports/api/userprofile/getCurrentUser"));
 
         HttpResponse httpResponse = httpClient.execute(httpGet, httpContext);
         int code = httpResponse.getStatusLine().getStatusCode();

@@ -5,9 +5,11 @@ import com.slvinterface.entity.SLVTransactionLogs;
 import com.slvinterface.exception.NoValueException;
 import com.slvinterface.exception.QRCodeAlreadyUsedException;
 import com.slvinterface.exception.ReplaceOLCFailedException;
+import com.slvinterface.exception.SLVConnectionException;
 import com.slvinterface.json.*;
 import org.apache.log4j.Logger;
 
+import java.net.URLEncoder;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -24,7 +26,7 @@ public class SurreySLVInterface extends  SLVInterfaceService {
 
 
     // 118 - Controller ID, Node Installation Date -  155,Scan Node QR Code - 85,New Node QR Code-132,Replacement Date-159,
-    public void processFormData(List<FormData> formDataList, SLVSyncTable slvSyncTable){
+    public void processFormData(List<FormData> formDataList, SLVSyncTable slvSyncTable)throws SLVConnectionException{
         Edge2SLVData previousEdge2SLVData = null;
         for(FormData formData : formDataList){
             Edge2SLVData currentEdge2SLVData = new Edge2SLVData();
@@ -52,14 +54,21 @@ public class SurreySLVInterface extends  SLVInterfaceService {
             }
             try{
                 slvSyncTable.setIdOnController(previousEdge2SLVData.getIdOnController());
-                checkMacAddressExists(macAddress,slvSyncTable.getIdOnController());
+
+                previousEdge2SLVData.setIdOnController(URLEncoder.encode(previousEdge2SLVData.getIdOnController(),"UTF-8"));
+                retryCount = 0;
+                checkTokenValidity(previousEdge2SLVData);
+
+                checkMacAddressExists(macAddress,previousEdge2SLVData.getIdOnController());
                 slvSync(slvSyncTable,previousEdge2SLVData);
-            }catch (QRCodeAlreadyUsedException e){
+            }catch (SLVConnectionException e){
+                throw new SLVConnectionException(e);
+            }/*catch (QRCodeAlreadyUsedException e){
                 slvSyncTable.setStatus("Failure");
                 slvSyncTable.setErrorDetails(e.getMessage());
                 logger.info("MAC Address is Empty. So Note is not synced.");
                 return;
-            }catch (ReplaceOLCFailedException e){
+            }*/catch (ReplaceOLCFailedException e){
                 slvSyncTable.setStatus("Failure");
                 slvSyncTable.setErrorDetails("Error while during replaceOLC Call.");
                 logger.error("Error while during replaceOLC Call.",e);
@@ -95,7 +104,7 @@ public class SurreySLVInterface extends  SLVInterfaceService {
             Config temp = new Config();
             temp.setType(priority.getType());
 
-            int pos = configList.indexOf(priorities);
+            int pos = configList.indexOf(temp);
 
             if(pos != -1){
                 Config config =  configList.get(pos);
@@ -182,23 +191,32 @@ public class SurreySLVInterface extends  SLVInterfaceService {
     private void setDeviceVal(SLVSyncTable slvSyncTable,Edge2SLVData previousEdge2SLVData){
         SLVTransactionLogs slvTransactionLogs = getSLVTransVal(slvSyncTable);
         List<Object> paramsList = new ArrayList<>();
-        loadVal(paramsList,slvSyncTable);
+        loadVal(paramsList,previousEdge2SLVData);
         addStreetLightData("installStatus","Installed",paramsList);
+        addStreetLightData("MacAddress",previousEdge2SLVData.getMacAddress(),paramsList);
         addStreetLightData("install.date",previousEdge2SLVData.getInstallDate(),paramsList);
-        addStreetLightData("SLV.Calendar","Surrey 100-50-off-50",paramsList);
+        String slvCalender = "Surrey 100-50-off-50";
+        try {
+            slvCalender =  URLEncoder.encode(slvCalender,"UTF-8");
+            addStreetLightData("DimmingGroupName",slvCalender,paramsList);
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+
+
         setDeviceValues(paramsList,slvTransactionLogs);
     }
 
 
-    private void loadVal( List<Object> paramsList,SLVSyncTable slvSyncTable){
-        paramsList.add("idOnController=" + slvSyncTable.getNoteName());
-        paramsList.add("controllerStrId=");
+    private void loadVal( List<Object> paramsList,Edge2SLVData previousEdge2SLVData){
+        paramsList.add("idOnController=" + previousEdge2SLVData.getIdOnController());
+        paramsList.add("controllerStrId="+previousEdge2SLVData.getControllerStrId());
     }
 
 
     protected String dateFormat(Long dateTime) {
         Date date = new Date(Long.valueOf(dateTime));
-        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
         dateFormat.setTimeZone(TimeZone.getTimeZone("GMT"));
         String dff = dateFormat.format(date);
         return dff;

@@ -19,6 +19,12 @@ private static final Logger logger = Logger.getLogger(SLVRestService.class);
 
 
     public HttpResponse callGetMethod(String url)throws IOException, ClientProtocolException {
+        try{
+            RestTemplate.INSTANCE.reConnect();
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+
         HttpGet httpGet = new HttpGet();
         httpGet.setHeader("x-csrf-token",RestTemplate.INSTANCE.token);
         httpGet.setHeader("x-requested-with","XMLHttpRequest");
@@ -54,6 +60,7 @@ private static final Logger logger = Logger.getLogger(SLVRestService.class);
            logger.info("-------SLV Response ----------");
            logger.info(response);
            logger.info("-------SLV Response Ends----------");
+           return response;
        }catch (Exception e){
            logger.error("Error in getResponseBody",e);
        }

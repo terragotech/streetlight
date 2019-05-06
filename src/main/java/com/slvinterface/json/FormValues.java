@@ -2,6 +2,8 @@ package com.slvinterface.json;
 
 import com.slvinterface.enumeration.NotesType;
 
+import java.util.Objects;
+
 public class FormValues {
 
     public int id;
@@ -30,7 +32,15 @@ public class FormValues {
     }
 
     public String getValue() {
-        return value;
+        if(value != null){
+            value = value.replace(label+"#", "");
+            if(value.contains("null")){
+                return null;
+            }
+            return value;
+        }
+        return null;
+
     }
 
     public void setValue(String value) {
@@ -75,5 +85,18 @@ public class FormValues {
 
     public void setGroup(boolean group) {
         isGroup = group;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        FormValues that = (FormValues) o;
+        return id == that.id;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id);
     }
 }

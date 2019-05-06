@@ -21,6 +21,7 @@ public class QueryExecutor {
 
 
     public QueryExecutor() throws Exception {
+        connectionSource = ConnectionDao.INSTANCE.connectionSource;
         initTable();
         initDao();
     }

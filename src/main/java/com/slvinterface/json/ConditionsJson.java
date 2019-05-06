@@ -8,7 +8,7 @@ import java.util.List;
 public class ConditionsJson {
     private List<Priority> priority;
     private DeviceCreation deviceCreation;
-    private List<Config> configList = new ArrayList<>();
+    private List<Config> config = new ArrayList<>();
 
     public List<Priority> getPriority() {
         return priority;
@@ -27,11 +27,11 @@ public class ConditionsJson {
     }
 
     public List<Config> getConfigList() {
-        return configList;
+        return config;
     }
 
     public void setConfigList(List<Config> configList) {
-        this.configList = configList;
+        this.config = configList;
     }
 
     @Override
@@ -39,7 +39,7 @@ public class ConditionsJson {
         return "ConditionsJson{" +
                 "priority=" + priority +
                 ", deviceCreation=" + deviceCreation +
-                ", configList=" + configList +
+                ", configList=" + config +
                 '}';
     }
 }
