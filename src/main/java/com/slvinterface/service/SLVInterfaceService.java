@@ -327,9 +327,7 @@ public abstract class SLVInterfaceService {
             } else if (keyValue != null && keyValue.equals(dimmingGroupKey)) {
                 dimmingGroupName = jsonObject1.get("value").getAsString();
             }
-
         }
-
         //
         if (nodeInstall != null && !nodeInstall.trim().isEmpty() && nodeInstall.trim().length() > 7) {
             deviceEntity.setInstallDate(nodeInstall);
@@ -350,7 +348,7 @@ public abstract class SLVInterfaceService {
         EdgeAllMac edgeAllMacData = new EdgeAllMac();
         edgeAllMacData.setMacAddress(macAddress);
         edgeAllMacData.setNoteTitle(title);
-        connectionDAO.saveEdgeAllMac(edgeAllMacData);
+        queryExecutor.saveEdgeAllMac(edgeAllMacData);
     }
 
     private void setSLVTransactionLogs(SLVTransactionLogs slvTransactionLogs, String request, CallType callType) {
@@ -360,6 +358,33 @@ public abstract class SLVInterfaceService {
 
     private void setResponseDetails(SLVTransactionLogs slvTransactionLogs, String responseString) {
         slvTransactionLogs.setResponseBody(responseString);
+    }
+    protected int setDeviceValues(List<Object> paramsList, SLVTransactionLogs slvTransactionLogs) {
+        int errorCode = -1;
+        try {
+            String mainUrl = properties.getProperty("streetlight.slv.url.main");
+            String updateDeviceValues = properties.getProperty("streetlight.slv.url.updatedevice");
+            String url = mainUrl + updateDeviceValues;
+
+            paramsList.add("ser=json");
+            String params = StringUtils.join(paramsList, "&");
+            url = url + "&" + params;
+            logger.info("SetDevice method called");
+            logger.info("SetDevice url:" + url);
+            setSLVTransactionLogs(slvTransactionLogs, url, CallType.SET_DEVICE);
+            ResponseEntity<String> response = restService.getPostRequest(url, null);
+            String responseString = response.getBody();
+            setResponseDetails(slvTransactionLogs, responseString);
+            JsonObject replaceOlcResponse = (JsonObject) jsonParser.parse(responseString);
+            errorCode = replaceOlcResponse.get("errorCode").getAsInt();
+        } catch (Exception e) {
+            setResponseDetails(slvTransactionLogs, "Error in setDeviceValues:" + e.getMessage());
+            logger.error("Error in setDeviceValues", e);
+        } finally {
+            queryExecutor.saveSLVTransactionLogs(slvTransactionLogs);
+        }
+
+        return errorCode;
     }
 
     /**

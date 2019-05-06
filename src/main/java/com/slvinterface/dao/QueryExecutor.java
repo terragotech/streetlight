@@ -55,8 +55,12 @@ public class QueryExecutor {
     }
 
 
-    public void saveEdgeAllMac(EdgeAllMac edgeAllMac) throws Exception {
-        edgeAllMacsDao.create(edgeAllMac);
+    public void saveEdgeAllMac(EdgeAllMac edgeAllMac) {
+        try {
+            edgeAllMacsDao.create(edgeAllMac);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
 
