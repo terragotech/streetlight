@@ -94,4 +94,17 @@ public class QueryExecutor {
         return slvSyncTablesDao.queryBuilder().where().eq(SLVSyncTable.NOTE_GUID, noteGuid).queryForFirst();
     }
 
+    public Long getMaxSyncTime(){
+        try{
+            SLVSyncTable slvSyncTable = slvSyncTablesDao.queryBuilder().orderBy("id",false).queryForFirst();
+            if(slvSyncTable != null){
+                return slvSyncTable.getSyncTime();
+            }
+
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+        return -1L;
+    }
+
 }

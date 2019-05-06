@@ -68,29 +68,11 @@ public abstract class SLVInterfaceService {
             return;
         }
 
-        String notesGuids = "[\"dcc7dd03-f1ad-45f1-8705-315b4596d267\"]";
+        String edgeSlvUrl =  PropertiesReader.getProperties().getProperty("streetlight.edge.slvServerUrl");
 
-        JsonArray noteGuidsJsonArray = (JsonArray) jsonParser.parse(notesGuids);
-        if (noteGuidsJsonArray != null && !noteGuidsJsonArray.isJsonNull()) {
-            for (JsonElement noteGuidJson : noteGuidsJsonArray) {
-                String noteGuid = noteGuidJson.getAsString();
-                logger.info("Current NoteGuid:" + noteGuid);
-                try {
-                    run(noteGuid, accessToken);
-                } catch (DatabaseException e) {
-                    logger.error("Error while getting value from DB.Due to DB Error we are skipping other notes also", e);
-                    return;
-                } catch (SLVConnectionException e) {
-                    logger.error("Unable to connect with SLV Server.");
-                    return;
-                } catch (Exception e) {
-                    logger.error("Error while processing this note.NoteGuid:" + noteGuid);
-                }
-
-            }
-        }
-
-       /* // Get NoteList from edgeserver
+        Long lastSyncTime =   queryExecutor.getMaxSyncTime();
+        edgeSlvUrl = edgeSlvUrl +"/notesGuid?lastSyncTime="+lastSyncTime;
+        // Get NoteList from edgeserver
         ResponseEntity<String> edgeSlvServerResponse = edgeRestService.getRequest(edgeSlvUrl, false, accessToken);
 
         // Process only response code as success
@@ -117,7 +99,7 @@ public abstract class SLVInterfaceService {
 
                 }
             }
-        } */
+        }
     }
 
 

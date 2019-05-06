@@ -144,7 +144,7 @@
                             <archive>
                                 <manifest>
                                     <mainClass>
-                                        com.terragoedge.slvinterface.SlvInterfaceApp
+                                        com.slvinterface.main.SLVApp
                                     </mainClass>
                                 </manifest>
                             </archive>
