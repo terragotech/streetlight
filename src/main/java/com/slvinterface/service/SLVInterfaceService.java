@@ -8,18 +8,21 @@ import com.slvinterface.entity.EdgeAllMac;
 import com.slvinterface.entity.SLVSyncTable;
 import com.slvinterface.entity.SLVTransactionLogs;
 import com.slvinterface.enumeration.CallType;
-import com.slvinterface.exception.DatabaseException;
-import com.slvinterface.exception.NoValueException;
-import com.slvinterface.exception.QRCodeAlreadyUsedException;
-import com.slvinterface.exception.ReplaceOLCFailedException;
+import com.slvinterface.exception.*;
 import com.slvinterface.json.*;
 import com.slvinterface.utils.PropertiesReader;
 import com.slvinterface.utils.ResourceDetails;
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.http.HttpResponse;
+import org.apache.http.client.ClientProtocolException;
 import org.apache.log4j.Logger;
 import org.springframework.http.ResponseEntity;
 
+import java.io.BufferedReader;
 import java.io.FileReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
@@ -35,6 +38,9 @@ public abstract class SLVInterfaceService {
     Gson gson = null;
     ConditionsJson conditionsJson = null;
     Properties properties = null;
+    SLVRestService slvRestService = null;
+
+    private static int retryCount = 0;
 
 
     SLVInterfaceService() throws Exception {
@@ -42,6 +48,7 @@ public abstract class SLVInterfaceService {
         jsonParser = new JsonParser();
         queryExecutor = new QueryExecutor();
         gson = new Gson();
+        slvRestService = new SLVRestService();
         this.properties = PropertiesReader.getProperties();
     }
 
@@ -72,13 +79,26 @@ public abstract class SLVInterfaceService {
             if (noteGuidsJsonArray != null && !noteGuidsJsonArray.isJsonNull()) {
                 for (JsonElement noteGuidJson : noteGuidsJsonArray) {
                     String noteGuid = noteGuidJson.getAsString();
+                    logger.info("Current NoteGuid:"+noteGuid);
+                    try {
+                        run(noteGuid,accessToken);
+                    }catch (DatabaseException e){
+                        logger.error("Error while getting value from DB.Due to DB Error we are skipping other notes also",e);
+                        return;
+                    }catch (SLVConnectionException e){
+                        logger.error("Unable to connect with SLV Server.");
+                        return;
+                    }catch (Exception e){
+                        logger.error("Error while processing this note.NoteGuid:"+noteGuid);
+                    }
+
                 }
             }
         }
     }
 
 
-    private void run(String noteGuid, String accessToken) throws DatabaseException {
+    private void run(String noteGuid, String accessToken) throws DatabaseException,SLVConnectionException {
         try {
             SLVSyncTable slvSyncTable = queryExecutor.getSLSyncTable(noteGuid);
             if (slvSyncTable != null) {
@@ -89,11 +109,11 @@ public abstract class SLVInterfaceService {
             throw new DatabaseException(e);
         }
 
-        try {
-            SLVSyncTable slvSyncTable = new SLVSyncTable();
-            slvSyncTable.setNoteGuid(noteGuid);
-            slvSyncTable.setProcessedDateTime(System.currentTimeMillis());
+        SLVSyncTable slvSyncTable = new SLVSyncTable();
+        slvSyncTable.setNoteGuid(noteGuid);
+        slvSyncTable.setProcessedDateTime(System.currentTimeMillis());
 
+        try {
             String url = PropertiesReader.getProperties().getProperty("streetlight.edge.url.main");
 
             url = url + PropertiesReader.getProperties().getProperty("streetlight.edge.url.notes.get");
@@ -107,22 +127,82 @@ public abstract class SLVInterfaceService {
 
             // Process only response code as success
             if (responseEntity.getStatusCode().is2xxSuccessful()) {
+                logger.info("Response from edge.");
                 String notesData = responseEntity.getBody();
+                processNoteData(notesData,slvSyncTable);
             } else {
-                slvSyncTable.setErrorDetails("Unable to Get Note Details from Edge Server.");
+                slvSyncTable.setErrorDetails("Unable to Get Note Details from Edge Server and status code is:"+responseEntity.getStatusCode());
             }
 
-        } catch (Exception e) {
+        }catch (SLVConnectionException e){
+            slvSyncTable.setStatus("Failure");
+            slvSyncTable.setErrorDetails(e.getMessage());
+            throw new SLVConnectionException(e);
+        }catch (Exception e) {
+            slvSyncTable.setStatus("Failure");
+            slvSyncTable.setErrorDetails(e.getMessage());
             logger.error("Error in run", e);
+        }finally {
+            try {
+                queryExecutor.saveSLVTransactionLogs(slvSyncTable);
+            }catch (Exception e){
+                throw new DatabaseException(e);
+            }
+
         }
 
     }
 
-    private void processNoteData(String notesData, SLVSyncTable slvSyncTable) {
+    private void checkTokenValidity(SLVSyncTable slvSyncTable)throws SLVConnectionException{
+        try{
+            logger.info("Checking Token Validity.");
+            logger.info("Current RetryCount:"+retryCount);
+            DeviceEntity deviceEntity = new DeviceEntity();
+            loadDeviceValues(slvSyncTable.getNoteName(),deviceEntity);
+            return;
+        }catch (NoValueException e){
+            return;
+        }catch (Exception e){
+            retryCount = retryCount + 1;
+            logger.error("Error in checkTokenValidity",e);
+            if(retryCount > 5){
+                throw new SLVConnectionException("Unable to connect with SLV.",e);
+            }
+            try{
+                if(retryCount > 1){
+                    logger.info("Tried more that one time.So try after 30secs...");
+                    Thread.sleep(30000);
+                }
+                RestTemplate.INSTANCE.reConnect();
+                checkTokenValidity(slvSyncTable);
+            }catch (Exception e1){
+                throw new SLVConnectionException("Unable to connect with SLV.",e);
+            }
+
+        }
+    }
+
+    private void processNoteData(String notesData, SLVSyncTable slvSyncTable)throws SLVConnectionException {
         try {
             EdgeNote edgeNote = gson.fromJson(notesData, EdgeNote.class);
             populateSLVSyncTable(edgeNote, slvSyncTable);
-        } catch (Exception e) {
+            List<FormData> formDataList = getFormDataList(edgeNote);
+            if(formDataList.size() < 1){
+                slvSyncTable.setErrorDetails("Form Template is not present.");
+                slvSyncTable.setStatus("Failure");
+                logger.info("Form Template is not present.");
+                return;
+            }
+
+            retryCount = 0;
+            checkTokenValidity(slvSyncTable);
+
+            processFormData(formDataList,slvSyncTable);
+        }catch (SLVConnectionException e){
+            throw new SLVConnectionException(e);
+        }catch (Exception e) {
+            slvSyncTable.setErrorDetails(e.getMessage());
+            slvSyncTable.setStatus("Failure");
             logger.error("Error in processNoteData", e);
         }
     }
@@ -138,6 +218,7 @@ public abstract class SLVInterfaceService {
         slvSyncTable.setNoteCreatedBy(edgeNote.getCreatedBy());
         slvSyncTable.setNoteCreatedDateTime(edgeNote.getCreatedDateTime());
         slvSyncTable.setSyncTime(edgeNote.getSyncTime());
+        slvSyncTable.setParentNoteId(edgeNote.getBaseParentNoteId());
     }
 
 
@@ -215,12 +296,9 @@ public abstract class SLVInterfaceService {
         String params = StringUtils.join(paramsList, "&");
         url = url + "?" + params;
         System.out.println("Url :" + url);
-        ResponseEntity<String> response = slvRestService.getRequest(url, true, null);
-        if (response.getStatusCodeValue() == 200) {
-            String responseString = response.getBody();
-            logger.info("-------MAC Address----------");
-            logger.info(responseString);
-            logger.info("-------MAC Address End----------");
+        HttpResponse response = slvRestService.callGetMethod(url);
+        if (response.getStatusLine().getStatusCode() == 200) {
+            String responseString = slvRestService.getResponseBody(response);
             DeviceMacAddress deviceMacAddress = gson.fromJson(responseString, DeviceMacAddress.class);
             List<Value> values = deviceMacAddress.getValue();
             StringBuilder stringBuilder = new StringBuilder();
@@ -242,27 +320,27 @@ public abstract class SLVInterfaceService {
 
     }
 
-    public void loadDeviceValues(String idOnController, DeviceEntity deviceEntity) throws Exception {
-        try {
-            logger.info("loadDeviceValues called.");
-            String mainUrl = properties.getProperty("streetlight.slv.url.main");
-            String deviceUrl = properties.getProperty("streetlight.slv.url.search.device");
-            String url = mainUrl + deviceUrl;
-            List<String> paramsList = new ArrayList<>();
-            paramsList.add("attributeName=idOnController");
-            paramsList.add("attributeValue=" + idOnController);
-            paramsList.add("recurse=true");
-            paramsList.add("returnedInfo=lightDevicesList");
-            paramsList.add("attributeOperator=eq-i");
-            paramsList.add("maxResults=1");
-            paramsList.add("ser=json");
-            String params = StringUtils.join(paramsList, "&");
-            url = url + "?" + params;
-            logger.info("Load Device url :" + url);
-            ResponseEntity<String> response = restService.getRequest(url, true, null);
-            if (response.getStatusCodeValue() == 200) {
-                logger.info("LoadDevice Respose :" + response.getBody());
-                String responseString = response.getBody();
+    public void loadDeviceValues(String idOnController, DeviceEntity deviceEntity) throws NoValueException,SLVUnAuthorizeException, IOException, ClientProtocolException {
+        logger.info("loadDeviceValues called.");
+        String mainUrl = properties.getProperty("streetlight.slv.url.main");
+        String deviceUrl = properties.getProperty("streetlight.slv.url.search.device");
+        String url = mainUrl + deviceUrl;
+        List<String> paramsList = new ArrayList<>();
+        paramsList.add("attributeName=idOnController");
+        paramsList.add("attributeValue=" + idOnController);
+        paramsList.add("recurse=true");
+        paramsList.add("returnedInfo=lightDevicesList");
+        paramsList.add("attributeOperator=eq-i");
+        paramsList.add("maxResults=1");
+        paramsList.add("ser=json");
+        String params = StringUtils.join(paramsList, "&");
+        url = url + "?" + params;
+        logger.info("Load Device url :" + url);
+        HttpResponse response = slvRestService.callGetMethod(url);
+        if (response.getStatusLine().getStatusCode() == 200) {
+            String responseString = slvRestService.getResponseBody(response);
+            logger.info("LoadDevice Respose :" + responseString);
+            if(responseString != null){
                 int id = processDeviceJson(responseString);
                 logger.info("LoadDevice Id :" + id);
 
@@ -272,16 +350,20 @@ public abstract class SLVInterfaceService {
                 } else {
                     String subDeviceUrl = getDeviceUrl(id);
                     logger.info("subDevice url:" + subDeviceUrl);
-                    ResponseEntity<String> responseEntity = restService.getRequest(subDeviceUrl, true, null);
-                    if (response.getStatusCodeValue() == 200) {
-                        String deviceResponse = responseEntity.getBody();
-                        processDeviceValuesJson(deviceResponse, idOnController, deviceEntity);
+                    HttpResponse httpResponse = slvRestService.callGetMethod(subDeviceUrl);
+                    if (httpResponse.getStatusLine().getStatusCode() == 200) {
+                        String deviceResponse = slvRestService.getResponseBody(httpResponse);
+                        if(deviceResponse != null){
+                            processDeviceValuesJson(deviceResponse, idOnController, deviceEntity);
+                        }
                     }
                 }
             }
-        } catch (Exception e) {
 
-            throw new Exception(e);
+        }else if(response.getStatusLine().getStatusCode() == 403){
+            String responseString = slvRestService.getResponseBody(response);
+            logger.info("LoadDevice Respose :" + responseString);
+            throw new SLVUnAuthorizeException(responseString);
         }
     }
 
@@ -372,8 +454,8 @@ public abstract class SLVInterfaceService {
             logger.info("SetDevice method called");
             logger.info("SetDevice url:" + url);
             setSLVTransactionLogs(slvTransactionLogs, url, CallType.SET_DEVICE);
-            ResponseEntity<String> response = restService.getPostRequest(url, null);
-            String responseString = response.getBody();
+            HttpResponse response = slvRestService.callGetMethod(url);
+            String responseString =  slvRestService.getResponseBody(response);
             setResponseDetails(slvTransactionLogs, responseString);
             JsonObject replaceOlcResponse = (JsonObject) jsonParser.parse(responseString);
             errorCode = replaceOlcResponse.get("errorCode").getAsInt();
@@ -392,10 +474,10 @@ public abstract class SLVInterfaceService {
      *
      * @throws ReplaceOLCFailedException
      */
-    public void replaceOLC(String controllerStrIdValue, String idOnController, String macAddress, SLVTransactionLogs slvTransactionLogs, SlvInterfaceLogEntity slvInterfaceLogEntity)
+    public void replaceOLC(String controllerStrIdValue, String idOnController, String macAddress,SLVSyncTable slvSyncTable)
             throws ReplaceOLCFailedException {
+        SLVTransactionLogs slvTransactionLogs = getSLVTransVal(slvSyncTable);
         try {
-            // String newNetworkId = slvSyncDataEntity.getMacAddress();
             String newNetworkId = macAddress;
 
             // Get Url detail from properties
@@ -413,8 +495,8 @@ public abstract class SLVInterfaceService {
             String params = StringUtils.join(paramsList, "&");
             url = url + "?" + params;
             setSLVTransactionLogs(slvTransactionLogs, url, CallType.REPLACE_OLC);
-            ResponseEntity<String> response = restService.getPostRequest(url, null);
-            String responseString = response.getBody();
+            HttpResponse response = slvRestService.callGetMethod(url);
+            String responseString =  slvRestService.getResponseBody(response);
             setResponseDetails(slvTransactionLogs, responseString);
             JsonObject replaceOlcResponse = (JsonObject) jsonParser.parse(responseString);
             String errorStatus = replaceOlcResponse.get("status").getAsString();
@@ -426,8 +508,6 @@ public abstract class SLVInterfaceService {
             } else {
                 if (macAddress != null && !macAddress.trim().isEmpty()) {
                     createEdgeAllMac(idOnController, macAddress);
-                    logger.info("Clear device process starts.");
-                    logger.info("Clear device process End.");
                 }
 
             }
@@ -441,6 +521,15 @@ public abstract class SLVInterfaceService {
 
     }
 
+    private SLVTransactionLogs getSLVTransVal(SLVSyncTable slvSyncTable){
+        SLVTransactionLogs slvTransactionLogs = new SLVTransactionLogs();
+        slvTransactionLogs.setTitle(slvSyncTable.getNoteName());
+        slvTransactionLogs.setNoteGuid(slvSyncTable.getNoteGuid());
+        slvTransactionLogs.setCreatedDateTime(slvSyncTable.getNoteCreatedDateTime());
+        slvTransactionLogs.setParentNoteGuid(slvSyncTable.getParentNoteId());
+        return slvTransactionLogs;
+    }
+
     public int processDeviceJson(String deviceJson) {
         JsonObject jsonObject = new JsonParser().parse(deviceJson).getAsJsonObject();
         logger.info("Device request json:" + gson.toJson(jsonObject));
@@ -452,5 +541,10 @@ public abstract class SLVInterfaceService {
             return id;
         }
         return 0;
+    }
+
+
+    public void processFormData(List<FormData> formDataList, SLVSyncTable slvSyncTable){
+
     }
 }

@@ -24,7 +24,7 @@ public enum RestTemplate {
 
     HttpClient httpClient;
     HttpContext httpContext;
-    private String token;
+    String token;
     private CookieStore cookieStore;
 
     private static final Logger logger = Logger.getLogger(RestTemplate.class);
@@ -41,7 +41,7 @@ public enum RestTemplate {
         }
     }
 
-    private void reConnect()throws Exception{
+    public void reConnect()throws Exception{
         init();
         getCsrfToken();
     }
@@ -81,4 +81,6 @@ public enum RestTemplate {
             throw  new AuthenticationException("Unable to Authentication. Status code"+code);
         }
     }
+
+
 }

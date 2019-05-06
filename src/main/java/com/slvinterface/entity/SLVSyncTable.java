@@ -35,6 +35,9 @@ public class SLVSyncTable {
     @DatabaseField(columnName = "devicecreationstatus")
     private String deviceCreationStatus;
 
+    @DatabaseField(columnName = "parentnoteid")
+    private String parentNoteId;
+
     public int getId() {
         return id;
     }
@@ -131,6 +134,14 @@ public class SLVSyncTable {
         this.syncTime = syncTime;
     }
 
+    public String getParentNoteId() {
+        return parentNoteId;
+    }
+
+    public void setParentNoteId(String parentNoteId) {
+        this.parentNoteId = parentNoteId;
+    }
+
     @Override
     public String toString() {
         return "SLVSyncTable{" +
@@ -140,11 +151,13 @@ public class SLVSyncTable {
                 ", noteGuid='" + noteGuid + '\'' +
                 ", noteCreatedDateTime=" + noteCreatedDateTime +
                 ", processedDateTime=" + processedDateTime +
+                ", syncTime=" + syncTime +
                 ", status='" + status + '\'' +
                 ", selectedAction='" + selectedAction + '\'' +
                 ", errorDetails='" + errorDetails + '\'' +
                 ", macAddress='" + macAddress + '\'' +
                 ", deviceCreationStatus='" + deviceCreationStatus + '\'' +
+                ", parentNoteId='" + parentNoteId + '\'' +
                 '}';
     }
 }

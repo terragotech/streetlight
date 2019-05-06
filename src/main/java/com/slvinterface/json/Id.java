@@ -1,10 +1,12 @@
 package com.slvinterface.json;
 
+import com.slvinterface.enumeration.ValType;
+
 import java.util.Objects;
 
 public class Id {
     private Integer id;
-    private String type;
+    private ValType type;
     private boolean isRequired;
 
     public Integer getId() {
@@ -15,11 +17,11 @@ public class Id {
         this.id = id;
     }
 
-    public String getType() {
+    public ValType getType() {
         return type;
     }
 
-    public void setType(String type) {
+    public void setType(ValType type) {
         this.type = type;
     }
 
