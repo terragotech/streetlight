@@ -38,6 +38,17 @@ public class SLVSyncTable {
     @DatabaseField(columnName = "parentnoteid")
     private String parentNoteId;
 
+    @DatabaseField(columnName = "idoncontroller")
+    private String idOnController;
+
+    public String getIdOnController() {
+        return idOnController;
+    }
+
+    public void setIdOnController(String idOnController) {
+        this.idOnController = idOnController;
+    }
+
     public int getId() {
         return id;
     }
@@ -158,6 +169,7 @@ public class SLVSyncTable {
                 ", macAddress='" + macAddress + '\'' +
                 ", deviceCreationStatus='" + deviceCreationStatus + '\'' +
                 ", parentNoteId='" + parentNoteId + '\'' +
+                ", idOnController='" + idOnController + '\'' +
                 '}';
     }
 }

@@ -1,17 +1,17 @@
 {
-  "priority": [{"type":"REMOVE","order":1},{"type":"UPDATE","order":2},{"type":"NEW","order":3}],
+  "priority": [{"type":"NEW_DEVICE","order":1}],
   "deviceCreation":[{"id":19,"conditions":"EQUALS or HAS_VAL","value":""}],
   "config": [
     {
       "type": "NEW_DEVICE",
       "ids": [
         {
-          "id": 19,
+          "id": 85,
           "type": "MAC",
           "isRequired": false
         },
         {
-          "id": 20,
+          "id": 155,
           "type": "FIXTURE",
           "isRequired": true
         }
@@ -20,61 +20,6 @@
         {
           "id": 17,
           "value": "New"
-        }
-      ]
-    },
-    {
-      "type": "REPLACE_DEVICE",
-      "ids": [
-        {
-          "id": 13,
-          "type": "EXISTING_MAC",
-          "isRequired": false
-        },
-        {
-          "id": 14,
-          "type": "MAC",
-          "isRequired": true
-        },
-        {
-          "id": 15,
-          "type": "FIXTURE",
-          "isRequired": true
-        }
-      ],
-      "action": [
-        {
-          "id": 1,
-          "value": "repair"
-        },
-        {
-          "id": 16,
-          "value": "repairs"
-        }
-      ]
-    },
-    {
-      "type": "UPDATE_DEVICE",
-      "ids": [
-        {
-          "id": 18,
-          "type": "EXISTING_MAC",
-          "isRequired": true
-        },
-        {
-          "id": 20,
-          "type": "MAC",
-          "isRequired": true
-        }
-      ],
-      "action": [
-        {
-          "id": 1,
-          "value": "repair"
-        },
-        {
-          "id": 16,
-          "value": "repair node only"
         }
       ]
     }

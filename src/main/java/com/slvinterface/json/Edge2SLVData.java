@@ -5,8 +5,35 @@ import com.slvinterface.enumeration.SLVProcess;
 public class Edge2SLVData {
 
     private String title;
+    private String idOnController;
+    private String controllerStrId;
+    private String installDate;
     private String macAddress;
     private Priority priority;
+
+    public String getIdOnController() {
+        return idOnController;
+    }
+
+    public void setIdOnController(String idOnController) {
+        this.idOnController = idOnController;
+    }
+
+    public String getControllerStrId() {
+        return controllerStrId;
+    }
+
+    public void setControllerStrId(String controllerStrId) {
+        this.controllerStrId = controllerStrId;
+    }
+
+    public String getInstallDate() {
+        return installDate;
+    }
+
+    public void setInstallDate(String installDate) {
+        this.installDate = installDate;
+    }
 
     public String getTitle() {
         return title;

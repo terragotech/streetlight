@@ -1,19 +1,33 @@
 package com.slvinterface.entity;
 
+import com.j256.ormlite.field.DatabaseField;
 import com.j256.ormlite.table.DatabaseTable;
 import com.slvinterface.enumeration.CallType;
 
 @DatabaseTable(tableName = "slvtransactionlogs")
 public class SLVTransactionLogs {
 
+    @DatabaseField(generatedId = true)
+    private int id;
+    @DatabaseField(columnName = "parentnoteguid")
     private String parentNoteGuid;
+    @DatabaseField(columnName = "noteguid")
     private String noteGuid;
+    @DatabaseField(columnName = "title")
     private String title;
+    @DatabaseField(columnName = "idoncontroller")
+    private String idOnController;
+    @DatabaseField(columnName = "requestdetails")
     private String requestDetails;
+    @DatabaseField(columnName = "responsebody")
     private String responseBody;
+    @DatabaseField(columnName = "eventtime")
     private long eventTime;
+    @DatabaseField(columnName = "createddatetime")
     private long createdDateTime;
+    @DatabaseField(columnName = "typeofcall")
     private CallType typeOfCall;
+
 
     public String getParentNoteGuid() {
         return parentNoteGuid;

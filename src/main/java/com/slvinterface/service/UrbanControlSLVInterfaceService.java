@@ -1,6 +1,7 @@
 package com.slvinterface.service;
 
 import com.slvinterface.entity.SLVSyncTable;
+import com.slvinterface.entity.SLVTransactionLogs;
 import com.slvinterface.enumeration.SLVProcess;
 import com.slvinterface.exception.NoValueException;
 import com.slvinterface.exception.QRCodeAlreadyUsedException;
@@ -8,6 +9,7 @@ import com.slvinterface.exception.ReplaceOLCFailedException;
 import com.slvinterface.json.*;
 import org.apache.log4j.Logger;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class UrbanControlSLVInterfaceService extends  SLVInterfaceService{
@@ -140,6 +142,12 @@ public class UrbanControlSLVInterfaceService extends  SLVInterfaceService{
                 slvSyncTable.setSelectedAction("Replace WorkFlow");
                 replaceOLC("",slvSyncTable.getNoteName(),"",slvSyncTable);
                 replaceOLC("",slvSyncTable.getNoteName(),previousEdge2SLVData.getMacAddress(),slvSyncTable);
+
+                SLVTransactionLogs slvTransactionLogs = getSLVTransVal(slvSyncTable);
+                List<Object> paramsList = new ArrayList<>();
+                addStreetLightData("installStatus","",paramsList);
+                addStreetLightData("DimmingGroupName", "City of London 80", paramsList);
+                setDeviceValues(paramsList,slvTransactionLogs);
                 slvSyncTable.setStatus("Success");
                 break;
 
@@ -152,4 +160,7 @@ public class UrbanControlSLVInterfaceService extends  SLVInterfaceService{
 
         }
     }
+
+
+
 }

@@ -521,7 +521,7 @@ public abstract class SLVInterfaceService {
 
     }
 
-    private SLVTransactionLogs getSLVTransVal(SLVSyncTable slvSyncTable){
+    public SLVTransactionLogs getSLVTransVal(SLVSyncTable slvSyncTable){
         SLVTransactionLogs slvTransactionLogs = new SLVTransactionLogs();
         slvTransactionLogs.setTitle(slvSyncTable.getNoteName());
         slvTransactionLogs.setNoteGuid(slvSyncTable.getNoteGuid());
@@ -546,5 +546,11 @@ public abstract class SLVInterfaceService {
 
     public void processFormData(List<FormData> formDataList, SLVSyncTable slvSyncTable){
 
+    }
+
+
+    protected void addStreetLightData(String key, String value, List<Object> paramsList) {
+        paramsList.add("valueName=" + key.trim());
+        paramsList.add("value=" + value.trim());
     }
 }
