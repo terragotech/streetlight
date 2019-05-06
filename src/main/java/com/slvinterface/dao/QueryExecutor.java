@@ -20,69 +20,73 @@ public class QueryExecutor {
     public Dao<SLVTransactionLogs, String> slvTransactionLogsDao = null;
 
 
-    public  QueryExecutor()throws Exception{
+    public QueryExecutor() throws Exception {
         initTable();
         initDao();
     }
 
 
-    private void initDao()throws Exception{
+    private void initDao() throws Exception {
         edgeAllMacsDao = DaoManager.createDao(connectionSource, EdgeAllMac.class);
         slvSyncTablesDao = DaoManager.createDao(connectionSource, SLVSyncTable.class);
         slvTransactionLogsDao = DaoManager.createDao(connectionSource, SLVTransactionLogs.class);
     }
 
 
-    private void initTable(){
+    private void initTable() {
         try {
             TableUtils.createTableIfNotExists(connectionSource, EdgeAllMac.class);
-        }catch (Exception e){
+        } catch (Exception e) {
             //  e.printStackTrace();
         }
 
         try {
             TableUtils.createTableIfNotExists(connectionSource, SLVSyncTable.class);
-        }catch (Exception e){
+        } catch (Exception e) {
             //  e.printStackTrace();
         }
 
         try {
             TableUtils.createTableIfNotExists(connectionSource, SLVTransactionLogs.class);
-        }catch (Exception e){
+        } catch (Exception e) {
             //  e.printStackTrace();
         }
 
     }
 
 
-    public void saveEdgeAllMac(EdgeAllMac edgeAllMac)throws Exception{
+    public void saveEdgeAllMac(EdgeAllMac edgeAllMac) throws Exception {
         edgeAllMacsDao.create(edgeAllMac);
     }
 
 
-    public EdgeAllMac getEdgeAllMac(String title,String macAddress) throws Exception{
-       return edgeAllMacsDao.queryBuilder().where().eq(EdgeAllMac.TITLE,title).and().eq(EdgeAllMac.MAC_ADDRESS,macAddress).queryForFirst();
+    public EdgeAllMac getEdgeAllMac(String title, String macAddress) throws Exception {
+        return edgeAllMacsDao.queryBuilder().where().eq(EdgeAllMac.TITLE, title).and().eq(EdgeAllMac.MAC_ADDRESS, macAddress).queryForFirst();
     }
 
 
-    public boolean isExistMacAddress(String idOncontroller, String macaddress) throws Exception{
-        EdgeAllMac edgeAllMac = getEdgeAllMac(idOncontroller,macaddress.toUpperCase());
+    public boolean isExistMacAddress(String idOncontroller, String macaddress) throws Exception {
+        EdgeAllMac edgeAllMac = getEdgeAllMac(idOncontroller, macaddress.toUpperCase());
         return edgeAllMac != null;
     }
 
 
-    public void saveSLVTransactionLogs(SLVTransactionLogs slvTransactionLogs)throws  Exception{
-        slvTransactionLogsDao.create(slvTransactionLogs);
+    public void saveSLVTransactionLogs(SLVTransactionLogs slvTransactionLogs) {
+        try {
+            slvTransactionLogsDao.create(slvTransactionLogs);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
 
-    public void saveSLVTransactionLogs(SLVSyncTable slvSyncTable)throws  Exception{
+    public void saveSLVTransactionLogs(SLVSyncTable slvSyncTable) throws Exception {
         slvSyncTablesDao.create(slvSyncTable);
     }
 
 
-    public SLVSyncTable getSLSyncTable(String noteGuid)throws Exception{
-       return slvSyncTablesDao.queryBuilder().where().eq(SLVSyncTable.NOTE_GUID,noteGuid).queryForFirst();
+    public SLVSyncTable getSLSyncTable(String noteGuid) throws Exception {
+        return slvSyncTablesDao.queryBuilder().where().eq(SLVSyncTable.NOTE_GUID, noteGuid).queryForFirst();
     }
 
 }
