@@ -9,6 +9,7 @@ import com.terragoedge.streetlight.edgeinterface.SlvData;
 import com.terragoedge.streetlight.edgeinterface.SlvToEdgeService;
 import com.terragoedge.streetlight.json.model.ContextList;
 import com.terragoedge.streetlight.json.model.CslpDate;
+import com.terragoedge.streetlight.json.model.SLVTransactionLogs;
 import com.terragoedge.streetlight.json.model.SlvInterfaceLogEntity;
 import com.terragoedge.streetlight.logging.InstallMaintenanceLogModel;
 import com.terragoedge.streetlight.logging.LoggingModel;
@@ -121,7 +122,7 @@ public class StreetlightChicagoService extends AbstractProcessor {
 
 
 
-        String edgeSlvUrl = "https://amerescousa.terragoedge.com/edgeSlvServer/notesGuid?lastSyncTime=";
+        String edgeSlvUrl = "httpss://amerescousa.terragoedge.com/edgeSlvServer/notesGuid?lastSyncTime=";
 
         long lastSynctime = streetlightDao.getLastSyncTime();
         if(lastSynctime > 0){
@@ -167,6 +168,8 @@ public class StreetlightChicagoService extends AbstractProcessor {
                                logger.info("rest service data:" + notesData);
                                EdgeNote edgeNote = gson.fromJson(notesData, EdgeNote.class);
                                if (!edgeNote.getCreatedBy().contains("admin") && !edgeNote.getCreatedBy().contains("slvinterface")) {
+
+                                   boolean isDroppedPinWorkFlow = isDroppedPinNote(edgeNote,droppedPinTag);
                                    InstallMaintenanceLogModel installMaintenanceLogModel = new InstallMaintenanceLogModel();
 
                                    installMaintenanceLogModel.setProcessedNoteId(edgeNote.getNoteGuid());
@@ -180,11 +183,38 @@ public class StreetlightChicagoService extends AbstractProcessor {
                                    slvInterfaceLogEntity.setIdOnController(edgeNote.getTitle());
                                    slvInterfaceLogEntity.setCreateddatetime(System.currentTimeMillis());
                                    slvInterfaceLogEntity.setResync(false);
-                                   installationMaintenanceProcessor.processNewAction(edgeNote, installMaintenanceLogModel, false, null,slvInterfaceLogEntity);
-                                   //updateSlvStatusToEdge(installMaintenanceLogModel, edgeNote);
-                                   LoggingModel loggingModel = installMaintenanceLogModel;
-                                   streetlightDao.insertProcessedNotes(loggingModel, installMaintenanceLogModel);
-                                   connectionDAO.saveSlvInterfaceLog(slvInterfaceLogEntity);
+                                   String utilLocId = null;
+                                   if(isDroppedPinWorkFlow){
+                                       utilLocId = "5"+edgeNote.getTitle();
+                                   }
+                                   boolean isDeviceCreated = false;
+                                   if(isDroppedPinWorkFlow) {
+                                       SLVTransactionLogs slvTransactionLogs = getSLVTransactionLogs(installMaintenanceLogModel);
+                                       String idOnController = edgeNote.getTitle();
+                                       boolean isdevicePresent = isDevicePresent(slvTransactionLogs, idOnController);
+                                       if (!isdevicePresent) {
+                                           int geozoneid = checkAndCreateGeoZone(edgeNote.getEdgeNotebook().getNotebookName(),slvTransactionLogs);
+                                           if(geozoneid == -1){
+                                               isDeviceCreated = false;
+                                           }else{
+                                               int deviceId = createDevice(slvTransactionLogs,edgeNote,geozoneid);
+                                               if(deviceId == -1){
+                                                   isDeviceCreated = false;
+                                               }else{
+                                                   isDeviceCreated = true;
+                                               }
+                                           }
+                                       }else{
+                                           isDeviceCreated = false;
+                                       }
+                                   }
+                                   if(!isDroppedPinWorkFlow || (isDroppedPinWorkFlow && isDeviceCreated)) {
+                                       installationMaintenanceProcessor.processNewAction(edgeNote, installMaintenanceLogModel, false, utilLocId, slvInterfaceLogEntity, isDroppedPinWorkFlow);
+                                       //updateSlvStatusToEdge(installMaintenanceLogModel, edgeNote);
+                                       LoggingModel loggingModel = installMaintenanceLogModel;
+                                       streetlightDao.insertProcessedNotes(loggingModel, installMaintenanceLogModel);
+                                       connectionDAO.saveSlvInterfaceLog(slvInterfaceLogEntity);
+                                   }
                                }
                            }catch (Exception e){
                                 logger.error("Error in run",e);
@@ -214,5 +244,7 @@ public class StreetlightChicagoService extends AbstractProcessor {
         cal.set(Calendar.MILLISECOND, 0);
         return dateFormat.format(cal.getTime());
     }
+
+
     // http://192.168.1.9:8080/edgeServer/oauth/token?grant_type=password&username=admin&password=admin&client_id=edgerestapp
 }

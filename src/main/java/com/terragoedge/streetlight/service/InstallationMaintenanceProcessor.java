@@ -147,7 +147,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
         }
     }
 
-    public void processNewAction(EdgeNote edgeNote, InstallMaintenanceLogModel installMaintenanceLogModel, boolean isReSync, String utilLocId, SlvInterfaceLogEntity slvInterfaceLogEntity) {
+    public void processNewAction(EdgeNote edgeNote, InstallMaintenanceLogModel installMaintenanceLogModel, boolean isReSync, String utilLocId, SlvInterfaceLogEntity slvInterfaceLogEntity,boolean isdroppedPinNote) {
         slvInterfaceLogEntity.setParentnoteid((edgeNote.getBaseParentNoteId() == null) ? edgeNote.getNoteGuid() : edgeNote.getBaseParentNoteId());
         logger.info("processNewAction");
         slvInterfaceLogEntity.setIdOnController(edgeNote.getTitle());
@@ -1238,7 +1238,8 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
             loadDefaultVal(edgeNote, installMaintenanceLogModel);
             loadDeviceValues(installMaintenanceLogModel.getIdOnController(), installMaintenanceLogModel);
             logger.info("going to call processnew action");
-            processNewAction(edgeNote, installMaintenanceLogModel, isResync, utilLocId, slvInterfaceLogEntity);
+            boolean isDroppedPinWorkFlow = isDroppedPinNote(edgeNote,droppedPinTag);
+            processNewAction(edgeNote, installMaintenanceLogModel, isResync, utilLocId, slvInterfaceLogEntity,false);
 
             //updateSlvStatusToEdge(installMaintenanceLogModel, edgeNote);
             LoggingModel loggingModel = installMaintenanceLogModel;

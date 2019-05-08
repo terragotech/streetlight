@@ -3,6 +3,7 @@ package com.terragoedge.streetlight.service;
 import com.google.gson.*;
 import com.terragoedge.edgeserver.*;
 import com.terragoedge.streetlight.PropertiesReader;
+import com.terragoedge.streetlight.Utils;
 import com.terragoedge.streetlight.dao.ConnectionDAO;
 import com.terragoedge.streetlight.dao.StreetlightDao;
 import com.terragoedge.streetlight.enumeration.CallType;
@@ -36,6 +37,7 @@ public abstract class AbstractProcessor {
     WeakHashMap<String, String> contextListHashMap = new WeakHashMap<>();
     HashMap<String, CslpDate> cslpDateHashMap = new HashMap<>();
     HashMap<String, String> macHashMap = new HashMap<>();
+    protected String droppedPinTag;
 
     public AbstractProcessor() {
         this.connectionDAO = ConnectionDAO.INSTANCE;
@@ -44,6 +46,7 @@ public abstract class AbstractProcessor {
         this.properties = PropertiesReader.getProperties();
         this.gson = new Gson();
         this.jsonParser = new JsonParser();
+        droppedPinTag = properties.getProperty("com.droppedpin.tag");
     }
 
     protected String value(List<EdgeFormData> edgeFormDatas, String key) throws NoValueException {
@@ -384,7 +387,6 @@ public abstract class AbstractProcessor {
             installStatus = "Installed";
         }
 
-
         if (utilLocId != null) {
             addStreetLightData("location.utillocationid", utilLocId, paramsList);
         }
@@ -568,7 +570,168 @@ public abstract class AbstractProcessor {
 
         return errorCode;
     }
+    protected int checkAndCreateGeoZone(String geozone, SLVTransactionLogs slvTransactionLogs) {
+        int geozoneId = -1;
+        try {
+            String rootGeoZone = properties.getProperty("com.slv.root.geozone");
+            String mainUrl = properties.getProperty("streetlight.slv.url.main");
+            String searchGeoZone = properties.getProperty("com.slv.search.devices.url");
+            String url = mainUrl + searchGeoZone;
+            List<String> paramsList = new ArrayList<>();
+            paramsList.add("ser=json");
+            paramsList.add("name="+geozone);
+            paramsList.add("partialMatch=false");
+            String params = StringUtils.join(paramsList, "&");
+            url = url + "?" + params;
+            logger.info("checkAndCreateGeoZone method called");
+            logger.info("checkAndCreateGeoZone url:" + url);
+            setSLVTransactionLogs(slvTransactionLogs, url, CallType.SEARCH_GEOZONE);
+            ResponseEntity<String> response = restService.getPostRequest(url, null);
+            String responseString = response.getBody();
+            setResponseDetails(slvTransactionLogs, responseString);
+            JsonArray jsonArray = jsonParser.parse(responseString).getAsJsonArray();
+                if(jsonArray != null && jsonArray.size() > 0){
+                for(JsonElement jsonElement : jsonArray){
+                    JsonObject jsonObject = (JsonObject) jsonElement;
+                    if(jsonObject.get("namesPath").getAsString().equals(rootGeoZone+geozone)){
+                        geozoneId = jsonObject.get("id").getAsInt();
+                    }
+                }
+            }
+            if(geozoneId == 0){// no geozone present.so create geozone
+                geozoneId = createGeoZone(geozone,slvTransactionLogs);
+            }
+        } catch (Exception e) {
+            setResponseDetails(slvTransactionLogs, "Error in checkAndCreateGeoZone:" + e.getMessage());
+            logger.error("Error in checkAndCreateGeoZone", e);
+        } finally {
+            streetlightDao.insertTransactionLogs(slvTransactionLogs);
+        }
 
+        return geozoneId;
+    }
+
+
+    protected int createGeoZone(String geozone, SLVTransactionLogs slvTransactionLogs) {
+        int geozoneId = -1;
+        try {
+            String rootGeoZoneId = properties.getProperty("com.slv.root.geozone.id");
+            String mainUrl = properties.getProperty("streetlight.slv.url.main");
+            String latMin = properties.getProperty("com.slv.lat.min");
+            String latMax = properties.getProperty("com.slv.lat.max");
+            String lngMin = properties.getProperty("com.slv.lng.min");
+            String lngMax = properties.getProperty("com.slv.lng.max");
+            String createGeoZone = properties.getProperty("com.slv.create.geozone.url");
+            String url = mainUrl + createGeoZone;
+            List<String> paramsList = new ArrayList<>();
+            paramsList.add("ser=json");
+            paramsList.add("name="+geozone);
+            paramsList.add("parentId="+rootGeoZoneId);
+            paramsList.add("latMax="+latMax);
+            paramsList.add("latMin="+latMin);
+            paramsList.add("lngMax="+lngMax);
+            paramsList.add("lngMin="+lngMin);
+            String params = StringUtils.join(paramsList, "&");
+            url = url + "?" + params;
+            logger.info("createGeoZone method called");
+            logger.info("createGeoZone url:" + url);
+            setSLVTransactionLogs(slvTransactionLogs, url, CallType.CREATE_GEOZONE);
+            ResponseEntity<String> response = restService.getPostRequest(url, null);
+            String responseString = response.getBody();
+            setResponseDetails(slvTransactionLogs, responseString);
+            JsonObject createGeozoneResponse = (JsonObject) jsonParser.parse(responseString);
+            geozoneId = createGeozoneResponse.get("id").getAsInt();
+        } catch (Exception e) {
+            setResponseDetails(slvTransactionLogs, "Error in createGeoZone:" + e.getMessage());
+            logger.error("Error in createGeoZone", e);
+        } finally {
+            streetlightDao.insertTransactionLogs(slvTransactionLogs);
+        }
+
+        return geozoneId;
+    }
+    protected int createDevice(SLVTransactionLogs slvTransactionLogs,EdgeNote edgeNote,int geoZoneId){
+        int deviceId = -1;
+        try {
+            String mainUrl = properties.getProperty("streetlight.slv.url.main");
+            String createDeviceMethodName = properties.getProperty("com.slv.create.device.url");
+            String controllerStrId = properties.getProperty("streetlight.slv.controllerstrid");
+            String url = mainUrl + createDeviceMethodName;
+            List<String> paramsList = new ArrayList<>();
+            EdgeNotebook edgeNotebook = edgeNote.getEdgeNotebook();
+            String atlasPage = Utils.getAtlasPage(edgeNotebook.getNotebookName());
+
+            String atlasGroup = Utils.getAtlasGroup("");
+
+            String fixtureCode = Utils.getFixtureCode("");
+            String fixtureName = atlasPage+"-"+atlasGroup+"-"+edgeNote.getTitle()+"-"+fixtureCode;
+            paramsList.add("ser=json");
+            paramsList.add("userName="+fixtureName);
+            paramsList.add("categoryStrId=json");
+            paramsList.add("geozoneId="+geoZoneId);
+            paramsList.add("controllerStrId="+controllerStrId);
+            paramsList.add("idOnController="+edgeNote.getTitle());
+            paramsList.add("lat=json");
+            paramsList.add("lng=json");
+            String params = StringUtils.join(paramsList, "&");
+            url = url + "?" + params;
+            logger.info("createDevice method called");
+            logger.info("createDevice url:" + url);
+            setSLVTransactionLogs(slvTransactionLogs, url, CallType.CREATE_DEVICE);
+            ResponseEntity<String> response = restService.getPostRequest(url, null);
+            String responseString = response.getBody();
+            setResponseDetails(slvTransactionLogs, responseString);
+            JsonObject replaceOlcResponse = (JsonObject) jsonParser.parse(responseString);
+            deviceId = replaceOlcResponse.get("id").getAsInt();
+        } catch (Exception e) {
+            setResponseDetails(slvTransactionLogs, "Error in createDevice:" + e.getMessage());
+            logger.error("Error in createDevice", e);
+        } finally {
+            streetlightDao.insertTransactionLogs(slvTransactionLogs);
+        }
+
+        return deviceId;
+    }
+
+    protected boolean isDevicePresent(SLVTransactionLogs slvTransactionLogs,String deviceName){
+        boolean isDevicePresent = false;
+        try {
+            String mainUrl = properties.getProperty("streetlight.slv.url.main");
+            String searchDeviceMethodName = properties.getProperty("com.slv.search.device");
+            int firstGeoZoneId = Integer.valueOf(properties.getProperty("com.slv.first.geozone.id"));
+            String url = mainUrl + searchDeviceMethodName;
+            List<String> paramsList = new ArrayList<>();
+
+            paramsList.add("ser=json");
+            paramsList.add("geozoneId="+firstGeoZoneId);
+            paramsList.add("recurse=true");
+            paramsList.add("returnedInfo=lightDevicesList");
+            paramsList.add("attributeName=name");
+            paramsList.add("attributeValue="+deviceName);
+            paramsList.add("maxResults=1");
+            paramsList.add("attributeOperator=eq");
+            String params = StringUtils.join(paramsList, "&");
+            url = url + "?" + params;
+            logger.info("isDevicePresent method called");
+            logger.info("isDevicePresent url:" + url);
+            setSLVTransactionLogs(slvTransactionLogs, url, CallType.SEARCH_DEVICE);
+            ResponseEntity<String> response = restService.getPostRequest(url, null);
+            String responseString = response.getBody();
+            setResponseDetails(slvTransactionLogs, responseString);
+            JsonObject searchDeviceResponse = (JsonObject) jsonParser.parse(responseString);
+            JsonArray jsonArray = searchDeviceResponse.get("value").getAsJsonArray();
+            if(jsonArray != null && jsonArray.size() > 0){
+                isDevicePresent = true;
+            }
+        } catch (Exception e) {
+            setResponseDetails(slvTransactionLogs, "Error in isDevicePresent:" + e.getMessage());
+            logger.error("Error in isDevicePresent", e);
+        } finally {
+            streetlightDao.insertTransactionLogs(slvTransactionLogs);
+        }
+
+        return isDevicePresent;
+    }
     private void setSLVTransactionLogs(SLVTransactionLogs slvTransactionLogs, String request, CallType callType) {
         slvTransactionLogs.setRequestDetails(request);
         slvTransactionLogs.setTypeOfCall(callType);
@@ -835,6 +998,13 @@ public abstract class AbstractProcessor {
         }
         return null;
     }
-
+    protected Boolean isDroppedPinNote(EdgeNote edgeNote,String droppedPinTag){
+        List<String> tags = edgeNote.getTags();
+        boolean isDroppedPinWorkFlow = false;
+        if(tags.contains(droppedPinTag)){
+            isDroppedPinWorkFlow = true;
+        }
+        return isDroppedPinWorkFlow;
+    }
 
 }
