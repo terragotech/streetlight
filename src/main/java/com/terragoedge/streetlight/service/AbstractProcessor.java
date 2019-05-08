@@ -570,7 +570,7 @@ public abstract class AbstractProcessor {
 
         return errorCode;
     }
-    protected int checkAndCreateGeoZone(String geozone, SLVTransactionLogs slvTransactionLogs) {
+    protected int checkGeoZone(String geozone, SLVTransactionLogs slvTransactionLogs) {
         int geozoneId = -1;
         try {
             String rootGeoZone = properties.getProperty("com.slv.root.geozone");
@@ -598,9 +598,6 @@ public abstract class AbstractProcessor {
                     }
                 }
             }
-            if(geozoneId == 0){// no geozone present.so create geozone
-                geozoneId = createGeoZone(geozone,slvTransactionLogs);
-            }
         } catch (Exception e) {
             setResponseDetails(slvTransactionLogs, "Error in checkAndCreateGeoZone:" + e.getMessage());
             logger.error("Error in checkAndCreateGeoZone", e);
@@ -611,51 +608,13 @@ public abstract class AbstractProcessor {
         return geozoneId;
     }
 
-
-    protected int createGeoZone(String geozone, SLVTransactionLogs slvTransactionLogs) {
-        int geozoneId = -1;
-        try {
-            String rootGeoZoneId = properties.getProperty("com.slv.root.geozone.id");
-            String mainUrl = properties.getProperty("streetlight.slv.url.main");
-            String latMin = properties.getProperty("com.slv.lat.min");
-            String latMax = properties.getProperty("com.slv.lat.max");
-            String lngMin = properties.getProperty("com.slv.lng.min");
-            String lngMax = properties.getProperty("com.slv.lng.max");
-            String createGeoZone = properties.getProperty("com.slv.create.geozone.url");
-            String url = mainUrl + createGeoZone;
-            List<String> paramsList = new ArrayList<>();
-            paramsList.add("ser=json");
-            paramsList.add("name="+geozone);
-            paramsList.add("parentId="+rootGeoZoneId);
-            paramsList.add("latMax="+latMax);
-            paramsList.add("latMin="+latMin);
-            paramsList.add("lngMax="+lngMax);
-            paramsList.add("lngMin="+lngMin);
-            String params = StringUtils.join(paramsList, "&");
-            url = url + "?" + params;
-            logger.info("createGeoZone method called");
-            logger.info("createGeoZone url:" + url);
-            setSLVTransactionLogs(slvTransactionLogs, url, CallType.CREATE_GEOZONE);
-            ResponseEntity<String> response = restService.getPostRequest(url, null);
-            String responseString = response.getBody();
-            setResponseDetails(slvTransactionLogs, responseString);
-            JsonObject createGeozoneResponse = (JsonObject) jsonParser.parse(responseString);
-            geozoneId = createGeozoneResponse.get("id").getAsInt();
-        } catch (Exception e) {
-            setResponseDetails(slvTransactionLogs, "Error in createGeoZone:" + e.getMessage());
-            logger.error("Error in createGeoZone", e);
-        } finally {
-            streetlightDao.insertTransactionLogs(slvTransactionLogs);
-        }
-
-        return geozoneId;
-    }
     protected int createDevice(SLVTransactionLogs slvTransactionLogs,EdgeNote edgeNote,int geoZoneId){
         int deviceId = -1;
         try {
             String mainUrl = properties.getProperty("streetlight.slv.url.main");
             String createDeviceMethodName = properties.getProperty("com.slv.create.device.url");
             String controllerStrId = properties.getProperty("streetlight.slv.controllerstrid");
+            String categoryStrId = properties.getProperty("com.slv.categorystr.id");
             String url = mainUrl + createDeviceMethodName;
             List<String> paramsList = new ArrayList<>();
             EdgeNotebook edgeNotebook = edgeNote.getEdgeNotebook();
@@ -665,14 +624,17 @@ public abstract class AbstractProcessor {
 
             String fixtureCode = Utils.getFixtureCode("");
             String fixtureName = atlasPage+"-"+atlasGroup+"-"+edgeNote.getTitle()+"-"+fixtureCode;
+            String geometry = edgeNote.getGeometry();
+            JsonObject geometryObject = jsonParser.parse(geometry).getAsJsonObject();
+            JsonArray latlngs = geometryObject.get("coordinates").getAsJsonArray();
             paramsList.add("ser=json");
             paramsList.add("userName="+fixtureName);
-            paramsList.add("categoryStrId=json");
+            paramsList.add("categoryStrId="+categoryStrId);
             paramsList.add("geozoneId="+geoZoneId);
             paramsList.add("controllerStrId="+controllerStrId);
             paramsList.add("idOnController="+edgeNote.getTitle());
-            paramsList.add("lat=json");
-            paramsList.add("lng=json");
+            paramsList.add("lat="+latlngs.get(1));
+            paramsList.add("lng="+latlngs.get(0));
             String params = StringUtils.join(paramsList, "&");
             url = url + "?" + params;
             logger.info("createDevice method called");

@@ -193,12 +193,16 @@ public class StreetlightChicagoService extends AbstractProcessor {
                                        String idOnController = edgeNote.getTitle();
                                        boolean isdevicePresent = isDevicePresent(slvTransactionLogs, idOnController);
                                        if (!isdevicePresent) {
-                                           int geozoneid = checkAndCreateGeoZone(edgeNote.getEdgeNotebook().getNotebookName(),slvTransactionLogs);
+                                           int geozoneid = checkGeoZone(edgeNote.getEdgeNotebook().getNotebookName(),slvTransactionLogs);
                                            if(geozoneid == -1){
+                                               slvInterfaceLogEntity.setStatus(MessageConstants.ERROR);
+                                               slvInterfaceLogEntity.setErrordetails("no geozone present with this name: "+edgeNote.getEdgeNotebook().getNotebookName()+" in the path of"+properties.getProperty("com.slv.root.geozone"));
                                                isDeviceCreated = false;
                                            }else{
                                                int deviceId = createDevice(slvTransactionLogs,edgeNote,geozoneid);
                                                if(deviceId == -1){
+                                                   slvInterfaceLogEntity.setStatus(MessageConstants.ERROR);
+                                                   slvInterfaceLogEntity.setErrordetails("Not able to create device: "+edgeNote.getTitle());
                                                    isDeviceCreated = false;
                                                }else{
                                                    isDeviceCreated = true;
@@ -207,6 +211,9 @@ public class StreetlightChicagoService extends AbstractProcessor {
                                        }else{
                                            isDeviceCreated = false;
                                        }
+                                   }
+                                   if(isDroppedPinWorkFlow && !isDeviceCreated){
+
                                    }
                                    if(!isDroppedPinWorkFlow || (isDroppedPinWorkFlow && isDeviceCreated)) {
                                        installationMaintenanceProcessor.processNewAction(edgeNote, installMaintenanceLogModel, false, utilLocId, slvInterfaceLogEntity, isDroppedPinWorkFlow);
