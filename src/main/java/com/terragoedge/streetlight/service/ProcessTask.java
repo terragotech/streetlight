@@ -142,8 +142,8 @@ public class ProcessTask extends FailureAbstractService implements Runnable {
         JsonObject edgeNoteJsonObject = processEdgeForms(gson.toJson(edgeNote), edgeFormDatas, formTemplateGuid);
         String newNoteGuid = edgeNoteJsonObject.get("noteGuid").getAsString();
         if (failureReportModel.isOutage()) {
-            edgeNoteJsonObject.remove("dictionary");
-            setGroupValue(outageLayerGuid, edgeNoteJsonObject);
+           // edgeNoteJsonObject.remove("dictionary");
+           // setGroupValue(outageLayerGuid, edgeNoteJsonObject);
         } else if (failureReportModel.isComplete()) {
             edgeNoteJsonObject.remove("dictionary");
             setGroupValue(completeLayerGuid, edgeNoteJsonObject);
