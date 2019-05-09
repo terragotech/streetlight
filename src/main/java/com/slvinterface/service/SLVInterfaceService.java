@@ -25,9 +25,8 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.lang.reflect.Type;
 import java.net.URLEncoder;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Properties;
+import java.text.SimpleDateFormat;
+import java.util.*;
 
 public abstract class SLVInterfaceService {
 
@@ -466,7 +465,6 @@ public abstract class SLVInterfaceService {
             setResponseDetails(slvTransactionLogs, responseString);
             JsonObject replaceOlcResponse = (JsonObject) jsonParser.parse(responseString);
             String errorStatus = replaceOlcResponse.get("status").getAsString();
-            errorStatus = "Success";
             logger.info("Replace OLC Process End.");
             // As per doc, errorcode is 0 for success. Otherwise, its not success.
             if (errorStatus.equals("ERROR")) {
@@ -519,5 +517,20 @@ public abstract class SLVInterfaceService {
     protected void addStreetLightData(String key, String value, List<Object> paramsList) {
         paramsList.add("valueName=" + key.trim());
         paramsList.add("value=" + value.trim());
+    }
+
+
+    public void loadVal( List<Object> paramsList,Edge2SLVData previousEdge2SLVData){
+        paramsList.add("idOnController=" + previousEdge2SLVData.getIdOnController());
+        paramsList.add("controllerStrId="+previousEdge2SLVData.getControllerStrId());
+    }
+
+
+    protected String dateFormat(Long dateTime) {
+        Date date = new Date(Long.valueOf(dateTime));
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+        dateFormat.setTimeZone(TimeZone.getTimeZone("GMT"));
+        String dff = dateFormat.format(date);
+        return dff;
     }
 }

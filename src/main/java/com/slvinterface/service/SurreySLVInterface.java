@@ -17,7 +17,7 @@ import java.util.List;
 import java.util.TimeZone;
 
 public class SurreySLVInterface extends  SLVInterfaceService {
-    private static final Logger logger = Logger.getLogger(UrbanControlSLVInterfaceService.class);
+    private static final Logger logger = Logger.getLogger(SurreySLVInterface.class);
 
     public SurreySLVInterface()throws Exception{
         super();
@@ -63,12 +63,12 @@ public class SurreySLVInterface extends  SLVInterfaceService {
                 slvSync(slvSyncTable,previousEdge2SLVData);
             }catch (SLVConnectionException e){
                 throw new SLVConnectionException(e);
-            }/*catch (QRCodeAlreadyUsedException e){
+            }catch (QRCodeAlreadyUsedException e){
                 slvSyncTable.setStatus("Failure");
                 slvSyncTable.setErrorDetails(e.getMessage());
                 logger.info("MAC Address is Empty. So Note is not synced.");
                 return;
-            }*/catch (ReplaceOLCFailedException e){
+            }catch (ReplaceOLCFailedException e){
                 slvSyncTable.setStatus("Failure");
                 slvSyncTable.setErrorDetails("Error while during replaceOLC Call.");
                 logger.error("Error while during replaceOLC Call.",e);
@@ -169,17 +169,15 @@ public class SurreySLVInterface extends  SLVInterfaceService {
             case UPDATE_DEVICE:
                 slvSyncTable.setSelectedAction("Replace WorkFlow");
                 replaceOLC(previousEdge2SLVData.getControllerStrId(),previousEdge2SLVData.getIdOnController(),"",slvSyncTable);
-                replaceOLC(previousEdge2SLVData.getControllerStrId(),previousEdge2SLVData.getIdOnController(),previousEdge2SLVData.getMacAddress(),slvSyncTable);
-
                 setDeviceVal(slvSyncTable,previousEdge2SLVData);
+                replaceOLC(previousEdge2SLVData.getControllerStrId(),previousEdge2SLVData.getIdOnController(),previousEdge2SLVData.getMacAddress(),slvSyncTable);
                 slvSyncTable.setStatus("Success");
                 break;
 
             case NEW_DEVICE:
                 slvSyncTable.setSelectedAction("Install WorkFlow");
-                replaceOLC(previousEdge2SLVData.getControllerStrId(),previousEdge2SLVData.getIdOnController(),previousEdge2SLVData.getMacAddress(),slvSyncTable);
-
                 setDeviceVal(slvSyncTable,previousEdge2SLVData);
+                replaceOLC(previousEdge2SLVData.getControllerStrId(),previousEdge2SLVData.getIdOnController(),previousEdge2SLVData.getMacAddress(),slvSyncTable);
                 slvSyncTable.setStatus("Success");
                 break;
 
@@ -195,6 +193,7 @@ public class SurreySLVInterface extends  SLVInterfaceService {
         addStreetLightData("installStatus","Installed",paramsList);
         addStreetLightData("MacAddress",previousEdge2SLVData.getMacAddress(),paramsList);
         addStreetLightData("install.date",previousEdge2SLVData.getInstallDate(),paramsList);
+
         String slvCalender = "Surrey 100-50-off-50";
         try {
             slvCalender =  URLEncoder.encode(slvCalender,"UTF-8");
@@ -203,23 +202,17 @@ public class SurreySLVInterface extends  SLVInterfaceService {
             e.printStackTrace();
         }
 
+        String modelFunctionId = "talq.streetlight.v1:lightNodeFunction6";
+
+        try {
+            modelFunctionId =  URLEncoder.encode(modelFunctionId,"UTF-8");
+            addStreetLightData("modelfunctionid",modelFunctionId,paramsList);
+           // addStreetLightData("nodeTypeStrId", modelFunctionId,paramsList);
+        }catch (Exception e){
+            e.printStackTrace();
+        }
 
         setDeviceValues(paramsList,slvTransactionLogs);
-    }
-
-
-    private void loadVal( List<Object> paramsList,Edge2SLVData previousEdge2SLVData){
-        paramsList.add("idOnController=" + previousEdge2SLVData.getIdOnController());
-        paramsList.add("controllerStrId="+previousEdge2SLVData.getControllerStrId());
-    }
-
-
-    protected String dateFormat(Long dateTime) {
-        Date date = new Date(Long.valueOf(dateTime));
-        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
-        dateFormat.setTimeZone(TimeZone.getTimeZone("GMT"));
-        String dff = dateFormat.format(date);
-        return dff;
     }
 
 }

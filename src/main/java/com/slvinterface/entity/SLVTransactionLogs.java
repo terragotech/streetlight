@@ -1,5 +1,6 @@
 package com.slvinterface.entity;
 
+import com.j256.ormlite.field.DataType;
 import com.j256.ormlite.field.DatabaseField;
 import com.j256.ormlite.table.DatabaseTable;
 import com.slvinterface.enumeration.CallType;
@@ -17,9 +18,9 @@ public class SLVTransactionLogs {
     private String title;
     @DatabaseField(columnName = "idoncontroller")
     private String idOnController;
-    @DatabaseField(columnName = "requestdetails")
+    @DatabaseField(columnName = "requestdetails",dataType = DataType.LONG_STRING)
     private String requestDetails;
-    @DatabaseField(columnName = "responsebody")
+    @DatabaseField(columnName = "responsebody",dataType = DataType.LONG_STRING)
     private String responseBody;
     @DatabaseField(columnName = "eventtime")
     private long eventTime;

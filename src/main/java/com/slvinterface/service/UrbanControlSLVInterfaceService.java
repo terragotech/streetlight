@@ -6,11 +6,16 @@ import com.slvinterface.enumeration.SLVProcess;
 import com.slvinterface.exception.NoValueException;
 import com.slvinterface.exception.QRCodeAlreadyUsedException;
 import com.slvinterface.exception.ReplaceOLCFailedException;
+import com.slvinterface.exception.SLVConnectionException;
 import com.slvinterface.json.*;
 import org.apache.log4j.Logger;
 
+import java.net.URLEncoder;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
+import java.util.TimeZone;
 
 public class UrbanControlSLVInterfaceService extends  SLVInterfaceService{
 
@@ -21,12 +26,9 @@ public class UrbanControlSLVInterfaceService extends  SLVInterfaceService{
     }
 
 
-    /**
-     * Iterate each form value and check whether value is already processed or synced. If not, synced to SLV.
-     * @param formDataList
-     * @param slvSyncTable
-     */
-    public void processFormData(List<FormData> formDataList, SLVSyncTable slvSyncTable){
+
+    // 118 - Controller ID, Node Installation Date -  155,Scan Node QR Code - 85,New Node QR Code-132,Replacement Date-159,
+    public void processFormData(List<FormData> formDataList, SLVSyncTable slvSyncTable)throws SLVConnectionException{
         Edge2SLVData previousEdge2SLVData = null;
         for(FormData formData : formDataList){
             Edge2SLVData currentEdge2SLVData = new Edge2SLVData();
@@ -45,33 +47,41 @@ public class UrbanControlSLVInterfaceService extends  SLVInterfaceService{
         }
 
         if(previousEdge2SLVData != null && previousEdge2SLVData.getPriority() != null){
-           String macAddress = previousEdge2SLVData.getMacAddress();
-           if(macAddress == null || macAddress.trim().isEmpty()){
-               slvSyncTable.setStatus("Failure");
-               slvSyncTable.setErrorDetails("MAC Address is Empty.");
-               logger.info("MAC Address is Empty. So Note is not synced.");
-               return;
-           }
-           try{
-               checkMacAddressExists(macAddress,slvSyncTable.getNoteName());
-               slvSync(slvSyncTable,previousEdge2SLVData);
-           }catch (QRCodeAlreadyUsedException e){
-               slvSyncTable.setStatus("Failure");
-               slvSyncTable.setErrorDetails(e.getMessage());
-               logger.info("MAC Address is Empty. So Note is not synced.");
-               return;
-           }catch (ReplaceOLCFailedException e){
-               slvSyncTable.setStatus("Failure");
-               slvSyncTable.setErrorDetails("Error while during replaceOLC Call.");
-               logger.error("Error while during replaceOLC Call.",e);
-               return;
-           }catch (Exception e){
-               logger.error("Error in checkMacAddressExists",e);
-               slvSyncTable.setStatus("Failure");
-               slvSyncTable.setErrorDetails(e.getMessage());
+            String macAddress = previousEdge2SLVData.getMacAddress();
+            if(macAddress == null || macAddress.trim().isEmpty()){
+                slvSyncTable.setStatus("Failure");
+                slvSyncTable.setErrorDetails("MAC Address is Empty.");
+                logger.info("MAC Address is Empty. So Note is not synced.");
+                return;
+            }
+            try{
+                slvSyncTable.setIdOnController(previousEdge2SLVData.getIdOnController());
 
-               return;
-           }
+                previousEdge2SLVData.setIdOnController(URLEncoder.encode(previousEdge2SLVData.getIdOnController(),"UTF-8"));
+                retryCount = 0;
+                checkTokenValidity(previousEdge2SLVData);
+
+                checkMacAddressExists(macAddress,previousEdge2SLVData.getIdOnController());
+                slvSync(slvSyncTable,previousEdge2SLVData);
+            }catch (SLVConnectionException e){
+                throw new SLVConnectionException(e);
+            }catch (QRCodeAlreadyUsedException e){
+                slvSyncTable.setStatus("Failure");
+                slvSyncTable.setErrorDetails(e.getMessage());
+                logger.info("MAC Address is Empty. So Note is not synced.");
+                return;
+            }catch (ReplaceOLCFailedException e){
+                slvSyncTable.setStatus("Failure");
+                slvSyncTable.setErrorDetails("Error while during replaceOLC Call.");
+                logger.error("Error while during replaceOLC Call.",e);
+                return;
+            }catch (Exception e){
+                logger.error("Error in checkMacAddressExists",e);
+                slvSyncTable.setStatus("Failure");
+                slvSyncTable.setErrorDetails(e.getMessage());
+
+                return;
+            }
 
         }else{
             slvSyncTable.setStatus("Failure");
@@ -96,7 +106,7 @@ public class UrbanControlSLVInterfaceService extends  SLVInterfaceService{
             Config temp = new Config();
             temp.setType(priority.getType());
 
-            int pos = configList.indexOf(priorities);
+            int pos = configList.indexOf(temp);
 
             if(pos != -1){
                 Config config =  configList.get(pos);
@@ -112,6 +122,26 @@ public class UrbanControlSLVInterfaceService extends  SLVInterfaceService{
                                 e.printStackTrace();
                             }
 
+
+                            break;
+                        case FIXTURE:
+                            try{
+                                String installDate = valueById(formValuesList,id.getId());
+                                installDate =  dateFormat(Long.valueOf(installDate));
+                                edge2SLVData.setInstallDate(installDate);
+                            }catch (NoValueException e){
+                                e.printStackTrace();
+                            }
+
+                            break;
+
+                        case IDONCONTROLLER:
+                            try{
+                                String idOnController = valueById(formValuesList,id.getId());
+                                edge2SLVData.setIdOnController(idOnController);
+                            }catch (NoValueException e){
+                                e.printStackTrace();
+                            }
                             break;
                     }
                 }
@@ -134,26 +164,22 @@ public class UrbanControlSLVInterfaceService extends  SLVInterfaceService{
         switch (previousEdge2SLVData.getPriority().getType()){
             case REMOVE:
                 slvSyncTable.setSelectedAction("Remove WorkFlow");
-                replaceOLC("",slvSyncTable.getNoteName(),"",slvSyncTable);
+                replaceOLC(previousEdge2SLVData.getControllerStrId(),previousEdge2SLVData.getIdOnController(),"",slvSyncTable);
                 slvSyncTable.setStatus("Success");
                 break;
 
             case UPDATE_DEVICE:
                 slvSyncTable.setSelectedAction("Replace WorkFlow");
-                replaceOLC("",slvSyncTable.getNoteName(),"",slvSyncTable);
-                replaceOLC("",slvSyncTable.getNoteName(),previousEdge2SLVData.getMacAddress(),slvSyncTable);
-
-                SLVTransactionLogs slvTransactionLogs = getSLVTransVal(slvSyncTable);
-                List<Object> paramsList = new ArrayList<>();
-                addStreetLightData("installStatus","",paramsList);
-                addStreetLightData("DimmingGroupName", "City of London 80", paramsList);
-                setDeviceValues(paramsList,slvTransactionLogs);
+                replaceOLC(previousEdge2SLVData.getControllerStrId(),previousEdge2SLVData.getIdOnController(),"",slvSyncTable);
+                setDeviceVal(slvSyncTable,previousEdge2SLVData);
+                replaceOLC(previousEdge2SLVData.getControllerStrId(),previousEdge2SLVData.getIdOnController(),previousEdge2SLVData.getMacAddress(),slvSyncTable);
                 slvSyncTable.setStatus("Success");
                 break;
 
             case NEW_DEVICE:
                 slvSyncTable.setSelectedAction("Install WorkFlow");
-                replaceOLC("",slvSyncTable.getNoteName(),previousEdge2SLVData.getMacAddress(),slvSyncTable);
+                setDeviceVal(slvSyncTable,previousEdge2SLVData);
+                replaceOLC(previousEdge2SLVData.getControllerStrId(),previousEdge2SLVData.getIdOnController(),previousEdge2SLVData.getMacAddress(),slvSyncTable);
                 slvSyncTable.setStatus("Success");
                 break;
 
@@ -161,6 +187,34 @@ public class UrbanControlSLVInterfaceService extends  SLVInterfaceService{
         }
     }
 
+
+    private void setDeviceVal(SLVSyncTable slvSyncTable,Edge2SLVData previousEdge2SLVData){
+        SLVTransactionLogs slvTransactionLogs = getSLVTransVal(slvSyncTable);
+        List<Object> paramsList = new ArrayList<>();
+        loadVal(paramsList,previousEdge2SLVData);
+        addStreetLightData("installStatus","Installed",paramsList);
+        addStreetLightData("MacAddress",previousEdge2SLVData.getMacAddress(),paramsList);
+        addStreetLightData("install.date",previousEdge2SLVData.getInstallDate(),paramsList);
+
+        String slvCalender = "City of London 80";
+        try {
+            slvCalender =  URLEncoder.encode(slvCalender,"UTF-8");
+            addStreetLightData("DimmingGroupName",slvCalender,paramsList);
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+
+        String modelFunctionId = "talq.streetlight.v1:lightNodeFunction6";
+
+        try {
+            modelFunctionId =  URLEncoder.encode(modelFunctionId,"UTF-8");
+            addStreetLightData("modelfunctionid",modelFunctionId,paramsList);
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+
+        setDeviceValues(paramsList,slvTransactionLogs);
+    }
 
 
 }
