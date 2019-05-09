@@ -40,7 +40,7 @@ public class EdgeService {
         try {
             //String urlNew = baseUrl + "/rest/notes/notesdata/" + noteGuid;
             String urlNew = baseUrl + "/rest/notes/" + noteGuid;
-         //   logger.info("Url to get Note Details:" + urlNew);
+            logger.info("Url to get Note Details:" + urlNew);
             ResponseEntity<String> responseEntity = serverCall(urlNew, HttpMethod.GET, null);
             if (responseEntity.getStatusCode().is2xxSuccessful()) {
                 String response = responseEntity.getBody();

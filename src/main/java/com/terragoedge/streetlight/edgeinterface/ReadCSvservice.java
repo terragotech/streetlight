@@ -26,20 +26,23 @@ public class ReadCSvservice {
     }
 
     public void start() {
-       String filePath = "./data/input.csv";
-       // String filePath = "D:/Report/input.csv";
+        String filePath = "./data/input.csv";
+        // String filePath = "D:/Report/input.csv";
         List<SlvData> slvDataList = getSlvDataFromCSV(filePath);
         try {
-            int i=0;
+            SlvData slvData1 = new SlvData();
+            slvData1.setNoteTitle("4100");
+            slvDataList.add(slvData1);
+            int i = 0;
             System.out.println(slvDataList.size());
             for (SlvData slvData : slvDataList) {
-                    try {
-                        i++;
-                        System.out.println("processed count :"+i);
-                        slvToEdgeService.run(slvData);
-                    } catch (Exception e) {
-                        slvData.setStatus("Failure");
-                    }
+                try {
+                    i++;
+                    System.out.println("processed count :" + i);
+                    slvToEdgeService.run(slvData);
+                } catch (Exception e) {
+                    slvData.setStatus("Failure");
+                }
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -82,8 +85,8 @@ public class ReadCSvservice {
             while ((currentRow = bufferedReader.readLine()) != null) {
                 String values[] = currentRow.split(",");
                 SlvData slvData = new SlvData();
-                slvData.setNoteGuid(values[0].trim());
-               // slvData.setProjectName(values[1].trim());
+                slvData.setNoteTitle(values[0].trim());
+                // slvData.setProjectName(values[1].trim());
                 //slvData.setExistingMunicipality(values[1]);
                 //slvData.setMunicipality(values[2]);
                 slvDataList.add(slvData);
