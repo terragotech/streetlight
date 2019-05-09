@@ -70,6 +70,9 @@ public abstract class SLVInterfaceService {
         String edgeSlvUrl =  PropertiesReader.getProperties().getProperty("streetlight.edge.slvServerUrl");
 
         Long lastSyncTime =   queryExecutor.getMaxSyncTime();
+        if(lastSyncTime == -1){
+            lastSyncTime = System.currentTimeMillis() - (30 * 60000);
+        }
         edgeSlvUrl = edgeSlvUrl +"/notesGuid?lastSyncTime="+lastSyncTime;
         // Get NoteList from edgeserver
         ResponseEntity<String> edgeSlvServerResponse = edgeRestService.getRequest(edgeSlvUrl, false, accessToken);
