@@ -635,6 +635,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
         String cdotIssue = null;
         try {
             cdotIssue = valueById(edgeFormDatas, 106);
+            cdotIssue =  getUnableRepairComment(cdotIssue,edgeFormDatas);
             logger.info("cdotIssue's issue Value :" + cdotIssue);
         } catch (NoValueException e) {
             logger.error("Error in while getting cdotIssue's issue", e);
@@ -682,6 +683,29 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
     }
 
 
+    private String getSkippedReason(String skippedFixtureReasonVal,List<EdgeFormData> edgeFormDatas){
+        if(skippedFixtureReasonVal.equals("Other - Add note")){
+            try{
+                skippedFixtureReasonVal = valueById(edgeFormDatas, 42);
+            }catch (Exception e){
+                logger.error("Error in getSkippedReason",e);
+            }
+        }
+        return skippedFixtureReasonVal;
+    }
+
+
+    private String getUnableRepairComment(String unableRepair,List<EdgeFormData> edgeFormDatas){
+        if(unableRepair.equals("Other (Comment)")){
+            try{
+                unableRepair = valueById(edgeFormDatas, 121);
+            }catch (Exception e){
+                logger.error("Error in getUnableRepairComment",e);
+            }
+        }
+        return unableRepair;
+    }
+
     private void processNewGroup(List<EdgeFormData> edgeFormDatas, EdgeNote edgeNote, InstallMaintenanceLogModel loggingModel, boolean isResync, String utilLocId, String nightRideKey, String nightRideValue, SlvInterfaceLogEntity slvInterfaceLogEntity) {
         try {
 
@@ -697,7 +721,9 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
             if (installStatusValue != null && installStatusValue.equals("Could not complete")) {
                 try {
                     String skippedFixtureReasonVal = valueById(edgeFormDatas, 23);
+                    skippedFixtureReasonVal = getSkippedReason(skippedFixtureReasonVal,edgeFormDatas);
                     logger.info("Skipped Fixture Reason Val" + skippedFixtureReasonVal);
+
                     if (nightRideValue != null && !nightRideValue.trim().isEmpty()) {
                         nightRideValue = nightRideValue + "," + skippedFixtureReasonVal;
                     } else {
