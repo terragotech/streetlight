@@ -14,8 +14,10 @@ import com.terragoedge.streetlight.logging.InstallMaintenanceLogModel;
 import com.terragoedge.streetlight.logging.LoggingModel;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
+import java.net.URLEncoder;
 import java.sql.SQLException;
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -436,7 +438,16 @@ public abstract class AbstractProcessor {
 
     protected void addStreetLightData(String key, String value, List<Object> paramsList) {
         paramsList.add("valueName=" + key.trim());
-        paramsList.add("value=" + value.trim());
+        if(key.equals("DimmingGroupName") || key.equals("cslp.node.install.date") || key.equals("install.date")){
+            try {
+                paramsList.add("value=" + URLEncoder.encode(value.trim(), "UTF-8"));
+            }catch (Exception e){
+                e.printStackTrace();
+            }
+        }else{
+            paramsList.add("value=" + value.trim());
+        }
+
     }
 
 
@@ -587,14 +598,18 @@ public abstract class AbstractProcessor {
             logger.info("checkAndCreateGeoZone url:" + url);
             setSLVTransactionLogs(slvTransactionLogs, url, CallType.SEARCH_GEOZONE);
             ResponseEntity<String> response = restService.getPostRequest(url, null);
-            String responseString = response.getBody();
-            setResponseDetails(slvTransactionLogs, responseString);
-            JsonArray jsonArray = jsonParser.parse(responseString).getAsJsonArray();
-                if(jsonArray != null && jsonArray.size() > 0){
-                for(JsonElement jsonElement : jsonArray){
-                    JsonObject jsonObject = (JsonObject) jsonElement;
-                    if(jsonObject.get("namesPath").getAsString().equals(rootGeoZone+geozone)){
-                        geozoneId = jsonObject.get("id").getAsInt();
+            if(response.getStatusCode() == HttpStatus.NOT_FOUND){
+                geozoneId = -1;
+            }else {
+                String responseString = response.getBody();
+                setResponseDetails(slvTransactionLogs, responseString);
+                JsonArray jsonArray = jsonParser.parse(responseString).getAsJsonArray();
+                if (jsonArray != null && jsonArray.size() > 0) {
+                    for (JsonElement jsonElement : jsonArray) {
+                        JsonObject jsonObject = (JsonObject) jsonElement;
+                        if (jsonObject.get("namesPath").getAsString().equals(rootGeoZone + geozone)) {
+                            geozoneId = jsonObject.get("id").getAsInt();
+                        }
                     }
                 }
             }
@@ -618,14 +633,34 @@ public abstract class AbstractProcessor {
             String url = mainUrl + createDeviceMethodName;
             List<String> paramsList = new ArrayList<>();
             EdgeNotebook edgeNotebook = edgeNote.getEdgeNotebook();
+            List<FormData> formDatas = edgeNote.getFormData();
+            FormData formData = new FormData();
+            formData.setFormTemplateGuid(properties.getProperty("amerescousa.edge.formtemplateGuid"));
+            int pos = formDatas.indexOf(formData);
+            List<EdgeFormData> edgeFormDatas = formDatas.get(pos).getFormDef();
+//            String proposedContext = getFormValue(edgeFormDatas,"Proposed context");
+//            String formFixtureCode = getFormValue(edgeFormDatas,"Fixture Code");
+            String proposedContext = "";
+            String formFixtureCode = "";
+            try {
+                proposedContext = edgeNote.getLocationDescription().split("\\|")[0];
+            }catch (Exception e){
+                e.printStackTrace();
+            }
+            try {
+                formFixtureCode = edgeNote.getLocationDescription().split("\\|")[1];
+            }catch (Exception e){
+                e.printStackTrace();
+            }
             String atlasPage = Utils.getAtlasPage(edgeNotebook.getNotebookName());
 
-            String atlasGroup = Utils.getAtlasGroup("");
+            String atlasGroup = Utils.getAtlasGroup(proposedContext);
 
-            String fixtureCode = Utils.getFixtureCode("");
+            String fixtureCode = Utils.getFixtureCode(formFixtureCode.startsWith(" ") ? formFixtureCode.substring(1) : formFixtureCode);
             String fixtureName = atlasPage+"-"+atlasGroup+"-"+edgeNote.getTitle()+"-"+fixtureCode;
-            String geometry = edgeNote.getGeometry();
-            JsonObject geometryObject = jsonParser.parse(geometry).getAsJsonObject();
+            String geoJson = edgeNote.getGeometry();
+            JsonObject geojsonObject = jsonParser.parse(geoJson).getAsJsonObject();
+            JsonObject geometryObject = geojsonObject.get("geometry").getAsJsonObject();
             JsonArray latlngs = geometryObject.get("coordinates").getAsJsonArray();
             paramsList.add("ser=json");
             paramsList.add("userName="+fixtureName);
@@ -668,7 +703,7 @@ public abstract class AbstractProcessor {
             paramsList.add("geozoneId="+firstGeoZoneId);
             paramsList.add("recurse=true");
             paramsList.add("returnedInfo=lightDevicesList");
-            paramsList.add("attributeName=name");
+            paramsList.add("attributeName=idOnController");
             paramsList.add("attributeValue="+deviceName);
             paramsList.add("maxResults=1");
             paramsList.add("attributeOperator=eq");
@@ -678,12 +713,16 @@ public abstract class AbstractProcessor {
             logger.info("isDevicePresent url:" + url);
             setSLVTransactionLogs(slvTransactionLogs, url, CallType.SEARCH_DEVICE);
             ResponseEntity<String> response = restService.getPostRequest(url, null);
-            String responseString = response.getBody();
-            setResponseDetails(slvTransactionLogs, responseString);
-            JsonObject searchDeviceResponse = (JsonObject) jsonParser.parse(responseString);
-            JsonArray jsonArray = searchDeviceResponse.get("value").getAsJsonArray();
-            if(jsonArray != null && jsonArray.size() > 0){
-                isDevicePresent = true;
+            if(response.getStatusCode() == HttpStatus.NOT_FOUND){
+                isDevicePresent = false;
+            }else {
+                String responseString = response.getBody();
+                setResponseDetails(slvTransactionLogs, responseString);
+                JsonObject searchDeviceResponse = (JsonObject) jsonParser.parse(responseString);
+                JsonArray jsonArray = searchDeviceResponse.get("value").getAsJsonArray();
+                if (jsonArray != null && jsonArray.size() > 0) {
+                    isDevicePresent = true;
+                }
             }
         } catch (Exception e) {
             setResponseDetails(slvTransactionLogs, "Error in isDevicePresent:" + e.getMessage());
@@ -969,4 +1008,12 @@ public abstract class AbstractProcessor {
         return isDroppedPinWorkFlow;
     }
 
+    private String getFormValue(List<EdgeFormData> edgeFormDatas,String label){
+        for(EdgeFormData edgeFormData : edgeFormDatas){
+            if(edgeFormData.getLabel().equals(label)){
+                return edgeFormData.getValue();
+            }
+        }
+        return "";
+    }
 }

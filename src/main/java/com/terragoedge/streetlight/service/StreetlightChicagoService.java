@@ -5,6 +5,7 @@ import java.io.FileReader;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
+import com.terragoedge.edgeserver.FormData;
 import com.terragoedge.streetlight.edgeinterface.SlvData;
 import com.terragoedge.streetlight.edgeinterface.SlvToEdgeService;
 import com.terragoedge.streetlight.json.model.ContextList;
@@ -122,7 +123,7 @@ public class StreetlightChicagoService extends AbstractProcessor {
 
 
 
-        String edgeSlvUrl = "httpss://amerescousa.terragoedge.com/edgeSlvServer/notesGuid?lastSyncTime=";
+        String edgeSlvUrl = "https://amerescousa.terragoedge.com/edgeSlvServer/notesGuid?lastSyncTime=";
 
         long lastSynctime = streetlightDao.getLastSyncTime();
         if(lastSynctime > 0){
@@ -146,7 +147,6 @@ public class StreetlightChicagoService extends AbstractProcessor {
             System.out.println(notesGuids);
 
            JsonArray noteGuidsJsonArray = (JsonArray)jsonParser.parse(notesGuids);
-
            if(noteGuidsJsonArray != null &&  !noteGuidsJsonArray.isJsonNull()){
                for(JsonElement noteGuidJson : noteGuidsJsonArray){
                    String noteGuid = noteGuidJson.getAsString();
@@ -163,6 +163,7 @@ public class StreetlightChicagoService extends AbstractProcessor {
 
                        // Process only response code as success
                        if (responseEntity.getStatusCode().is2xxSuccessful()) {
+                           SlvInterfaceLogEntity slvInterfaceLogEntity = new SlvInterfaceLogEntity();
                            try{
                                String notesData = responseEntity.getBody();
                                logger.info("rest service data:" + notesData);
@@ -178,8 +179,8 @@ public class StreetlightChicagoService extends AbstractProcessor {
                                    installMaintenanceLogModel.setCreatedDatetime(String.valueOf(edgeNote.getCreatedDateTime()));
                                    installMaintenanceLogModel.setParentNoteId(edgeNote.getBaseParentNoteId());
                                    loadDefaultVal(edgeNote, installMaintenanceLogModel);
-                                   loadDeviceValues(edgeNote.getTitle(),installMaintenanceLogModel);
-                                   SlvInterfaceLogEntity slvInterfaceLogEntity = new SlvInterfaceLogEntity();
+
+
                                    slvInterfaceLogEntity.setIdOnController(edgeNote.getTitle());
                                    slvInterfaceLogEntity.setCreateddatetime(System.currentTimeMillis());
                                    slvInterfaceLogEntity.setResync(false);
@@ -189,42 +190,20 @@ public class StreetlightChicagoService extends AbstractProcessor {
                                    }
                                    boolean isDeviceCreated = false;
                                    if(isDroppedPinWorkFlow) {
-                                       SLVTransactionLogs slvTransactionLogs = getSLVTransactionLogs(installMaintenanceLogModel);
-                                       String idOnController = edgeNote.getTitle();
-                                       boolean isdevicePresent = isDevicePresent(slvTransactionLogs, idOnController);
-                                       if (!isdevicePresent) {
-                                           int geozoneid = checkGeoZone(edgeNote.getEdgeNotebook().getNotebookName(),slvTransactionLogs);
-                                           if(geozoneid == -1){
-                                               slvInterfaceLogEntity.setStatus(MessageConstants.ERROR);
-                                               slvInterfaceLogEntity.setErrordetails("no geozone present with this name: "+edgeNote.getEdgeNotebook().getNotebookName()+" in the path of"+properties.getProperty("com.slv.root.geozone"));
-                                               isDeviceCreated = false;
-                                           }else{
-                                               int deviceId = createDevice(slvTransactionLogs,edgeNote,geozoneid);
-                                               if(deviceId == -1){
-                                                   slvInterfaceLogEntity.setStatus(MessageConstants.ERROR);
-                                                   slvInterfaceLogEntity.setErrordetails("Not able to create device: "+edgeNote.getTitle());
-                                                   isDeviceCreated = false;
-                                               }else{
-                                                   isDeviceCreated = true;
-                                               }
-                                           }
-                                       }else{
-                                           isDeviceCreated = false;
-                                       }
-                                   }
-                                   if(isDroppedPinWorkFlow && !isDeviceCreated){
-
+                                       isDeviceCreated = processDroppedPinWorkflow(edgeNote,slvInterfaceLogEntity,installMaintenanceLogModel);
                                    }
                                    if(!isDroppedPinWorkFlow || (isDroppedPinWorkFlow && isDeviceCreated)) {
+                                       loadDeviceValues(edgeNote.getTitle(),installMaintenanceLogModel);
                                        installationMaintenanceProcessor.processNewAction(edgeNote, installMaintenanceLogModel, false, utilLocId, slvInterfaceLogEntity, isDroppedPinWorkFlow);
                                        //updateSlvStatusToEdge(installMaintenanceLogModel, edgeNote);
                                        LoggingModel loggingModel = installMaintenanceLogModel;
                                        streetlightDao.insertProcessedNotes(loggingModel, installMaintenanceLogModel);
-                                       connectionDAO.saveSlvInterfaceLog(slvInterfaceLogEntity);
                                    }
                                }
                            }catch (Exception e){
                                 logger.error("Error in run",e);
+                           }finally {
+                               connectionDAO.saveSlvInterfaceLog(slvInterfaceLogEntity);
                            }
                            // Get Response String
 
@@ -251,7 +230,65 @@ public class StreetlightChicagoService extends AbstractProcessor {
         cal.set(Calendar.MILLISECOND, 0);
         return dateFormat.format(cal.getTime());
     }
+    private int validateForms(EdgeNote edgeNote){
+        String installFormTemplateGuid = properties.getProperty("amerescousa.edge.formtemplateGuid");
+        List<FormData> formDatas = edgeNote.getFormData();
+        int count = 0;
+        for(FormData formData : formDatas){
+            if(formData.getFormTemplateGuid().equals(installFormTemplateGuid)){
+                count++;
+            }
+        }
+        return count;
+    }
 
-
+    private boolean processDroppedPinWorkflow(EdgeNote edgeNote,SlvInterfaceLogEntity slvInterfaceLogEntity,InstallMaintenanceLogModel installMaintenanceLogModel){
+        SLVTransactionLogs slvTransactionLogs = getSLVTransactionLogs(installMaintenanceLogModel);
+        String idOnController = edgeNote.getTitle();
+        boolean isDeviceCreated = false;
+        boolean isdevicePresent = isDevicePresent(slvTransactionLogs, idOnController);
+        logger.info("The device present with the same idoncontroller: "+idOnController+ "result: "+isdevicePresent);
+        if (!isdevicePresent) {
+            int geozoneid = checkGeoZone(edgeNote.getEdgeNotebook().getNotebookName(),slvTransactionLogs);
+            if(geozoneid == -1){
+                logger.error("Skipping this device. Dueto there is no geozone present with this name: "+edgeNote.getEdgeNotebook().getNotebookName());
+                slvInterfaceLogEntity.setStatus(MessageConstants.ERROR);
+                slvInterfaceLogEntity.setErrordetails("no geozone present with this name: "+edgeNote.getEdgeNotebook().getNotebookName()+" in the path of"+properties.getProperty("com.slv.root.geozone"));
+                isDeviceCreated = false;
+            }else{
+                int count = validateForms(edgeNote);
+                if(count == 0){
+                    logger.error("Skipping this device. Dueto there is no install and maintenance form for this device: "+idOnController);
+                    slvInterfaceLogEntity.setStatus(MessageConstants.ERROR);
+                    slvInterfaceLogEntity.setErrordetails("No installAndMaintenance form for this note: "+idOnController);
+                    isDeviceCreated = false;
+                }else if(count > 1){
+                    logger.error("Skipping this device. Dueto there is two or more no.of install and maintenance form for this device: "+idOnController);
+                    slvInterfaceLogEntity.setStatus(MessageConstants.ERROR);
+                    slvInterfaceLogEntity.setErrordetails("two or more installAndMaintenance forms available for this note: "+idOnController);
+                    isDeviceCreated = false;
+                }else {
+                    logger.info(idOnController+ " this device having one install and maintenance form. So it's going to process");
+                    int deviceId = createDevice(slvTransactionLogs, edgeNote, geozoneid);
+                    logger.info(idOnController+" device created in slv and it's id is: "+deviceId);
+                    if (deviceId == -1) {
+                        logger.error("Device not created in slv for this idoncontroller: "+idOnController);
+                        slvInterfaceLogEntity.setStatus(MessageConstants.ERROR);
+                        slvInterfaceLogEntity.setErrordetails("Not able to create device: " + idOnController);
+                        isDeviceCreated = false;
+                    } else {
+                        logger.info("Device successfully created for this idoncontroller: "+idOnController);
+                        isDeviceCreated = true;
+                    }
+                }
+            }
+        }else{
+            logger.info("Device already present with the same name: "+idOnController);
+            slvInterfaceLogEntity.setStatus(MessageConstants.ERROR);
+            slvInterfaceLogEntity.setErrordetails("device already present with the same name: "+idOnController);
+            isDeviceCreated = false;
+        }
+        return isDeviceCreated;
+    }
     // http://192.168.1.9:8080/edgeServer/oauth/token?grant_type=password&username=admin&password=admin&client_id=edgerestapp
 }

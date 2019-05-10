@@ -5,17 +5,21 @@ import com.terragoedge.streetlight.enumeration.FixtureCodeType;
 public class Utils {
 
     public static String getAtlasPage(String atlasPage){
-        return atlasPage.replaceAll("-","");
+        atlasPage = atlasPage.replaceAll("-","");
+        if(atlasPage.length() > 4){
+            return atlasPage.substring(0,4);
+        }else{
+            return atlasPage;
+        }
     }
 
     public static String getAtlasGroup(String proposedContext){
-        switch (proposedContext){
-            case "Alley":
-                return "AL";
-            case "Viaduct":
-                return "VI";
-            default:
-                return "00";
+        if(proposedContext.contains("Alley")){
+            return "AL";
+        }else if(proposedContext.contains("Viaduct")){
+            return "VI";
+        }else{
+            return "00";
         }
     }
 
@@ -25,7 +29,7 @@ public class Utils {
         }else{
             FixtureCodeType fixtureCodeType = FixtureCodeType.get(fixtureCode);
             if(fixtureCodeType == null){
-                return null;
+                return FixtureCodeType.OTHER.getValue();
             }
             return fixtureCodeType.getValue();
         }
