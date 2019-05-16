@@ -27,6 +27,7 @@ import java.nio.file.StandardCopyOption;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.Statement;
+import java.text.SimpleDateFormat;
 import java.util.*;
 
 public class InstallMaintenanceDao extends UtilDao {
@@ -35,6 +36,7 @@ public class InstallMaintenanceDao extends UtilDao {
     private EdgeMailService edgeMailService;
     private List<Config> configs = new ArrayList<>();
     private static Long startTime = 0l;
+    private static Long endingTime = 0l;
 
 
     public InstallMaintenanceDao() {
@@ -51,8 +53,24 @@ public class InstallMaintenanceDao extends UtilDao {
         ResultSet queryResponse = null;
         CSVWriter dailyCompletedCSVWriter = null;
         List<DuplicateModel> duplicateModelList = new ArrayList<>();
-        startTime = 1554921000000L;
-        startTime = Long.parseLong(PropertiesReader.getProperties().getProperty("amerescousa.report.from"));
+        String customDate = PropertiesReader.getProperties().getProperty("amerescousa.custom.date");
+        if (customDate != null && customDate.equals("true")) {
+            logger.info("Custom date is called");
+            String startingDate = PropertiesReader.getProperties().getProperty("amerescousa.startingDate");
+            String endingDate = PropertiesReader.getProperties().getProperty("amerescousa.endingDate");
+            startTime = getDateformatAsMilliSecond(startingDate);
+            endingTime = getDateformatAsMilliSecond(endingDate);
+            logger.info("custom date StartingDate : " + startingDate);
+            logger.info("custom date EndingDate : " + endingDate);
+            logger.info("custom date startTime : " + startTime);
+            logger.info("custom date endingTime : " + endingTime);
+        } else {
+            startTime = getReportStartingTime();
+            endingTime = System.currentTimeMillis();
+            logger.info("startTime : " + startTime);
+            logger.info("endingTime : " + endingTime);
+        }
+        // startTime = Long.parseLong(PropertiesReader.getProperties().getProperty("amerescousa.report.from"));
         logger.info("configs: " + gson.toJson(configs));
         try {
             String fileName = Utils.getDateTime();
@@ -62,9 +80,14 @@ public class InstallMaintenanceDao extends UtilDao {
             FileWriter fileWriter = new FileWriter(dailyReportFile);
             dailyCompletedCSVWriter = initCSV(fileWriter);
             logger.info("start time:" + startTime);
-            logger.info("readable fromat time:" + Utils.getDateTime(startTime));
-            queryResponse = queryStatement.executeQuery("select title,noteguid,parentnoteid,createddatetime from edgenote where iscurrent = true and isdeleted = false  and createddatetime >= " + startTime + "   order by createddatetime;");
-
+            logger.info("readable fromat starting time:" + Utils.getDateTime(startTime));
+            logger.info("readable fromat ending time:" + Utils.getDateTime(endingTime));
+            System.out.println("readable fromat starting time:" + Utils.getDateTime(startTime));
+            System.out.println("readable fromat ending time:" + Utils.getDateTime(endingTime));
+            queryResponse = queryStatement.executeQuery("select title,noteguid,parentnoteid,createddatetime from edgenote where iscurrent = true and isdeleted = false  and createddatetime >= " + startTime + " and createddatetime < " + endingTime + "   order by createddatetime;");
+            // queryResponse = queryStatement.executeQuery("select title,noteguid,parentnoteid,createddatetime from edgenote where createddatetime >= " + startTime + " and createddatetime < " + endingTime + "   order by createddatetime;");
+            String qury = "select title,noteguid,parentnoteid,createddatetime from edgenote where iscurrent = true and isdeleted = false and createddatetime >= " + startTime + " and createddatetime < " + endingTime + "   order by createddatetime";
+            logger.info("query is :"+qury);
             logger.info("query response executed");
             int i = 0;
             while (queryResponse.next()) {
@@ -74,7 +97,7 @@ public class InstallMaintenanceDao extends UtilDao {
                 NoteData currentNoteData = new NoteData();
                 currentNoteData.setNoteGuid(currentNoteGuid);
                 currentNoteData.setCreatedDateTime(currentNoteDateTime);
-
+                System.out.println("process count :" + i);
                 String parentNoteId = queryResponse.getString("parentnoteid");
                 logger.info("currentNoteGuid: " + currentNoteGuid);
                 logger.info("parentNoteId: " + parentNoteId);
@@ -238,7 +261,7 @@ public class InstallMaintenanceDao extends UtilDao {
 
 
     private boolean isInstalledOnTime(NoteData currentNoteData) {
-        return currentNoteData.getCreatedDateTime() >= startTime;
+        return currentNoteData.getCreatedDateTime() >= startTime ;
     }
 
 
@@ -249,7 +272,7 @@ public class InstallMaintenanceDao extends UtilDao {
                 CSVWriter.NO_QUOTE_CHARACTER,
                 CSVWriter.NO_ESCAPE_CHARACTER,
                 CSVWriter.DEFAULT_LINE_END);
-        String[] headerRecord = {"Title", "Action","MAC Address", "User Id", "Fixture QR Scan", "Fixture Type",
+        String[] headerRecord = {"Title", "Action", "MAC Address", "User Id", "Fixture QR Scan", "Fixture Type",
                 "Context", "Lat", "Lng", "Date Time", "Is ReplaceNode", "Existing Node MAC Address", "New Node MAC Address", "New Fixture QR Scan", "Reason for Replacement", "Reason for removal", "Resolved Issue", "Resolved Comment", "Scan Existing MAC if wrong", "UnableToRepair Issue", "unableToRepair Comment", "InstallStatus", "Skipped Fixture Reason", "Skipped Reason"};
         csvWriter.writeNext(headerRecord);
         return csvWriter;
@@ -393,6 +416,9 @@ public class InstallMaintenanceDao extends UtilDao {
             }.getType());
             String action = getValue(17, edgeFormDatas);
             logger.info("selected new action:" + action);
+            if (action == null) {
+                action = "";
+            }
             if (action.contains("Repairs")) {
                 action = getValue(24, edgeFormDatas);
                 logger.info("selected ReplaceAction :" + action);
@@ -413,23 +439,23 @@ public class InstallMaintenanceDao extends UtilDao {
                             case RF:
 
                                 //To be installed To be  installed
-                               // installMaintenanceModel.setAction(Constants.REPLACE_FIXTURE_ONLY);
+                                // installMaintenanceModel.setAction(Constants.REPLACE_FIXTURE_ONLY);
                                 installMaintenanceModel.setFixtureQRScanRF(setValue(installMaintenanceModel.getFixtureQRScanRF(), getValue(idsList.getFix(), edgeFormDatas)));
                                 installMaintenanceModel.setExFixtureQRScanRF(setValue(installMaintenanceModel.getExFixtureQRScanRF(), getValue(idsList.getExFix(), edgeFormDatas)));
                                 installMaintenanceModel.setReasonforReplacement(setValue(installMaintenanceModel.getReasonforReplacement(), getValue(idsList.getReasonforreplacement(), edgeFormDatas)));
                                 break;
                             case NEW:
-                               // installMaintenanceModel.setAction("New");
+                                // installMaintenanceModel.setAction("New");
                                 installMaintenanceModel.setMacAddress(setValue(installMaintenanceModel.getMacAddress(), getValue(idsList.getMac(), edgeFormDatas)));
                                 installMaintenanceModel.setFixtureQRScan(setValue(installMaintenanceModel.getFixtureQRScan(), getValue(idsList.getFix(), edgeFormDatas)));
                                 break;
                             case RN:
-                               // installMaintenanceModel.setAction(Constants.REPLACE_NODE_ONLY);
+                                // installMaintenanceModel.setAction(Constants.REPLACE_NODE_ONLY);
                                 installMaintenanceModel.setMacAddressRN(setValue(installMaintenanceModel.getMacAddressRN(), getValue(idsList.getMac(), edgeFormDatas)));
                                 installMaintenanceModel.setExMacAddressRN(setValue(installMaintenanceModel.getExMacAddressRN(), getValue(idsList.getExMac(), edgeFormDatas)));
                                 break;
                             case RNF:
-                               // installMaintenanceModel.setAction(Constants.REPLACE_NODE_FIXTURE);
+                                // installMaintenanceModel.setAction(Constants.REPLACE_NODE_FIXTURE);
                                 installMaintenanceModel.setMacAddressRNF(setValue(installMaintenanceModel.getMacAddressRNF(), getValue(idsList.getMac(), edgeFormDatas)));
                                 installMaintenanceModel.setExMacAddressRNF(setValue(installMaintenanceModel.getExMacAddressRNF(), getValue(idsList.getExMac(), edgeFormDatas)));
                                 installMaintenanceModel.setFixtureQRScanRNF(setValue(installMaintenanceModel.getFixtureQRScanRNF(), getValue(idsList.getFix(), edgeFormDatas)));
@@ -440,7 +466,7 @@ public class InstallMaintenanceDao extends UtilDao {
                                 installMaintenanceModel.setRemovalReason(setValue(installMaintenanceModel.getRemovalReason(), getValue(idsList.getRemove(), edgeFormDatas)));
                                 break;
                             case RS:
-                               // installMaintenanceModel.setAction(Constants.REPLACE_NODE_FIXTURE);
+                                // installMaintenanceModel.setAction(Constants.REPLACE_NODE_FIXTURE);
                                 installMaintenanceModel.setResolvedIssue(setValue(installMaintenanceModel.getResolvedIssue(), getValue(idsList.getIssue(), edgeFormDatas)));
                                 installMaintenanceModel.setResolvedComment(setValue(installMaintenanceModel.getResolvedComment(), getValue(idsList.getComment(), edgeFormDatas)));
                                 installMaintenanceModel.setExistingMacIfWrong(setValue(installMaintenanceModel.getExistingMacIfWrong(), getValue(idsList.getScanifwrong(), edgeFormDatas)));
@@ -603,5 +629,33 @@ public class InstallMaintenanceDao extends UtilDao {
             closeStatement(queryStatement);
         }
         return duplicateTitle;
+    }
+
+    public static long getDateformatAsMilliSecond(String configDate) {
+        try {
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+            Date date = sdf.parse(configDate);
+            return date.getTime();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return -1;
+    }
+
+    public static long getReportStartingTime() {
+        try {
+            String customDate = PropertiesReader.getProperties().getProperty("amerescousa.timezone");
+            Calendar cal = Calendar.getInstance();
+            TimeZone tz = TimeZone.getTimeZone(customDate);
+            cal.setTimeZone(tz);
+            cal.set(Calendar.DAY_OF_MONTH, cal.get(Calendar.DAY_OF_MONTH));
+            cal.set(Calendar.HOUR_OF_DAY, 0);
+            cal.set(Calendar.MINUTE, 0);
+            cal.set(Calendar.SECOND, 0);
+            return cal.getTimeInMillis();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return -1;
     }
 }

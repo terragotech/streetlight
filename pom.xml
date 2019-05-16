@@ -111,7 +111,7 @@
                         <goal>single</goal>
                     </goals>
                     <configuration>
-                        <finalName>streetlight_chicago_daily_report-v3</finalName>
+                        <finalName>streetlight_chicago_daily_report-v13</finalName>
                         <archive>
                             <manifest>
                                 <mainClass>

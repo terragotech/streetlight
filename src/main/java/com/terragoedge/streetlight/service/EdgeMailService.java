@@ -175,7 +175,7 @@ public class EdgeMailService {
 			for (int i = 0; i < toAddress.length; i++) {
 				message.addRecipient(Message.RecipientType.TO, toAddress[i]);
 			}
-			message.setSubject("Daily Report - Automated");
+			message.setSubject("Daily Installation Report - Automated");
 
 			BodyPart messageBodyPart = new MimeBodyPart();
 			messageBodyPart.setText("Please find attached the csv with the today's data. \n \n");

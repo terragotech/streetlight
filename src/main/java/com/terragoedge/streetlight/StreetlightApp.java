@@ -26,7 +26,8 @@ public class StreetlightApp {
 			}
 		}
 		//return 13;
-        return 17;
+		String scheduledHour = PropertiesReader.getProperties().getProperty("amerescousa.scheduledtime");
+        return Integer.parseInt(scheduledHour);
 	}
 
 
@@ -34,13 +35,9 @@ public class StreetlightApp {
 
 	//1525944100172
 	public static void main(String[] args) {
-		InstallMaintenanceDao installMaintenanceDao = new InstallMaintenanceDao();
-		logger.info("going to start loadNotesData");
-		 installMaintenanceDao.loadNotesData();
-		logger.info("going to start do process");
-		installMaintenanceDao.doProcess();
+
 		//installMaintenanceDao.startGeoPDFProcess("/Users/Nithish/Documents/office/data-fix/Mar20/daily_report_20Mar2019.csv");
-		/*try{
+		try{
 			while(true){
 				try{
 					Calendar calendar = Calendar.getInstance(Locale.getDefault());
@@ -52,10 +49,13 @@ public class StreetlightApp {
 						File file  = new File("./report/pid");
 						if(!file.exists()){
 							System.out.println("File is not present.");
-							StreetlightChicagoService streetlightChicagoService = new StreetlightChicagoService();
 							try {
-								streetlightChicagoService.run();
-							} catch (IOException e) {
+								InstallMaintenanceDao installMaintenanceDao = new InstallMaintenanceDao();
+								logger.info("going to start loadNotesData");
+								installMaintenanceDao.loadNotesData();
+								logger.info("going to start do process");
+								installMaintenanceDao.doProcess();
+							} catch (Exception e) {
 								e.printStackTrace();
 							}
 							StreetlightDaoConnection.getInstance().closeConnection();
@@ -78,7 +78,7 @@ public class StreetlightApp {
 			}
 		}catch(Exception e){
 			e.printStackTrace();
-		}*/
+		}
 		
 		
 		
