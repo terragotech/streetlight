@@ -32,7 +32,7 @@ public class SlvToEdgeService extends EdgeService {
         String formTemplateGuid = PropertiesReader.getProperties().getProperty("amerescousa.edge.formtemplateGuid");
         List<com.terragoedge.edgeserver.SlvData> noteGuidList = streetlightDao.getNoteDetails(slvData.getNoteTitle());
         for (com.terragoedge.edgeserver.SlvData dbSLVData : noteGuidList) {
-            logger.info("Note not in AmerescoUSA.");
+            logger.info("Note processed in AmerescoUSA.");
             slvData.setNoteGuid(dbSLVData.getGuid().trim());
             String notesJson = getNoteDetails(slvData.getNoteGuid());
             if (notesJson == null) {
@@ -54,7 +54,7 @@ public class SlvToEdgeService extends EdgeService {
                 long createddatetime = edgeNote.getCreatedDateTime();
                 SlvData resultSlvData = processInstallationForm(edgeNote, formData, formTemplateGuid, slvData);
                 if (resultSlvData.getStatus().equals("Success")) {
-                    //  streetlightDao.updateNoteDetails(createddatetime + 1000, "slvinterface", resultSlvData.getNewNoteGuid());
+                      streetlightDao.updateNoteDetails(createddatetime + 1000, createdBy, resultSlvData.getNewNoteGuid());
                     logger.info("------------------Success---------------------");
                     logger.info("Processed notetitle: " + edgeNote.getTitle());
                 } else {

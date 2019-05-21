@@ -30,9 +30,6 @@ public class ReadCSvservice {
         // String filePath = "D:/Report/input.csv";
         List<SlvData> slvDataList = getSlvDataFromCSV(filePath);
         try {
-            SlvData slvData1 = new SlvData();
-            slvData1.setNoteTitle("4100");
-            slvDataList.add(slvData1);
             int i = 0;
             System.out.println(slvDataList.size());
             for (SlvData slvData : slvDataList) {

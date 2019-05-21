@@ -127,6 +127,7 @@ public class EdgeService {
                 formDefJson = formDefJson.replaceAll("\\\\", "");
                 formDefJson = formDefJson.replace("u0026","\\u0026");
                 List<EdgeFormData> formDataList = getEdgeFormData(formDefJson);
+                updateFormValue(formDataList, 38, "");
                 serverEdgeForm.add("formDef", gson.toJsonTree(formDataList));
                 serverEdgeForm.addProperty("formGuid", UUID.randomUUID().toString());
             }
@@ -140,7 +141,7 @@ public class EdgeService {
         edgeJsonObject.addProperty("createdBy", "slvinterface");
 
         List<Dictionary> dictionaryList = edgeNote.getDictionary();
-        boolean isDictionaryExist = false;
+       /* boolean isDictionaryExist = false;
         for (Dictionary dictionary : dictionaryList) {
             if (dictionary.getKey().equals("groupGuid") && !dictionary.getValue().equals(layerGuid)) {
                 isDictionaryExist = true;
@@ -152,7 +153,7 @@ public class EdgeService {
             dictionary.setKey("groupGuid");
             dictionary.setValue(layerGuid);
             dictionaryList.add(dictionary);
-        }
+        }*/
         edgeJsonObject.add("dictionary", gson.toJsonTree(dictionaryList));
         return edgeJsonObject;
     }

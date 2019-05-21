@@ -102,7 +102,7 @@
                             <goal>single</goal>
                         </goals>
                         <configuration>
-                            <finalName>amerescousa-layer-v4</finalName>
+                            <finalName>amerescousa-revision-titlev5</finalName>
 
                             <archive>
                                 <manifest>
