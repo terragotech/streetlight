@@ -9,7 +9,7 @@ import java.util.Date;
 
 
 public class StreetlightApp {
-
+private static boolean isReportProcessed = false;
 	public static void main(String[] args) {
         Calendar calendar = Calendar.getInstance();
 	    while (true){
@@ -20,8 +20,15 @@ public class StreetlightApp {
                 calendar.setTime(new Date());
                 int hours = calendar.get(Calendar.HOUR_OF_DAY);
                 if(hours == Integer.valueOf(PropertiesReader.getProperties().getProperty("com.existing.mac.validation.failure.report.time"))){
-                    String fileUploadUrl = PropertiesReader.getProperties().getProperty("com.existing.mac.validation.failure.report.url");
-                    streetlightChicagoService.edgeSlvserverCall(fileUploadUrl);
+                    if(!isReportProcessed){
+                        String fileUploadUrl = PropertiesReader.getProperties().getProperty("com.existing.mac.validation.failure.report.url");
+                        streetlightChicagoService.edgeSlvserverCall(fileUploadUrl);
+                        isReportProcessed = true;
+                    }
+                }else{
+                    if(isReportProcessed){
+                        isReportProcessed = false;
+                    }
                 }
                 Thread.sleep(30000);
             }catch (Exception e){

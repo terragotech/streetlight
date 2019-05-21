@@ -840,9 +840,10 @@ public abstract class AbstractProcessor {
 public boolean checkExistingMacAddressValid(EdgeNote edgeNote, InstallMaintenanceLogModel installMaintenanceLogModel) throws Exception{
         try {
             String idonController = edgeNote.getTitle();
-            if(installMaintenanceLogModel.getSlvMacaddress() != null && installMaintenanceLogModel.getExistingNodeMACaddress() != null){
-                if(installMaintenanceLogModel.getSlvMacaddress().trim().toLowerCase().equals(installMaintenanceLogModel.getExistingNodeMACaddress().trim().toLowerCase())) {
-                    List<ExistingMacValidationFailure> existingMacValidationFailures = connectionDAO.getExistingMacValidationFailure(idonController,installMaintenanceLogModel.getExistingNodeMACaddress());
+            String slvMacAddress = installMaintenanceLogModel.getSlvMacaddress() == null ? "" : installMaintenanceLogModel.getSlvMacaddress();
+            String existingMacAddress = installMaintenanceLogModel.getExistingNodeMACaddress() == null ? "" : installMaintenanceLogModel.getExistingNodeMACaddress();
+                if(slvMacAddress.trim().toLowerCase().equals(existingMacAddress.trim().toLowerCase())) {
+                    List<ExistingMacValidationFailure> existingMacValidationFailures = connectionDAO.getExistingMacValidationFailure(idonController,existingMacAddress);
                     for(ExistingMacValidationFailure existingMacValidationFailure : existingMacValidationFailures){
                         connectionDAO.deleteExistingMacVaildationFailure(existingMacValidationFailure);
                     }
@@ -854,17 +855,14 @@ public boolean checkExistingMacAddressValid(EdgeNote edgeNote, InstallMaintenanc
                     existingMacValidationFailure.setCreatedDateTime(edgeNote.getCreatedDateTime());
                     existingMacValidationFailure.setNoteGuid(edgeNote.getNoteGuid());
                     existingMacValidationFailure.setEdgeNewNodeMacaddress(installMaintenanceLogModel.getNewNodeMACaddress());
-                    existingMacValidationFailure.setEdgeExistingMacaddress(installMaintenanceLogModel.getExistingNodeMACaddress());
+                    existingMacValidationFailure.setEdgeExistingMacaddress(existingMacAddress);
                     existingMacValidationFailure.setIdOnController(idonController);
-                    existingMacValidationFailure.setSlvMacaddress(installMaintenanceLogModel.getSlvMacaddress());
+                    existingMacValidationFailure.setSlvMacaddress(slvMacAddress);
                     connectionDAO.saveExistingMacFailure(existingMacValidationFailure);
                     installMaintenanceLogModel.setErrorDetails("Existing macaddress not matched with slv macaddress");
                     installMaintenanceLogModel.setStatus(MessageConstants.ERROR);
                     return false;
                 }
-            }else{
-                return true;
-            }
     } catch (Exception e) {
         throw new Exception(e);
     }
