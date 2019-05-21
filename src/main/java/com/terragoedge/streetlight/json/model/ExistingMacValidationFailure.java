@@ -17,6 +17,12 @@ public class ExistingMacValidationFailure {
     private String createdBy;
     @DatabaseField(columnName = "edge_existing_macaddress")
     private String edgeExistingMacaddress;
+    @DatabaseField(columnName = "noteguid")
+    private String noteGuid;
+    @DatabaseField(columnName = "processed_date_time")
+    private long processedDateTime;
+    @DatabaseField(columnName = "edge_new_node_macaddrss")
+    private String edgeNewNodeMacaddress;
 
     public int getId() {
         return id;
@@ -66,6 +72,31 @@ public class ExistingMacValidationFailure {
         this.edgeExistingMacaddress = edgeExistingMacaddress;
     }
 
+
+    public String getNoteGuid() {
+        return noteGuid;
+    }
+
+    public void setNoteGuid(String noteGuid) {
+        this.noteGuid = noteGuid;
+    }
+
+    public long getProcessedDateTime() {
+        return processedDateTime;
+    }
+
+    public void setProcessedDateTime(long processedDateTime) {
+        this.processedDateTime = processedDateTime;
+    }
+
+    public String getEdgeNewNodeMacaddress() {
+        return edgeNewNodeMacaddress;
+    }
+
+    public void setEdgeNewNodeMacaddress(String edgeNewNodeMacaddress) {
+        this.edgeNewNodeMacaddress = edgeNewNodeMacaddress;
+    }
+
     @Override
     public String toString() {
         return "ExistingMacValidationFailure{" +
@@ -75,6 +106,9 @@ public class ExistingMacValidationFailure {
                 ", slvMacaddress='" + slvMacaddress + '\'' +
                 ", createdBy='" + createdBy + '\'' +
                 ", edgeExistingMacaddress='" + edgeExistingMacaddress + '\'' +
+                ", noteGuid='" + noteGuid + '\'' +
+                ", processedDateTime='" + processedDateTime + '\'' +
+                ", edgeNewNodeMacaddress='" + edgeNewNodeMacaddress + '\'' +
                 '}';
     }
 }

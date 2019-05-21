@@ -837,29 +837,36 @@ public abstract class AbstractProcessor {
         return null;
     }
 
-public boolean checkExisitingMacAddressValid(EdgeNote edgeNote,InstallMaintenanceLogModel installMaintenanceLogModel) throws Exception{
+public boolean checkExistingMacAddressValid(EdgeNote edgeNote, InstallMaintenanceLogModel installMaintenanceLogModel) throws Exception{
         try {
             String idonController = edgeNote.getTitle();
-        if(installMaintenanceLogModel.getSlvMacaddress().equals(installMaintenanceLogModel.getExistingNodeMACaddress())) {
-            List<ExistingMacValidationFailure> existingMacValidationFailures = connectionDAO.getExistingMacValidationFailure(idonController,installMaintenanceLogModel.getExistingNodeMACaddress());
-            for(ExistingMacValidationFailure existingMacValidationFailure : existingMacValidationFailures){
-                connectionDAO.deleteExistingMacVaildationFailure(existingMacValidationFailure);
+            if(installMaintenanceLogModel.getSlvMacaddress() != null && installMaintenanceLogModel.getExistingNodeMACaddress() != null){
+                if(installMaintenanceLogModel.getSlvMacaddress().trim().toLowerCase().equals(installMaintenanceLogModel.getExistingNodeMACaddress().trim().toLowerCase())) {
+                    List<ExistingMacValidationFailure> existingMacValidationFailures = connectionDAO.getExistingMacValidationFailure(idonController,installMaintenanceLogModel.getExistingNodeMACaddress());
+                    for(ExistingMacValidationFailure existingMacValidationFailure : existingMacValidationFailures){
+                        connectionDAO.deleteExistingMacVaildationFailure(existingMacValidationFailure);
+                    }
+                    return true;
+                }else{
+                    ExistingMacValidationFailure existingMacValidationFailure = new ExistingMacValidationFailure();
+                    existingMacValidationFailure.setCreatedBy(edgeNote.getCreatedBy());
+                    existingMacValidationFailure.setProcessedDateTime(System.currentTimeMillis());
+                    existingMacValidationFailure.setCreatedDateTime(edgeNote.getCreatedDateTime());
+                    existingMacValidationFailure.setNoteGuid(edgeNote.getNoteGuid());
+                    existingMacValidationFailure.setEdgeNewNodeMacaddress(installMaintenanceLogModel.getNewNodeMACaddress());
+                    existingMacValidationFailure.setEdgeExistingMacaddress(installMaintenanceLogModel.getExistingNodeMACaddress());
+                    existingMacValidationFailure.setIdOnController(idonController);
+                    existingMacValidationFailure.setSlvMacaddress(installMaintenanceLogModel.getSlvMacaddress());
+                    connectionDAO.saveExistingMacFailure(existingMacValidationFailure);
+                    installMaintenanceLogModel.setErrorDetails("Existing macaddress not matched with slv macaddress");
+                    installMaintenanceLogModel.setStatus(MessageConstants.ERROR);
+                    return false;
+                }
+            }else{
+                return true;
             }
-            return true;
-        }else{
-            ExistingMacValidationFailure existingMacValidationFailure = new ExistingMacValidationFailure();
-            existingMacValidationFailure.setCreatedBy(edgeNote.getCreatedBy());
-            existingMacValidationFailure.setCreatedDateTime(System.currentTimeMillis());
-            existingMacValidationFailure.setEdgeExistingMacaddress(installMaintenanceLogModel.getExistingNodeMACaddress());
-            existingMacValidationFailure.setIdOnController(idonController);
-            existingMacValidationFailure.setSlvMacaddress(installMaintenanceLogModel.getSlvMacaddress());
-            connectionDAO.saveExistingMacFailure(existingMacValidationFailure);
-            installMaintenanceLogModel.setErrorDetails("Existing macaddress not matched with slv macaddress");
-            installMaintenanceLogModel.setStatus(MessageConstants.ERROR);
-        }
     } catch (Exception e) {
         throw new Exception(e);
     }
-    return false;
 }
 }

@@ -10,7 +10,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 import org.springframework.http.ResponseEntity;
 
-import java.rmi.MarshalException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -972,7 +971,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
 
             String controllerStrIdValue = loggingModel.getControllerSrtId();
 
-            boolean isMatched = checkExisitingMacAddressValid(edgeNote,loggingModel);
+            boolean isMatched = checkExistingMacAddressValid(edgeNote,loggingModel);
             if(!isMatched){
                 return;
             }
@@ -1050,7 +1049,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
 
             String controllerStrIdValue = loggingModel.getControllerSrtId();
             
-            boolean isMatched = checkExisitingMacAddressValid(edgeNote,loggingModel);
+            boolean isMatched = checkExistingMacAddressValid(edgeNote,loggingModel);
             if(!isMatched){
                 return;
             }

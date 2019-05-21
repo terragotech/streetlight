@@ -13,12 +13,16 @@ import com.terragoedge.streetlight.json.model.SlvInterfaceLogEntity;
 import com.terragoedge.streetlight.logging.InstallMaintenanceLogModel;
 import com.terragoedge.streetlight.logging.LoggingModel;
 import org.apache.log4j.Logger;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.terragoedge.edgeserver.EdgeNote;
 import com.terragoedge.streetlight.PropertiesReader;
+import org.springframework.web.client.RestTemplate;
 
 public class StreetlightChicagoService extends AbstractProcessor {
 
@@ -213,6 +217,17 @@ public class StreetlightChicagoService extends AbstractProcessor {
         cal.set(Calendar.SECOND, 0);
         cal.set(Calendar.MILLISECOND, 0);
         return dateFormat.format(cal.getTime());
+    }
+
+    public ResponseEntity<String> edgeSlvserverCall(String url, HttpMethod httpMethod) {
+        RestTemplate restTemplate = new RestTemplate();
+
+        HttpEntity request = new HttpEntity<>(new HttpHeaders());
+
+        ResponseEntity<String> responseEntity = restTemplate.exchange(url, httpMethod, request, String.class);
+        logger.info("------------ Response ------------------");
+        logger.info("Response Code:" + responseEntity.getStatusCode().toString());
+        return responseEntity;
     }
     // http://192.168.1.9:8080/edgeServer/oauth/token?grant_type=password&username=admin&password=admin&client_id=edgerestapp
 }
