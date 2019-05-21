@@ -972,7 +972,10 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
 
             String controllerStrIdValue = loggingModel.getControllerSrtId();
 
-
+            boolean isMatched = checkExisitingMacAddressValid(edgeNote,loggingModel);
+            if(!isMatched){
+                return;
+            }
             if (newNodeMacAddress != null && !newNodeMacAddress.isEmpty()) {
                 try {
                     checkMacAddressExists(newNodeMacAddress, idOnController, nightRideKey, nightRideValue, loggingModel, slvInterfaceLogEntity);
@@ -1046,7 +1049,11 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
             String idOnController = loggingModel.getIdOnController();
 
             String controllerStrIdValue = loggingModel.getControllerSrtId();
-
+            
+            boolean isMatched = checkExisitingMacAddressValid(edgeNote,loggingModel);
+            if(!isMatched){
+                return;
+            }
 
             try {
                 checkMacAddressExists(newNodeMacAddress, idOnController, nightRideKey, nightRideValue, loggingModel, slvInterfaceLogEntity);

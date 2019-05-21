@@ -18,6 +18,7 @@ public class LoggingModel {
     private boolean isNoteAlreadySynced;
     private String talqAddressnoteGuid;
     private String parentNoteId;
+    private String slvMacaddress;
 
     private String controllerSrtId;
 
@@ -277,6 +278,14 @@ public class LoggingModel {
         isButtonPhotoCell = buttonPhotoCell;
     }
 
+    public String getSlvMacaddress() {
+        return slvMacaddress;
+    }
+
+    public void setSlvMacaddress(String slvMacaddress) {
+        this.slvMacaddress = slvMacaddress;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -316,6 +325,7 @@ public class LoggingModel {
                 ", isNoteAlreadySynced=" + isNoteAlreadySynced +
                 ", talqAddressnoteGuid='" + talqAddressnoteGuid + '\'' +
                 ", parentNoteId='" + parentNoteId + '\'' +
+                ", slvMacaddress='" + slvMacaddress + '\'' +
                 ", controllerSrtId='" + controllerSrtId + '\'' +
                 ", talqCreatedTime=" + talqCreatedTime +
                 ", talqAddress='" + talqAddress + '\'' +
@@ -327,7 +337,9 @@ public class LoggingModel {
                 ", isFixtureQRSame=" + isFixtureQRSame +
                 ", isNigthRideSame=" + isNigthRideSame +
                 ", isButtonPhotoCell=" + isButtonPhotoCell +
+                ", isCouldNotComplete=" + isCouldNotComplete +
                 ", repairsOption='" + repairsOption + '\'' +
+                ", slvLuminaireSerialNumber='" + slvLuminaireSerialNumber + '\'' +
                 '}';
     }
 }
