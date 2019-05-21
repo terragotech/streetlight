@@ -220,7 +220,7 @@ public enum ConnectionDAO {
 
     public List<ExistingMacValidationFailure> getAllExistingMacVaildationFailures(long time){
         try {
-            return existingMacValidationFailureDao.queryBuilder().where().ge("createddatetime",time).query();
+            return existingMacValidationFailureDao.queryBuilder().where().ge("processed_date_time",time).query();
         }catch (Exception e){
             e.printStackTrace();
         }

@@ -20,7 +20,8 @@ public class StreetlightApp {
                 calendar.setTime(new Date());
                 int hours = calendar.get(Calendar.HOUR_OF_DAY);
                 if(hours == Integer.valueOf(PropertiesReader.getProperties().getProperty("com.existing.mac.validation.failure.report.time"))){
-                    streetlightChicagoService.edgeSlvserverCall(, HttpMethod.POST);
+                    String fileUploadUrl = PropertiesReader.getProperties().getProperty("com.existing.mac.validation.failure.report.url");
+                    streetlightChicagoService.edgeSlvserverCall(fileUploadUrl);
                 }
                 Thread.sleep(30000);
             }catch (Exception e){

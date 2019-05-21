@@ -1,27 +1,30 @@
 package com.terragoedge.streetlight.service;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.FileReader;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
+import com.terragoedge.streetlight.OpenCsvUtils;
 import com.terragoedge.streetlight.edgeinterface.SlvData;
 import com.terragoedge.streetlight.edgeinterface.SlvToEdgeService;
 import com.terragoedge.streetlight.json.model.ContextList;
 import com.terragoedge.streetlight.json.model.CslpDate;
+import com.terragoedge.streetlight.json.model.ExistingMacValidationFailure;
 import com.terragoedge.streetlight.json.model.SlvInterfaceLogEntity;
 import com.terragoedge.streetlight.logging.InstallMaintenanceLogModel;
 import com.terragoedge.streetlight.logging.LoggingModel;
 import org.apache.log4j.Logger;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.ResponseEntity;
+import org.joda.time.DateTime;
+import org.springframework.http.*;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.terragoedge.edgeserver.EdgeNote;
 import com.terragoedge.streetlight.PropertiesReader;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 
 public class StreetlightChicagoService extends AbstractProcessor {
@@ -219,12 +222,50 @@ public class StreetlightChicagoService extends AbstractProcessor {
         return dateFormat.format(cal.getTime());
     }
 
-    public ResponseEntity<String> edgeSlvserverCall(String url, HttpMethod httpMethod) {
+    public ResponseEntity<String> edgeSlvserverCall(String url) {
+        long millis = DateTime.now().minusDays(1).withTimeAtStartOfDay().getMillis();
+        List<ExistingMacValidationFailure> existingMacValidationFailures = connectionDAO.getAllExistingMacVaildationFailures(millis);
+        List<String[]> datas = new ArrayList<>();
+        for(ExistingMacValidationFailure existingMacValidationFailure : existingMacValidationFailures){
+            List<String> data = new ArrayList<>();
+            data.add(existingMacValidationFailure.getIdOnController());
+            data.add(existingMacValidationFailure.getNoteGuid());
+            data.add(existingMacValidationFailure.getCreatedBy());
+            data.add(existingMacValidationFailure.getSlvMacaddress());
+            data.add(existingMacValidationFailure.getEdgeExistingMacaddress());
+            data.add(existingMacValidationFailure.getEdgeNewNodeMacaddress());
+            data.add(OpenCsvUtils.getFormatedDateTime(existingMacValidationFailure.getCreatedDateTime()));
+            data.add(OpenCsvUtils.getFormatedDateTime(existingMacValidationFailure.getProcessedDateTime()));
+            datas.add(data.toArray(new String[0]));
+        }
+        String fileName = OpenCsvUtils.getCsvFileName()+".csv";
+        String folderPath = properties.getProperty("com.existing.macaddress.failure.report.path");
+        File folder = new File(folderPath);
+        if(!folder.exists()){
+            folder.mkdirs();
+        }
+        String outputFilePath = folderPath+"/"+fileName;
+        try {
+            OpenCsvUtils.csvWriterAll(datas,outputFilePath);
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+        return uploadFileToEdgeSlvServer(url,outputFilePath);
+    }
+
+    private ResponseEntity<String> uploadFileToEdgeSlvServer(String url,String outputFilePath){
         RestTemplate restTemplate = new RestTemplate();
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.MULTIPART_FORM_DATA);
 
-        HttpEntity request = new HttpEntity<>(new HttpHeaders());
+        MultiValueMap<String, Object> body
+                = new LinkedMultiValueMap<>();
+        body.add("file", new File(outputFilePath));
 
-        ResponseEntity<String> responseEntity = restTemplate.exchange(url, httpMethod, request, String.class);
+        HttpEntity<MultiValueMap<String, Object>> requestEntity
+                = new HttpEntity<>(headers);
+
+        ResponseEntity<String> responseEntity = restTemplate.postForEntity(url, requestEntity, String.class);
         logger.info("------------ Response ------------------");
         logger.info("Response Code:" + responseEntity.getStatusCode().toString());
         return responseEntity;
