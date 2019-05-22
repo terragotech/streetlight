@@ -569,7 +569,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
                 // replace OlC
                 System.out.println("New :" + isNew + " \nmacAddress :" + macAddress);
                 logger.info("New :" + isNew + " \nmacAddress :" + macAddress);
-                if (isNew && macAddress == null || macAddress.isEmpty()) {
+                if (macAddress == null || macAddress.isEmpty()) {
                     loggingModel.setStatus(MessageConstants.SUCCESS);
                     return;
                 } else {
