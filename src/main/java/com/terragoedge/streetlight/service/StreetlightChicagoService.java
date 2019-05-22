@@ -226,6 +226,8 @@ public class StreetlightChicagoService extends AbstractProcessor {
         long millis = DateTime.now().minusDays(1).withTimeAtStartOfDay().getMillis();
         List<ExistingMacValidationFailure> existingMacValidationFailures = connectionDAO.getAllExistingMacVaildationFailures(millis);
         List<String[]> datas = new ArrayList<>();
+        String[] headers = {"idoncontroller","noteguid","createdby","slvmacaddress","edge_existingmacaddress","edge_newmacaddress","created_datetime","processed_datetime"};
+        datas.add(headers);
         for(ExistingMacValidationFailure existingMacValidationFailure : existingMacValidationFailures){
             List<String> data = new ArrayList<>();
             data.add(existingMacValidationFailure.getIdOnController());
