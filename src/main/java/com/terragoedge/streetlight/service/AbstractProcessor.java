@@ -371,7 +371,7 @@ public abstract class AbstractProcessor {
                 addStreetLightData("luminaire.installdate", dateFormat(edgeNote.getCreatedDateTime()), paramsList);
             }
             if (macAddress == null || macAddress.trim().isEmpty()) {
-                if (slvMacAddress!= null || macAddress.trim().startsWith("00135")) {
+                if (slvMacAddress!= null || slvMacAddress.trim().startsWith("00135")) {
                     installStatus = "Installed";
                 } else {
                     installStatus = "Fixture Only";
