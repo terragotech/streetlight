@@ -1050,7 +1050,9 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
             String controllerStrIdValue = loggingModel.getControllerSrtId();
             
             boolean isMatched = checkExistingMacAddressValid(edgeNote,loggingModel);
+            logger.info("Existing MAC Address match result:"+isMatched);
             if(!isMatched){
+                logger.info("Existing MAC Address not match with SLV. So Current note is skipped.");
                 return;
             }
 

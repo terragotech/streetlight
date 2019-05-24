@@ -247,10 +247,11 @@ public class StreetlightChicagoService extends AbstractProcessor {
             folder.mkdirs();
         }
         String outputFilePath = folderPath+"/"+fileName;
+        logger.error("Output File Path:"+outputFilePath);
         try {
             OpenCsvUtils.csvWriterAll(datas,outputFilePath);
         }catch (Exception e){
-            e.printStackTrace();
+           logger.error("Error in edgeSlvserverCall",e);
         }
         return uploadFileToEdgeSlvServer(url,outputFilePath);
     }

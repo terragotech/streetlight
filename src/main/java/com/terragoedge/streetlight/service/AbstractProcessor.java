@@ -839,16 +839,21 @@ public abstract class AbstractProcessor {
 
 public boolean checkExistingMacAddressValid(EdgeNote edgeNote, InstallMaintenanceLogModel installMaintenanceLogModel) throws Exception{
         try {
+            logger.info("Validate Existing MacAddress");
             String idonController = edgeNote.getTitle();
             String slvMacAddress = installMaintenanceLogModel.getSlvMacaddress() == null ? "" : installMaintenanceLogModel.getSlvMacaddress();
             String existingMacAddress = installMaintenanceLogModel.getExistingNodeMACaddress() == null ? "" : installMaintenanceLogModel.getExistingNodeMACaddress();
+            logger.info("Existing MacAddress:"+existingMacAddress);
+            logger.info("SLV MacAddress:"+slvMacAddress);
                 if(slvMacAddress.trim().toLowerCase().equals(existingMacAddress.trim().toLowerCase())) {
                     List<ExistingMacValidationFailure> existingMacValidationFailures = connectionDAO.getExistingMacValidationFailure(idonController,existingMacAddress);
                     for(ExistingMacValidationFailure existingMacValidationFailure : existingMacValidationFailures){
                         connectionDAO.deleteExistingMacVaildationFailure(existingMacValidationFailure);
                     }
+                    logger.info("Existing MacAddress Matches with SLV MacAddress.");
                     return true;
                 }else{
+                    logger.info("Existing MacAddress not Matched with SLV MacAddress.");
                     ExistingMacValidationFailure existingMacValidationFailure = new ExistingMacValidationFailure();
                     existingMacValidationFailure.setCreatedBy(edgeNote.getCreatedBy());
                     existingMacValidationFailure.setProcessedDateTime(System.currentTimeMillis());
@@ -864,6 +869,7 @@ public boolean checkExistingMacAddressValid(EdgeNote edgeNote, InstallMaintenanc
                     return false;
                 }
     } catch (Exception e) {
+            logger.error("Error in checkExistingMacAddressValid",e);
         throw new Exception(e);
     }
 }
