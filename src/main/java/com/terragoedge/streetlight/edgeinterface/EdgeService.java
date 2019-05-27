@@ -128,6 +128,7 @@ public class EdgeService {
                 formDefJson = formDefJson.replace("u0026","\\u0026");
                 List<EdgeFormData> formDataList = getEdgeFormData(formDefJson);
                 updateFormValue(formDataList, 38, "");
+                updateFormValue(formDataList, 39, "");
                 serverEdgeForm.add("formDef", gson.toJsonTree(formDataList));
                 serverEdgeForm.addProperty("formGuid", UUID.randomUUID().toString());
             }
