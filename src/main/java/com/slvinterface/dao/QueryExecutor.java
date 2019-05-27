@@ -38,19 +38,22 @@ public class QueryExecutor {
         try {
             TableUtils.createTableIfNotExists(connectionSource, EdgeAllMac.class);
         } catch (Exception e) {
-            //  e.printStackTrace();
+              e.printStackTrace();
+              logger.error("Error in EdgeAllMac",e);
         }
 
         try {
             TableUtils.createTableIfNotExists(connectionSource, SLVSyncTable.class);
         } catch (Exception e) {
-            //  e.printStackTrace();
+              e.printStackTrace();
+            logger.error("Error in SLVSyncTable",e);
         }
 
         try {
             TableUtils.createTableIfNotExists(connectionSource, SLVTransactionLogs.class);
         } catch (Exception e) {
-            //  e.printStackTrace();
+              e.printStackTrace();
+            logger.error("Error in SLVTransactionLogs",e);
         }
 
     }

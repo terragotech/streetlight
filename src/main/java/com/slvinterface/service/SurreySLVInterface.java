@@ -91,66 +91,6 @@ public class SurreySLVInterface extends  SLVInterfaceService {
     }
 
 
-    /**
-     * Populate EdgeValue to Edge2SLVData from FormValue based on Configuration JSON
-     * @param formData
-     * @param edge2SLVData
-     */
-    private void processFormData(FormData formData,Edge2SLVData edge2SLVData){
-        List<FormValues> formValuesList = formData.getFormDef();
-        List<Priority> priorities = conditionsJson.getPriority();
-        List<Config> configList = conditionsJson.getConfigList();
-        for(Priority priority : priorities){
-            Config temp = new Config();
-            temp.setType(priority.getType());
-
-            int pos = configList.indexOf(temp);
-
-            if(pos != -1){
-                Config config =  configList.get(pos);
-                List<Id> idList = config.getIds();
-                for(Id id : idList){
-                    switch (id.getType()){
-                        case MAC:
-                            try{
-                                String macAddress = valueById(formValuesList,id.getId()).toUpperCase();
-                                edge2SLVData.setMacAddress(macAddress);
-                                edge2SLVData.setPriority(priority);
-                            }catch (NoValueException e){
-                                e.printStackTrace();
-                            }
-
-
-                            break;
-                        case FIXTURE:
-                            try{
-                                String installDate = valueById(formValuesList,id.getId());
-                                installDate =  dateFormat(Long.valueOf(installDate));
-                                edge2SLVData.setInstallDate(installDate);
-                            }catch (NoValueException e){
-                                e.printStackTrace();
-                            }
-
-                            break;
-
-                        case IDONCONTROLLER:
-                            try{
-                                String idOnController = valueById(formValuesList,id.getId());
-                                edge2SLVData.setIdOnController(idOnController);
-                            }catch (NoValueException e){
-                                e.printStackTrace();
-                            }
-                            break;
-                    }
-                }
-
-                if(edge2SLVData.getPriority() != null){
-                    return;
-                }
-            }
-        }
-    }
-
 
     /**
      * Send Value to SLV.

@@ -1,5 +1,6 @@
 package com.slvinterface.main;
 
+import com.slvinterface.service.BrentSLVInterface;
 import com.slvinterface.service.SLVInterfaceService;
 import com.slvinterface.service.SurreySLVInterface;
 import com.slvinterface.service.UrbanControlSLVInterfaceService;
@@ -10,7 +11,7 @@ public class SLVApp {
     private static final Logger logger = Logger.getLogger(SLVApp.class);
     public static void main(String[] r){
         try{
-            SLVInterfaceService slvInterfaceService = new UrbanControlSLVInterfaceService();
+            SLVInterfaceService slvInterfaceService = new BrentSLVInterface();
             while(true){
                 try{
                     slvInterfaceService.run();

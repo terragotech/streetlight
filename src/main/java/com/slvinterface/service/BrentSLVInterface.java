@@ -2,33 +2,29 @@ package com.slvinterface.service;
 
 import com.slvinterface.entity.SLVSyncTable;
 import com.slvinterface.entity.SLVTransactionLogs;
-import com.slvinterface.enumeration.SLVProcess;
-import com.slvinterface.exception.NoValueException;
 import com.slvinterface.exception.QRCodeAlreadyUsedException;
 import com.slvinterface.exception.ReplaceOLCFailedException;
 import com.slvinterface.exception.SLVConnectionException;
-import com.slvinterface.json.*;
+import com.slvinterface.json.Edge2SLVData;
+import com.slvinterface.json.FormData;
 import org.apache.log4j.Logger;
 
 import java.net.URLEncoder;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
-import java.util.TimeZone;
 
-public class UrbanControlSLVInterfaceService extends  SLVInterfaceService{
+public class BrentSLVInterface extends  SLVInterfaceService {
 
-    private static final Logger logger = Logger.getLogger(UrbanControlSLVInterfaceService.class);
+    private static final Logger logger = Logger.getLogger(BrentSLVInterface.class);
 
-    public UrbanControlSLVInterfaceService()throws Exception{
+    public BrentSLVInterface()throws Exception{
         super();
     }
 
 
 
     // 118 - Controller ID, Node Installation Date -  155,Scan Node QR Code - 85,New Node QR Code-132,Replacement Date-159,
-    public void processFormData(List<FormData> formDataList, SLVSyncTable slvSyncTable)throws SLVConnectionException{
+    public void processFormData(List<FormData> formDataList, SLVSyncTable slvSyncTable)throws SLVConnectionException {
         Edge2SLVData previousEdge2SLVData = null;
         for(FormData formData : formDataList){
             Edge2SLVData currentEdge2SLVData = new Edge2SLVData();
@@ -94,8 +90,6 @@ public class UrbanControlSLVInterfaceService extends  SLVInterfaceService{
 
 
 
-
-
     /**
      * Send Value to SLV.
      * @param slvSyncTable
@@ -104,12 +98,6 @@ public class UrbanControlSLVInterfaceService extends  SLVInterfaceService{
      */
     private void slvSync(SLVSyncTable slvSyncTable,Edge2SLVData previousEdge2SLVData)throws ReplaceOLCFailedException {
         switch (previousEdge2SLVData.getPriority().getType()){
-            case REMOVE:
-                slvSyncTable.setSelectedAction("Remove WorkFlow");
-                replaceOLC(previousEdge2SLVData.getControllerStrId(),previousEdge2SLVData.getIdOnController(),"",slvSyncTable);
-                slvSyncTable.setStatus("Success");
-                break;
-
             case UPDATE_DEVICE:
                 slvSyncTable.setSelectedAction("Replace WorkFlow");
                 replaceOLC(previousEdge2SLVData.getControllerStrId(),previousEdge2SLVData.getIdOnController(),"",slvSyncTable);
@@ -118,12 +106,6 @@ public class UrbanControlSLVInterfaceService extends  SLVInterfaceService{
                 slvSyncTable.setStatus("Success");
                 break;
 
-            case NEW_DEVICE:
-                slvSyncTable.setSelectedAction("Install WorkFlow");
-                setDeviceVal(slvSyncTable,previousEdge2SLVData);
-                replaceOLC(previousEdge2SLVData.getControllerStrId(),previousEdge2SLVData.getIdOnController(),previousEdge2SLVData.getMacAddress(),slvSyncTable);
-                slvSyncTable.setStatus("Success");
-                break;
 
 
         }
@@ -138,7 +120,7 @@ public class UrbanControlSLVInterfaceService extends  SLVInterfaceService{
         addStreetLightData("MacAddress",previousEdge2SLVData.getMacAddress(),paramsList);
         addStreetLightData("install.date",previousEdge2SLVData.getInstallDate(),paramsList);
 
-        String slvCalender = "City of London 80";
+        String slvCalender = "Surrey 100-50-off-50";
         try {
             slvCalender =  URLEncoder.encode(slvCalender,"UTF-8");
             addStreetLightData("DimmingGroupName",slvCalender,paramsList);
@@ -151,12 +133,11 @@ public class UrbanControlSLVInterfaceService extends  SLVInterfaceService{
         try {
             modelFunctionId =  URLEncoder.encode(modelFunctionId,"UTF-8");
             addStreetLightData("modelfunctionid",modelFunctionId,paramsList);
+            // addStreetLightData("nodeTypeStrId", modelFunctionId,paramsList);
         }catch (Exception e){
             e.printStackTrace();
         }
 
         setDeviceValues(paramsList,slvTransactionLogs);
     }
-
-
 }

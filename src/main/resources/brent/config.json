@@ -1,0 +1,31 @@
+{
+  "priority": [{"type":"UPDATE_DEVICE","order":1}],
+  "config": [
+    {
+      "type": "UPDATE_DEVICE",
+      "ids": [
+        {
+          "id": 26,
+          "type": "MAC",
+          "isRequired": false
+        },
+        {
+          "id": 25,
+          "type": "FIXTURE",
+          "isRequired": true
+        },
+        {
+          "id": 3,
+          "type": "IDONCONTROLLER",
+          "isRequired": true
+        }
+      ],
+      "action": [
+        {
+          "id": 17,
+          "value": "New"
+        }
+      ]
+    }
+  ]
+}

@@ -10,6 +10,15 @@ public class Edge2SLVData {
     private String installDate;
     private String macAddress;
     private Priority priority;
+    private String existingMACAddress;
+
+    public String getExistingMACAddress() {
+        return existingMACAddress;
+    }
+
+    public void setExistingMACAddress(String existingMACAddress) {
+        this.existingMACAddress = existingMACAddress;
+    }
 
     public String getIdOnController() {
         return idOnController;
@@ -63,8 +72,12 @@ public class Edge2SLVData {
     public String toString() {
         return "Edge2SLVData{" +
                 "title='" + title + '\'' +
+                ", idOnController='" + idOnController + '\'' +
+                ", controllerStrId='" + controllerStrId + '\'' +
+                ", installDate='" + installDate + '\'' +
                 ", macAddress='" + macAddress + '\'' +
                 ", priority=" + priority +
+                ", existingMACAddress='" + existingMACAddress + '\'' +
                 '}';
     }
 }
