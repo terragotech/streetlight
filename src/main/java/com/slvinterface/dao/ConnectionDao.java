@@ -14,7 +14,6 @@ public enum ConnectionDao {
 
         try {
             connectionSource = new JdbcConnectionSource(DATABASE_URL);
-
         } catch (Exception e) {
             e.printStackTrace();
         }

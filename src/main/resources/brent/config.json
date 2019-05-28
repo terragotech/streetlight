@@ -7,15 +7,15 @@
         {
           "id": 26,
           "type": "MAC",
-          "isRequired": false
-        },
-        {
-          "id": 25,
-          "type": "FIXTURE",
           "isRequired": true
         },
         {
-          "id": 3,
+          "id": 25,
+          "type": "EXISTING_MAC",
+          "isRequired": true
+        },
+        {
+          "id": 15,
           "type": "IDONCONTROLLER",
           "isRequired": true
         }

@@ -101,7 +101,6 @@ public class BrentSLVInterface extends  SLVInterfaceService {
             case UPDATE_DEVICE:
                 slvSyncTable.setSelectedAction("Replace WorkFlow");
                 replaceOLC(previousEdge2SLVData.getControllerStrId(),previousEdge2SLVData.getIdOnController(),"",slvSyncTable);
-                setDeviceVal(slvSyncTable,previousEdge2SLVData);
                 replaceOLC(previousEdge2SLVData.getControllerStrId(),previousEdge2SLVData.getIdOnController(),previousEdge2SLVData.getMacAddress(),slvSyncTable);
                 slvSyncTable.setStatus("Success");
                 break;
@@ -112,32 +111,5 @@ public class BrentSLVInterface extends  SLVInterfaceService {
     }
 
 
-    private void setDeviceVal(SLVSyncTable slvSyncTable,Edge2SLVData previousEdge2SLVData){
-        SLVTransactionLogs slvTransactionLogs = getSLVTransVal(slvSyncTable);
-        List<Object> paramsList = new ArrayList<>();
-        loadVal(paramsList,previousEdge2SLVData);
-        addStreetLightData("installStatus","Installed",paramsList);
-        addStreetLightData("MacAddress",previousEdge2SLVData.getMacAddress(),paramsList);
-        addStreetLightData("install.date",previousEdge2SLVData.getInstallDate(),paramsList);
 
-        String slvCalender = "Surrey 100-50-off-50";
-        try {
-            slvCalender =  URLEncoder.encode(slvCalender,"UTF-8");
-            addStreetLightData("DimmingGroupName",slvCalender,paramsList);
-        }catch (Exception e){
-            e.printStackTrace();
-        }
-
-        String modelFunctionId = "talq.streetlight.v1:lightNodeFunction6";
-
-        try {
-            modelFunctionId =  URLEncoder.encode(modelFunctionId,"UTF-8");
-            addStreetLightData("modelfunctionid",modelFunctionId,paramsList);
-            // addStreetLightData("nodeTypeStrId", modelFunctionId,paramsList);
-        }catch (Exception e){
-            e.printStackTrace();
-        }
-
-        setDeviceValues(paramsList,slvTransactionLogs);
-    }
 }
