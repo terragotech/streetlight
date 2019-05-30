@@ -821,12 +821,15 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
             }
 
             if (isResync) {
-                try {
-                    SLVTransactionLogs slvTransactionLogs = getSLVTransactionLogs(loggingModel);
-                    replaceOLC(loggingModel.getControllerSrtId(), loggingModel.getIdOnController(), "", slvTransactionLogs, slvInterfaceLogEntity);
-                } catch (Exception e) {
-                    String message = e.getMessage();
+                if (nodeMacValue != null && !nodeMacValue.trim().isEmpty() && !loggingModel.isMacAddressUsed()) {
+                    try {
+                        SLVTransactionLogs slvTransactionLogs = getSLVTransactionLogs(loggingModel);
+                        replaceOLC(loggingModel.getControllerSrtId(), loggingModel.getIdOnController(), "", slvTransactionLogs, slvInterfaceLogEntity);
+                    } catch (Exception e) {
+                        String message = e.getMessage();
+                    }
                 }
+
 
             }
 
