@@ -172,6 +172,27 @@ public enum ConnectionDAO {
         }
     }
 
+
+    public void removeEdgeAllMAC(String idOnController,String macAddress){
+        try {
+            DeleteBuilder<EdgeAllMacData, String> deleteBuilder = edgeAllMacDataDao.deleteBuilder();
+            deleteBuilder.where().eq("title",idOnController).and().eq("macaddress",macAddress);
+            deleteBuilder.delete();
+        }catch (Exception e){
+            logger.error("Error in removeEdgeAllMAC",e);
+        }
+    }
+
+    public void removeEdgeAllFixture(String idOnController){
+        try {
+            DeleteBuilder<EdgeAllFixtureData, String> deleteBuilderEdgeAllFix = edgeAllFixtureDataDao.deleteBuilder();
+            deleteBuilderEdgeAllFix.where().eq("title",idOnController);
+            deleteBuilderEdgeAllFix.delete();
+        }catch (Exception e){
+            logger.error("Error in removeEdgeAllFixture",e);
+        }
+    }
+
     public void saveEdgeAllFixture(EdgeAllFixtureData edgeAllFixtureData) {
         try {
             edgeAllFixtureDataDao.create(edgeAllFixtureData);

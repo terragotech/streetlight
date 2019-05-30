@@ -493,7 +493,10 @@ public abstract class AbstractProcessor {
 
     public void buildFixtureStreetLightData(String data, List<Object> paramsList, EdgeNote edgeNote, SlvServerData slvServerData, LoggingModel loggingModel)
             throws InValidBarCodeException {
-
+        if(data.equals("LB6023120LED")){
+            processFixtureQRScan(data,paramsList,edgeNote,slvServerData,loggingModel);
+            return;
+        }
         String[] fixtureInfo = data.split(",");
         logger.info("Fixture QR Scan Val length" + fixtureInfo.length);
         // The highlighted sections are where it look like Philips replaced a “-“ with a “,” causing a single field to become 2 fields. I can have Dan contact the manufacturer but we won’t be able to change any of the QR codes on the fixtures already delivered.

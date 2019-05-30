@@ -1139,7 +1139,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
                             e.printStackTrace();
                             logger.error("Error in clear device values:" + e.getMessage());
                         }
-                        logger.info("cleared divice value");
+                        logger.info("cleared device value");
                         if (macaddress != null) {
                             DuplicateMacAddress duplicateMacAddress = connectionDAO.getDuplicateMacAddress(macaddress);
                             logger.info("duplicate mac address: " + duplicateMacAddress);
@@ -1147,6 +1147,12 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
                                 //reSync(duplicateMacAddress.getNoteguid(),getEdgeToken(),true,utilLocId,true);
                                 logger.info("resync called due to duplicate mac address");
                             }
+
+                            logger.info("Data going to remove from EdgeAllMac and EdgeAllFix Table.");
+                            logger.info("IdOnController:"+installMaintenanceLogModel.getIdOnController());
+                            logger.info("MACAddress:"+macaddress);
+                            connectionDAO.removeEdgeAllMAC(installMaintenanceLogModel.getIdOnController(),macaddress);
+                            connectionDAO.removeEdgeAllFixture(installMaintenanceLogModel.getIdOnController());
                         }
 
                     } catch (Exception e) {
