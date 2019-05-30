@@ -5,6 +5,7 @@ public class InstallWorkflowFormId {
     private int streetName;
     private int parrish;
     private int newPoleNumber;
+    private int division;
     private int retrofitStatus;
     private int newLampWatage;
     private int oldPoleNumber;
@@ -146,6 +147,14 @@ public class InstallWorkflowFormId {
         this.poleNumber = poleNumber;
     }
 
+    public int getDivision() {
+        return division;
+    }
+
+    public void setDivision(int division) {
+        this.division = division;
+    }
+
     @Override
     public String toString() {
         return "InstallWorkflowFormId{" +
@@ -153,6 +162,7 @@ public class InstallWorkflowFormId {
                 ", streetName=" + streetName +
                 ", parrish=" + parrish +
                 ", newPoleNumber=" + newPoleNumber +
+                ", division=" + division +
                 ", retrofitStatus=" + retrofitStatus +
                 ", newLampWatage=" + newLampWatage +
                 ", oldPoleNumber=" + oldPoleNumber +

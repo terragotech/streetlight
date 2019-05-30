@@ -336,9 +336,9 @@ public abstract class AbstractSlvService extends EdgeService {
     }
 
     public GeozoneEntity getGeozoneEntity(JPSWorkflowModel jpsWorkflowModel) {
-        String notebookName = jpsWorkflowModel.getNotebookName();
+        String division = (jpsWorkflowModel.getDivision() == null || jpsWorkflowModel.getDivision().equals("") || jpsWorkflowModel.getDivision().equals("UNKNOWN")) ? jpsWorkflowModel.getNotebookName() : jpsWorkflowModel.getDivision();
         String streetName = jpsWorkflowModel.getAddress1();
-        logger.info("Parent Geozone name as notebookName:"+notebookName);
+        logger.info("Parent Geozone name as notebookName:"+division);
         logger.info("Sub or childgezone Name as StreetName :"+streetName);
         String rootGeozoneId = properties.getProperty("streetlight.slv.rootgeozone");
         GeozoneEntity geozoneEntity = connectionDAO.getGeozoneEntity(jpsWorkflowModel);
@@ -352,7 +352,7 @@ public abstract class AbstractSlvService extends EdgeService {
         geozoneEntity.setStreetZoneName(jpsWorkflowModel.getAddress1());
         //check parent notebook has exist or not in slv
         GeozoneModel divisionChildGeozone = null;
-        GeozoneModel streetChildGeozone = null;
+//        GeozoneModel streetChildGeozone = null;
         // Get parent geozone
         GeozoneModel parishGeozoneModel = getGeozoneIdByName(jpsWorkflowModel.getCity(), Integer.valueOf(rootGeozoneId));
         // create parent and child geozone if not exist parent geozone
@@ -362,39 +362,39 @@ public abstract class AbstractSlvService extends EdgeService {
             parishGeozoneModel = createGeozone(jpsWorkflowModel.getCity(), Integer.parseInt(rootGeozoneId));
             logger.info("ParentGeozone value : "+((parishGeozoneModel!=null)? gson.toJson(parishGeozoneModel):null));
             if(parishGeozoneModel != null) {
-                divisionChildGeozone = createGeozone(notebookName, parishGeozoneModel.getId());
+                divisionChildGeozone = createGeozone(division, parishGeozoneModel.getId());
                 logger.info("childGeozone value : " + ((divisionChildGeozone != null) ? gson.toJson(divisionChildGeozone) : null));
-                if(divisionChildGeozone != null){
+                /*if(divisionChildGeozone != null){
                     streetChildGeozone = createGeozone(jpsWorkflowModel.getAddress1(), divisionChildGeozone.getId());
                     logger.info("first childGeozone value : " + ((streetChildGeozone != null) ? gson.toJson(streetChildGeozone) : null));
-                }
+                }*/
 
             }
         } else {
             //get child geozone
             logger.info("Exist parent geozone, Going to veryfi child geozone is exist or not");
-            divisionChildGeozone = getGeozoneIdByName(notebookName, parishGeozoneModel.getId());
+            divisionChildGeozone = getGeozoneIdByName(division, parishGeozoneModel.getId());
             logger.info("division childGeozone value : "+((divisionChildGeozone!=null)? gson.toJson(divisionChildGeozone):null));
             //check if child geozone under another parentgeozone, create new child geozone based on parent geozone.
             if (divisionChildGeozone == null || divisionChildGeozone.getParentId() != parishGeozoneModel.getId()) {
                 logger.info("check if child geozone under another parentgeozone, create new child geozone based on parent geozone");
-                divisionChildGeozone = createGeozone(notebookName, parishGeozoneModel.getId());
+                divisionChildGeozone = createGeozone(division, parishGeozoneModel.getId());
                 logger.info("division childGeozone value : " + ((divisionChildGeozone != null) ? gson.toJson(divisionChildGeozone) : null));
-                if(divisionChildGeozone != null){
+                /*if(divisionChildGeozone != null){
                     streetChildGeozone = createGeozone(jpsWorkflowModel.getAddress1(),divisionChildGeozone.getId());
                     logger.info("street childGeozone value : " + ((streetChildGeozone != null) ? gson.toJson(streetChildGeozone) : null));
-                }
+                }*/
             }else{
-                streetChildGeozone = getGeozoneIdByName(jpsWorkflowModel.getAddress1(), divisionChildGeozone.getId());
+                /*streetChildGeozone = getGeozoneIdByName(jpsWorkflowModel.getAddress1(), divisionChildGeozone.getId());
                 if(streetChildGeozone == null){
                     streetChildGeozone = createGeozone(jpsWorkflowModel.getAddress1(), divisionChildGeozone.getId());
                     logger.info("street childGeozone value : " + ((streetChildGeozone != null) ? gson.toJson(streetChildGeozone) : null));
-                }
+                }*/
             }
         }
         geozoneEntity.setParishzoneId(parishGeozoneModel.getId());
         geozoneEntity.setDivisionZoneId(divisionChildGeozone.getId());
-        geozoneEntity.setStreetGeozoneId(streetChildGeozone.getId());
+//        geozoneEntity.setStreetGeozoneId(streetChildGeozone.getId());
         connectionDAO.createGeozone(geozoneEntity);
         return geozoneEntity;
     }

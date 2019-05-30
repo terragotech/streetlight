@@ -191,6 +191,10 @@ public class SlvInterfaceService extends AbstractSlvService {
             if (nullCheck(parrish))
                 jpsWorkflowModel.setCity(parrish);
 
+            String division = getFormValue(edgeFormDataList,installWorkflowFormId.getDivision());
+            if (nullCheck(division))
+                jpsWorkflowModel.setDivision(division);
+
             String newPoleNumber = getFormValue(edgeFormDataList,installWorkflowFormId.getNewPoleNumber());
             if (nullCheck(newPoleNumber)) {
                 jpsWorkflowModel.setIdOnController(newPoleNumber);

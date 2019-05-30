@@ -14,5 +14,6 @@
   "feed": 144,
   "poleShape": 201,
   "condition": 140,
-  "poleNumber": 203
+  "poleNumber": 203,
+  "division": 80
 }

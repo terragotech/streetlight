@@ -19,6 +19,7 @@ public class JPSWorkflowModel {
     private String locationtype;
     private String type;
     private String model;
+    private String division;
     private String pole_type;
     private int lowvoltagethreshold;
     private String macAddress;
@@ -324,5 +325,13 @@ public class JPSWorkflowModel {
 
     public void setPower(String power) {
         this.power = power;
+    }
+
+    public String getDivision() {
+        return division;
+    }
+
+    public void setDivision(String division) {
+        this.division = division;
     }
 }

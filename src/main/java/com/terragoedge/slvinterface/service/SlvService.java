@@ -43,7 +43,7 @@ public class SlvService extends AbstractSlvService {
         logger.info("---------------------Geozone info start---------------------------");
         logger.info(gson.toJson(geozoneEntity));
         logger.info("---------------------Geozone info end---------------------------");
-        jpsWorkflowModel.setGeozoneId(geozoneEntity.getStreetGeozoneId());
+        jpsWorkflowModel.setGeozoneId(geozoneEntity.getDivisionZoneId());
         JsonArray devices = checkDeviceExist(jpsWorkflowModel.getIdOnController());// search idoncontroller on slv - ** rest call
         //start
         int deviceId = -1;
@@ -225,7 +225,7 @@ public class SlvService extends AbstractSlvService {
         addStreetLightData("location.streetdescription", jpsWorkflowModel.getStreetdescription(), paramList);
         addStreetLightData("categoryStrId", jpsWorkflowModel.getCategoryStrId(), paramList);
         addStreetLightData("location.city", jpsWorkflowModel.getCity(), paramList);
-        addStreetLightData("DimmingGroupName", jpsWorkflowModel.getDimmingGroupName(), paramList);
+        addStreetLightData("DimmingGroupName", "", paramList);
         addStreetLightData("provider.name", jpsWorkflowModel.getProvider_name(), paramList);
 //        addStreetLightData("geoZone path", jpsWorkflowModel.getGeozonePath(), paramList);
         addStreetLightData("network.highvoltagethreshold", String.valueOf(jpsWorkflowModel.getHighvoltagethreshold()), paramList);
