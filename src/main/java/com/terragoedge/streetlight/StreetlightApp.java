@@ -23,9 +23,9 @@ public class StreetlightApp {
     }
 
     public static void main(String[] args) {
-     /*   ReportFixService reportFixService = new ReportFixService();
-        reportFixService.run();*/
-        try {
+        ReportFixService reportFixService = new ReportFixService();
+        reportFixService.run();
+      /*  try {
             while (true) {
                 try {
                     Calendar calendar = Calendar.getInstance(Locale.getDefault());
@@ -64,7 +64,7 @@ public class StreetlightApp {
             }
         } catch (Exception e) {
             e.printStackTrace();
-        }
+        }*/
     }
 
 }

@@ -65,7 +65,16 @@
             <artifactId>commons-io</artifactId>
             <version>2.4</version>
         </dependency>
-
+        <dependency>
+            <groupId>org.apache.httpcomponents</groupId>
+            <artifactId>httpclient</artifactId>
+            <version>4.5.5</version>
+        </dependency>
+        <dependency>
+            <groupId>commons-io</groupId>
+            <artifactId>commons-io</artifactId>
+            <version>2.4</version>
+        </dependency>
         <!-- https://mvnrepository.com/artifact/com.mashape.unirest/unirest-java -->
 
     </dependencies>
@@ -90,7 +99,7 @@
                             <goal>single</goal>
                         </goals>
                         <configuration>
-                            <finalName>ameresco_usa_failure_form_v25</finalName>
+                            <finalName>ameresco_usa_failure_form_v7.2</finalName>
                             <archive>
                                 <manifest>
                                     <mainClass>

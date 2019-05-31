@@ -19,6 +19,7 @@ import com.terragoedge.streetlight.utils.Utils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.log4j.Logger;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 
 import java.io.FileInputStream;
@@ -233,14 +234,19 @@ public class FailureReportService extends FailureAbstractService {
         String failureReportUrl = url + failureUrl + "?" + params;
         logger.info("Url to get Failure Report:");
         logger.info("Url:" + failureReportUrl);
-        ResponseEntity<String> response = restService.getPostRequest(failureReportUrl, null);
-        logger.info("Response Code:" + response.getStatusCodeValue());
-        if (response.getStatusCodeValue() == 200) {
-            String responseString = response.getBody();
-            logger.info("--------Response----------");
-            logger.info(responseString);
-            // return (JsonObject) jsonParser.parse(tempResponse);
-            return (JsonObject) jsonParser.parse(responseString);
+        try{
+            ResponseEntity<String> response = restService.callSlvWithToken(false,url);
+          //  ResponseEntity<String> response = restService.getPostRequest(failureReportUrl, null);
+            logger.info("Response Code:" + response.getStatusCodeValue());
+            if (response.getStatusCodeValue() == 200) {
+                String responseString = response.getBody();
+                logger.info("--------Response----------");
+                logger.info(responseString);
+                // return (JsonObject) jsonParser.parse(tempResponse);
+                return (JsonObject) jsonParser.parse(responseString);
+            }
+        }catch (Exception e){
+          logger.error("Error while getting failure report.",e);
         }
         return null;
 
@@ -248,15 +254,21 @@ public class FailureReportService extends FailureAbstractService {
 
     public List<GeozoneModel> getGeozoneModelList(String url) {
         List<GeozoneModel> geozoneModels = new ArrayList<>();
-        ResponseEntity<String> responseEntity = restService.getPostRequest(url, null);
-        if (responseEntity.getStatusCode().is2xxSuccessful()) {
-            String responseJson = responseEntity.getBody();
-            geozoneModels = gson.fromJson(responseJson, new TypeToken<List<GeozoneModel>>() {
-            }.getType());
-            return geozoneModels;
-        } else {
-            logger.error("Unable to get message from EdgeServer. Response Code is :" + responseEntity.getStatusCode());
+       // ResponseEntity<String> responseEntity = restService.getPostRequest(url, null);
+        try{
+            ResponseEntity<String> responseEntity = restService.callSlvWithToken(false,url);
+            if (responseEntity.getStatusCode().is2xxSuccessful()) {
+                String responseJson = responseEntity.getBody();
+                geozoneModels = gson.fromJson(responseJson, new TypeToken<List<GeozoneModel>>() {
+                }.getType());
+                return geozoneModels;
+            } else {
+                logger.error("Unable to get message from EdgeServer. Response Code is :" + responseEntity.getStatusCode());
+            }
+        }catch (Exception e){
+            e.printStackTrace();
         }
+
         return new ArrayList<GeozoneModel>();
 
     }
