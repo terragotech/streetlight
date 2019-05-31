@@ -142,6 +142,7 @@ public abstract class AbstractProcessor {
                 luminaireDate = jsonObject1.get("value").getAsString();
             } else if (keyValue != null && keyValue.equals("userproperty.MacAddress")) {
                 macAddress = jsonObject1.get("value").getAsString();
+                installMaintenanceLogModel.setSlvMacaddress(macAddress);
             }else if (keyValue != null && keyValue.equals("userproperty.luminaire.serialnumber")) {
                 luminaireSerialNumber = jsonObject1.get("value").getAsString();
             }
@@ -375,7 +376,7 @@ public abstract class AbstractProcessor {
                 addStreetLightData("luminaire.installdate", dateFormat(edgeNote.getCreatedDateTime()), paramsList);
             }
             if (macAddress == null || macAddress.trim().isEmpty()) {
-                if (slvMacAddress!= null || macAddress.trim().startsWith("00135")) {
+                if (slvMacAddress != null && slvMacAddress.trim().startsWith("00135")) {
                     installStatus = "Installed";
                 } else {
                     installStatus = "Fixture Only";
@@ -477,8 +478,38 @@ public abstract class AbstractProcessor {
         return false;
     }
 
+    private void processFixtureQRScan(String data, List<Object> paramsList, EdgeNote edgeNote, SlvServerData slvServerData, LoggingModel loggingModel){
+        addStreetLightData("luminaire.brand", "Acuity", paramsList);
+        slvServerData.setLuminaireBrand("Acuity");
+
+        addStreetLightData("device.luminaire.partnumber", "MVOLT WFL 30K TM GYSDP10KVMP PER7 NL RFD275482", paramsList);
+        slvServerData.setLuminairePartNumber("MVOLT WFL 30K TM GYSDP10KVMP PER7 NL RFD275482");
+
+        addStreetLightData("luminaire.model", "ACP0LED PK3", paramsList);
+        slvServerData.setLuminaireModel("ACP0LED PK3");
+
+        addStreetLightData("device.luminaire.manufacturedate", "01/28/2019", paramsList);
+        slvServerData.setLuminaireManufacturedate("01/28/2019");
+
+        addStreetLightData("power", "119", paramsList);
+
+        addStreetLightData("luminaire.type", "LED", paramsList);
+
+
+        addStreetLightData("device.luminaire.colortemp", "3000K", paramsList);
+        slvServerData.setLuminaireColorTemp("3000K");
+
+
+
+
+    }
+
     public void buildFixtureStreetLightData(String data, List<Object> paramsList, EdgeNote edgeNote, SlvServerData slvServerData, LoggingModel loggingModel)
             throws InValidBarCodeException {
+        if(data.equals("LB6023120LED")){
+            processFixtureQRScan(data,paramsList,edgeNote,slvServerData,loggingModel);
+            return;
+        }
         String[] fixtureInfo = data.split(",");
         logger.info("Fixture QR Scan Val length" + fixtureInfo.length);
         // The highlighted sections are where it look like Philips replaced a “-“ with a “,” causing a single field to become 2 fields. I can have Dan contact the manufacturer but we won’t be able to change any of the QR codes on the fixtures already delivered.
@@ -1008,6 +1039,42 @@ public abstract class AbstractProcessor {
         return isDroppedPinWorkFlow;
     }
 
+public boolean checkExistingMacAddressValid(EdgeNote edgeNote, InstallMaintenanceLogModel installMaintenanceLogModel) throws Exception{
+        try {
+            logger.info("Validate Existing MacAddress");
+            String idonController = edgeNote.getTitle();
+            String slvMacAddress = installMaintenanceLogModel.getSlvMacaddress() == null ? "" : installMaintenanceLogModel.getSlvMacaddress();
+            String existingMacAddress = installMaintenanceLogModel.getExistingNodeMACaddress() == null ? "" : installMaintenanceLogModel.getExistingNodeMACaddress();
+            logger.info("Existing MacAddress:"+existingMacAddress);
+            logger.info("SLV MacAddress:"+slvMacAddress);
+                if(slvMacAddress.trim().toLowerCase().equals(existingMacAddress.trim().toLowerCase())) {
+                    List<ExistingMacValidationFailure> existingMacValidationFailures = connectionDAO.getExistingMacValidationFailure(idonController,existingMacAddress);
+                    for(ExistingMacValidationFailure existingMacValidationFailure : existingMacValidationFailures){
+                        connectionDAO.deleteExistingMacVaildationFailure(existingMacValidationFailure);
+                    }
+                    logger.info("Existing MacAddress Matches with SLV MacAddress.");
+                    return true;
+                }else{
+                    logger.info("Existing MacAddress not Matched with SLV MacAddress.");
+                    ExistingMacValidationFailure existingMacValidationFailure = new ExistingMacValidationFailure();
+                    existingMacValidationFailure.setCreatedBy(edgeNote.getCreatedBy());
+                    existingMacValidationFailure.setProcessedDateTime(System.currentTimeMillis());
+                    existingMacValidationFailure.setCreatedDateTime(edgeNote.getCreatedDateTime());
+                    existingMacValidationFailure.setNoteGuid(edgeNote.getNoteGuid());
+                    existingMacValidationFailure.setEdgeNewNodeMacaddress(installMaintenanceLogModel.getNewNodeMACaddress());
+                    existingMacValidationFailure.setEdgeExistingMacaddress(existingMacAddress);
+                    existingMacValidationFailure.setIdOnController(idonController);
+                    existingMacValidationFailure.setSlvMacaddress(slvMacAddress);
+                    connectionDAO.saveExistingMacFailure(existingMacValidationFailure);
+                    installMaintenanceLogModel.setErrorDetails("Existing macaddress not matched with slv macaddress");
+                    installMaintenanceLogModel.setStatus(MessageConstants.ERROR);
+                    return false;
+                }
+    } catch (Exception e) {
+            logger.error("Error in checkExistingMacAddressValid",e);
+        throw new Exception(e);
+    }
+}
     private String getFormValue(List<EdgeFormData> edgeFormDatas,String label){
         for(EdgeFormData edgeFormData : edgeFormDatas){
             if(edgeFormData.getLabel().equals(label)){

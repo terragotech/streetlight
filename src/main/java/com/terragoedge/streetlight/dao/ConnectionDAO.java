@@ -11,6 +11,9 @@ import com.terragoedge.edgeserver.EdgeAllMacData;
 import com.terragoedge.streetlight.json.model.*;
 import org.apache.log4j.Logger;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public enum ConnectionDAO {
     INSTANCE;
 
@@ -27,6 +30,7 @@ public enum ConnectionDAO {
     public Dao<EdgeAllMacData, String> edgeAllMacDataDao = null;
     public Dao<EdgeAllFixtureData, String> edgeAllFixtureDataDao = null;
     public Dao<SlvInterfaceLogEntity, String> slvInterfaceLogDao = null;
+    public Dao<ExistingMacValidationFailure, String> existingMacValidationFailureDao = null;
 
 
     ConnectionDAO() {
@@ -77,6 +81,11 @@ public enum ConnectionDAO {
             } catch (Exception e) {
                 logger.error("Error in openConnection", e);
             }
+            try{
+                TableUtils.createTableIfNotExists(connectionSource,ExistingMacValidationFailure.class);
+            }catch (Exception e){
+                logger.error("Error in openConnection", e);
+            }
             slvDeviceDao = DaoManager.createDao(connectionSource, SlvServerData.class);
             duplicateMacAddressDao = DaoManager.createDao(connectionSource, DuplicateMacAddress.class);
             deviceAttributeDao = DaoManager.createDao(connectionSource, DeviceAttributes.class);
@@ -84,6 +93,7 @@ public enum ConnectionDAO {
             edgeAllMacDataDao = DaoManager.createDao(connectionSource, EdgeAllMacData.class);
             edgeAllFixtureDataDao = DaoManager.createDao(connectionSource, EdgeAllFixtureData.class);
             slvInterfaceLogDao = DaoManager.createDao(connectionSource, SlvInterfaceLogEntity.class);
+            existingMacValidationFailureDao = DaoManager.createDao(connectionSource,ExistingMacValidationFailure.class);
             System.out.println("Connected.....");
         } catch (Exception e) {
             logger.error("Error in openConnection", e);
@@ -162,6 +172,27 @@ public enum ConnectionDAO {
         }
     }
 
+
+    public void removeEdgeAllMAC(String idOnController,String macAddress){
+        try {
+            DeleteBuilder<EdgeAllMacData, String> deleteBuilder = edgeAllMacDataDao.deleteBuilder();
+            deleteBuilder.where().eq("title",idOnController).and().eq("macaddress",macAddress);
+            deleteBuilder.delete();
+        }catch (Exception e){
+            logger.error("Error in removeEdgeAllMAC",e);
+        }
+    }
+
+    public void removeEdgeAllFixture(String idOnController){
+        try {
+            DeleteBuilder<EdgeAllFixtureData, String> deleteBuilderEdgeAllFix = edgeAllFixtureDataDao.deleteBuilder();
+            deleteBuilderEdgeAllFix.where().eq("title",idOnController);
+            deleteBuilderEdgeAllFix.delete();
+        }catch (Exception e){
+            logger.error("Error in removeEdgeAllFixture",e);
+        }
+    }
+
     public void saveEdgeAllFixture(EdgeAllFixtureData edgeAllFixtureData) {
         try {
             edgeAllFixtureDataDao.create(edgeAllFixtureData);
@@ -198,5 +229,39 @@ public enum ConnectionDAO {
             }
 
         }
+    }
+
+    public void saveExistingMacFailure(ExistingMacValidationFailure existingMacValidationFailure){
+        try{
+            existingMacValidationFailureDao.create(existingMacValidationFailure);
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+    }
+
+    public List<ExistingMacValidationFailure> getAllExistingMacVaildationFailures(long time){
+        try {
+            return existingMacValidationFailureDao.queryBuilder().where().ge("processed_date_time",time).query();
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+        return new ArrayList<>();
+    }
+
+    public void deleteExistingMacVaildationFailure(ExistingMacValidationFailure existingMacValidationFailure){
+        try{
+            existingMacValidationFailureDao.delete(existingMacValidationFailure);
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+    }
+
+    public List<ExistingMacValidationFailure> getExistingMacValidationFailure(String idoncontroller,String existingMac){
+        try{
+            return existingMacValidationFailureDao.queryBuilder().where().eq("idoncontroller",idoncontroller).and().eq("slvmacaddress",existingMac).query();
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+        return new ArrayList<>();
     }
 }

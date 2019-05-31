@@ -10,7 +10,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 import org.springframework.http.ResponseEntity;
 
-import java.rmi.MarshalException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -570,7 +569,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
                 // replace OlC
                 System.out.println("New :" + isNew + " \nmacAddress :" + macAddress);
                 logger.info("New :" + isNew + " \nmacAddress :" + macAddress);
-                if (isNew && macAddress == null || macAddress.isEmpty()) {
+                if (macAddress == null || macAddress.isEmpty()) {
                     loggingModel.setStatus(MessageConstants.SUCCESS);
                     return;
                 } else {
@@ -822,12 +821,15 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
             }
 
             if (isResync) {
-                try {
-                    SLVTransactionLogs slvTransactionLogs = getSLVTransactionLogs(loggingModel);
-                    replaceOLC(loggingModel.getControllerSrtId(), loggingModel.getIdOnController(), "", slvTransactionLogs, slvInterfaceLogEntity);
-                } catch (Exception e) {
-                    String message = e.getMessage();
+                if (nodeMacValue != null && !nodeMacValue.trim().isEmpty() && !loggingModel.isMacAddressUsed()) {
+                    try {
+                        SLVTransactionLogs slvTransactionLogs = getSLVTransactionLogs(loggingModel);
+                        replaceOLC(loggingModel.getControllerSrtId(), loggingModel.getIdOnController(), "", slvTransactionLogs, slvInterfaceLogEntity);
+                    } catch (Exception e) {
+                        String message = e.getMessage();
+                    }
                 }
+
 
             }
 
@@ -972,7 +974,10 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
 
             String controllerStrIdValue = loggingModel.getControllerSrtId();
 
-
+            boolean isMatched = checkExistingMacAddressValid(edgeNote,loggingModel);
+            if(!isMatched){
+                return;
+            }
             if (newNodeMacAddress != null && !newNodeMacAddress.isEmpty()) {
                 try {
                     checkMacAddressExists(newNodeMacAddress, idOnController, nightRideKey, nightRideValue, loggingModel, slvInterfaceLogEntity);
@@ -1046,7 +1051,13 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
             String idOnController = loggingModel.getIdOnController();
 
             String controllerStrIdValue = loggingModel.getControllerSrtId();
-
+            
+            boolean isMatched = checkExistingMacAddressValid(edgeNote,loggingModel);
+            logger.info("Existing MAC Address match result:"+isMatched);
+            if(!isMatched){
+                logger.info("Existing MAC Address not match with SLV. So Current note is skipped.");
+                return;
+            }
 
             try {
                 checkMacAddressExists(newNodeMacAddress, idOnController, nightRideKey, nightRideValue, loggingModel, slvInterfaceLogEntity);
@@ -1131,7 +1142,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
                             e.printStackTrace();
                             logger.error("Error in clear device values:" + e.getMessage());
                         }
-                        logger.info("cleared divice value");
+                        logger.info("cleared device value");
                         if (macaddress != null) {
                             DuplicateMacAddress duplicateMacAddress = connectionDAO.getDuplicateMacAddress(macaddress);
                             logger.info("duplicate mac address: " + duplicateMacAddress);
@@ -1139,6 +1150,12 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
                                 //reSync(duplicateMacAddress.getNoteguid(),getEdgeToken(),true,utilLocId,true);
                                 logger.info("resync called due to duplicate mac address");
                             }
+
+                            logger.info("Data going to remove from EdgeAllMac and EdgeAllFix Table.");
+                            logger.info("IdOnController:"+installMaintenanceLogModel.getIdOnController());
+                            logger.info("MACAddress:"+macaddress);
+                            connectionDAO.removeEdgeAllMAC(installMaintenanceLogModel.getIdOnController(),macaddress);
+                            connectionDAO.removeEdgeAllFixture(installMaintenanceLogModel.getIdOnController());
                         }
 
                     } catch (Exception e) {
