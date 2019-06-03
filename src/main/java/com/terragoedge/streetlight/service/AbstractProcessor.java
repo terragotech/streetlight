@@ -439,16 +439,12 @@ public abstract class AbstractProcessor {
 
     protected void addStreetLightData(String key, String value, List<Object> paramsList) {
         paramsList.add("valueName=" + key.trim());
-        if(key.equals("DimmingGroupName") || key.equals("cslp.node.install.date") || key.equals("install.date")){
-            try {
-                paramsList.add("value=" + URLEncoder.encode(value.trim(), "UTF-8"));
-            }catch (Exception e){
-                e.printStackTrace();
-            }
-        }else{
-            paramsList.add("value=" + value.trim());
+       // paramsList.add("value=" + value.trim());
+        try{
+            paramsList.add("value=" + URLEncoder.encode(value.trim(), "UTF-8"));
+        }catch (Exception e){
+            logger.error("Error in addStreetLightData",e);
         }
-
     }
 
 
