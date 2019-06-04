@@ -17,10 +17,11 @@ import java.util.WeakHashMap;
 
 public class InstallationMaintenanceProcessor extends AbstractProcessor {
 
-    public InstallationMaintenanceProcessor(WeakHashMap<String, String> contextListHashMap, HashMap<String, CslpDate> cslpDateHashMap) {
+    public InstallationMaintenanceProcessor(WeakHashMap<String, String> contextListHashMap, HashMap<String, CslpDate> cslpDateHashMap,HashMap<String, String> macHashMap) {
         super();
         this.contextListHashMap = contextListHashMap;
         this.cslpDateHashMap = cslpDateHashMap;
+        this.macHashMap = macHashMap;
     }
 
     private static final String INSTATALLATION_AND_MAINTENANCE_GUID = "8b722347-c3a7-41f4-a8a9-c35dece6f98b";

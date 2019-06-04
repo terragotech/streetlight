@@ -39,7 +39,7 @@ public class StreetlightChicagoService extends AbstractProcessor {
     public StreetlightChicagoService() {
         super();
        // loadContextList();
-        installationMaintenanceProcessor = new InstallationMaintenanceProcessor(contextListHashMap,cslpDateHashMap);
+        installationMaintenanceProcessor = new InstallationMaintenanceProcessor(contextListHashMap,cslpDateHashMap,macHashMap);
         slvToEdgeService = new SlvToEdgeService();
         System.out.println("Object Created.");
     }
