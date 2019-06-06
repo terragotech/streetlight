@@ -58,6 +58,10 @@ public class ProcessTask extends FailureAbstractService implements Runnable {
                 }
             }
             logger.info("Set OutageLayer"+failureReportModel.getFixtureId());
+            if(failureReportModel==null || failureReportModel.getFixtureId()==null){
+                logger.info("Given note title is null its not processed");
+                return;
+            }
             String notesJson = getNoteDetails(failureReportModel.getFixtureId());
             if (notesJson == null) {
                 logger.info("Note not in Edge.");

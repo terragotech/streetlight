@@ -23,8 +23,8 @@ public class StreetlightApp {
     }
 
     public static void main(String[] args) {
-        ReportFixService reportFixService = new ReportFixService();
-        reportFixService.run();
+        FailureReportService failureReportService = new FailureReportService();
+        failureReportService.run();
       /*  try {
             while (true) {
                 try {

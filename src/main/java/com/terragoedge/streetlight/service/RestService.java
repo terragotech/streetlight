@@ -144,10 +144,13 @@ public class RestService {
 
     public ResponseEntity<String> callSlvWithToken(boolean isGetRequest,String url) throws Exception{
         try{
+            logger.info("ReConnect");
             SlvRestTemplate.INSTANCE.reConnect();
         }catch (Exception e){
+
             e.printStackTrace();
         }
+        logger.info("failureport :"+url);
         HttpResponse response = SlvRestTemplate.INSTANCE.httpClient.execute(isGetRequest ? getSlvGetHeaders(url) : getSlvPostHeaders(url), SlvRestTemplate.INSTANCE.httpContext);
         String responseBody = getResponseBody(response);
         int responseCode = response.getStatusLine().getStatusCode();

@@ -31,27 +31,30 @@ public enum SlvRestTemplate {
     private static final Logger logger = Logger.getLogger(SlvRestTemplate.class);
     Properties properties = PropertiesReader.getProperties();
 
-    SlvRestTemplate(){
-        try{
+    SlvRestTemplate() {
+        try {
+            System.out.print("going to create object");
             reConnect();
-        }catch (Exception e){
+            System.out.print("Initialized object");
+        } catch (Exception e) {
             httpClient = null;
             httpContext = null;
             token = null;
+            System.out.print("Error while connect SLV");
             e.printStackTrace();
+
 
         }
     }
 
-    public void reConnect()throws Exception{
+    public void reConnect() throws Exception {
+        logger.info("Going to call init and getCsrfToken");
         init();
         getCsrfToken();
     }
 
 
-
-
-    private void init(){
+    private void init() {
         httpClient = HttpClientBuilder.create().build();
         cookieStore = new BasicCookieStore();
         httpContext = new BasicHttpContext();
@@ -59,30 +62,33 @@ public enum SlvRestTemplate {
 
     }
 
-    private void getCsrfToken()throws AuthenticationException,Exception{
+    private void getCsrfToken() throws AuthenticationException, Exception {
         String userName = properties.getProperty("com.slv.username");
         String password = properties.getProperty("com.slv.password");
+        logger.info("slv username is :" + userName);
+        logger.info("slv password is :" + password);
         String plainCreds = userName + ":" + password;
         byte[] plainCredsBytes = plainCreds.getBytes();
         byte[] base64CredsBytes = Base64.encodeBase64(plainCredsBytes);
         String base64Creds = new String(base64CredsBytes);
-
+        logger.info("basic auth :" + base64Creds);
         HttpGet httpGet = new HttpGet();
-        httpGet.setHeader("authorization", "Basic "+base64Creds);
-        httpGet.setHeader("x-csrf-token","Fetch");
-        httpGet.setHeader("x-requested-with","XMLHttpRequest");
+        httpGet.setHeader("authorization", "Basic " + base64Creds);
+        httpGet.setHeader("x-csrf-token", "Fetch");
+        httpGet.setHeader("x-requested-with", "XMLHttpRequest");
         String baseUrl = properties.getProperty("com.slv.server");
-        System.out.println(baseUrl+"/api/userprofile/getCurrentUser");
-       // logger.info("Url:"+baseUrl+"/reports/api/userprofile/getCurrentUser");
-        httpGet.setURI(URI.create(baseUrl+"/api/userprofile/getCurrentUser"));
+        System.out.println(baseUrl + "/reports/api/userprofile/getCurrentUser");
+        logger.info("Url:" + baseUrl + "/reports/api/userprofile/getCurrentUser");
+        httpGet.setURI(URI.create(baseUrl + "/reports/api/userprofile/getCurrentUser"));
 
         HttpResponse httpResponse = httpClient.execute(httpGet, httpContext);
         int code = httpResponse.getStatusLine().getStatusCode();
 
-        if(code == HttpStatus.SC_OK){
+        if (code == HttpStatus.SC_OK) {
             token = httpResponse.getFirstHeader("X-CSRF-Token").getValue();
-        }else{
-            throw  new AuthenticationException("Unable to Authentication. Status code"+code);
+            logger.info("new Token :" + token);
+        } else {
+            throw new AuthenticationException("Unable to Authentication. Status code" + code);
         }
     }
 

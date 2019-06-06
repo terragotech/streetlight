@@ -52,11 +52,11 @@ public class FailureReportService extends FailureAbstractService {
             errorFormJson = IOUtils.toString(fis);
         } catch (Exception e) {
             logger.error("Error in loadErrorFormJson", e);
-        }finally{
-            if(fis != null){
-                try{
+        } finally {
+            if (fis != null) {
+                try {
                     fis.close();
-                }catch (Exception e){
+                } catch (Exception e) {
                     e.printStackTrace();
                 }
 
@@ -82,14 +82,20 @@ public class FailureReportService extends FailureAbstractService {
                 processFailureReport(geozoneModel, failureReportModelList);
 
                 for (FailureReportModel failureReportModel : failureReportModelList) {
-                    logger.info("ProcessForm Started Title " + failureReportModel.toString());
 
-                    if (failureReportModel.isOutage() || failureReportModel.isWarning()) {
-                        Runnable processTask = new ProcessTask(failureReportModel);
-                        executor.execute(processTask);
+                    try {
+                        logger.info("ProcessForm Started Title " + failureReportModel.toString());
+                        if (failureReportModel != null && failureReportModel.getFixtureId() != null) {
+                            if (failureReportModel.isOutage() || failureReportModel.isWarning()) {
+                                Runnable processTask = new ProcessTask(failureReportModel);
+                                executor.execute(processTask);
+                            }
+                            // processErrorForm(failureReportModel);
+                            processedFixtureIds.add(failureReportModel.getFixtureId());
+                        }
+                    }catch (Exception e){
+                        e.printStackTrace();
                     }
-                    // processErrorForm(failureReportModel);
-                    processedFixtureIds.add(failureReportModel.getFixtureId());
                 }
             }
         }
@@ -229,14 +235,15 @@ public class FailureReportService extends FailureAbstractService {
         paramsList.add("ser=json");
         paramsList.add("reportPropertyName=detail");
         paramsList.add("reportPropertyValue=2");
-        paramsList.add("time=" + System.currentTimeMillis());
+        paramsList.add("slvSystemServiceRequestTime=" + System.currentTimeMillis());
+        //paramsList.add("time=" + System.currentTimeMillis());
         String params = StringUtils.join(paramsList, "&");
         String failureReportUrl = url + failureUrl + "?" + params;
         logger.info("Url to get Failure Report:");
         logger.info("Url:" + failureReportUrl);
-        try{
-            ResponseEntity<String> response = restService.callSlvWithToken(false,url);
-          //  ResponseEntity<String> response = restService.getPostRequest(failureReportUrl, null);
+        try {
+            ResponseEntity<String> response = restService.callSlvWithToken(true, failureReportUrl);
+            //  ResponseEntity<String> response = restService.getPostRequest(failureReportUrl, null);
             logger.info("Response Code:" + response.getStatusCodeValue());
             if (response.getStatusCodeValue() == 200) {
                 String responseString = response.getBody();
@@ -245,8 +252,8 @@ public class FailureReportService extends FailureAbstractService {
                 // return (JsonObject) jsonParser.parse(tempResponse);
                 return (JsonObject) jsonParser.parse(responseString);
             }
-        }catch (Exception e){
-          logger.error("Error while getting failure report.",e);
+        } catch (Exception e) {
+            logger.error("Error while getting failure report.", e);
         }
         return null;
 
@@ -254,9 +261,9 @@ public class FailureReportService extends FailureAbstractService {
 
     public List<GeozoneModel> getGeozoneModelList(String url) {
         List<GeozoneModel> geozoneModels = new ArrayList<>();
-       // ResponseEntity<String> responseEntity = restService.getPostRequest(url, null);
-        try{
-            ResponseEntity<String> responseEntity = restService.callSlvWithToken(false,url);
+        // ResponseEntity<String> responseEntity = restService.getPostRequest(url, null);
+        try {
+            ResponseEntity<String> responseEntity = restService.callSlvWithToken(false, url);
             if (responseEntity.getStatusCode().is2xxSuccessful()) {
                 String responseJson = responseEntity.getBody();
                 geozoneModels = gson.fromJson(responseJson, new TypeToken<List<GeozoneModel>>() {
@@ -265,7 +272,7 @@ public class FailureReportService extends FailureAbstractService {
             } else {
                 logger.error("Unable to get message from EdgeServer. Response Code is :" + responseEntity.getStatusCode());
             }
-        }catch (Exception e){
+        } catch (Exception e) {
             e.printStackTrace();
         }
 
@@ -283,44 +290,51 @@ public class FailureReportService extends FailureAbstractService {
     }
 
 
-
     public void processResolvedForm(String fixtureId, FailureFormDBmodel failureFormDBmodel) {
-        String notebookGuid = null;
-        String edgenoteJson = getNoteDetails(fixtureId);
-        Type listType = new TypeToken<ArrayList<EdgeNote>>() {
-        }.getType();
-        List<EdgeNote> edgeNoteList = gson.fromJson(edgenoteJson, listType);
-        for (EdgeNote edgeNote : edgeNoteList) {
-            String outageLayerGuid = PropertiesReader.getProperties().getProperty("complete_layer.guid");
-            if (edgeNote.getEdgeNotebook() != null) {
-                EdgeNotebook edgeNotebook = edgeNote.getEdgeNotebook();
-                notebookGuid = edgeNotebook.getNotebookGuid();
-            }
-            String noteguid = edgeNote.getNoteGuid();
-            JsonObject edgeJsonObject = (JsonObject) jsonParser.parse(gson.toJson(edgeNote));
-            setGroupValue(outageLayerGuid, edgeJsonObject);
-            JsonArray serverEdgeFormJsonArray = edgeJsonObject.get("formData").getAsJsonArray();
-            int size = serverEdgeFormJsonArray.size();
-            for (int i = 0; i < size; i++) {
-                JsonObject serverEdgeForm = serverEdgeFormJsonArray.get(i).getAsJsonObject();
-                String formDefJson = serverEdgeForm.get("formDef").getAsString();
-                formDefJson = formDefJson.replace("\\\\", "");
-                List<EdgeFormData> edgeFormDataList = getEdgeFormData(formDefJson);
-                serverEdgeForm.add("formDef", gson.toJsonTree(edgeFormDataList));
-                serverEdgeForm.addProperty("formGuid", UUID.randomUUID().toString());
-            }
-            edgeJsonObject.add("formData", serverEdgeFormJsonArray);
-            logger.info("ProcessResolvedData " + edgeJsonObject.toString());
-            edgeJsonObject.addProperty("createdDateTime", System.currentTimeMillis());
-            edgeJsonObject.addProperty("noteGuid", UUID.randomUUID().toString());
-            ResponseEntity<String> responseEntity = updateNoteDetails(edgeJsonObject.toString(), noteguid, notebookGuid);
-            logger.info("edgenote update to server: " + responseEntity.getBody());
+        try {
+            if (fixtureId != null) {
+                String notebookGuid = null;
+                String edgenoteJson = getNoteDetails(fixtureId);
+                Type listType = new TypeToken<ArrayList<EdgeNote>>() {
+                }.getType();
+                if (edgenoteJson != null) {
+                    List<EdgeNote> edgeNoteList = gson.fromJson(edgenoteJson, listType);
+                    for (EdgeNote edgeNote : edgeNoteList) {
+                        String outageLayerGuid = PropertiesReader.getProperties().getProperty("complete_layer.guid");
+                        if (edgeNote.getEdgeNotebook() != null) {
+                            EdgeNotebook edgeNotebook = edgeNote.getEdgeNotebook();
+                            notebookGuid = edgeNotebook.getNotebookGuid();
+                        }
+                        String noteguid = edgeNote.getNoteGuid();
+                        JsonObject edgeJsonObject = (JsonObject) jsonParser.parse(gson.toJson(edgeNote));
+                        setGroupValue(outageLayerGuid, edgeJsonObject);
+                        JsonArray serverEdgeFormJsonArray = edgeJsonObject.get("formData").getAsJsonArray();
+                        int size = serverEdgeFormJsonArray.size();
+                        for (int i = 0; i < size; i++) {
+                            JsonObject serverEdgeForm = serverEdgeFormJsonArray.get(i).getAsJsonObject();
+                            String formDefJson = serverEdgeForm.get("formDef").getAsString();
+                            formDefJson = formDefJson.replace("\\\\", "");
+                            List<EdgeFormData> edgeFormDataList = getEdgeFormData(formDefJson);
+                            serverEdgeForm.add("formDef", gson.toJsonTree(edgeFormDataList));
+                            serverEdgeForm.addProperty("formGuid", UUID.randomUUID().toString());
+                        }
+                        edgeJsonObject.add("formData", serverEdgeFormJsonArray);
+                        logger.info("ProcessResolvedData " + edgeJsonObject.toString());
+                        edgeJsonObject.addProperty("createdDateTime", System.currentTimeMillis());
+                        edgeJsonObject.addProperty("noteGuid", UUID.randomUUID().toString());
+                        ResponseEntity<String> responseEntity = updateNoteDetails(edgeJsonObject.toString(), noteguid, notebookGuid);
+                        logger.info("edgenote update to server: " + responseEntity.getBody());
 
-            failureFormDBmodel.setNoteid(edgeNote.getNoteGuid());
-            failureFormDBmodel.setCreatedDatetime(String.valueOf(edgeNote.getCreatedDateTime()));
-            failureFormDBmodel.setProcessDateTime(String.valueOf(System.currentTimeMillis()));
-            failureFormDBmodel.setNewNoteGuid(responseEntity.getBody());
-            streetlightDao.update(failureFormDBmodel);
+                        failureFormDBmodel.setNoteid(edgeNote.getNoteGuid());
+                        failureFormDBmodel.setCreatedDatetime(String.valueOf(edgeNote.getCreatedDateTime()));
+                        failureFormDBmodel.setProcessDateTime(String.valueOf(System.currentTimeMillis()));
+                        failureFormDBmodel.setNewNoteGuid(responseEntity.getBody());
+                        streetlightDao.update(failureFormDBmodel);
+                    }
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
         }
 
     }
