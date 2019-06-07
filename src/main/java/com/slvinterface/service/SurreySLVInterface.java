@@ -7,14 +7,12 @@ import com.slvinterface.exception.QRCodeAlreadyUsedException;
 import com.slvinterface.exception.ReplaceOLCFailedException;
 import com.slvinterface.exception.SLVConnectionException;
 import com.slvinterface.json.*;
+import com.slvinterface.utils.PropertiesReader;
 import org.apache.log4j.Logger;
 
 import java.net.URLEncoder;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.TimeZone;
+import java.util.*;
 
 public class SurreySLVInterface extends  SLVInterfaceService {
     private static final Logger logger = Logger.getLogger(SurreySLVInterface.class);
@@ -134,13 +132,15 @@ public class SurreySLVInterface extends  SLVInterfaceService {
         addStreetLightData("MacAddress",previousEdge2SLVData.getMacAddress(),paramsList);
         addStreetLightData("install.date",previousEdge2SLVData.getInstallDate(),paramsList);
 
-        String slvCalender = "Surrey 100-50-off-50";
-        try {
-            slvCalender =  URLEncoder.encode(slvCalender,"UTF-8");
-            addStreetLightData("DimmingGroupName",slvCalender,paramsList);
-        }catch (Exception e){
-            e.printStackTrace();
+        String slvCalender = PropertiesReader.getProperties().getProperty("streetlight.calendar");
+        if(slvCalender != null && !slvCalender.trim().isEmpty()){
+            try {
+                addStreetLightData("DimmingGroupName",slvCalender,paramsList);
+            }catch (Exception e){
+                e.printStackTrace();
+            }
         }
+
 
         String modelFunctionId = "talq.streetlight.v1:lightNodeFunction6";
 

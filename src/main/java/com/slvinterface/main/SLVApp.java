@@ -11,7 +11,7 @@ public class SLVApp {
     private static final Logger logger = Logger.getLogger(SLVApp.class);
     public static void main(String[] r){
         try{
-            SLVInterfaceService slvInterfaceService = new BrentSLVInterface();
+            SLVInterfaceService slvInterfaceService = new SurreySLVInterface();
             while(true){
                 try{
                     slvInterfaceService.run();

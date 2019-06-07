@@ -81,7 +81,6 @@ public abstract class SLVInterfaceService {
         if (edgeSlvServerResponse.getStatusCode().is2xxSuccessful()) {
             // Get Response String
             String notesGuids = edgeSlvServerResponse.getBody();
-
             JsonArray noteGuidsJsonArray = (JsonArray) jsonParser.parse(notesGuids);
             if (noteGuidsJsonArray != null && !noteGuidsJsonArray.isJsonNull()) {
                 for (JsonElement noteGuidJson : noteGuidsJsonArray) {
@@ -295,7 +294,8 @@ public abstract class SLVInterfaceService {
         paramsList.add("attributeName=MacAddress");
         paramsList.add("attributeValue=" + macAddress);
         paramsList.add("attributeOperator=eq-i");
-        paramsList.add("geoZoneId=10453");
+        String geoZoneId = PropertiesReader.getProperties().getProperty("streetlight.root.geozone");
+        paramsList.add("geoZoneId="+geoZoneId);
         paramsList.add("recurse=true");
         paramsList.add("returnedInfo=devicesList");
         paramsList.add("ser=json");
@@ -519,7 +519,12 @@ public abstract class SLVInterfaceService {
 
     protected void addStreetLightData(String key, String value, List<Object> paramsList) {
         paramsList.add("valueName=" + key.trim());
-        paramsList.add("value=" + value.trim());
+        try {
+            value =  URLEncoder.encode(value,"UTF-8");
+            paramsList.add("value=" + value.trim());
+        }catch (Exception e){
+            e.printStackTrace();
+        }
     }
 
 
