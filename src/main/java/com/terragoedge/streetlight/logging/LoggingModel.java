@@ -35,6 +35,7 @@ public class LoggingModel {
     private boolean isFixtureQRSame;
     private boolean isNigthRideSame;
     private boolean isButtonPhotoCell;
+    private boolean isDroppedPinWorkflow;
 
 
     private boolean isCouldNotComplete;
@@ -284,6 +285,15 @@ public class LoggingModel {
 
     public void setSlvMacaddress(String slvMacaddress) {
         this.slvMacaddress = slvMacaddress;
+    }
+
+
+    public boolean isDroppedPinWorkflow() {
+        return isDroppedPinWorkflow;
+    }
+
+    public void setDroppedPinWorkflow(boolean droppedPinWorkflow) {
+        isDroppedPinWorkflow = droppedPinWorkflow;
     }
 
     @Override

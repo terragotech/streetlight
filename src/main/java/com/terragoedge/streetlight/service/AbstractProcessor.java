@@ -13,11 +13,13 @@ import com.terragoedge.streetlight.json.model.*;
 import com.terragoedge.streetlight.logging.InstallMaintenanceLogModel;
 import com.terragoedge.streetlight.logging.LoggingModel;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.log4j.Logger;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
 import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.sql.SQLException;
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -589,6 +591,12 @@ public abstract class AbstractProcessor {
             String url = mainUrl + updateDeviceValues;
 
             paramsList.add("ser=json");
+            if(slvTransactionLogs.isDroppedPinWorkflow()) {
+                paramsList.add("valueName=location.locationtype");
+                paramsList.add("value=" + properties.getProperty("com.slv.location.locationtype"));
+                paramsList.add("valueName=modelFunctionId");
+                paramsList.add("value=" + properties.getProperty("com.slv.type.equipment"));
+            }
             String params = StringUtils.join(paramsList, "&");
             url = url + "&" + params;
             logger.info("SetDevice method called");
@@ -617,7 +625,7 @@ public abstract class AbstractProcessor {
             String url = mainUrl + searchGeoZone;
             List<String> paramsList = new ArrayList<>();
             paramsList.add("ser=json");
-            paramsList.add("name="+geozone);
+            paramsList.add("name="+geozone.replaceAll(" ","%20"));
             paramsList.add("partialMatch=false");
             String params = StringUtils.join(paramsList, "&");
             url = url + "?" + params;
@@ -682,7 +690,6 @@ public abstract class AbstractProcessor {
             String atlasPage = Utils.getAtlasPage(edgeNotebook.getNotebookName());
 
             String atlasGroup = Utils.getAtlasGroup(proposedContext);
-
             String fixtureCode = Utils.getFixtureCode(formFixtureCode.startsWith(" ") ? formFixtureCode.substring(1) : formFixtureCode);
             String fixtureName = atlasPage+"-"+atlasGroup+"-"+edgeNote.getTitle()+"-"+fixtureCode;
             String geoJson = edgeNote.getGeometry();
@@ -697,6 +704,7 @@ public abstract class AbstractProcessor {
             paramsList.add("idOnController="+edgeNote.getTitle());
             paramsList.add("lat="+latlngs.get(1));
             paramsList.add("lng="+latlngs.get(0));
+
             String params = StringUtils.join(paramsList, "&");
             url = url + "?" + params;
             logger.info("createDevice method called");
@@ -874,6 +882,8 @@ public abstract class AbstractProcessor {
         slvTransactionLogs.setTitle(loggingModel.getNoteName());
         slvTransactionLogs.setCreatedDateTime(Long.valueOf(loggingModel.getCreatedDatetime()));
         slvTransactionLogs.setParentNoteGuid(loggingModel.getParentNoteId());
+        slvTransactionLogs.setDroppedPinWorkflow(loggingModel.isDroppedPinWorkflow());
+
         return slvTransactionLogs;
     }
 
