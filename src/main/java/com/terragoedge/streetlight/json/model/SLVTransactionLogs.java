@@ -12,6 +12,7 @@ public class SLVTransactionLogs {
     private long eventTime;
     private long createdDateTime;
     private CallType typeOfCall;
+    private boolean isDroppedPinWorkflow;
 
 
     public String getParentNoteGuid() {
@@ -76,6 +77,14 @@ public class SLVTransactionLogs {
 
     public void setTypeOfCall(CallType typeOfCall) {
         this.typeOfCall = typeOfCall;
+    }
+
+    public boolean isDroppedPinWorkflow() {
+        return isDroppedPinWorkflow;
+    }
+
+    public void setDroppedPinWorkflow(boolean droppedPinWorkflow) {
+        isDroppedPinWorkflow = droppedPinWorkflow;
     }
 
     @Override
