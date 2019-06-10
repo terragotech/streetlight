@@ -130,7 +130,7 @@ public class StreetlightChicagoService extends AbstractProcessor {
 
 
 
-        String edgeSlvUrl = "http://localhost:8080/notesGuid?lastSyncTime=";
+        String edgeSlvUrl = "https://amerescousa.terragoedge.com/edgeSlvServer/notesGuid?lastSyncTime=";
 
         long lastSynctime = streetlightDao.getLastSyncTime();
         if(lastSynctime > 0){
@@ -178,6 +178,7 @@ public class StreetlightChicagoService extends AbstractProcessor {
                                if (!edgeNote.getCreatedBy().contains("admin") && !edgeNote.getCreatedBy().contains("slvinterface")) {
                                     // Below commented line need for dropped pin workflow in future
                                    boolean isDroppedPinWorkFlow = isDroppedPinNote(edgeNote,droppedPinTag);
+                                   logger.info("isDroppedPinWorkFlow:"+isDroppedPinWorkFlow);
                                    InstallMaintenanceLogModel installMaintenanceLogModel = new InstallMaintenanceLogModel();
                                    installMaintenanceLogModel.setDroppedPinWorkflow(isDroppedPinWorkFlow);
                                    installMaintenanceLogModel.setProcessedNoteId(edgeNote.getNoteGuid());
@@ -318,12 +319,12 @@ public class StreetlightChicagoService extends AbstractProcessor {
             }else{
                 int count = validateForms(edgeNote);
                 if(count == 0){
-                    logger.error("Skipping this device. Dueto there is no install and maintenance form for this device: "+idOnController);
+                    logger.error("Skipping this device. Due to there is no install and maintenance form for this device: "+idOnController);
                     slvInterfaceLogEntity.setStatus(MessageConstants.ERROR);
                     slvInterfaceLogEntity.setErrordetails("No installAndMaintenance form for this note: "+idOnController);
                     isDeviceCreated = false;
                 }else if(count > 1){
-                    logger.error("Skipping this device. Dueto there is two or more no.of install and maintenance form for this device: "+idOnController);
+                    logger.error("Skipping this device. Due to there is two or more no.of install and maintenance form for this device: "+idOnController);
                     slvInterfaceLogEntity.setStatus(MessageConstants.ERROR);
                     slvInterfaceLogEntity.setErrordetails("two or more installAndMaintenance forms available for this note: "+idOnController);
                     isDeviceCreated = false;

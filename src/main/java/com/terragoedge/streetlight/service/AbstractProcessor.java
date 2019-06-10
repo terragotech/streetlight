@@ -630,7 +630,14 @@ public abstract class AbstractProcessor {
             String url = mainUrl + searchGeoZone;
             List<String> paramsList = new ArrayList<>();
             paramsList.add("ser=json");
-            paramsList.add("name="+geozone.replaceAll(" ","%20"));
+
+            try{
+                geozone = URLEncoder.encode(geozone.trim(), "UTF-8");
+            }catch (Exception e){
+                logger.error("Error in addStreetLightData",e);
+            }
+
+            paramsList.add("name="+geozone);
             paramsList.add("partialMatch=false");
             String params = StringUtils.join(paramsList, "&");
             url = url + "?" + params;
