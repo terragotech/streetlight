@@ -549,10 +549,15 @@ public abstract class AbstractProcessor {
             addStreetLightData("power", powerVal, paramsList);
 
             String dimmingGroupName = contextListHashMap.get(loggingModel.getIdOnController());
+            logger.info("dimming groupname :"+dimmingGroupName);
+            logger.info("stringContainsNumber(fixtureInfo[5]) status :"+stringContainsNumber(fixtureInfo[5]));
+            logger.info("stringContainsNumber(fixtureInfo[5]) status :"+stringContainsNumber(fixtureInfo[5]));
+            logger.info("dimming group starting with condition :"+(dimmingGroupName.startsWith("3") || dimmingGroupName.startsWith("11") || dimmingGroupName.startsWith("12")));
             if (dimmingGroupName != null && stringContainsNumber(fixtureInfo[5]) && (dimmingGroupName.startsWith("3") || dimmingGroupName.startsWith("11") || dimmingGroupName.startsWith("12"))) {
                 fixtureInfo[5] = "LED";
+                logger.info("Entered if Statement Lum Type" +fixtureInfo[5]);
             }
-
+            logger.info("Final Lum Type" +fixtureInfo[5]);
             //luminaire.type
             addStreetLightData("luminaire.type", fixtureInfo[5], paramsList);
             // addStreetLightData("comed.litetype", fixtureInfo[5], paramsList);
