@@ -10,8 +10,6 @@ import com.terragoedge.edgeserver.FormData;
 import com.terragoedge.streetlight.OpenCsvUtils;
 import com.terragoedge.streetlight.edgeinterface.SlvData;
 import com.terragoedge.streetlight.edgeinterface.SlvToEdgeService;
-import com.terragoedge.streetlight.json.model.ContextList;
-import com.terragoedge.streetlight.json.model.CslpDate;
 import com.terragoedge.streetlight.json.model.ExistingMacValidationFailure;
 import com.terragoedge.streetlight.json.model.SLVTransactionLogs;
 import com.terragoedge.streetlight.json.model.SlvInterfaceLogEntity;

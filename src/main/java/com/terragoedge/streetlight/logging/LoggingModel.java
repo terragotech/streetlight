@@ -1,5 +1,7 @@
 package com.terragoedge.streetlight.logging;
 
+import com.terragoedge.streetlight.json.model.SLVDates;
+
 import java.util.Objects;
 
 public class LoggingModel {
@@ -44,6 +46,10 @@ public class LoggingModel {
 
     private String slvLuminaireSerialNumber;
 
+
+
+
+
     public boolean isCouldNotComplete() {
         return isCouldNotComplete;
     }
@@ -70,6 +76,7 @@ public class LoggingModel {
         }
 
     }
+
 
     public String getParentNoteId() {
         return parentNoteId;
@@ -347,6 +354,7 @@ public class LoggingModel {
                 ", isFixtureQRSame=" + isFixtureQRSame +
                 ", isNigthRideSame=" + isNigthRideSame +
                 ", isButtonPhotoCell=" + isButtonPhotoCell +
+                ", isDroppedPinWorkflow=" + isDroppedPinWorkflow +
                 ", isCouldNotComplete=" + isCouldNotComplete +
                 ", repairsOption='" + repairsOption + '\'' +
                 ", slvLuminaireSerialNumber='" + slvLuminaireSerialNumber + '\'' +

@@ -1,16 +1,36 @@
 package com.terragoedge.streetlight.json.model;
 
-public class CslpDate {
+public class SLVDates {
 
     private String cslpLumDate;
     private String cslpNodeDate;
+    private String nodeInstallDate;
+    private String lumInstallDate;
 
-    public CslpDate(String cslpLumDate, String cslpNodeDate) {
+
+
+    public SLVDates(String cslpLumDate, String cslpNodeDate) {
         this.cslpLumDate = cslpLumDate;
         this.cslpNodeDate = cslpNodeDate;
     }
 
-    public CslpDate() {
+    public SLVDates() {
+    }
+
+    public String getNodeInstallDate() {
+        return nodeInstallDate;
+    }
+
+    public void setNodeInstallDate(String nodeInstallDate) {
+        this.nodeInstallDate = nodeInstallDate;
+    }
+
+    public String getLumInstallDate() {
+        return lumInstallDate;
+    }
+
+    public void setLumInstallDate(String lumInstallDate) {
+        this.lumInstallDate = lumInstallDate;
     }
 
     public String getCslpLumDate() {
@@ -29,13 +49,15 @@ public class CslpDate {
         this.cslpNodeDate = cslpNodeDate;
     }
 
+    
+
     @Override
     public String toString() {
-        return "CslpDate{" +
+        return "SLVDates{" +
                 "cslpLumDate='" + cslpLumDate + '\'' +
                 ", cslpNodeDate='" + cslpNodeDate + '\'' +
+                ", nodeInstallDate='" + nodeInstallDate + '\'' +
+                ", lumInstallDate='" + lumInstallDate + '\'' +
                 '}';
     }
-
-
 }

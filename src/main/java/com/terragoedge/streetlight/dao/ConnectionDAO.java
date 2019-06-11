@@ -6,8 +6,7 @@ import com.j256.ormlite.jdbc.JdbcConnectionSource;
 import com.j256.ormlite.stmt.DeleteBuilder;
 import com.j256.ormlite.support.ConnectionSource;
 import com.j256.ormlite.table.TableUtils;
-import com.terragoedge.edgeserver.EdgeAllFixtureData;
-import com.terragoedge.edgeserver.EdgeAllMacData;
+import com.terragoedge.edgeserver.*;
 import com.terragoedge.streetlight.json.model.*;
 import org.apache.log4j.Logger;
 
@@ -32,6 +31,8 @@ public enum ConnectionDAO {
     public Dao<SlvInterfaceLogEntity, String> slvInterfaceLogDao = null;
     public Dao<ExistingMacValidationFailure, String> existingMacValidationFailureDao = null;
 
+
+    public Dao<EdgeSLVDate, String> edgeNodeDates = null;
 
     ConnectionDAO() {
         openConnection();
@@ -86,6 +87,14 @@ public enum ConnectionDAO {
             }catch (Exception e){
                 logger.error("Error in openConnection", e);
             }
+
+
+            try{
+                TableUtils.createTableIfNotExists(connectionSource,EdgeSLVDate.class);
+            }catch (Exception e){
+                logger.error("Error in openConnection", e);
+            }
+
             slvDeviceDao = DaoManager.createDao(connectionSource, SlvServerData.class);
             duplicateMacAddressDao = DaoManager.createDao(connectionSource, DuplicateMacAddress.class);
             deviceAttributeDao = DaoManager.createDao(connectionSource, DeviceAttributes.class);
@@ -94,11 +103,15 @@ public enum ConnectionDAO {
             edgeAllFixtureDataDao = DaoManager.createDao(connectionSource, EdgeAllFixtureData.class);
             slvInterfaceLogDao = DaoManager.createDao(connectionSource, SlvInterfaceLogEntity.class);
             existingMacValidationFailureDao = DaoManager.createDao(connectionSource,ExistingMacValidationFailure.class);
+
+            edgeNodeDates = DaoManager.createDao(connectionSource, EdgeSLVDate.class);
+
             System.out.println("Connected.....");
         } catch (Exception e) {
             logger.error("Error in openConnection", e);
         }
     }
+
 
 
     public Dao<SlvServerData, String> getSlvDeviceDao() {
@@ -115,7 +128,7 @@ public enum ConnectionDAO {
         try {
             duplicateMacAddressDao.create(duplicateMacAddress);
         } catch (Exception e) {
-            e.printStackTrace();
+            logger.error("Error in saveDuplicateMacAddress",e);
         }
     }
 
@@ -123,7 +136,7 @@ public enum ConnectionDAO {
         try {
             deviceAttributeDao.create(deviceAttributes);
         } catch (Exception e) {
-            e.printStackTrace();
+            logger.error("Error in saveDeviceAttributes",e);
         }
     }
 
@@ -131,7 +144,7 @@ public enum ConnectionDAO {
         try {
             macAddressEventLogsDao.create(duplicateMACAddressEventLog);
         } catch (Exception e) {
-            e.printStackTrace();
+            logger.error("Error in saveMacAddressEventLog",e);
         }
     }
 
@@ -139,7 +152,7 @@ public enum ConnectionDAO {
         try {
             return duplicateMacAddressDao.queryBuilder().where().eq("macaddress", macaddress).queryForFirst();
         } catch (Exception e) {
-            e.printStackTrace();
+            logger.error("Error in getDuplicateMacAddress",e);
         }
         return null;
     }
@@ -150,7 +163,7 @@ public enum ConnectionDAO {
             deleteBuilder.where().eq("noteguid", noteguid);
             deleteBuilder.delete();
         } catch (Exception e) {
-            e.printStackTrace();
+            logger.error("Error in deleteDuplicateMacAddress",e);
         }
     }
 
@@ -159,7 +172,7 @@ public enum ConnectionDAO {
         try {
             edgeAllMacData = edgeAllMacDataDao.queryBuilder().where().eq("title", idOncontroller).and().eq("macaddress", macaddress).queryForFirst();
         } catch (Exception e) {
-            e.printStackTrace();
+            logger.error("Error in isExistMacAddress",e);
         }
         return (edgeAllMacData != null) ? true : false;
     }
@@ -168,7 +181,7 @@ public enum ConnectionDAO {
         try {
             edgeAllMacDataDao.create(edgeAllMacData);
         } catch (Exception e) {
-            e.printStackTrace();
+            logger.error("Error in saveEdgeAllMac",e);
         }
     }
 
@@ -197,7 +210,7 @@ public enum ConnectionDAO {
         try {
             edgeAllFixtureDataDao.create(edgeAllFixtureData);
         } catch (Exception e) {
-            e.printStackTrace();
+            logger.error("Error in saveEdgeAllFixture",e);
         }
     }
 
@@ -206,7 +219,7 @@ public enum ConnectionDAO {
         try {
             edgeAllFixtureData = edgeAllFixtureDataDao.queryBuilder().where().eq("title", idOncontroller).and().eq("fixtureqrscan", fixtureQrScan).queryForFirst();
         } catch (Exception e) {
-            e.printStackTrace();
+            logger.error("Error in isExistFixture",e);
         }
         return (edgeAllFixtureData != null) ? true : false;
     }
@@ -215,7 +228,7 @@ public enum ConnectionDAO {
         try {
             slvInterfaceLogDao.create(slvInterfaceLogEntity);
         } catch (Exception e) {
-            e.printStackTrace();
+            logger.error("Error in saveSlvInterfaceLog",e);
         }
     }
 
@@ -235,7 +248,7 @@ public enum ConnectionDAO {
         try{
             existingMacValidationFailureDao.create(existingMacValidationFailure);
         }catch (Exception e){
-            e.printStackTrace();
+            logger.error("Error in saveExistingMacFailure",e);
         }
     }
 
@@ -243,7 +256,7 @@ public enum ConnectionDAO {
         try {
             return existingMacValidationFailureDao.queryBuilder().where().ge("processed_date_time",time).query();
         }catch (Exception e){
-            e.printStackTrace();
+            logger.error("Error in getAllExistingMacVaildationFailures",e);
         }
         return new ArrayList<>();
     }
@@ -252,7 +265,7 @@ public enum ConnectionDAO {
         try{
             existingMacValidationFailureDao.delete(existingMacValidationFailure);
         }catch (Exception e){
-            e.printStackTrace();
+            logger.error("Error in deleteExistingMacVaildationFailure",e);
         }
     }
 
@@ -260,8 +273,30 @@ public enum ConnectionDAO {
         try{
             return existingMacValidationFailureDao.queryBuilder().where().eq("idoncontroller",idoncontroller).and().eq("slvmacaddress",existingMac).query();
         }catch (Exception e){
-            e.printStackTrace();
+            logger.error("Error in getExistingMacValidationFailure",e);
         }
         return new ArrayList<>();
     }
+
+
+
+    public void saveEdgeNodeDate(EdgeSLVDate edgeSLVDate){
+        try{
+            edgeNodeDates.create(edgeSLVDate);
+        }catch (Exception e){
+            logger.error("Error in saveEdgeNodeDate",e);
+        }
+    }
+
+
+    public EdgeSLVDate getEdgeNodeDate(String title, String edgeDate,String type){
+        try {
+            return edgeNodeDates.queryBuilder().where().eq("title",title).and().eq("edge_date",edgeDate).and().eq("dates_type",type).queryForFirst();
+        }catch (Exception e){
+            logger.error("Error in getEdgeCSLPNodeDate",e);
+        }
+        return null;
+    }
+
+
 }

@@ -7,20 +7,16 @@ import com.terragoedge.streetlight.Utils;
 import com.terragoedge.streetlight.dao.ConnectionDAO;
 import com.terragoedge.streetlight.dao.StreetlightDao;
 import com.terragoedge.streetlight.enumeration.CallType;
-import com.terragoedge.streetlight.enumeration.ProcessType;
 import com.terragoedge.streetlight.exception.*;
 import com.terragoedge.streetlight.json.model.*;
 import com.terragoedge.streetlight.logging.InstallMaintenanceLogModel;
 import com.terragoedge.streetlight.logging.LoggingModel;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.log4j.Logger;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
 import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
-import java.sql.SQLException;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.Properties;
@@ -39,7 +35,7 @@ public abstract class AbstractProcessor {
     ConnectionDAO connectionDAO;
 
     WeakHashMap<String, String> contextListHashMap = new WeakHashMap<>();
-    HashMap<String, CslpDate> cslpDateHashMap = new HashMap<>();
+    HashMap<String, SLVDates> cslpDateHashMap = new HashMap<>();
     HashMap<String, String> macHashMap = new HashMap<>();
     protected String droppedPinTag;
 
@@ -127,9 +123,14 @@ public abstract class AbstractProcessor {
         contextListHashMap.clear();
         cslpDateHashMap.clear();
         macHashMap.clear();
-        CslpDate cslpDate = new CslpDate();
-        String nodeInstall = null;
-        String luminaireDate = null;
+
+        SLVDates slvDates = new SLVDates();
+        installMaintenanceLogModel.getDatesHolder().setSlvDates(slvDates);
+
+        String cslpNodeInstall = null;
+        String cslpLuminaireDate = null;
+        String nodeInstallDate = null;
+        String luminaireInstallDate = null;
         String macAddress = null;
         String luminaireSerialNumber = null;
         for (int i = 0; i < arr.size(); i++) {
@@ -139,31 +140,44 @@ public abstract class AbstractProcessor {
                 String proposedContext = jsonObject1.get("value").getAsString();
                 contextListHashMap.put(idOnController, proposedContext);
             } else if (keyValue != null && keyValue.equals(cslInstallDateKey)) {
-                nodeInstall = jsonObject1.get("value").getAsString();
+                cslpNodeInstall = jsonObject1.get("value").getAsString();
             } else if (keyValue != null && keyValue.equals(cslLuminaireDateKey)) {
-                luminaireDate = jsonObject1.get("value").getAsString();
+                cslpLuminaireDate = jsonObject1.get("value").getAsString();
             } else if (keyValue != null && keyValue.equals("userproperty.MacAddress")) {
                 macAddress = jsonObject1.get("value").getAsString();
                 installMaintenanceLogModel.setSlvMacaddress(macAddress);
             }else if (keyValue != null && keyValue.equals("userproperty.luminaire.serialnumber")) {
                 luminaireSerialNumber = jsonObject1.get("value").getAsString();
+            }else if (keyValue != null && keyValue.equals("install.date")) {
+                nodeInstallDate = jsonObject1.get("value").getAsString();
+            }else if (keyValue != null && keyValue.equals("luminiare.installdate")) {
+                luminaireInstallDate = jsonObject1.get("value").getAsString();
             }
 
         }
 
         //
-        if (nodeInstall != null && !nodeInstall.trim().isEmpty() && nodeInstall.trim().length() > 7) {
-            cslpDate.setCslpNodeDate(nodeInstall);
+        if (cslpNodeInstall != null && !cslpNodeInstall.trim().isEmpty() && cslpNodeInstall.trim().length() > 7) {
+            slvDates.setCslpNodeDate(cslpNodeInstall);
         }
-        if (luminaireDate != null && !luminaireDate.trim().isEmpty() && luminaireDate.trim().length() > 7) {
-            cslpDate.setCslpLumDate(luminaireDate);
+        if (cslpLuminaireDate != null && !cslpLuminaireDate.trim().isEmpty() && cslpLuminaireDate.trim().length() > 7) {
+            slvDates.setCslpLumDate(cslpLuminaireDate);
+        }
+
+
+        if(nodeInstallDate != null && !nodeInstallDate.trim().isEmpty()){
+            slvDates.setNodeInstallDate(nodeInstallDate);
+        }
+
+        if(luminaireInstallDate != null && !luminaireInstallDate.trim().isEmpty()){
+            slvDates.setLumInstallDate(luminaireInstallDate);
         }
 
         if(luminaireSerialNumber != null && !luminaireSerialNumber.trim().isEmpty() && luminaireSerialNumber.trim().length() > 3){
             installMaintenanceLogModel.setSlvLuminaireSerialNumber(luminaireSerialNumber);
         }
-        logger.info("cslpDate :" + gson.toJson(cslpDate));
-        cslpDateHashMap.put(idOnController, cslpDate);
+        logger.info("SLVDates :" + gson.toJson(slvDates));
+        cslpDateHashMap.put(idOnController, slvDates);
         macHashMap.put(idOnController, macAddress);
         DeviceAttributes deviceAttributes = new DeviceAttributes();
         deviceAttributes.setMacAddress(macAddress);
@@ -343,10 +357,10 @@ public abstract class AbstractProcessor {
     private boolean isLumDatePresent(String idOnContoller) {
         logger.info("IdOnController:" + idOnContoller);
         logger.info("cslpDateHashMap:" + cslpDateHashMap.size());
-        CslpDate cslpDate = cslpDateHashMap.get(idOnContoller);
-        logger.info("CslpDate:" + cslpDate);
-        if (cslpDate != null) {
-            String val = cslpDate.getCslpLumDate();
+        SLVDates SLVDates = cslpDateHashMap.get(idOnContoller);
+        logger.info("SLVDates:" + SLVDates);
+        if (SLVDates != null) {
+            String val = SLVDates.getCslpLumDate();
             if (val != null) {
                 return true;
             }
@@ -357,8 +371,8 @@ public abstract class AbstractProcessor {
 
     public boolean isNodeDatePresent(String idOnContoller) {
         logger.info("isNodePresent Json:" + gson.toJson(cslpDateHashMap));
-        CslpDate cslpDate = cslpDateHashMap.get(idOnContoller);
-        return cslpDate != null && cslpDate.getCslpNodeDate() != null;
+        SLVDates SLVDates = cslpDateHashMap.get(idOnContoller);
+        return SLVDates != null && SLVDates.getCslpNodeDate() != null;
     }
 
 
@@ -861,10 +875,12 @@ public abstract class AbstractProcessor {
     }
 
 
-    protected void loadDefaultVal(EdgeNote edgeNote, LoggingModel loggingModel) {
+    protected void loadDefaultVal(EdgeNote edgeNote, InstallMaintenanceLogModel loggingModel) {
         loggingModel.setIdOnController(edgeNote.getTitle());
         String controllerStrId = properties.getProperty("streetlight.slv.controllerstrid");
         loggingModel.setControllerSrtId(controllerStrId);
+        DatesHolder datesHolder = new DatesHolder();
+        loggingModel.setDatesHolder(datesHolder);
     }
 
     private void sendNightRideToSLV(String idOnController, String nightRideKey, String nightRideValue, LoggingModel loggingModel) {
@@ -1100,5 +1116,11 @@ public boolean checkExistingMacAddressValid(EdgeNote edgeNote, InstallMaintenanc
             }
         }
         return "";
+    }
+
+
+    protected boolean isDatePresent(String title,String date,String type){
+        EdgeSLVDate edgeSLVDate = connectionDAO.getEdgeNodeDate(title,date,type);
+        return edgeSLVDate != null;
     }
 }

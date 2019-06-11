@@ -1,11 +1,25 @@
 package com.terragoedge.streetlight.logging;
 
+import com.terragoedge.streetlight.json.model.DatesHolder;
+import com.terragoedge.streetlight.json.model.SLVDates;
+
 public class InstallMaintenanceLogModel extends LoggingModel {
 
     private boolean isInstallFormPresent;
     private boolean isFixtureOnly;
     private int deviceId;
     private String comment;
+
+    private DatesHolder datesHolder;
+
+
+    public DatesHolder getDatesHolder() {
+        return datesHolder;
+    }
+
+    public void setDatesHolder(DatesHolder datesHolder) {
+        this.datesHolder = datesHolder;
+    }
 
     public String getComment() {
         return comment;
@@ -43,6 +57,9 @@ public class InstallMaintenanceLogModel extends LoggingModel {
     public String toString() {
         return "InstallMaintenanceLogModel{" +
                 "isInstallFormPresent=" + isInstallFormPresent +
+                ", isFixtureOnly=" + isFixtureOnly +
+                ", deviceId=" + deviceId +
+                ", comment='" + comment + '\'' +
                 '}';
     }
 }

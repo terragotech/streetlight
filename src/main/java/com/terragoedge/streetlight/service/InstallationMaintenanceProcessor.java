@@ -2,6 +2,7 @@ package com.terragoedge.streetlight.service;
 
 import com.terragoedge.edgeserver.*;
 import com.terragoedge.streetlight.PropertiesReader;
+import com.terragoedge.streetlight.enumeration.DateType;
 import com.terragoedge.streetlight.exception.*;
 import com.terragoedge.streetlight.json.model.*;
 import com.terragoedge.streetlight.logging.InstallMaintenanceLogModel;
@@ -17,7 +18,7 @@ import java.util.WeakHashMap;
 
 public class InstallationMaintenanceProcessor extends AbstractProcessor {
 
-    public InstallationMaintenanceProcessor(WeakHashMap<String, String> contextListHashMap, HashMap<String, CslpDate> cslpDateHashMap,HashMap<String, String> macHashMap) {
+    public InstallationMaintenanceProcessor(WeakHashMap<String, String> contextListHashMap, HashMap<String, SLVDates> cslpDateHashMap, HashMap<String, String> macHashMap) {
         super();
         this.contextListHashMap = contextListHashMap;
         this.cslpDateHashMap = cslpDateHashMap;
@@ -222,6 +223,8 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
 
     private String getAction(List<EdgeFormData> edgeFormDatas, String idOnController, InstallMaintenanceLogModel loggingModel, EdgeNote edgeNote, SlvInterfaceLogEntity slvInterfaceLogEntity) throws AlreadyUsedException {
         try {
+
+            loadDateValFromEdge(edgeFormDatas,loggingModel);
             String value = value(edgeFormDatas, "Action");
             if (value.equals("Repairs & Outages")) {
                 String repairsOutagesValue = null;
@@ -1292,6 +1295,102 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
                 connectionDAO.deleteDuplicateMacAddress(noteGuid);
             }
             //  }
+        }
+    }
+
+
+    private void loadDateValFromEdge(List<EdgeFormData> edgeFormDatas,InstallMaintenanceLogModel installMaintenanceLogModel){
+        SLVDates edgeSLVDates = new SLVDates();
+        installMaintenanceLogModel.getDatesHolder().setEdgeDates(edgeSLVDates);
+        // Get CSLP Node Install Date
+        String cslpNodeInstallDate = null;
+        try {
+            cslpNodeInstallDate = valueById(edgeFormDatas, 22);
+            edgeSLVDates.setCslpNodeDate(cslpNodeInstallDate);
+            logger.info("cslpNodeInstallDate Val" + cslpNodeInstallDate);
+        } catch (NoValueException e) {
+            logger.error("CSLP Node Install Date is empty", e);
+        }
+
+
+        // Get CSLP Node Install Date
+        String cslpLumInstallDate = null;
+        try {
+            cslpLumInstallDate = valueById(edgeFormDatas, 22);
+            edgeSLVDates.setCslpLumDate(cslpLumInstallDate);
+            logger.info("cslpLumInstallDate Val" + cslpLumInstallDate);
+        } catch (NoValueException e) {
+            logger.error("CSLP Lum Install Date is empty", e);
+        }
+
+
+        // Get Node Install Date
+        String installDate = null;
+        try {
+            installDate = valueById(edgeFormDatas, 22);
+            edgeSLVDates.setNodeInstallDate(installDate);
+            logger.info("installDate Val" + installDate);
+        } catch (NoValueException e) {
+            logger.error("Install Date is empty", e);
+        }
+
+
+        // Get Lum Install Date
+        String lumInstallDate = null;
+        try {
+            lumInstallDate = valueById(edgeFormDatas, 22);
+            edgeSLVDates.setLumInstallDate(lumInstallDate);
+            logger.info("lumInstallDate Val" + lumInstallDate);
+        } catch (NoValueException e) {
+            logger.error("Lum Install Date is empty", e);
+        }
+
+        getSlvSyncDates(installMaintenanceLogModel,edgeSLVDates);
+    }
+
+
+    private void getSlvSyncDates(InstallMaintenanceLogModel installMaintenanceLogModel,SLVDates edgeSLVDates){
+        SLVDates syncEdgeDates = new SLVDates();
+        installMaintenanceLogModel.getDatesHolder().setSyncEdgeDates(syncEdgeDates);
+        SLVDates slvDates = installMaintenanceLogModel.getDatesHolder().getSlvDates();
+
+        // CSLP Node Install Dates
+        String edgeCslpNodeDate =  installMaintenanceLogModel.getDatesHolder().compareSLVEdgeDate(edgeSLVDates.getCslpNodeDate(),slvDates.getCslpNodeDate(),true);
+
+        if(edgeCslpNodeDate != null){
+            boolean res =  isDatePresent(installMaintenanceLogModel.getIdOnController(),edgeCslpNodeDate, DateType.CSLP_NODE.toString());
+            if(!res){
+                syncEdgeDates.setCslpNodeDate(edgeCslpNodeDate);
+            }
+        }
+
+        // CSLP Lum Install Dates
+        String edgeCslpLumDate =   installMaintenanceLogModel.getDatesHolder().compareSLVEdgeDate(edgeSLVDates.getCslpLumDate(),slvDates.getCslpLumDate(),true);
+
+        if(edgeCslpLumDate != null){
+            boolean res =  isDatePresent(installMaintenanceLogModel.getIdOnController(),edgeCslpLumDate, DateType.CSLP_LUM.toString());
+            if(!res){
+                syncEdgeDates.setCslpLumDate(edgeCslpLumDate);
+            }
+        }
+
+
+        //  Node Install Dates
+        String edgeNodeDate =  installMaintenanceLogModel.getDatesHolder().compareSLVEdgeDate(edgeSLVDates.getNodeInstallDate(),slvDates.getNodeInstallDate(),false);
+        if(edgeNodeDate != null){
+            boolean res =  isDatePresent(installMaintenanceLogModel.getIdOnController(),edgeNodeDate, DateType.NODE.toString());
+            if(!res){
+                syncEdgeDates.setCslpNodeDate(edgeNodeDate);
+            }
+        }
+
+        // CSLP Lum Install Dates
+        String edgeLumInstallDate = installMaintenanceLogModel.getDatesHolder().compareSLVEdgeDate(edgeSLVDates.getLumInstallDate(),slvDates.getLumInstallDate(),false);
+        if(edgeLumInstallDate != null){
+            boolean res =  isDatePresent(installMaintenanceLogModel.getIdOnController(),edgeLumInstallDate, DateType.LUM.toString());
+            if(!res){
+                syncEdgeDates.setLumInstallDate(edgeLumInstallDate);
+            }
         }
     }
 }
