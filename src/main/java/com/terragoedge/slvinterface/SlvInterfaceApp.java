@@ -9,16 +9,16 @@ import java.util.Locale;
 
 public class SlvInterfaceApp {
 
-
+    private static boolean isReportSent = false;
 
     public static void main(String[] args) {
         try {
             SlvInterfaceService slvInterfaceService = new SlvInterfaceService();
-           // while (true) {
+            while (true) {
                 slvInterfaceService.start();
-                //processedDailyReport(slvInterfaceService);
-             //   Thread.sleep(60000);
-            //}
+                processedDailyReport(slvInterfaceService);
+                Thread.sleep(60000);
+            }
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -31,23 +31,14 @@ public class SlvInterfaceApp {
             System.out.println("hoursOfDay:" + hoursOfDay);
             String time = PropertiesReader.getProperties().getProperty("jps.report.time");
             int scheduledHours = Integer.parseInt(time);
-            if (hoursOfDay >= scheduledHours && hoursOfDay < (scheduledHours + 1)) {
-                File file = new File("./pid");
-                if (!file.exists()) {
-                    System.out.println("File is not present.");
+            if (hoursOfDay == scheduledHours) {
+                if(!isReportSent){
                     slvInterfaceService.startReport();
-                } else {
-                    System.out.println("File is present.");
+                    isReportSent = true;
                 }
-
             } else {
-                File file = new File("./pid");
-                if (file.exists()) {
-                    System.out.println("File deleted.");
-                    file.delete();
-                }
+                isReportSent = false;
             }
-            Thread.sleep(600000);
         } catch (Exception e) {
             e.printStackTrace();
         }

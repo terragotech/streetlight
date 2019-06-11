@@ -61,14 +61,18 @@ public class SlvService extends AbstractSlvService {
             }
         } else {
             deviceId = devices.get(0).getAsJsonObject().get("id").getAsInt();
+            updateSlvSyncDetail(edgeNote,jpsWorkflowModel,"Device already present: "+jpsWorkflowModel.getIdOnController());
         }
         /*if (jpsWorkflowModel.getOldPoleNumber() != null && !jpsWorkflowModel.getOldPoleNumber().isEmpty()) {
             replaceOLC(jpsWorkflowModel.getControllerStrId(), jpsWorkflowModel.getOldPoleNumber(), "", edgeNote, jpsWorkflowModel);
             deleteDevice(jpsWorkflowModel);
         }*/
         processDeviceValues(jpsWorkflowModel, true, edgeNote);
-        //processMacAddress(jpsWorkflowModel, edgeNote, deviceId);
-        logger.info("Going to call delete device");
+        if(deviceId > -1) {
+            processMacAddress(jpsWorkflowModel, edgeNote, deviceId);
+        }else{
+            logger.error("Device id is -1. So going to skip the ReplaceOLC for this note: "+edgeNote.getTitle());
+        }
     }
 
     private void processDeviceValues(JPSWorkflowModel jpsWorkflowModel, boolean devicePresentInSlv, EdgeNote edgeNote) throws Exception {
@@ -175,6 +179,8 @@ public class SlvService extends AbstractSlvService {
                 } else {
                     logger.error("error while fetching device data for this idoncontroller: " + jpsWorkflowModel.getIdOnController());
                     logger.error("error while fetching device data for this device id: " + deviceID);
+                    logger.error("error while fetching device data for this device id error: " + responseEntity.getBody());
+                    logger.error("error while fetching device data for this device id status code: " + responseEntity.getStatusCode().value());
                 }
             }
         }
@@ -271,6 +277,29 @@ public class SlvService extends AbstractSlvService {
             connectionDAO.updateSlvSyncDetail(slvSyncDetail);
         } else {
             logger.info("slvsyncdetails object is newly inserted");
+            connectionDAO.saveSlvSyncDetail(slvSyncDetail);
+        }
+    }
+
+
+    private void updateSlvSyncDetail(EdgeNote edgeNote, JPSWorkflowModel jpsWorkflowModel, String details) {
+        SlvSyncDetail slvSyncDetail = connectionDAO.getSlvSyncDetails(edgeNote.getNoteGuid());
+        if(slvSyncDetail == null){
+            slvSyncDetail = new SlvSyncDetail();
+        }
+        slvSyncDetail.setCreatedDateTime(edgeNote.getCreatedDateTime());
+        slvSyncDetail.setNoteGuid(edgeNote.getNoteGuid());
+        slvSyncDetail.setPoleNumber(jpsWorkflowModel.getIdOnController());
+        slvSyncDetail.setProcessedDateTime(System.currentTimeMillis());
+        slvSyncDetail.setSlvDeviceDetailsResponse(details);
+        slvSyncDetail.setTitle(edgeNote.getTitle());
+        slvSyncDetail.setDeviceDetails(gson.toJson(jpsWorkflowModel));
+        slvSyncDetail.setStatus(Status.Error);
+        if (slvSyncDetail.getId() > 1) {
+            logger.info("updateSlvSyncDetail object is updated");
+            connectionDAO.updateSlvSyncDetail(slvSyncDetail);
+        } else {
+            logger.info("updateSlvSyncDetail object is newly inserted");
             connectionDAO.saveSlvSyncDetail(slvSyncDetail);
         }
     }

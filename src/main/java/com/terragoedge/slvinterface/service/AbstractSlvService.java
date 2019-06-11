@@ -199,7 +199,8 @@ public abstract class AbstractSlvService extends EdgeService {
                 connectionDAO.saveSlvSyncDetail(dbSyncDetail);
             } else {
                 dbSyncDetail.setSlvReplaceOLCResponse(response.getBody());
-                dbSyncDetail.setCreatedDateTime(System.currentTimeMillis());
+                dbSyncDetail.setProcessedDateTime(System.currentTimeMillis());
+                dbSyncDetail.setCreatedDateTime(edgeNote.getCreatedDateTime());
                 dbSyncDetail.setStatus(status);
                 connectionDAO.updateSlvSyncDetail(dbSyncDetail);
             }

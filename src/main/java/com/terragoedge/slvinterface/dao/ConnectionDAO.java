@@ -39,11 +39,12 @@ public enum ConnectionDAO {
             try {
                 TableUtils.createTable(connectionSource, SlvSyncDetail.class);
             } catch (Exception e) {
-                //  e.printStackTrace();
+                  e.printStackTrace();
             }
             try {
                 TableUtils.createTable(connectionSource, GeozoneEntity.class);
             } catch (Exception e) {
+                e.printStackTrace();
             }
             try {
                 TableUtils.createTable(connectionSource, DuplicateMacAddress.class);
@@ -62,9 +63,10 @@ public enum ConnectionDAO {
         }
     }
 
-    public List<String> getEdgeNoteGuid(String formTemplateGuid,String notebookGuid) {
+    public List<String> getEdgeNoteGuid(String installFormTemplateGuid,String newFixtureFormTemplateGuid,long maxSyncTime) {
         try {
-            List<String> noteGuids = slvSyncDetailsDao.queryRaw("select noteguid from edgenote, edgeform where edgenote.isdeleted = false and edgenote.iscurrent = true and edgenote.noteid = edgeform.edgenoteentity_noteid and edgeform.formtemplateguid = '" + formTemplateGuid + "' and edgenote.noteid in(select noteid from tobe_send_slv_form2);", new RawRowMapper<String>() {
+
+            List<String> noteGuids = slvSyncDetailsDao.queryRaw("select noteguid from edgenote, edgeform where edgenote.isdeleted = false and edgenote.iscurrent = true and edgenote.noteid = edgeform.edgenoteentity_noteid and (edgeform.formtemplateguid = '" + installFormTemplateGuid + "' or edgeform.formtemplateguid = '" + newFixtureFormTemplateGuid + "') and edgenote.createddatetime > "+maxSyncTime+";", new RawRowMapper<String>() {
                 @Override
                 public String mapRow(String[] columnNames, String[] resultColumns) throws SQLException {
                     return resultColumns[0];
@@ -230,6 +232,15 @@ public enum ConnectionDAO {
         return null;
     }
 
+    public long getMaxSyncTime() {
+        try {
+            long maxSyncTime = slvSyncDetailsDao.queryRawValue("select max(created_date_time) from slvsyncdetails");
+            return maxSyncTime;
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return 0;
+    }
     public ConnectionSource getConnection() {
         return connectionSource;
     }

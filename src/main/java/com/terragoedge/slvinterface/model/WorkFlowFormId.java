@@ -1,6 +1,6 @@
 package com.terragoedge.slvinterface.model;
 
-public class InstallWorkflowFormId {
+public class WorkFlowFormId {
     private int feederName;
     private int streetName;
     private int parrish;

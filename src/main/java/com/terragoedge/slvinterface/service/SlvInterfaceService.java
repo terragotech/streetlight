@@ -1,10 +1,6 @@
 package com.terragoedge.slvinterface.service;
 
-import com.google.gson.JsonParser;
-import com.google.gson.reflect.TypeToken;
-import com.terragoedge.slvinterface.dao.tables.SlvDevice;
 import com.terragoedge.slvinterface.dao.tables.SlvSyncDetail;
-import com.terragoedge.slvinterface.enumeration.Status;
 import com.terragoedge.slvinterface.exception.*;
 import com.terragoedge.slvinterface.model.*;
 import com.terragoedge.slvinterface.utils.PropertiesReader;
@@ -17,20 +13,18 @@ import org.wololo.geojson.Feature;
 import org.wololo.geojson.GeoJSONFactory;
 import org.wololo.jts2geojson.GeoJSONReader;
 
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
-import java.lang.reflect.Type;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-import static com.terragoedge.slvinterface.utils.Utils.dateFormat;
 
 public class SlvInterfaceService extends AbstractSlvService {
     Properties properties = null;
     final Logger logger = Logger.getLogger(SlvInterfaceService.class);
     private SlvService slvService;
+    private String installFormtemplateGuid = null;
+    private String newFixtureFormtemplateGuid = null;
 
     public SlvInterfaceService() {
         super();
@@ -49,29 +43,30 @@ public class SlvInterfaceService extends AbstractSlvService {
         }
         // Already Processed NoteGuids
         //  List<String> noteGuids = slvInterfaceDAO.getNoteGuids();
-        InstallWorkflowFormId installWorkflowFormId = null;
-        String formTemplateGuid = properties.getProperty("streetlight.edge.formtemplateguid");
+        WorkFlowFormId installworkFlowFormId = null;
+        WorkFlowFormId newFixtureworkFlowFormId = null;
         try {
-            if (formTemplateGuid.equals("442ab0e1-ae10-4fb5-a8f5-d1638b0a1fb8")) {// install workflow
-                File file = new File("./resources/installWorkflow.json");
-                String jsonIds = IOUtils.toString(new FileReader(file));
-                installWorkflowFormId = gson.fromJson(jsonIds, InstallWorkflowFormId.class);
-            } else {// new fixture workflow
-                File file = new File("./resources/newFixtureWorkflow.json");
-                String jsonIds = IOUtils.toString(new FileReader(file));
-                installWorkflowFormId = gson.fromJson(jsonIds, InstallWorkflowFormId.class);
-            }
+                installworkFlowFormId = getConfigData("./resources/installWorkflow.json");
+                newFixtureworkFlowFormId = getConfigData("./resources/newFixtureWorkflow.json");
         }catch (Exception e){
             e.printStackTrace();
             logger.error("Error while reading configuration file for form ids");
         }
+        if(installworkFlowFormId == null || newFixtureworkFlowFormId == null){
+            logger.error("Config data is null.So skipping this process.");
+        }
+        installFormtemplateGuid = properties.getProperty("streetlight.edge.install.formtemplateguid");
+        newFixtureFormtemplateGuid = properties.getProperty("streetlight.edge.new_workflow.formtemplateguid");
         String url = properties.getProperty("streetlight.edge.url.main");
 
         url = url + properties.getProperty("streetlight.edge.url.notes.get");
         logger.info("GetNotesUrl :" + url);
         String notebookGuid = properties.getProperty("jps.processing.notebookguid");
         // Get List of noteid
-        List<String> noteGuidsList = connectionDAO.getEdgeNoteGuid(formTemplateGuid,notebookGuid);
+        long maxSyncTime = connectionDAO.getMaxSyncTime();
+        logger.info("max SyncTime: "+maxSyncTime);
+//        List<String> noteGuidsList = new ArrayList<>();
+        List<String> noteGuidsList = connectionDAO.getEdgeNoteGuid(installFormtemplateGuid,newFixtureFormtemplateGuid,maxSyncTime);
         /*List<String> noteGuidsList = new ArrayList<>();
         noteGuidsList.clear();
         noteGuidsList.add(properties.getProperty("noteguid"));*/
@@ -88,7 +83,16 @@ public class SlvInterfaceService extends AbstractSlvService {
                         logger.info("Processed Note title size :" + gson.toJson(edgeNote));
                         logger.info("ProcessNoteGuid is :" + edgenoteGuid);
                         logger.info("ProcessNoteTitle is :" + edgeNote.getTitle());
-                        processEdgeNote(edgeNote, formTemplateGuid, false,installWorkflowFormId);
+                        List<String> formTemplateGuids = getProcessingFormTemplateGuids(edgeNote);
+                        if(formTemplateGuids.size() == 0){
+                            logger.error("There is no processing form attached to this note. So skipping."+edgeNote.getNoteGuid());
+                        }else if(formTemplateGuids.size() > 1){
+                            logger.error("There are more processing form attached to this note. So skipping."+edgeNote.getNoteGuid());
+                        }else {
+                            logger.error("There is only one processing form attached to this note. So continuing process."+edgeNote.getNoteGuid());
+                            String formTemplateGuid = formTemplateGuids.get(0);
+                            processEdgeNote(edgeNote, formTemplateGuid, false, formTemplateGuid.equals(installFormtemplateGuid) ? installworkFlowFormId : newFixtureworkFlowFormId);
+                        }
                     }else{
                         logger.info("getting edge note from rest call is failed noteguid: "+edgenoteGuid);
                     }
@@ -114,7 +118,7 @@ public class SlvInterfaceService extends AbstractSlvService {
         return (slvSyncDetail == null) ? false : true;
     }
 
-    private void processEdgeNote(EdgeNote edgeNote, String formTemplateGuid, boolean isResync,InstallWorkflowFormId installWorkflowFormId) {
+    private void processEdgeNote(EdgeNote edgeNote, String formTemplateGuid, boolean isResync, WorkFlowFormId installWorkflowFormId) {
         try {
             // Check whether this note is already processed or not.
             List<FormData> formDataList = new ArrayList<>();
@@ -143,12 +147,14 @@ public class SlvInterfaceService extends AbstractSlvService {
             }
         } catch (Exception e) {
             e.printStackTrace();
+            logger.error("Error while processing this note: "+edgeNote.getNoteGuid());
+            logger.error("Error while processing this note: "+e.getMessage());
         }
     }
 
     //streetlight.controller.str.id
     //
-    public JPSWorkflowModel processWorkFlowForm(List<FormData> formDataList, EdgeNote edgeNote,InstallWorkflowFormId installWorkflowFormId) {
+    public JPSWorkflowModel processWorkFlowForm(List<FormData> formDataList, EdgeNote edgeNote, WorkFlowFormId installWorkflowFormId) {
         JPSWorkflowModel jpsWorkflowModel = new JPSWorkflowModel();
         if (edgeNote.getEdgeNotebook() != null) {
             jpsWorkflowModel.setNotebookName(edgeNote.getEdgeNotebook().getNotebookName());
@@ -297,5 +303,30 @@ public class SlvInterfaceService extends AbstractSlvService {
             return edgeFormDatas.get(pos).getValue();
         }
         return "";
+    }
+
+    private WorkFlowFormId getConfigData(String path){
+        try {
+            File file = new File(path);
+            String jsonIds = IOUtils.toString(new FileReader(file));
+            return gson.fromJson(jsonIds, WorkFlowFormId.class);
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    private List<String> getProcessingFormTemplateGuids(EdgeNote edgeNote){
+        List<String> formTemplateGuids = new ArrayList<>();
+        List<FormData> formDatas = edgeNote.getFormData();
+        if(formDatas != null){
+            for(FormData formData : formDatas){
+                String formTemplateGuid = formData.getFormTemplateGuid();
+                if(formTemplateGuid.equals(properties.getProperty("streetlight.edge.install.formtemplateguid")) || formTemplateGuid.equals(properties.getProperty("streetlight.edge.new_workflow.formtemplateguid"))){
+                    formTemplateGuids.add(formData.getFormTemplateGuid());
+                }
+            }
+        }
+        return formTemplateGuids;
     }
 }
