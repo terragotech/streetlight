@@ -34,6 +34,7 @@ public class EdgeNote {
 	private String sourceType = null;
 	private EdgeNotebook edgeNotebook = null;
 	private String altitudeAccuracy = null;
+	private Long syncTime;
 
 	public EdgeNote() {
 
@@ -270,5 +271,13 @@ public class EdgeNote {
 
 	public void setEdgeNotebook(EdgeNotebook edgeNotebook) {
 		this.edgeNotebook = edgeNotebook;
+	}
+
+	public Long getSyncTime() {
+		return syncTime;
+	}
+
+	public void setSyncTime(Long syncTime) {
+		this.syncTime = syncTime;
 	}
 }

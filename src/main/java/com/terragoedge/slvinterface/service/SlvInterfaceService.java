@@ -61,12 +61,23 @@ public class SlvInterfaceService extends AbstractSlvService {
 
         url = url + properties.getProperty("streetlight.edge.url.notes.get");
         logger.info("GetNotesUrl :" + url);
-        String notebookGuid = properties.getProperty("jps.processing.notebookguid");
         // Get List of noteid
         long maxSyncTime = connectionDAO.getMaxSyncTime();
         logger.info("max SyncTime: "+maxSyncTime);
 //        List<String> noteGuidsList = new ArrayList<>();
-        List<String> noteGuidsList = connectionDAO.getEdgeNoteGuid(installFormtemplateGuid,newFixtureFormtemplateGuid,maxSyncTime);
+        String resync = properties.getProperty("com.slv.resync");
+        List<String> noteGuidsList = new ArrayList<>();
+        if(resync.equals("true")){
+            String reSyncData = getResyncData("./resources/input.txt");
+            if(reSyncData == null){
+                logger.error("Resync data  is null");
+            }else{
+                String[] resyncItems = reSyncData.split(",");
+                noteGuidsList = Arrays.asList(resyncItems);
+            }
+        }else {
+            noteGuidsList = connectionDAO.getEdgeNoteGuid(installFormtemplateGuid, newFixtureFormtemplateGuid, maxSyncTime);
+        }
         /*List<String> noteGuidsList = new ArrayList<>();
         noteGuidsList.clear();
         noteGuidsList.add(properties.getProperty("noteguid"));*/
@@ -312,6 +323,18 @@ public class SlvInterfaceService extends AbstractSlvService {
             return gson.fromJson(jsonIds, WorkFlowFormId.class);
         }catch (Exception e){
             e.printStackTrace();
+        }
+        return null;
+    }
+
+    private String getResyncData(String path){
+        try {
+            File file = new File(path);
+            String data = IOUtils.toString(new FileReader(file));
+            return data;
+        }catch (Exception e){
+            e.printStackTrace();
+            logger.error("Error while getting resync data: "+e.getMessage());
         }
         return null;
     }

@@ -188,7 +188,7 @@ public abstract class AbstractSlvService extends EdgeService {
             }
             if (dbSyncDetail == null) {
                 dbSyncDetail = new SlvSyncDetail();
-                dbSyncDetail.setCreatedDateTime(edgeNote.getCreatedDateTime());
+                dbSyncDetail.setCreatedDateTime(edgeNote.getSyncTime());
                 dbSyncDetail.setNoteGuid(edgeNote.getNoteGuid());
                 dbSyncDetail.setPoleNumber(jpsWorkflowModel.getIdOnController());
                 dbSyncDetail.setProcessedDateTime(System.currentTimeMillis());
@@ -200,7 +200,7 @@ public abstract class AbstractSlvService extends EdgeService {
             } else {
                 dbSyncDetail.setSlvReplaceOLCResponse(response.getBody());
                 dbSyncDetail.setProcessedDateTime(System.currentTimeMillis());
-                dbSyncDetail.setCreatedDateTime(edgeNote.getCreatedDateTime());
+                dbSyncDetail.setCreatedDateTime(edgeNote.getSyncTime());
                 dbSyncDetail.setStatus(status);
                 connectionDAO.updateSlvSyncDetail(dbSyncDetail);
             }

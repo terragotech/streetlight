@@ -263,7 +263,7 @@ public class SlvService extends AbstractSlvService {
     }
 
     private void saveSlvSyncDetail(SlvSyncDetail slvSyncDetail, EdgeNote edgeNote, JPSWorkflowModel jpsWorkflowModel, ResponseEntity<String> responseEntity, boolean isUpdate) {
-        slvSyncDetail.setCreatedDateTime(edgeNote.getCreatedDateTime());
+        slvSyncDetail.setCreatedDateTime(edgeNote.getSyncTime());
         slvSyncDetail.setNoteGuid(edgeNote.getNoteGuid());
         slvSyncDetail.setPoleNumber(jpsWorkflowModel.getIdOnController());
         slvSyncDetail.setProcessedDateTime(System.currentTimeMillis());
@@ -287,7 +287,7 @@ public class SlvService extends AbstractSlvService {
         if(slvSyncDetail == null){
             slvSyncDetail = new SlvSyncDetail();
         }
-        slvSyncDetail.setCreatedDateTime(edgeNote.getCreatedDateTime());
+        slvSyncDetail.setCreatedDateTime(edgeNote.getSyncTime());
         slvSyncDetail.setNoteGuid(edgeNote.getNoteGuid());
         slvSyncDetail.setPoleNumber(jpsWorkflowModel.getIdOnController());
         slvSyncDetail.setProcessedDateTime(System.currentTimeMillis());
