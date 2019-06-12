@@ -191,6 +191,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
                                 installMaintenanceLogModel.setInstalledDate(edgeNote.getCreatedDateTime());
                                 break;
                             case "Repairs & Outages":
+                                installMaintenanceLogModel.setActionNew(false);
                                 slvInterfaceLogEntity.setSelectedAction("Repairs & Outages");
                                 repairAndOutage(edgeFormDatas, edgeNote, installMaintenanceLogModel, utilLocId, nightRideKey, formatedValueNR, formatedValueNR, slvInterfaceLogEntity);
                                 installMaintenanceLogModel.setReplacedDate(edgeNote.getCreatedDateTime());

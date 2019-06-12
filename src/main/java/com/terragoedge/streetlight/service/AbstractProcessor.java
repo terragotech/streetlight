@@ -420,7 +420,7 @@ public abstract class AbstractProcessor {
             edgeNotebookName = edgeNotebookName +" Acorns";
         }*/
         // As per Mail Conversion - Re: New Release updated on Test Server (.175) - 4.6.18
-        if (installStatus != null) {
+        if (installStatus != null && loggingModel.isActionNew()) {
             addStreetLightData("installStatus", loggingModel.isButtonPhotoCell() ? InstallStatus.Photocell_Only.getValue() : installStatus, paramsList);
         }
 
