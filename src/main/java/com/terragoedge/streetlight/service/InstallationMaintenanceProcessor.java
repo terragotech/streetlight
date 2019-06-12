@@ -2,6 +2,7 @@ package com.terragoedge.streetlight.service;
 
 import com.terragoedge.edgeserver.*;
 import com.terragoedge.streetlight.PropertiesReader;
+import com.terragoedge.streetlight.enumeration.InstallStatus;
 import com.terragoedge.streetlight.exception.*;
 import com.terragoedge.streetlight.json.model.*;
 import com.terragoedge.streetlight.logging.InstallMaintenanceLogModel;
@@ -184,6 +185,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
                     if (value != null) {
                         switch (value) {
                             case "New":
+                                installMaintenanceLogModel.setActionNew(true);
                                 slvInterfaceLogEntity.setSelectedAction("New");
                                 processNewGroup(edgeFormDatas, edgeNote, installMaintenanceLogModel, isReSync, utilLocId, nightRideKey, formatedValueNR, slvInterfaceLogEntity);
                                 installMaintenanceLogModel.setInstalledDate(edgeNote.getCreatedDateTime());
@@ -319,7 +321,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
         if (installStatusValue != null && installStatusValue.equals("Button Photocell Installation")) {
             DeviceAttributes deviceAttributes = getDeviceValues(loggingModel);
             loggingModel.setButtonPhotoCell(true);
-            if (deviceAttributes.getInstallStatus().equals("Verified")) {
+            if (deviceAttributes.getInstallStatus().equals(InstallStatus.Verified.getValue()) || deviceAttributes.getInstallStatus().equals(InstallStatus.Photocell_Only.getValue())) {
                 loggingModel.setFixtureQRSame(true);
             }
         } else  if(installStatusValue != null && installStatusValue.equals("Could not complete")){
@@ -1115,7 +1117,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
             switch (removeReason) {
                 case "Installed on Wrong Fixture":
                     try {
-                        if (deviceAttributes != null && deviceAttributes.getInstallStatus().equals("To be installed")) {
+                        if (deviceAttributes != null && deviceAttributes.getInstallStatus().equals(InstallStatus.To_be_installed.getValue())) {
                             installMaintenanceLogModel.setStatus(MessageConstants.ERROR);
                             installMaintenanceLogModel.setErrorDetails("Already Processed.Install Status: To be installed");
                             slvInterfaceLogEntity.setErrorcategory(MessageConstants.SLV_VALIDATION_ERROR);
@@ -1165,7 +1167,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
                     break;
                 case "Pole Removed":
                     try {
-                        if (deviceAttributes != null && deviceAttributes.getInstallStatus().equals("Removed")) {
+                        if (deviceAttributes != null && deviceAttributes.getInstallStatus().equals(InstallStatus.Removed.getValue())) {
                             installMaintenanceLogModel.setStatus(MessageConstants.ERROR);
                             installMaintenanceLogModel.setErrorDetails("Already Processed.Install Status: Pole Removed");
                             slvInterfaceLogEntity.setErrorcategory(MessageConstants.SLV_VALIDATION_ERROR);
@@ -1181,7 +1183,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
                     break;
                 case "Pole Knocked-Down":
                     try {
-                        if (deviceAttributes != null && deviceAttributes.getInstallStatus().equals("Pole Knocked Down")) {
+                        if (deviceAttributes != null && deviceAttributes.getInstallStatus().equals(InstallStatus.Pole_Knocked_Down.getValue())) {
                             installMaintenanceLogModel.setStatus(MessageConstants.ERROR);
                             installMaintenanceLogModel.setErrorDetails("Already Processed.Install Status: Pole Knocked Down");
                             slvInterfaceLogEntity.setErrorcategory(MessageConstants.SLV_VALIDATION_ERROR);
@@ -1210,20 +1212,20 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
                 addStreetLightData("luminaire.installdate", "", paramsList);
                 addStreetLightData("cslp.node.install.date", "", paramsList);
                 addStreetLightData("install.date", "", paramsList);
-                addStreetLightData("installStatus", "To be installed", paramsList);
+                addStreetLightData("installStatus", InstallStatus.To_be_installed.getValue(), paramsList);
                 break;
             case "Pole Removed":
                 clearFixtureValues(paramsList);
                 addStreetLightData("install.date", "", paramsList);
                 addStreetLightData("luminaire.installdate", "", paramsList);
-                addStreetLightData("installStatus", "Removed", paramsList);
+                addStreetLightData("installStatus", InstallStatus.Removed.getValue(), paramsList);
                 addStreetLightData("luminaire.type", "HPS", paramsList);
                 break;
             case "Pole Knocked-Down":
                 clearFixtureValues(paramsList);
                 addStreetLightData("install.date", "", paramsList);
                 addStreetLightData("luminaire.installdate", "", paramsList);
-                addStreetLightData("installStatus", "Pole Knocked Down", paramsList);
+                addStreetLightData("installStatus", InstallStatus.Pole_Knocked_Down.getValue(), paramsList);
                 addStreetLightData("luminaire.type", "HPS", paramsList);
                 break;
         }
