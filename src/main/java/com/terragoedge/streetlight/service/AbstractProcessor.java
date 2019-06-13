@@ -292,6 +292,7 @@ public abstract class AbstractProcessor {
                 return false;
             } else {
                 boolean isDuplicate = false;
+                String slvIdOnController = null;
                 for (Value value : values) {
                     if (!value.getIdOnController().equals(idOnController)) {
                         isDuplicate = true;
@@ -299,6 +300,7 @@ public abstract class AbstractProcessor {
                     if (value.getIdOnController().equals(idOnController) && nightRideKey != null) {
                         sendNightRideToSLV(value.getIdOnController(), nightRideKey, nightRideValue, loggingModel);
                     }
+                    slvIdOnController = value.getIdOnController();
                     stringBuilder.append(value.getIdOnController());
                     stringBuilder.append("\n");
                 }
@@ -311,6 +313,8 @@ public abstract class AbstractProcessor {
                         duplicateMacAddress.setTitle(idOnController);
                         duplicateMacAddress.setMacaddress(macAddress);
                         duplicateMacAddress.setNoteguid(loggingModel.getProcessedNoteId());
+                        duplicateMacAddress.setEventTime(System.currentTimeMillis());
+                        duplicateMacAddress.setAssignedTo(slvIdOnController);
                         connectionDAO.saveDuplicateMacAddress(duplicateMacAddress);
 
                     } catch (Exception e) {
