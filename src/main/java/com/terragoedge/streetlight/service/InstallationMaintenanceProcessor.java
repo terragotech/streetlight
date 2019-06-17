@@ -25,7 +25,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
         this.macHashMap = macHashMap;
     }
 
-    private static final String INSTATALLATION_AND_MAINTENANCE_GUID = "8b722347-c3a7-41f4-a8a9-c35dece6f98b";
+    private static final String INSTATALLATION_AND_MAINTENANCE_GUID = "ce053ac2-cda6-4e25-8dd0-ac30ba79e28b";
 
     final Logger logger = Logger.getLogger(InstallationMaintenanceProcessor.class);
 

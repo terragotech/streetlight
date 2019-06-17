@@ -406,9 +406,7 @@ public abstract class AbstractProcessor {
             installStatus = "Installed";
         }
 
-        if (utilLocId != null) {
-            addStreetLightData("location.utillocationid", utilLocId, paramsList);
-        }
+        addStreetLightData("location.utillocationid", idOnContoller, paramsList);
 
 
         String dimmingGroupName = contextListHashMap.get(idOnContoller);
@@ -1065,12 +1063,8 @@ public abstract class AbstractProcessor {
         return null;
     }
     protected Boolean isDroppedPinNote(EdgeNote edgeNote,String droppedPinTag){
-        List<String> tags = edgeNote.getTags();
-        boolean isDroppedPinWorkFlow = false;
-        if(tags.contains(droppedPinTag)){
-            isDroppedPinWorkFlow = true;
-        }
-        return isDroppedPinWorkFlow;
+
+        return false;
     }
 
 public boolean checkExistingMacAddressValid(EdgeNote edgeNote, InstallMaintenanceLogModel installMaintenanceLogModel) throws Exception{

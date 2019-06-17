@@ -19,23 +19,7 @@ private static boolean isReportProcessed = false;
             try{
                 streetlightChicagoService = new StreetlightChicagoService();
                 streetlightChicagoService.run();
-                calendar.setTime(new Date());
-                int hours = calendar.get(Calendar.HOUR_OF_DAY);
-                if(hours == Integer.valueOf(PropertiesReader.getProperties().getProperty("com.existing.mac.validation.failure.report.time"))){
 
-                    if(!isReportProcessed){
-                        logger.info("Existing MAC Address Report process starts.");
-                        String fileUploadUrl = PropertiesReader.getProperties().getProperty("com.existing.mac.validation.failure.report.url");
-                        logger.info("File Upload Url:"+fileUploadUrl);
-                        streetlightChicagoService.edgeSlvserverCall(fileUploadUrl);
-                        logger.info("Existing MAC Address Report process Ends.");
-                        isReportProcessed = true;
-                    }
-                }else{
-                    if(isReportProcessed){
-                        isReportProcessed = false;
-                    }
-                }
                 Thread.sleep(30000);
             }catch (Exception e){
                 e.printStackTrace();
