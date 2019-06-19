@@ -568,7 +568,6 @@ public abstract class AbstractProcessor {
             logger.info("dimming groupname :"+dimmingGroupName);
             logger.info("stringContainsNumber(fixtureInfo[5]) status :"+stringContainsNumber(fixtureInfo[5]));
             logger.info("stringContainsNumber(fixtureInfo[5]) status :"+stringContainsNumber(fixtureInfo[5]));
-            logger.info("dimming group starting with condition :"+(dimmingGroupName.startsWith("3") || dimmingGroupName.startsWith("11") || dimmingGroupName.startsWith("12")));
             if (dimmingGroupName != null && stringContainsNumber(fixtureInfo[5]) && (dimmingGroupName.startsWith("3") || dimmingGroupName.startsWith("11") || dimmingGroupName.startsWith("12"))) {
                 fixtureInfo[5] = "LED";
                 logger.info("Entered if Statement Lum Type" +fixtureInfo[5]);
@@ -811,6 +810,7 @@ public abstract class AbstractProcessor {
      */
     public void replaceOLC(String controllerStrIdValue, String idOnController, String macAddress, SLVTransactionLogs slvTransactionLogs, SlvInterfaceLogEntity slvInterfaceLogEntity)
             throws ReplaceOLCFailedException {
+
         try {
             // String newNetworkId = slvSyncDataEntity.getMacAddress();
             String newNetworkId = macAddress;
@@ -860,6 +860,7 @@ public abstract class AbstractProcessor {
         } finally {
             streetlightDao.insertTransactionLogs(slvTransactionLogs);
         }
+
 
     }
 
