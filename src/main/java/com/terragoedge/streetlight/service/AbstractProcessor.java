@@ -7,6 +7,8 @@ import com.terragoedge.streetlight.Utils;
 import com.terragoedge.streetlight.dao.ConnectionDAO;
 import com.terragoedge.streetlight.dao.StreetlightDao;
 import com.terragoedge.streetlight.enumeration.CallType;
+import com.terragoedge.streetlight.enumeration.InstallStatus;
+import com.terragoedge.streetlight.enumeration.ProcessType;
 import com.terragoedge.streetlight.exception.*;
 import com.terragoedge.streetlight.json.model.*;
 import com.terragoedge.streetlight.logging.InstallMaintenanceLogModel;
@@ -305,6 +307,7 @@ public abstract class AbstractProcessor {
                 return false;
             } else {
                 boolean isDuplicate = false;
+                String slvIdOnController = null;
                 for (Value value : values) {
                     if (!value.getIdOnController().equals(idOnController)) {
                         isDuplicate = true;
@@ -312,6 +315,7 @@ public abstract class AbstractProcessor {
                     if (value.getIdOnController().equals(idOnController) && nightRideKey != null) {
                         sendNightRideToSLV(value.getIdOnController(), nightRideKey, nightRideValue, loggingModel);
                     }
+                    slvIdOnController = value.getIdOnController();
                     stringBuilder.append(value.getIdOnController());
                     stringBuilder.append("\n");
                 }
@@ -324,6 +328,8 @@ public abstract class AbstractProcessor {
                         duplicateMacAddress.setTitle(idOnController);
                         duplicateMacAddress.setMacaddress(macAddress);
                         duplicateMacAddress.setNoteguid(loggingModel.getProcessedNoteId());
+                        duplicateMacAddress.setEventTime(System.currentTimeMillis());
+                        duplicateMacAddress.setAssignedTo(slvIdOnController);
                         connectionDAO.saveDuplicateMacAddress(duplicateMacAddress);
 
                     } catch (Exception e) {
@@ -378,7 +384,8 @@ public abstract class AbstractProcessor {
 
     protected void addOtherParams(EdgeNote edgeNote, List<Object> paramsList, String idOnContoller, String utilLocId, boolean isNew, String fixerQrScanValue, String macAddress, InstallMaintenanceLogModel loggingModel) {
         // luminaire.installdate - 2017-09-07 09:47:35
-        String installStatus = null;
+        String installStatus = InstallStatus.Installed.getValue();
+
         String slvMacAddress = macHashMap.get(idOnContoller);
         if (fixerQrScanValue != null && fixerQrScanValue.trim().length() > 0 && !loggingModel.isFixtureQRSame()) {
             logger.info("Fixture QR scan not empty and set luminare installdate" + dateFormat(edgeNote.getCreatedDateTime()));
@@ -391,19 +398,11 @@ public abstract class AbstractProcessor {
             if (!isButtonPhotoCelll) {
                 addStreetLightData("luminaire.installdate", dateFormat(edgeNote.getCreatedDateTime()), paramsList);
             }
-            if (macAddress == null || macAddress.trim().isEmpty()) {
-                if (slvMacAddress != null && slvMacAddress.trim().startsWith("00135")) {
-                    installStatus = "Installed";
-                } else {
-                    installStatus = "Fixture Only";
-                }
-            } else {
-                installStatus = "Installed";
+            // As per Mail Conversion - Re: New Release updated on Test Server (.175) - 4.6.18
+            if(fixerQrScanValue.startsWith("Existing") && loggingModel.isActionNew()){
+                installStatus = InstallStatus.Node_Only.getValue();
             }
 
-
-        } else if (macAddress != null && macAddress.trim().length() > 0) {
-            installStatus = "Installed";
         }
 
         if (utilLocId != null) {
@@ -429,7 +428,7 @@ public abstract class AbstractProcessor {
                 edgeNotebookName = edgeNotebookName + " Acorns";
             }
             if (dimmingGroupName.contains("Node Only") && installStatus != null) {
-                installStatus = "Verified";
+                installStatus = InstallStatus.Verified.getValue();
 
             }
         }
@@ -439,8 +438,9 @@ public abstract class AbstractProcessor {
        /* if (dimmingGroupName != null && dimmingGroupName.trim().toLowerCase().contains("acorns")) {
             edgeNotebookName = edgeNotebookName +" Acorns";
         }*/
-        if (installStatus != null) {
-            addStreetLightData("installStatus", loggingModel.isButtonPhotoCell() ? "Verified" : installStatus, paramsList);
+        // As per Mail Conversion - Re: New Release updated on Test Server (.175) - 4.6.18
+        if (installStatus != null && loggingModel.isActionNew()) {
+            addStreetLightData("installStatus", loggingModel.isButtonPhotoCell() ? InstallStatus.Photocell_Only.getValue() : installStatus, paramsList);
         }
 
 

@@ -10,6 +10,16 @@ public class InstallMaintenanceLogModel extends LoggingModel {
     private int deviceId;
     private String comment;
 
+    private boolean isActionNew;
+
+    public boolean isActionNew() {
+        return isActionNew;
+    }
+
+    public void setActionNew(boolean actionNew) {
+        isActionNew = actionNew;
+    }
+
     private DatesHolder datesHolder;
 
 
@@ -57,6 +67,10 @@ public class InstallMaintenanceLogModel extends LoggingModel {
     public String toString() {
         return "InstallMaintenanceLogModel{" +
                 "isInstallFormPresent=" + isInstallFormPresent +
+                ", isFixtureOnly=" + isFixtureOnly +
+                ", deviceId=" + deviceId +
+                ", comment='" + comment + '\'' +
+                ", isActionNew=" + isActionNew +
                 ", isFixtureOnly=" + isFixtureOnly +
                 ", deviceId=" + deviceId +
                 ", comment='" + comment + '\'' +

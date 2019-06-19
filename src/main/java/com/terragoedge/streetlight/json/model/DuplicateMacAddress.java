@@ -11,6 +11,26 @@ public class DuplicateMacAddress {
     private String noteguid;
     @DatabaseField(columnName = "macaddress")
     private String macaddress;
+    @DatabaseField(columnName = "eventtime")
+    private long eventTime;
+    @DatabaseField(columnName = "assigned_to")
+    private String assignedTo;
+
+    public long getEventTime() {
+        return eventTime;
+    }
+
+    public void setEventTime(long eventTime) {
+        this.eventTime = eventTime;
+    }
+
+    public String getAssignedTo() {
+        return assignedTo;
+    }
+
+    public void setAssignedTo(String assignedTo) {
+        this.assignedTo = assignedTo;
+    }
 
     public String getTitle() {
         return title;
@@ -42,6 +62,8 @@ public class DuplicateMacAddress {
                 "title='" + title + '\'' +
                 ", noteguid='" + noteguid + '\'' +
                 ", macaddress='" + macaddress + '\'' +
+                ", eventTime=" + eventTime +
+                ", assignedTo='" + assignedTo + '\'' +
                 '}';
     }
 }
