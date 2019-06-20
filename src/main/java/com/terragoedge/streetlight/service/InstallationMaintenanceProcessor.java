@@ -227,7 +227,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
     private String getAction(List<EdgeFormData> edgeFormDatas, String idOnController, InstallMaintenanceLogModel loggingModel, EdgeNote edgeNote, SlvInterfaceLogEntity slvInterfaceLogEntity) throws AlreadyUsedException {
         try {
 
-            loadDateValFromEdge(edgeFormDatas,loggingModel);
+            //loadDateValFromEdge(edgeFormDatas,loggingModel);
             String value = value(edgeFormDatas, "Action");
             if (value.equals("Repairs & Outages")) {
                 String repairsOutagesValue = null;
@@ -531,10 +531,22 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
             paramsList.add("controllerStrId=" + controllerStrIdValue);
             SlvServerData slvServerData = new SlvServerData();
 
+            logger.info("Atlasphysicalpage in SLV:"+loggingModel.getAtlasPhysicalPage());
+            logger.info("IsDroppedPinWorkflow:"+loggingModel.isDroppedPinWorkflow());
+            logger.info("Edge NoteBook:"+edgeNote.getEdgeNotebook());
+            if(loggingModel.isDroppedPinWorkflow() && loggingModel.getAtlasPhysicalPage() == null && edgeNote.getEdgeNotebook() != null && edgeNote.getEdgeNotebook().getNotebookName() != null){
+                logger.info("atlasphysicalpage is empty.");
+                addStreetLightData("location.atlasphysicalpage", edgeNote.getEdgeNotebook().getNotebookName(), paramsList);
+            }
             addOtherParams(edgeNote, paramsList, idOnController, utilLocId, isNew, fixerQrScanValue, macAddress, loggingModel);
+
+
+
 
             if (fixerQrScanValue != null && !loggingModel.isFixtureQRSame()) {
                 buildFixtureStreetLightData(fixerQrScanValue, paramsList, edgeNote, slvServerData, loggingModel);//update fixer qrscan value
+
+
             }
 
             logger.info("Night Ride Val in Set Device"+nightRideValue);

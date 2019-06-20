@@ -10,7 +10,17 @@ public class InstallMaintenanceLogModel extends LoggingModel {
     private int deviceId;
     private String comment;
 
+    private String atlasPhysicalPage;
+
     private boolean isActionNew;
+
+    public String getAtlasPhysicalPage() {
+        return atlasPhysicalPage;
+    }
+
+    public void setAtlasPhysicalPage(String atlasPhysicalPage) {
+        this.atlasPhysicalPage = atlasPhysicalPage;
+    }
 
     public boolean isActionNew() {
         return isActionNew;

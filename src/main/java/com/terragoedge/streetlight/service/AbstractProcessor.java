@@ -135,6 +135,7 @@ public abstract class AbstractProcessor {
         String luminaireInstallDate = null;
         String macAddress = null;
         String luminaireSerialNumber = null;
+        String atlasPhysicalPage = null;
         for (int i = 0; i < arr.size(); i++) {
             JsonObject jsonObject1 = arr.get(i).getAsJsonObject();
             String keyValue = jsonObject1.get("key").getAsString();
@@ -154,7 +155,10 @@ public abstract class AbstractProcessor {
                 nodeInstallDate = jsonObject1.get("value").getAsString();
             }else if (keyValue != null && keyValue.equals("luminiare.installdate")) {
                 luminaireInstallDate = jsonObject1.get("value").getAsString();
+            }else if(keyValue != null && keyValue.equals("userproperty.location.atlasphysicalpage")){
+                atlasPhysicalPage = jsonObject1.get("value").getAsString();
             }
+            //userproperty.location.atlasphysicalpage
 
         }
 
@@ -178,6 +182,11 @@ public abstract class AbstractProcessor {
         if(luminaireSerialNumber != null && !luminaireSerialNumber.trim().isEmpty() && luminaireSerialNumber.trim().length() > 3){
             installMaintenanceLogModel.setSlvLuminaireSerialNumber(luminaireSerialNumber);
         }
+
+        if(atlasPhysicalPage != null && !atlasPhysicalPage.trim().isEmpty()){
+            installMaintenanceLogModel.setAtlasPhysicalPage(atlasPhysicalPage);
+        }
+
         logger.info("SLVDates :" + gson.toJson(slvDates));
         cslpDateHashMap.put(idOnController, slvDates);
         macHashMap.put(idOnController, macAddress);
