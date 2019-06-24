@@ -148,7 +148,11 @@ public class SlvInterfaceService extends AbstractSlvService {
                     logger.info("Given formtemplates present in this note.: " + edgeNote.getTitle());
                     JPSWorkflowModel jpsWorkflowModel = processWorkFlowForm(formDatasList, edgeNote,installWorkflowFormId);
                     logger.info("JspWorkmodel json :" + gson.toJson(jpsWorkflowModel));
-                    slvService.processSlv(jpsWorkflowModel, edgeNote);
+                    if(jpsWorkflowModel.getInstallStatus().equals("CONVERTED")){//CONVERTED
+                        slvService.processSlv(jpsWorkflowModel, edgeNote);
+                    }else{
+                        logger.error("Install status is not CONVERTED. So skipping this note: "+edgeNote.getNoteGuid());
+                    }
                 } else {
                     System.out.println("Wrong formtemplate");
                     logger.info("Wrong formtemplates Present");
