@@ -676,7 +676,10 @@ public abstract class AbstractProcessor {
                 if (jsonArray != null && jsonArray.size() > 0) {
                     for (JsonElement jsonElement : jsonArray) {
                         JsonObject jsonObject = (JsonObject) jsonElement;
-                        if (jsonObject.get("namesPath").getAsString().equals(rootGeoZone + geozone)) {
+                        String geozoneNamePath = jsonObject.get("namesPath").getAsString();
+                        if(geozoneNamePath.startsWith(rootGeoZone.split("Unknown/")[0]) && geozoneNamePath.endsWith(geozone)) {
+                            geozoneId = jsonObject.get("id").getAsInt();
+                        }else if(geozoneNamePath.equals(rootGeoZone + geozone)){
                             geozoneId = jsonObject.get("id").getAsInt();
                         }
                     }
