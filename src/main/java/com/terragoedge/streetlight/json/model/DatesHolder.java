@@ -5,10 +5,12 @@ import java.util.Date;
 import java.util.TimeZone;
 
 public class DatesHolder {
-
+    // Date in SLV
     private SLVDates slvDates = new SLVDates();
+    // Date present in Edge Form
     private SLVDates edgeDates;
 
+    // Date Needs to send SLV
     private SLVDates syncEdgeDates;
 
     private boolean isCslpNodeDateSynced;

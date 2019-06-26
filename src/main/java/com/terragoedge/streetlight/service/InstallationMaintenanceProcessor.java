@@ -215,6 +215,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
                     slvInterfaceLogEntity.setErrordetails(MessageConstants.ACTION_NO_VAL);
                     slvInterfaceLogEntity.setStatus(MessageConstants.ERROR);
                 }
+                syncEdgeDates(installMaintenanceLogModel);
             }
         }
 
@@ -567,7 +568,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
                 }
                 addStreetLightData("MacAddress", macAddress, paramsList);
             }
-
+            setEdgeDates(loggingModel,paramsList);
             SLVTransactionLogs slvTransactionLogs = getSLVTransactionLogs(loggingModel);
             int errorCode = setDeviceValues(paramsList, slvTransactionLogs);
             logger.info("Error code" + errorCode);
@@ -622,6 +623,8 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
 
         }
     }
+
+
 
     private String getIdOnController(List<EdgeFormData> fixtureFromDef) {
         // Get IdOnController value
@@ -1406,6 +1409,96 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
             if(!res){
                 syncEdgeDates.setLumInstallDate(edgeLumInstallDate);
             }
+        }
+    }
+
+
+    /**
+     * Check EdgeForm has CSLP node install date,CSLP lum install date,Install date, Lum Install date value.
+     * If value is present, set those value to the corresponding fields and set date sync flag as true
+     * @param loggingModel
+     * @param paramsList
+     */
+    private void setEdgeDates(InstallMaintenanceLogModel loggingModel,List<Object> paramsList){
+        DatesHolder datesHolder = loggingModel.getDatesHolder();
+        logger.info("Populate EdgeForm Date Values.");
+        if(datesHolder != null && datesHolder.getSyncEdgeDates() != null){
+            SLVDates syncEdgeDates = datesHolder.getSyncEdgeDates();
+            logger.info("SyncEdgeDates:"+syncEdgeDates.toString());
+            // CSLP Node Install Date.
+            boolean isCSLPNodeInstallDate = addDateParam("cslp.node.install.date",syncEdgeDates.getCslpNodeDate(),paramsList);
+            logger.info("isCSLPNodeInstallDate added:"+isCSLPNodeInstallDate);
+            datesHolder.setCslpNodeDateSynced(isCSLPNodeInstallDate);
+
+            // CSLP Lum Install Date.
+            boolean isCSLPLumInstallDate = addDateParam("cslp.lum.install.date",syncEdgeDates.getCslpLumDate(),paramsList);
+            logger.info("isCSLPLumInstallDate added:"+isCSLPLumInstallDate);
+            datesHolder.setCslpLumDateSynced(isCSLPLumInstallDate);
+
+            // Install Date
+            boolean isInstallDate = addDateParam("install.date",syncEdgeDates.getNodeInstallDate(),paramsList);
+            logger.info("isInstallDate added:"+isInstallDate);
+            datesHolder.setInstallDateSynced(isInstallDate);
+
+            // Lum Install Date
+            boolean isLumInstallDate = addDateParam("luminaire.installdate",syncEdgeDates.getLumInstallDate(),paramsList);
+            logger.info("isLumInstallDate added:"+isLumInstallDate);
+            datesHolder.setCslpLumDateSynced(isLumInstallDate);
+        }
+    }
+
+    private boolean addDateParam(String paramName,String value,List<Object> paramsList){
+        if(value != null){
+            addStreetLightData(paramName, value, paramsList);
+            return true;
+        }
+        return false;
+    }
+
+
+
+    private void syncEdgeDates(InstallMaintenanceLogModel installMaintenanceLogModel){
+        logger.info("Edge Date Sync Process Starts.");
+        if(installMaintenanceLogModel.getDatesHolder() != null && installMaintenanceLogModel.getDatesHolder().getSyncEdgeDates() != null){
+
+            SLVDates syncEdgeDates = installMaintenanceLogModel.getDatesHolder().getSyncEdgeDates();
+            logger.info("SyncEdgeDates:"+syncEdgeDates.toString());
+            List<Object> paramsList = new ArrayList<>();
+
+            if(syncEdgeDates.getCslpNodeDate() != null && !installMaintenanceLogModel.getDatesHolder().isCslpNodeDateSynced()){
+                logger.info("CslpNodeInstallDate Added");
+                addDateParam("cslp.node.install.date",syncEdgeDates.getCslpNodeDate(),paramsList);
+            }
+
+            if(syncEdgeDates.getCslpLumDate() != null && !installMaintenanceLogModel.getDatesHolder().isCslpLumDateSynced()){
+                logger.info("CslpLumInstallDate Added");
+                addDateParam("cslp.lum.install.date",syncEdgeDates.getCslpNodeDate(),paramsList);
+            }
+
+
+            if(syncEdgeDates.getNodeInstallDate() != null && !installMaintenanceLogModel.getDatesHolder().isInstallDateSynced()){
+                logger.info("Install Date Added");
+                addDateParam("install.date",syncEdgeDates.getCslpNodeDate(),paramsList);
+            }
+
+
+            if(syncEdgeDates.getLumInstallDate() != null && !installMaintenanceLogModel.getDatesHolder().isLumInstallDateSynced()){
+                logger.info("Luminaire Install Date Added");
+                addDateParam("luminaire.installdate",syncEdgeDates.getLumInstallDate(),paramsList);
+            }
+
+            if(paramsList.size() > 0){
+                logger.info("Date value is Present. Syncing Date value....");
+                String idOnController = installMaintenanceLogModel.getIdOnController();
+                paramsList.add("idOnController=" + idOnController);
+                paramsList.add("controllerStrId=" + installMaintenanceLogModel.getControllerSrtId());
+                SLVTransactionLogs slvTransactionLogs = getSLVTransactionLogs(installMaintenanceLogModel);
+                int errorCode = setDeviceValues(paramsList, slvTransactionLogs);
+                logger.info("Error Code:"+errorCode);
+            }else{
+                logger.info("No Date value is present");
+            }
+
         }
     }
 }
