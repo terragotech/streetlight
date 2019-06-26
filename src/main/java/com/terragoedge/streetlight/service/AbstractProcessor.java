@@ -673,17 +673,20 @@ public abstract class AbstractProcessor {
                 String responseString = response.getBody();
                 setResponseDetails(slvTransactionLogs, responseString);
                 JsonArray jsonArray = jsonParser.parse(responseString).getAsJsonArray();
+                int unknownGeoZoneId = -1;
+                int districtGeoZoneId = -1;
                 if (jsonArray != null && jsonArray.size() > 0) {
                     for (JsonElement jsonElement : jsonArray) {
                         JsonObject jsonObject = (JsonObject) jsonElement;
                         String geozoneNamePath = jsonObject.get("namesPath").getAsString();
-                        if(geozoneNamePath.startsWith(rootGeoZone.split("Unknown/")[0]) && geozoneNamePath.endsWith(geozone)) {
-                            geozoneId = jsonObject.get("id").getAsInt();
-                        }else if(geozoneNamePath.equals(rootGeoZone + geozone)){
-                            geozoneId = jsonObject.get("id").getAsInt();
+                        if(geozoneNamePath.equals(rootGeoZone + geozone)){// inside unknown
+                            unknownGeoZoneId = jsonObject.get("id").getAsInt();
+                        }else if(geozoneNamePath.startsWith(rootGeoZone.split("Unknown/")[0]) && geozoneNamePath.endsWith(geozone)) {//inside district
+                            districtGeoZoneId = jsonObject.get("id").getAsInt();
                         }
                     }
                 }
+                geozoneId = districtGeoZoneId != -1 ? districtGeoZoneId : unknownGeoZoneId;
             }
         } catch (Exception e) {
             setResponseDetails(slvTransactionLogs, "Error in checkAndCreateGeoZone:" + e.getMessage());
