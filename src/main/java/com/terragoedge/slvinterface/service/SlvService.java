@@ -293,7 +293,7 @@ public class SlvService extends AbstractSlvService {
         slvSyncDetail.setProcessedDateTime(System.currentTimeMillis());
         slvSyncDetail.setSlvDeviceDetailsResponse(details);
         slvSyncDetail.setTitle(edgeNote.getTitle());
-        slvSyncDetail.setDeviceDetails(gson.toJson(jpsWorkflowModel));
+        slvSyncDetail.setDeviceDetails("");
         slvSyncDetail.setStatus(Status.Error);
         if (slvSyncDetail.getId() > 1) {
             logger.info("updateSlvSyncDetail object is updated");
