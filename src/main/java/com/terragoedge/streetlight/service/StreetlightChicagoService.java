@@ -315,7 +315,7 @@ public class StreetlightChicagoService extends AbstractProcessor {
         boolean isdevicePresent = isDevicePresent(slvTransactionLogs, idOnController);
         logger.info("The device present with the same idoncontroller: "+idOnController+ "result: "+isdevicePresent);
         if (!isdevicePresent) {
-            int geozoneid = checkGeoZone(edgeNote.getEdgeNotebook().getNotebookName(),slvTransactionLogs);
+            int geozoneid = checkAndCreateGeoZone(edgeNote.getEdgeNotebook().getNotebookName(),slvTransactionLogs);
             if(geozoneid == -1){
                 logger.error("Skipping this device. Dueto there is no geozone present with this name: "+edgeNote.getEdgeNotebook().getNotebookName());
                 slvInterfaceLogEntity.setStatus(MessageConstants.ERROR);
