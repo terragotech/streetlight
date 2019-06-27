@@ -228,7 +228,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
     private String getAction(List<EdgeFormData> edgeFormDatas, String idOnController, InstallMaintenanceLogModel loggingModel, EdgeNote edgeNote, SlvInterfaceLogEntity slvInterfaceLogEntity) throws AlreadyUsedException {
         try {
 
-            //loadDateValFromEdge(edgeFormDatas,loggingModel);
+            loadDateValFromEdge(edgeFormDatas,loggingModel);
             String value = value(edgeFormDatas, "Action");
             if (value.equals("Repairs & Outages")) {
                 String repairsOutagesValue = null;
@@ -585,6 +585,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
                 if (fixerQrScanValue != null && !fixerQrScanValue.trim().isEmpty()) {
                     createEdgeAllFixture(idOnController, fixerQrScanValue);
                 }
+                createAllSLVDate(loggingModel.getDatesHolder().getSyncEdgeDates(),idOnController);
                 logger.info("Replace OLC called");
                 // replace OlC
                 System.out.println("New :" + isNew + " \nmacAddress :" + macAddress);
@@ -1323,7 +1324,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
         // Get CSLP Node Install Date
         String cslpNodeInstallDate = null;
         try {
-            cslpNodeInstallDate = valueById(edgeFormDatas, 22);
+            cslpNodeInstallDate = valueById(edgeFormDatas, 169);
             edgeSLVDates.setCslpNodeDate(cslpNodeInstallDate);
             logger.info("cslpNodeInstallDate Val" + cslpNodeInstallDate);
         } catch (NoValueException e) {
@@ -1334,7 +1335,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
         // Get CSLP Node Install Date
         String cslpLumInstallDate = null;
         try {
-            cslpLumInstallDate = valueById(edgeFormDatas, 22);
+            cslpLumInstallDate = valueById(edgeFormDatas, 170);
             edgeSLVDates.setCslpLumDate(cslpLumInstallDate);
             logger.info("cslpLumInstallDate Val" + cslpLumInstallDate);
         } catch (NoValueException e) {
@@ -1345,7 +1346,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
         // Get Node Install Date
         String installDate = null;
         try {
-            installDate = valueById(edgeFormDatas, 22);
+            installDate = valueById(edgeFormDatas, 171);
             edgeSLVDates.setNodeInstallDate(installDate);
             logger.info("installDate Val" + installDate);
         } catch (NoValueException e) {
@@ -1356,7 +1357,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
         // Get Lum Install Date
         String lumInstallDate = null;
         try {
-            lumInstallDate = valueById(edgeFormDatas, 22);
+            lumInstallDate = valueById(edgeFormDatas, 172);
             edgeSLVDates.setLumInstallDate(lumInstallDate);
             logger.info("lumInstallDate Val" + lumInstallDate);
         } catch (NoValueException e) {
@@ -1500,5 +1501,30 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
             }
 
         }
+    }
+
+
+    private void createAllSLVDate(SLVDates slvDates,String idOnController){
+        logger.info("createAllSLVDate Process Starts");
+        if(slvDates != null){
+            saveEdgeSLVDate(slvDates.getCslpNodeDate(),DateType.CSLP_NODE.toString(),idOnController);
+            saveEdgeSLVDate(slvDates.getCslpLumDate(),DateType.CSLP_NODE.toString(),idOnController);
+            saveEdgeSLVDate(slvDates.getNodeInstallDate(),DateType.NODE.toString(),idOnController);
+            saveEdgeSLVDate(slvDates.getLumInstallDate(),DateType.LUM.toString(),idOnController);
+        }
+
+
+    }
+
+    private void saveEdgeSLVDate(String date,String dateType,String idOnController){
+        if(date != null){
+            EdgeSLVDate edgeSLVDate = new EdgeSLVDate();
+            edgeSLVDate.setTitle(idOnController);
+            edgeSLVDate.setEdgeDate(date);
+            edgeSLVDate.setDatesType(dateType);
+            connectionDAO.saveEdgeNodeDate(edgeSLVDate);
+            logger.info("EdgeSLVDate Saved..");
+        }
+
     }
 }

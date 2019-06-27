@@ -137,8 +137,7 @@ public class StreetlightChicagoService extends AbstractProcessor {
             edgeSlvUrl = edgeSlvUrl + lastSynctime;
 
         }else{
-            logger.error("Last Sync not loaded.");
-            return;
+            lastSynctime = System.currentTimeMillis() - (10 * 60000);
         }
 
 

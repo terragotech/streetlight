@@ -16,7 +16,7 @@ import java.util.List;
 public enum ConnectionDAO {
     INSTANCE;
 
-    private final static String DATABASE_URL = "jdbc:postgresql://127.0.0.1:5432/terragoedge?user=postgres&password=password";
+    private final static String DATABASE_URL = "jdbc:postgresql://127.0.0.1:5432/terragoedge_test?user=postgres&password=password";
 
     ConnectionSource connectionSource = null;
     final Logger logger = org.apache.log4j.Logger.getLogger(ConnectionDAO.class);

@@ -15,6 +15,10 @@ import com.terragoedge.streetlight.logging.InstallMaintenanceLogModel;
 import com.terragoedge.streetlight.logging.LoggingModel;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
+import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
+import org.joda.time.format.DateTimeFormat;
+import org.joda.time.format.DateTimeFormatter;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
@@ -127,6 +131,7 @@ public abstract class AbstractProcessor {
         macHashMap.clear();
 
         SLVDates slvDates = new SLVDates();
+        SLVDates slvDatesTemp = new SLVDates();
         installMaintenanceLogModel.getDatesHolder().setSlvDates(slvDates);
 
         String cslpNodeInstall = null;
@@ -151,9 +156,9 @@ public abstract class AbstractProcessor {
                 installMaintenanceLogModel.setSlvMacaddress(macAddress);
             }else if (keyValue != null && keyValue.equals("userproperty.luminaire.serialnumber")) {
                 luminaireSerialNumber = jsonObject1.get("value").getAsString();
-            }else if (keyValue != null && keyValue.equals("install.date")) {
+            }else if (keyValue != null && keyValue.equals("userproperty.cslp.node.install.date")) {
                 nodeInstallDate = jsonObject1.get("value").getAsString();
-            }else if (keyValue != null && keyValue.equals("luminiare.installdate")) {
+            }else if (keyValue != null && keyValue.equals("userproperty.luminaire.installdate")) {
                 luminaireInstallDate = jsonObject1.get("value").getAsString();
             }else if(keyValue != null && keyValue.equals("userproperty.location.atlasphysicalpage")){
                 atlasPhysicalPage = jsonObject1.get("value").getAsString();
@@ -164,19 +169,21 @@ public abstract class AbstractProcessor {
 
         //
         if (cslpNodeInstall != null && !cslpNodeInstall.trim().isEmpty() && cslpNodeInstall.trim().length() > 7) {
-            slvDates.setCslpNodeDate(cslpNodeInstall);
+            slvDatesTemp.setCslpNodeDate(cslpNodeInstall);
+            slvDates.setCslpNodeDate(slvDateFormat(cslpNodeInstall,"CSLP Node Install Date"));
         }
         if (cslpLuminaireDate != null && !cslpLuminaireDate.trim().isEmpty() && cslpLuminaireDate.trim().length() > 7) {
-            slvDates.setCslpLumDate(cslpLuminaireDate);
+            slvDatesTemp.setLumInstallDate(cslpLuminaireDate);
+            slvDates.setCslpLumDate(slvDateFormat(cslpLuminaireDate,"CSLP Lum Install Date"));
         }
 
 
         if(nodeInstallDate != null && !nodeInstallDate.trim().isEmpty()){
-            slvDates.setNodeInstallDate(nodeInstallDate);
+            slvDates.setNodeInstallDate(slvDateFormat(nodeInstallDate,"Node Install Date"));
         }
 
         if(luminaireInstallDate != null && !luminaireInstallDate.trim().isEmpty()){
-            slvDates.setLumInstallDate(luminaireInstallDate);
+            slvDates.setLumInstallDate(slvDateFormat(luminaireInstallDate,"Lum Install Date"));
         }
 
         if(luminaireSerialNumber != null && !luminaireSerialNumber.trim().isEmpty() && luminaireSerialNumber.trim().length() > 3){
@@ -188,7 +195,9 @@ public abstract class AbstractProcessor {
         }
 
         logger.info("SLVDates :" + gson.toJson(slvDates));
+        logger.info("SLVDates :" + gson.toJson(slvDatesTemp));
         cslpDateHashMap.put(idOnController, slvDates);
+        cslpDateHashMap.put(idOnController,slvDatesTemp);
         macHashMap.put(idOnController, macAddress);
         DeviceAttributes deviceAttributes = new DeviceAttributes();
         deviceAttributes.setMacAddress(macAddress);
@@ -197,6 +206,44 @@ public abstract class AbstractProcessor {
         deviceAttributes.setNoteGuid(noteGuid);
         connectionDAO.saveDeviceAttributes(deviceAttributes);
         logger.info("processDeviceValuesJson End");
+    }
+
+
+
+    private String slvDateFormat(String dateVal,String dateType){
+        logger.info(dateType+":"+dateVal);
+        if(dateVal.contains("-")){
+            try {
+                DateTimeFormatter fmt = DateTimeFormat.forPattern("yyyy-MM-dd HH:mm:ss")
+                        .withZone(DateTimeZone.forTimeZone(TimeZone.getTimeZone("CST")));
+                DateTime dt =  fmt.parseDateTime(dateVal);
+
+                return String.valueOf(dt.withTimeAtStartOfDay().getMillis());
+            }catch (Exception e){
+                logger.error("Error in slvDateFormat",e);
+            }
+
+            try {
+                DateTimeFormatter fmt = DateTimeFormat.forPattern("yyyy-MM-dd")
+                        .withZone(DateTimeZone.forTimeZone(TimeZone.getTimeZone("CST")));
+                DateTime dt =  fmt.parseDateTime(dateVal);
+
+                return String.valueOf(dt.withTimeAtStartOfDay().getMillis());
+            }catch (Exception e){
+                logger.error("Error in slvDateFormat",e);
+            }
+        }
+
+        try {
+            DateTimeFormatter fmt = DateTimeFormat.forPattern("MM/dd/yyyy")
+                    .withZone(DateTimeZone.forTimeZone(TimeZone.getTimeZone("CST")));
+            DateTime dt =  fmt.parseDateTime(dateVal);
+
+            return String.valueOf(dt.withTimeAtStartOfDay().getMillis());
+        }catch (Exception e){
+            logger.error("Error in slvDateFormat",e);
+        }
+        return null;
     }
 
     public void createEdgeAllFixture(String title, String fixerQrScanValue) {
