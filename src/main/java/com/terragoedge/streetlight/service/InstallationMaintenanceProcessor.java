@@ -8,9 +8,14 @@ import com.terragoedge.streetlight.exception.*;
 import com.terragoedge.streetlight.json.model.*;
 import com.terragoedge.streetlight.logging.InstallMaintenanceLogModel;
 import com.terragoedge.streetlight.logging.LoggingModel;
+import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.client.RestTemplate;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -1449,8 +1454,8 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
     }
 
     private boolean addDateParam(String paramName,String value,List<Object> paramsList){
-        if(value != null){
-            addStreetLightData(paramName, value, paramsList);
+        if(value != null && !value.trim().isEmpty()){
+            addStreetLightData(paramName, dateFormat(Long.valueOf(value)), paramsList);
             return true;
         }
         return false;
@@ -1527,4 +1532,63 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
         }
 
     }
+
+
+    public void updatePromotedFormData(SLVDates slvDates,String idOnController){
+        if(slvDates != null){
+            boolean hasData = false;
+            PromotedFormData promotedFormData = new PromotedFormData();
+            promotedFormData.setIdOnController(idOnController);
+            if(slvDates.getCslpLumDate() != null){
+                hasData = true;
+                promotedFormData.setCslpLumInstallDate(slvDates.getCslpLumDate());
+            }
+            if(slvDates.getCslpNodeDate() != null){
+                hasData = true;
+                promotedFormData.setCslpNodeInstallDate(slvDates.getCslpNodeDate());
+            }
+            if(slvDates.getNodeInstallDate() != null){
+                hasData = true;
+                promotedFormData.setInstallDate(slvDates.getNodeInstallDate());
+            }
+            if(slvDates.getLumInstallDate() != null){
+                hasData = true;
+                promotedFormData.setLumInstallDate(slvDates.getLumInstallDate());
+            }
+
+            if(hasData){
+                String requestJson = gson.toJson(promotedFormData);
+                String edgeSlvUrl = "http://199.233.241.175/edgeSlvServer/updatePromotedFormDates";
+                serverCall(edgeSlvUrl,HttpMethod.POST,requestJson);
+            }
+        }
+    }
+
+
+    public ResponseEntity<String> serverCall(String url, HttpMethod httpMethod, String body) {
+        logger.info("Request Url : " + url);
+        logger.info("Request Data : " + body);
+        RestTemplate restTemplate = new RestTemplate();
+        HttpHeaders headers =new HttpHeaders();
+
+        HttpEntity request = null;
+        if (body != null) {
+            headers.add("Content-Type", "application/json");
+            request = new HttpEntity<String>(body, headers);
+        } else {
+            request = new HttpEntity<>(headers);
+        }
+
+        ResponseEntity<String> responseEntity = restTemplate.exchange(url, httpMethod, request, String.class);
+        logger.info("------------ Response ------------------");
+
+        logger.info("Response Code:" + responseEntity.getStatusCode().toString());
+        if (responseEntity.getBody() != null) {
+            logger.info("Response Data:" + responseEntity.getBody());
+        }
+
+        return responseEntity;
+    }
+
+
 }

@@ -130,7 +130,7 @@ public class StreetlightChicagoService extends AbstractProcessor {
 
 
 
-        String edgeSlvUrl = "https://amerescousa.terragoedge.com/edgeSlvServer/notesGuid?lastSyncTime=";
+        String edgeSlvUrl = "http://199.233.241.175/edgeSlvServer/notesGuid?lastSyncTime=";
 
         long lastSynctime = streetlightDao.getLastSyncTime();
         if(lastSynctime > 0){
@@ -138,6 +138,7 @@ public class StreetlightChicagoService extends AbstractProcessor {
 
         }else{
             lastSynctime = System.currentTimeMillis() - (10 * 60000);
+            edgeSlvUrl = edgeSlvUrl + lastSynctime;
         }
 
 
@@ -217,7 +218,7 @@ public class StreetlightChicagoService extends AbstractProcessor {
                     if(!isDroppedPinWorkFlow || (isDroppedPinWorkFlow && isDeviceCreated)) {
                         loadDeviceValues(edgeNote.getTitle(),installMaintenanceLogModel);
                         installationMaintenanceProcessor.processNewAction(edgeNote, installMaintenanceLogModel, false, utilLocId, slvInterfaceLogEntity);
-                        //updateSlvStatusToEdge(installMaintenanceLogModel, edgeNote);
+                       // updateSlvStatusToEdge(installMaintenanceLogModel, edgeNote);
                         LoggingModel loggingModel = installMaintenanceLogModel;
                         streetlightDao.insertProcessedNotes(loggingModel, installMaintenanceLogModel);
                     }

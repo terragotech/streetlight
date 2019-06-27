@@ -173,7 +173,7 @@ public abstract class AbstractProcessor {
             slvDates.setCslpNodeDate(slvDateFormat(cslpNodeInstall,"CSLP Node Install Date"));
         }
         if (cslpLuminaireDate != null && !cslpLuminaireDate.trim().isEmpty() && cslpLuminaireDate.trim().length() > 7) {
-            slvDatesTemp.setLumInstallDate(cslpLuminaireDate);
+            slvDatesTemp.setCslpLumDate(cslpLuminaireDate);
             slvDates.setCslpLumDate(slvDateFormat(cslpLuminaireDate,"CSLP Lum Install Date"));
         }
 
