@@ -741,7 +741,7 @@ public abstract class AbstractProcessor {
 
         return errorCode;
     }
-    protected int checkGeoZone(String geozone, SLVTransactionLogs slvTransactionLogs) {
+    protected int checkAndCreateGeoZone(String geozone, SLVTransactionLogs slvTransactionLogs) {
         int geozoneId = -1;
         try {
             String rootGeoZone = properties.getProperty("com.slv.root.geozone");
@@ -771,20 +771,15 @@ public abstract class AbstractProcessor {
                 String responseString = response.getBody();
                 setResponseDetails(slvTransactionLogs, responseString);
                 JsonArray jsonArray = jsonParser.parse(responseString).getAsJsonArray();
-                int unknownGeoZoneId = -1;
-                int districtGeoZoneId = -1;
                 if (jsonArray != null && jsonArray.size() > 0) {
                     for (JsonElement jsonElement : jsonArray) {
                         JsonObject jsonObject = (JsonObject) jsonElement;
                         String geozoneNamePath = jsonObject.get("namesPath").getAsString();
                         if(geozoneNamePath.equals(rootGeoZone + geozone)){// inside unknown
-                            unknownGeoZoneId = jsonObject.get("id").getAsInt();
-                        }else if(geozoneNamePath.startsWith(rootGeoZone.split("Unknown/")[0]) && geozoneNamePath.endsWith(geozone)) {//inside district
-                            districtGeoZoneId = jsonObject.get("id").getAsInt();
+                            geozoneId = jsonObject.get("id").getAsInt();
                         }
                     }
                 }
-                geozoneId = districtGeoZoneId != -1 ? districtGeoZoneId : unknownGeoZoneId;
             }
         } catch (Exception e) {
             setResponseDetails(slvTransactionLogs, "Error in checkAndCreateGeoZone:" + e.getMessage());
@@ -792,7 +787,9 @@ public abstract class AbstractProcessor {
         } finally {
             streetlightDao.insertTransactionLogs(slvTransactionLogs);
         }
-
+        if(geozoneId == -1) {// no geozone present in unknown geozone so going to create geozone inside unknown
+            geozoneId = createGeoZone(geozone,slvTransactionLogs);
+        }
         return geozoneId;
     }
 
@@ -1278,5 +1275,57 @@ public boolean checkExistingMacAddressValid(EdgeNote edgeNote, InstallMaintenanc
     protected boolean isDatePresent(String title,String date,String type){
         EdgeSLVDate edgeSLVDate = connectionDAO.getEdgeNodeDate(title,date,type);
         return edgeSLVDate != null;
+    }
+
+
+
+    protected int createGeoZone(String geozone, SLVTransactionLogs slvTransactionLogs) {
+        int geozoneId = -1;
+        try {
+            int rootGeozoneId = Integer.valueOf(properties.getProperty("com.slv.root.geozone.id"));
+            String mainUrl = properties.getProperty("streetlight.slv.url.main");
+            String createGeozone = properties.getProperty("com.slv.create.geozone.method");
+            float maxLat = Float.valueOf(properties.getProperty("com.slv.unknown.maxlat"));
+            float maxLng = Float.valueOf(properties.getProperty("com.slv.unknown.maxlng"));
+            float minLat = Float.valueOf(properties.getProperty("com.slv.unknown.minlat"));
+            float minLng = Float.valueOf(properties.getProperty("com.slv.unknown.minlng"));
+            String url = mainUrl + createGeozone;
+            List<String> paramsList = new ArrayList<>();
+            paramsList.add("ser=json");
+
+            try{
+                geozone = URLEncoder.encode(geozone.trim(), "UTF-8");
+            }catch (Exception e){
+                logger.error("Error in addStreetLightData",e);
+            }
+
+            paramsList.add("name="+geozone);
+            paramsList.add("parentId="+rootGeozoneId);
+            paramsList.add("latMax="+maxLat);
+            paramsList.add("latMin="+minLat);
+            paramsList.add("lngMax="+maxLng);
+            paramsList.add("lngMin="+minLng);
+            String params = StringUtils.join(paramsList, "&");
+            url = url + "?" + params;
+            logger.info("checkAndCreateGeoZone method called");
+            logger.info("checkAndCreateGeoZone url:" + url);
+            setSLVTransactionLogs(slvTransactionLogs, url, CallType.CREATE_GEOZONE);
+            ResponseEntity<String> response = restService.getPostRequest(url, null);
+            if(response.getStatusCode() == HttpStatus.NOT_FOUND){
+                geozoneId = -1;
+            }else {
+                String responseString = response.getBody();
+                setResponseDetails(slvTransactionLogs, responseString);
+                JsonObject jsonObject = jsonParser.parse(responseString).getAsJsonObject();
+                geozoneId = jsonObject.get("id").getAsInt();
+            }
+        } catch (Exception e) {
+            setResponseDetails(slvTransactionLogs, "Error in createGeoZone:" + e.getMessage());
+            logger.error("Error in createGeoZone", e);
+        } finally {
+            streetlightDao.insertTransactionLogs(slvTransactionLogs);
+        }
+
+        return geozoneId;
     }
 }
