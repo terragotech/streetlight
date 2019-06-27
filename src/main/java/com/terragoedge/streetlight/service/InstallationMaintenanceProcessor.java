@@ -24,6 +24,7 @@ import java.util.WeakHashMap;
 
 public class InstallationMaintenanceProcessor extends AbstractProcessor {
 
+
     public InstallationMaintenanceProcessor(WeakHashMap<String, String> contextListHashMap, HashMap<String, SLVDates> cslpDateHashMap, HashMap<String, String> macHashMap) {
         super();
         this.contextListHashMap = contextListHashMap;
@@ -166,6 +167,8 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
         boolean isInstallForm = false;
 
         for (FormData formData : formDatas) {
+            edgeNoteCreatedDateTime = new SLVDates();
+            noteCreatedDateTime = String.valueOf(edgeNote.getCreatedDateTime());
             logger.info("Processing Form :" + formData.getFormTemplateGuid());
             if (formData.getFormTemplateGuid().equals(INSTATALLATION_AND_MAINTENANCE_GUID) || formData.getFormTemplateGuid().equals("fa47c708-fb82-4877-938c-992e870ae2a4") || formData.getFormTemplateGuid().equals("c8acc150-6228-4a27-bc7e-0fabea0e2b93")) {
 
@@ -221,6 +224,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
                     slvInterfaceLogEntity.setStatus(MessageConstants.ERROR);
                 }
                 syncEdgeDates(installMaintenanceLogModel);
+                updatePromotedFormData(installMaintenanceLogModel);
             }
         }
 
@@ -548,11 +552,8 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
 
 
 
-
             if (fixerQrScanValue != null && !loggingModel.isFixtureQRSame()) {
                 buildFixtureStreetLightData(fixerQrScanValue, paramsList, edgeNote, slvServerData, loggingModel);//update fixer qrscan value
-
-
             }
 
             logger.info("Night Ride Val in Set Device"+nightRideValue);
@@ -608,6 +609,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
                 logger.info("Replace OLC End");
                 loggingModel.setStatus(MessageConstants.SUCCESS);
                 slvInterfaceLogEntity.setStatus(MessageConstants.SUCCESS);
+
                 logger.info("Status Changed. to Success");
             }
 
@@ -1466,7 +1468,6 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
     private void syncEdgeDates(InstallMaintenanceLogModel installMaintenanceLogModel){
         logger.info("Edge Date Sync Process Starts.");
         if(installMaintenanceLogModel.getDatesHolder() != null && installMaintenanceLogModel.getDatesHolder().getSyncEdgeDates() != null){
-
             SLVDates syncEdgeDates = installMaintenanceLogModel.getDatesHolder().getSyncEdgeDates();
             logger.info("SyncEdgeDates:"+syncEdgeDates.toString());
             List<Object> paramsList = new ArrayList<>();
@@ -1474,23 +1475,27 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
             if(syncEdgeDates.getCslpNodeDate() != null && !installMaintenanceLogModel.getDatesHolder().isCslpNodeDateSynced()){
                 logger.info("CslpNodeInstallDate Added");
                 addDateParam("cslp.node.install.date",syncEdgeDates.getCslpNodeDate(),paramsList);
+                installMaintenanceLogModel.getDatesHolder().setCslpNodeDateSynced(true);
             }
 
             if(syncEdgeDates.getCslpLumDate() != null && !installMaintenanceLogModel.getDatesHolder().isCslpLumDateSynced()){
                 logger.info("CslpLumInstallDate Added");
                 addDateParam("cslp.lum.install.date",syncEdgeDates.getCslpNodeDate(),paramsList);
+                installMaintenanceLogModel.getDatesHolder().setCslpLumDateSynced(true);
             }
 
 
             if(syncEdgeDates.getNodeInstallDate() != null && !installMaintenanceLogModel.getDatesHolder().isInstallDateSynced()){
                 logger.info("Install Date Added");
                 addDateParam("install.date",syncEdgeDates.getCslpNodeDate(),paramsList);
+                installMaintenanceLogModel.getDatesHolder().setInstallDateSynced(true);
             }
 
 
             if(syncEdgeDates.getLumInstallDate() != null && !installMaintenanceLogModel.getDatesHolder().isLumInstallDateSynced()){
                 logger.info("Luminaire Install Date Added");
                 addDateParam("luminaire.installdate",syncEdgeDates.getLumInstallDate(),paramsList);
+                installMaintenanceLogModel.getDatesHolder().setLumInstallDateSynced(true);
             }
 
             if(paramsList.size() > 0){
@@ -1500,18 +1505,25 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
                 paramsList.add("controllerStrId=" + installMaintenanceLogModel.getControllerSrtId());
                 SLVTransactionLogs slvTransactionLogs = getSLVTransactionLogs(installMaintenanceLogModel);
                 int errorCode = setDeviceValues(paramsList, slvTransactionLogs);
+                createAllSLVDate(syncEdgeDates,idOnController);
                 logger.info("Error Code:"+errorCode);
             }else{
                 logger.info("No Date value is present");
             }
 
         }
+
     }
 
-
+    /**
+     * Save Edgeform date value to the local db. So that, we can avoid to resend same date again.
+     * @param slvDates
+     * @param idOnController
+     */
     private void createAllSLVDate(SLVDates slvDates,String idOnController){
         logger.info("createAllSLVDate Process Starts");
         if(slvDates != null){
+            updatePromotedFormData(slvDates,idOnController);
             saveEdgeSLVDate(slvDates.getCslpNodeDate(),DateType.CSLP_NODE.toString(),idOnController);
             saveEdgeSLVDate(slvDates.getCslpLumDate(),DateType.CSLP_NODE.toString(),idOnController);
             saveEdgeSLVDate(slvDates.getNodeInstallDate(),DateType.NODE.toString(),idOnController);
@@ -1533,12 +1545,34 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
 
     }
 
+    /**
+     * Check EdgeForm Date has value and synced to slv or not. If not, send edgenote created datetime.
+     * @param installMaintenanceLogModel
+     */
+    private void updatePromotedFormData(InstallMaintenanceLogModel installMaintenanceLogModel){
+        logger.info("Update Current Edge Note Date Time to Promoted table");
+        logger.info(installMaintenanceLogModel.getDatesHolder());
+       boolean res =  installMaintenanceLogModel.getDatesHolder().hasEdgeFormDateSynced();
+       logger.info("Res:"+res);
+       if(!res){
+           logger.info(edgeNoteCreatedDateTime);
+           logger.info(gson.toJson(edgeNoteCreatedDateTime));
+           updatePromotedFormData(edgeNoteCreatedDateTime,installMaintenanceLogModel.getIdOnController());
+       }else{
+           logger.info("Promoted Data already updated based on Edge Form Value.");
+       }
+    }
 
+    /**
+     * Update Promoted value if any four date has value.
+     * @param slvDates
+     * @param idOnController
+     */
     public void updatePromotedFormData(SLVDates slvDates,String idOnController){
         if(slvDates != null){
             boolean hasData = false;
             PromotedFormData promotedFormData = new PromotedFormData();
-            promotedFormData.setIdOnController(idOnController);
+            promotedFormData.setIdonController(idOnController);
             if(slvDates.getCslpLumDate() != null){
                 hasData = true;
                 promotedFormData.setCslpLumInstallDate(slvDates.getCslpLumDate());
@@ -1560,6 +1594,8 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
                 String requestJson = gson.toJson(promotedFormData);
                 String edgeSlvUrl = "http://199.233.241.175/edgeSlvServer/updatePromotedFormDates";
                 serverCall(edgeSlvUrl,HttpMethod.POST,requestJson);
+            }else{
+                logger.info("No Dates available to update promoted data");
             }
         }
     }

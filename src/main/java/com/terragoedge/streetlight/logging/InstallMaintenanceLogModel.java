@@ -30,7 +30,7 @@ public class InstallMaintenanceLogModel extends LoggingModel {
         isActionNew = actionNew;
     }
 
-    private DatesHolder datesHolder;
+    private DatesHolder datesHolder = new DatesHolder();
 
 
     public DatesHolder getDatesHolder() {

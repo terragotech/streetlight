@@ -19,7 +19,9 @@ public class DatesHolder {
     private boolean isLumInstallDateSynced;
 
     private long edgeNoteDateTime;
-    private boolean hasEdgeDate;
+
+
+
 
 
     public SLVDates getSlvDates() {
@@ -122,6 +124,12 @@ public class DatesHolder {
                 return null;
             }
         }
+
+    }
+
+
+    public boolean hasEdgeFormDateSynced(){
+        return (isCslpNodeDateSynced || isInstallDateSynced || isCslpLumDateSynced || isCslpNodeDateSynced) ? true : false;
 
     }
 

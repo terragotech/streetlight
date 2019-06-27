@@ -45,6 +45,9 @@ public abstract class AbstractProcessor {
     HashMap<String, String> macHashMap = new HashMap<>();
     protected String droppedPinTag;
 
+    protected SLVDates edgeNoteCreatedDateTime = null;
+    protected String noteCreatedDateTime = null;
+
     public AbstractProcessor() {
         this.connectionDAO = ConnectionDAO.INSTANCE;
         this.streetlightDao = new StreetlightDao();
@@ -158,7 +161,7 @@ public abstract class AbstractProcessor {
                 luminaireSerialNumber = jsonObject1.get("value").getAsString();
             }else if (keyValue != null && keyValue.equals("userproperty.cslp.node.install.date")) {
                 nodeInstallDate = jsonObject1.get("value").getAsString();
-            }else if (keyValue != null && keyValue.equals("userproperty.luminaire.installdate")) {
+            }else if (keyValue != null && keyValue.equals("install.date")) {
                 luminaireInstallDate = jsonObject1.get("value").getAsString();
             }else if(keyValue != null && keyValue.equals("userproperty.location.atlasphysicalpage")){
                 atlasPhysicalPage = jsonObject1.get("value").getAsString();
@@ -193,6 +196,16 @@ public abstract class AbstractProcessor {
         if(atlasPhysicalPage != null && !atlasPhysicalPage.trim().isEmpty()){
             installMaintenanceLogModel.setAtlasPhysicalPage(atlasPhysicalPage);
         }
+
+        if(nodeInstallDate == null){
+            logger.info("Node Install Date is Empty");
+            nodeInstallDate = getSLVInstallDate(installMaintenanceLogModel);
+            logger.info("nodeInstallDate value:::::::::"+nodeInstallDate);
+            if(nodeInstallDate != null && !nodeInstallDate.trim().isEmpty()){
+                slvDates.setNodeInstallDate(slvDateFormat(nodeInstallDate,"Node Install Date"));
+            }
+        }
+
 
         logger.info("SLVDates :" + gson.toJson(slvDates));
         logger.info("SLVDates :" + gson.toJson(slvDatesTemp));
@@ -510,6 +523,7 @@ public abstract class AbstractProcessor {
     }
 
     protected void addStreetLightData(String key, String value, List<Object> paramsList) {
+        logger.info(key);
         paramsList.add("valueName=" + key.trim());
        // paramsList.add("value=" + value.trim());
         try{
@@ -517,12 +531,49 @@ public abstract class AbstractProcessor {
         }catch (Exception e){
             logger.error("Error in addStreetLightData",e);
         }
+        if(value != null){
+            switch (key.trim()){
+                case "install.date":
+                    String installDate =  value.trim().isEmpty() ? value : noteCreatedDateTime;
+                    logger.info(installDate);
+                    edgeNoteCreatedDateTime.setNodeInstallDate(installDate);
+                    break;
+                case "cslp.node.install.date":
+                    String cslpNodeInstallDate =  value.trim().isEmpty() ? value : noteCreatedDateTime;
+                    logger.info(cslpNodeInstallDate);
+                    edgeNoteCreatedDateTime.setCslpNodeDate(cslpNodeInstallDate);
+                    break;
+                case "luminaire.installdate":
+                    String lumInstallDate =  value.trim().isEmpty() ? value : noteCreatedDateTime;
+                    logger.info(lumInstallDate);
+                    edgeNoteCreatedDateTime.setLumInstallDate(lumInstallDate);
+                    break;
+                case "cslp.lum.install.date":
+                    String cslpLumInstallDate =  value.trim().isEmpty() ? value : noteCreatedDateTime;
+                    logger.info(cslpLumInstallDate);
+                    edgeNoteCreatedDateTime.setCslpLumDate(cslpLumInstallDate);
+                    break;
+
+            }
+        }
+
+
+
+
     }
 
 
     protected String dateFormat(Long dateTime) {
         Date date = new Date(Long.valueOf(dateTime));
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        dateFormat.setTimeZone(TimeZone.getTimeZone("CST"));
+        String dff = dateFormat.format(date);
+        return dff;
+    }
+
+    protected String promotedDateFormat(Long dateTime) {
+        Date date = new Date(Long.valueOf(dateTime));
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
         dateFormat.setTimeZone(TimeZone.getTimeZone("CST"));
         String dff = dateFormat.format(date);
         return dff;
@@ -1073,6 +1124,48 @@ public abstract class AbstractProcessor {
         }
         return null;
 
+    }
+
+
+    public String getSLVInstallDate(InstallMaintenanceLogModel installMaintenanceLogModel){
+        try{
+            if (installMaintenanceLogModel.getDeviceId() > 0) {
+                String mainUrl = properties.getProperty("streetlight.slv.url.main");
+                String commentUrl = properties.getProperty("streetlight.slv.url.comment.get");
+                String url = mainUrl + commentUrl;
+                List<String> paramsList = new ArrayList<>();
+                paramsList.add("returnTimeAges=false");
+                paramsList.add("param0=" + installMaintenanceLogModel.getDeviceId());
+                paramsList.add("valueName=install.date");
+                paramsList.add("ser=json");
+                String params = StringUtils.join(paramsList, "&");
+                url = url + "?" + params;
+                logger.info("Get Install Date url :" + url);
+                ResponseEntity<String> response = restService.getRequest(url, true, null);
+                if (response.getStatusCodeValue() == 200) {
+                    logger.info("Get Install Date url :" + response.getBody());
+                    String responseString = response.getBody();
+                    JsonArray jsonArray = (JsonArray) jsonParser.parse(responseString);
+                    for (JsonElement installDateJsonArray : jsonArray) {
+                        JsonObject installDateJson = installDateJsonArray.getAsJsonObject();
+                        if (installDateJson.get("name") != null) {
+                            String paramName = installDateJson.get("name").getAsString();
+                            if (paramName.equals("install.date")) {
+                                if (installDateJson.get("value") != null) {
+                                    String installDateVal = installDateJson.get("value").getAsString();
+
+                                }
+                            }
+                        }
+
+                    }
+                }
+
+            }
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+        return null;
     }
 
 

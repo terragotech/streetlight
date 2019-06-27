@@ -2,19 +2,19 @@ package com.terragoedge.streetlight.json.model;
 
 public class PromotedFormData {
 
-    private String idOnController;
+    private String idonController;
     private String installDate;
     private  String cslpNodeInstallDate;
     private String cslpLumInstallDate;
     private String lumInstallDate;
 
 
-    public String getIdOnController() {
-        return idOnController;
+    public String getIdonController() {
+        return idonController;
     }
 
-    public void setIdOnController(String idOnController) {
-        this.idOnController = idOnController;
+    public void setIdonController(String idonController) {
+        this.idonController = idonController;
     }
 
     public String getInstallDate() {
@@ -52,7 +52,7 @@ public class PromotedFormData {
     @Override
     public String toString() {
         return "PromotedFormData{" +
-                "idOnController='" + idOnController + '\'' +
+                "idonController='" + idonController + '\'' +
                 ", installDate='" + installDate + '\'' +
                 ", cslpNodeInstallDate='" + cslpNodeInstallDate + '\'' +
                 ", cslpLumInstallDate='" + cslpLumInstallDate + '\'' +
