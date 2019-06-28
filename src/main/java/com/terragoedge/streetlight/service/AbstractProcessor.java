@@ -222,8 +222,7 @@ public abstract class AbstractProcessor {
     }
 
 
-
-    private String slvDateFormat(String dateVal,String dateType){
+    protected String slvDateFormat(String dateVal,String dateType){
         logger.info(dateType+":"+dateVal);
         if(dateVal.contains("-")){
             try {
@@ -534,24 +533,16 @@ public abstract class AbstractProcessor {
         if(value != null){
             switch (key.trim()){
                 case "install.date":
-                    String installDate =  value.trim().isEmpty() ? value : noteCreatedDateTime;
-                    logger.info(installDate);
-                    edgeNoteCreatedDateTime.setNodeInstallDate(installDate);
+                    edgeNoteCreatedDateTime.setNodeInstallDate(value);
                     break;
                 case "cslp.node.install.date":
-                    String cslpNodeInstallDate =  value.trim().isEmpty() ? value : noteCreatedDateTime;
-                    logger.info(cslpNodeInstallDate);
-                    edgeNoteCreatedDateTime.setCslpNodeDate(cslpNodeInstallDate);
+                    edgeNoteCreatedDateTime.setCslpNodeDate(value);
                     break;
                 case "luminaire.installdate":
-                    String lumInstallDate =  value.trim().isEmpty() ? value : noteCreatedDateTime;
-                    logger.info(lumInstallDate);
-                    edgeNoteCreatedDateTime.setLumInstallDate(lumInstallDate);
+                    edgeNoteCreatedDateTime.setLumInstallDate(value);
                     break;
                 case "cslp.lum.install.date":
-                    String cslpLumInstallDate =  value.trim().isEmpty() ? value : noteCreatedDateTime;
-                    logger.info(cslpLumInstallDate);
-                    edgeNoteCreatedDateTime.setCslpLumDate(cslpLumInstallDate);
+                    edgeNoteCreatedDateTime.setCslpLumDate(value);
                     break;
 
             }
@@ -722,6 +713,11 @@ public abstract class AbstractProcessor {
                 paramsList.add("valueName=modelFunctionId");
                 paramsList.add("value=" + properties.getProperty("com.slv.type.equipment"));
             }
+            // -- No Need for production
+            paramsList.add("valueName=modelFunctionId");
+            paramsList.add("value=" + properties.getProperty("com.slv.type.equipment"));
+
+
             String params = StringUtils.join(paramsList, "&");
             url = url + "&" + params;
             logger.info("SetDevice method called");
@@ -1149,7 +1145,7 @@ public abstract class AbstractProcessor {
                             String paramName = installDateJson.get("name").getAsString();
                             if (paramName.equals("install.date")) {
                                 if (installDateJson.get("value") != null) {
-                                    String installDateVal = installDateJson.get("value").getAsString();
+                                    return installDateJson.get("value").getAsString();
 
                                 }
                             }
@@ -1160,7 +1156,7 @@ public abstract class AbstractProcessor {
 
             }
         }catch (Exception e){
-            e.printStackTrace();
+            logger.error("Error in getSLVInstallDate",e);
         }
         return null;
     }

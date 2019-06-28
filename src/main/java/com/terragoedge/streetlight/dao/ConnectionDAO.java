@@ -45,54 +45,54 @@ public enum ConnectionDAO {
                 TableUtils.createTableIfNotExists(connectionSource, DuplicateMacAddress.class);
 
             } catch (Exception e) {
-                logger.error("Error in openConnection", e);
+                //logger.error("Error in openConnection", e);
             }
 
             try {
                 TableUtils.createTableIfNotExists(connectionSource, SlvServerData.class);
 
             } catch (Exception e) {
-                logger.error("Error in openConnection", e);
+                //logger.error("Error in openConnection", e);
             }
 
             try {
                 TableUtils.createTableIfNotExists(connectionSource, DeviceAttributes.class);
 
             } catch (Exception e) {
-                logger.error("Error in openConnection", e);
+                //logger.error("Error in openConnection", e);
             }
 
             try {
                 TableUtils.createTableIfNotExists(connectionSource, DuplicateMACAddressEventLog.class);
             } catch (Exception e) {
-                logger.error("Error in openConnection", e);
+                //logger.error("Error in openConnection", e);
             }
             try {
                 TableUtils.createTableIfNotExists(connectionSource, EdgeAllFixtureData.class);
             } catch (Exception e) {
-                logger.error("Error in openConnection", e);
+                //logger.error("Error in openConnection", e);
             }
             try {
                 TableUtils.createTableIfNotExists(connectionSource, EdgeAllMacData.class);
             } catch (Exception e) {
-                logger.error("Error in openConnection", e);
+               // logger.error("Error in openConnection", e);
             }
             try {
                 TableUtils.createTableIfNotExists(connectionSource, SlvInterfaceLogEntity.class);
             } catch (Exception e) {
-                logger.error("Error in openConnection", e);
+               // logger.error("Error in openConnection", e);
             }
             try{
                 TableUtils.createTableIfNotExists(connectionSource,ExistingMacValidationFailure.class);
             }catch (Exception e){
-                logger.error("Error in openConnection", e);
+                //logger.error("Error in openConnection", e);
             }
 
 
             try{
                 TableUtils.createTableIfNotExists(connectionSource,EdgeSLVDate.class);
             }catch (Exception e){
-                logger.error("Error in openConnection", e);
+                //logger.error("Error in openConnection", e);
             }
 
             slvDeviceDao = DaoManager.createDao(connectionSource, SlvServerData.class);
@@ -285,6 +285,17 @@ public enum ConnectionDAO {
             edgeNodeDates.create(edgeSLVDate);
         }catch (Exception e){
             logger.error("Error in saveEdgeNodeDate",e);
+        }
+    }
+
+
+    public void deleteEdgeNoteFormDate(String idOnController,String type){
+        try {
+           DeleteBuilder<EdgeSLVDate, String> deleteBuilder = edgeNodeDates.deleteBuilder();
+           deleteBuilder.where().eq("title",idOnController).and().eq("dates_type",type);
+           deleteBuilder.delete();
+        }catch (Exception e){
+            logger.error("Error in deleteEdgeNoteFormDate",e);
         }
     }
 

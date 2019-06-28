@@ -11,16 +11,18 @@ import com.terragoedge.streetlight.logging.LoggingModel;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
+import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
+import org.joda.time.format.DateTimeFormat;
+import org.joda.time.format.DateTimeFormatter;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.RestTemplate;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.WeakHashMap;
+import java.text.SimpleDateFormat;
+import java.util.*;
 
 public class InstallationMaintenanceProcessor extends AbstractProcessor {
 
@@ -224,7 +226,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
                     slvInterfaceLogEntity.setStatus(MessageConstants.ERROR);
                 }
                 syncEdgeDates(installMaintenanceLogModel);
-                updatePromotedFormData(installMaintenanceLogModel);
+                updatePromotedFormData(edgeNoteCreatedDateTime,installMaintenanceLogModel.getIdOnController());
             }
         }
 
@@ -1238,6 +1240,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
                 addStreetLightData("cslp.lum.install.date", "", paramsList);
                 addStreetLightData("luminaire.installdate", "", paramsList);
                 addStreetLightData("cslp.node.install.date", "", paramsList);
+                addStreetLightData("MacAddress", "", paramsList);
                 addStreetLightData("install.date", "", paramsList);
                 addStreetLightData("installStatus", InstallStatus.To_be_installed.getValue(), paramsList);
                 break;
@@ -1332,7 +1335,10 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
         String cslpNodeInstallDate = null;
         try {
             cslpNodeInstallDate = valueById(edgeFormDatas, 169);
-            edgeSLVDates.setCslpNodeDate(cslpNodeInstallDate);
+            if(cslpNodeInstallDate != null && !cslpNodeInstallDate.trim().isEmpty()){
+                edgeSLVDates.setCslpNodeDate(getStartOfDay(cslpNodeInstallDate));
+            }
+
             logger.info("cslpNodeInstallDate Val" + cslpNodeInstallDate);
         } catch (NoValueException e) {
             logger.error("CSLP Node Install Date is empty", e);
@@ -1343,7 +1349,11 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
         String cslpLumInstallDate = null;
         try {
             cslpLumInstallDate = valueById(edgeFormDatas, 170);
-            edgeSLVDates.setCslpLumDate(cslpLumInstallDate);
+            if(cslpLumInstallDate != null && !cslpLumInstallDate.trim().isEmpty()){
+                edgeSLVDates.setCslpLumDate(getStartOfDay(cslpLumInstallDate));
+            }
+
+
             logger.info("cslpLumInstallDate Val" + cslpLumInstallDate);
         } catch (NoValueException e) {
             logger.error("CSLP Lum Install Date is empty", e);
@@ -1354,7 +1364,11 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
         String installDate = null;
         try {
             installDate = valueById(edgeFormDatas, 171);
-            edgeSLVDates.setNodeInstallDate(installDate);
+            if(installDate != null && !installDate.trim().isEmpty()){
+                edgeSLVDates.setNodeInstallDate(getStartOfDay(installDate));
+            }
+
+
             logger.info("installDate Val" + installDate);
         } catch (NoValueException e) {
             logger.error("Install Date is empty", e);
@@ -1365,7 +1379,9 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
         String lumInstallDate = null;
         try {
             lumInstallDate = valueById(edgeFormDatas, 172);
-            edgeSLVDates.setLumInstallDate(lumInstallDate);
+            if(lumInstallDate != null && !lumInstallDate.trim().isEmpty()){
+                edgeSLVDates.setLumInstallDate(getStartOfDay(lumInstallDate));
+            }
             logger.info("lumInstallDate Val" + lumInstallDate);
         } catch (NoValueException e) {
             logger.error("Lum Install Date is empty", e);
@@ -1374,17 +1390,46 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
         getSlvSyncDates(installMaintenanceLogModel,edgeSLVDates);
     }
 
+    private String getStartOfDay(String milliseconds){
+        DateTime someDate = new DateTime(Long.valueOf(milliseconds), DateTimeZone.forTimeZone(TimeZone.getTimeZone("CST")));
+        return String.valueOf(someDate.withTimeAtStartOfDay().getMillis());
+    }
+
+
+    public static void main(String[] r){
+       String milliseconds = "1561629600000";
+        DateTime someDate = new DateTime(Long.valueOf(milliseconds), DateTimeZone.forTimeZone(TimeZone.getTimeZone("CST")));
+        String dateTime = String.valueOf(someDate.withTimeAtStartOfDay().getMillis());
+
+        Date date = new Date(Long.valueOf(dateTime));
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        dateFormat.setTimeZone(TimeZone.getTimeZone("CST"));
+        String dff = dateFormat.format(date);
+
+
+        DateTimeFormatter fmt = DateTimeFormat.forPattern("yyyy-MM-dd HH:mm:ss")
+                .withZone(DateTimeZone.forTimeZone(TimeZone.getTimeZone("CST")));
+        DateTime dt =  fmt.parseDateTime(dff);
+
+        System.out.println(String.valueOf(dt.getMillis()));
+    }
 
     private void getSlvSyncDates(InstallMaintenanceLogModel installMaintenanceLogModel,SLVDates edgeSLVDates){
         SLVDates syncEdgeDates = new SLVDates();
         installMaintenanceLogModel.getDatesHolder().setSyncEdgeDates(syncEdgeDates);
         SLVDates slvDates = installMaintenanceLogModel.getDatesHolder().getSlvDates();
 
+        logger.info("===========================");
+        logger.info(gson.toJson(edgeSLVDates));
+        logger.info(gson.toJson(slvDates));
+        logger.info("===========================");
+
         // CSLP Node Install Dates
         String edgeCslpNodeDate =  installMaintenanceLogModel.getDatesHolder().compareSLVEdgeDate(edgeSLVDates.getCslpNodeDate(),slvDates.getCslpNodeDate(),true);
-
+        logger.info("edgeCslpNodeDate::::"+edgeCslpNodeDate);
         if(edgeCslpNodeDate != null){
             boolean res =  isDatePresent(installMaintenanceLogModel.getIdOnController(),edgeCslpNodeDate, DateType.CSLP_NODE.toString());
+            logger.info("res::::"+res);
             if(!res){
                 syncEdgeDates.setCslpNodeDate(edgeCslpNodeDate);
             }
@@ -1392,9 +1437,10 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
 
         // CSLP Lum Install Dates
         String edgeCslpLumDate =   installMaintenanceLogModel.getDatesHolder().compareSLVEdgeDate(edgeSLVDates.getCslpLumDate(),slvDates.getCslpLumDate(),true);
-
+        logger.info("edgeCslpLumDate::::"+edgeCslpLumDate);
         if(edgeCslpLumDate != null){
             boolean res =  isDatePresent(installMaintenanceLogModel.getIdOnController(),edgeCslpLumDate, DateType.CSLP_LUM.toString());
+            logger.info("res::::"+res);
             if(!res){
                 syncEdgeDates.setCslpLumDate(edgeCslpLumDate);
             }
@@ -1403,21 +1449,26 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
 
         //  Node Install Dates
         String edgeNodeDate =  installMaintenanceLogModel.getDatesHolder().compareSLVEdgeDate(edgeSLVDates.getNodeInstallDate(),slvDates.getNodeInstallDate(),false);
+        logger.info("edgeNodeDate::::"+edgeNodeDate);
         if(edgeNodeDate != null){
             boolean res =  isDatePresent(installMaintenanceLogModel.getIdOnController(),edgeNodeDate, DateType.NODE.toString());
+            logger.info("res::::"+res);
             if(!res){
-                syncEdgeDates.setCslpNodeDate(edgeNodeDate);
+                syncEdgeDates.setNodeInstallDate(edgeNodeDate);
             }
         }
 
         // CSLP Lum Install Dates
         String edgeLumInstallDate = installMaintenanceLogModel.getDatesHolder().compareSLVEdgeDate(edgeSLVDates.getLumInstallDate(),slvDates.getLumInstallDate(),false);
+        logger.info("edgeLumInstallDate::::"+edgeLumInstallDate);
         if(edgeLumInstallDate != null){
             boolean res =  isDatePresent(installMaintenanceLogModel.getIdOnController(),edgeLumInstallDate, DateType.LUM.toString());
+            logger.info("res::::"+res);
             if(!res){
                 syncEdgeDates.setLumInstallDate(edgeLumInstallDate);
             }
         }
+        logger.info(gson.toJson(syncEdgeDates));
     }
 
 
@@ -1451,7 +1502,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
             // Lum Install Date
             boolean isLumInstallDate = addDateParam("luminaire.installdate",syncEdgeDates.getLumInstallDate(),paramsList);
             logger.info("isLumInstallDate added:"+isLumInstallDate);
-            datesHolder.setCslpLumDateSynced(isLumInstallDate);
+            datesHolder.setLumInstallDateSynced(isLumInstallDate);
         }
     }
 
@@ -1475,27 +1526,23 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
             if(syncEdgeDates.getCslpNodeDate() != null && !installMaintenanceLogModel.getDatesHolder().isCslpNodeDateSynced()){
                 logger.info("CslpNodeInstallDate Added");
                 addDateParam("cslp.node.install.date",syncEdgeDates.getCslpNodeDate(),paramsList);
-                installMaintenanceLogModel.getDatesHolder().setCslpNodeDateSynced(true);
             }
 
             if(syncEdgeDates.getCslpLumDate() != null && !installMaintenanceLogModel.getDatesHolder().isCslpLumDateSynced()){
                 logger.info("CslpLumInstallDate Added");
-                addDateParam("cslp.lum.install.date",syncEdgeDates.getCslpNodeDate(),paramsList);
-                installMaintenanceLogModel.getDatesHolder().setCslpLumDateSynced(true);
+                addDateParam("cslp.lum.install.date",syncEdgeDates.getCslpLumDate(),paramsList);
             }
 
 
             if(syncEdgeDates.getNodeInstallDate() != null && !installMaintenanceLogModel.getDatesHolder().isInstallDateSynced()){
                 logger.info("Install Date Added");
-                addDateParam("install.date",syncEdgeDates.getCslpNodeDate(),paramsList);
-                installMaintenanceLogModel.getDatesHolder().setInstallDateSynced(true);
+                addDateParam("install.date",syncEdgeDates.getNodeInstallDate(),paramsList);
             }
 
 
             if(syncEdgeDates.getLumInstallDate() != null && !installMaintenanceLogModel.getDatesHolder().isLumInstallDateSynced()){
                 logger.info("Luminaire Install Date Added");
                 addDateParam("luminaire.installdate",syncEdgeDates.getLumInstallDate(),paramsList);
-                installMaintenanceLogModel.getDatesHolder().setLumInstallDateSynced(true);
             }
 
             if(paramsList.size() > 0){
@@ -1523,7 +1570,6 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
     private void createAllSLVDate(SLVDates slvDates,String idOnController){
         logger.info("createAllSLVDate Process Starts");
         if(slvDates != null){
-            updatePromotedFormData(slvDates,idOnController);
             saveEdgeSLVDate(slvDates.getCslpNodeDate(),DateType.CSLP_NODE.toString(),idOnController);
             saveEdgeSLVDate(slvDates.getCslpLumDate(),DateType.CSLP_NODE.toString(),idOnController);
             saveEdgeSLVDate(slvDates.getNodeInstallDate(),DateType.NODE.toString(),idOnController);
@@ -1535,6 +1581,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
 
     private void saveEdgeSLVDate(String date,String dateType,String idOnController){
         if(date != null){
+            connectionDAO.deleteEdgeNoteFormDate(idOnController,dateType);
             EdgeSLVDate edgeSLVDate = new EdgeSLVDate();
             edgeSLVDate.setTitle(idOnController);
             edgeSLVDate.setEdgeDate(date);
@@ -1545,23 +1592,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
 
     }
 
-    /**
-     * Check EdgeForm Date has value and synced to slv or not. If not, send edgenote created datetime.
-     * @param installMaintenanceLogModel
-     */
-    private void updatePromotedFormData(InstallMaintenanceLogModel installMaintenanceLogModel){
-        logger.info("Update Current Edge Note Date Time to Promoted table");
-        logger.info(installMaintenanceLogModel.getDatesHolder());
-       boolean res =  installMaintenanceLogModel.getDatesHolder().hasEdgeFormDateSynced();
-       logger.info("Res:"+res);
-       if(!res){
-           logger.info(edgeNoteCreatedDateTime);
-           logger.info(gson.toJson(edgeNoteCreatedDateTime));
-           updatePromotedFormData(edgeNoteCreatedDateTime,installMaintenanceLogModel.getIdOnController());
-       }else{
-           logger.info("Promoted Data already updated based on Edge Form Value.");
-       }
-    }
+
 
     /**
      * Update Promoted value if any four date has value.
@@ -1569,35 +1600,40 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
      * @param idOnController
      */
     public void updatePromotedFormData(SLVDates slvDates,String idOnController){
-        if(slvDates != null){
-            boolean hasData = false;
-            PromotedFormData promotedFormData = new PromotedFormData();
-            promotedFormData.setIdonController(idOnController);
-            if(slvDates.getCslpLumDate() != null){
-                hasData = true;
-                promotedFormData.setCslpLumInstallDate(slvDates.getCslpLumDate());
-            }
-            if(slvDates.getCslpNodeDate() != null){
-                hasData = true;
-                promotedFormData.setCslpNodeInstallDate(slvDates.getCslpNodeDate());
-            }
-            if(slvDates.getNodeInstallDate() != null){
-                hasData = true;
-                promotedFormData.setInstallDate(slvDates.getNodeInstallDate());
-            }
-            if(slvDates.getLumInstallDate() != null){
-                hasData = true;
-                promotedFormData.setLumInstallDate(slvDates.getLumInstallDate());
-            }
+        try{
+            if(slvDates != null){
+                boolean hasData = false;
+                PromotedFormData promotedFormData = new PromotedFormData();
+                promotedFormData.setIdonController(idOnController);
+                if(slvDates.getCslpLumDate() != null){
+                    hasData = true;
+                    promotedFormData.setCslpLumInstallDate(slvDateFormat(slvDates.getCslpLumDate(),"Promote"));
+                }
+                if(slvDates.getCslpNodeDate() != null){
+                    hasData = true;
+                    promotedFormData.setCslpNodeInstallDate(slvDateFormat(slvDates.getCslpNodeDate(),"Promote"));
+                }
+                if(slvDates.getNodeInstallDate() != null){
+                    hasData = true;
+                    promotedFormData.setInstallDate(slvDateFormat(slvDates.getNodeInstallDate(),"Promote"));
+                }
+                if(slvDates.getLumInstallDate() != null){
+                    hasData = true;
+                    promotedFormData.setLumInstallDate(slvDateFormat(slvDates.getLumInstallDate(),"Promote"));
+                }
 
-            if(hasData){
-                String requestJson = gson.toJson(promotedFormData);
-                String edgeSlvUrl = "http://199.233.241.175/edgeSlvServer/updatePromotedFormDates";
-                serverCall(edgeSlvUrl,HttpMethod.POST,requestJson);
-            }else{
-                logger.info("No Dates available to update promoted data");
+                if(hasData){
+                    String requestJson = gson.toJson(promotedFormData);
+                    String edgeSlvUrl = "http://199.233.241.175/edgeSlvServer/updatePromotedFormDates";
+                    serverCall(edgeSlvUrl,HttpMethod.POST,requestJson);
+                }else{
+                    logger.info("No Dates available to update promoted data");
+                }
             }
+        }catch (Exception e){
+            logger.error("Error in updatePromotedFormData",e);
         }
+
     }
 
 
