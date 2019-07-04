@@ -12,9 +12,11 @@ import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.log4j.Logger;
 import org.springframework.http.*;
+import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 
 import com.terragoedge.streetlight.PropertiesReader;
+import org.springframework.web.util.UriComponentsBuilder;
 
 public class RestService {
 	
@@ -103,7 +105,23 @@ public class RestService {
 		headers.add("Authorization", "Basic " + base64Creds);
 		return headers;
 	}
-	
+
+
+    private HttpHeaders getEdgeHeaders() {
+        String userName = properties.getProperty("streetlight.edge.username");
+        String password = properties.getProperty("streetlight.edge.password");
+        HttpHeaders headers = new HttpHeaders();
+        String plainCreds = userName + ":" + password;
+
+        byte[] plainCredsBytes = plainCreds.getBytes();
+        byte[] base64CredsBytes = Base64.encodeBase64(plainCredsBytes);
+        String base64Creds = new String(base64CredsBytes);
+
+        headers.add("Authorization", "Basic " + base64Creds);
+        return headers;
+    }
+
+
 	
 	public ResponseEntity<String> getRequest(String url){
 		logger.info("------------ Request ------------------");
@@ -180,5 +198,27 @@ public class RestService {
 			logger.info(responseBody);
 			logger.info("------------ Response End ------------------");
 			return responseEntity;
+	}
+
+
+	public ResponseEntity<String> slv2Edge(String httpUrl,  HttpMethod httpMethod, MultiValueMap<String, String> params){
+		HttpHeaders headers = getEdgeHeaders();
+		RestTemplate restTemplate = new RestTemplate();
+		HttpEntity request = new HttpEntity<>(headers);
+
+        String url = PropertiesReader.getProperties().getProperty("streetlight.edge.url.main");
+        url = url + httpUrl;
+
+		UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromHttpUrl(url);
+
+		uriBuilder.queryParams(params);
+
+		ResponseEntity<String> response = restTemplate.exchange(uriBuilder.toUriString(), httpMethod, request, String.class);
+		logger.info("------------ Response ------------------");
+		logger.info("Response Code:" + response.getStatusCode().toString());
+		String responseBody = response.getBody();
+		logger.info(responseBody);
+		logger.info("------------ Response End ------------------");
+		return response;
 	}
 }

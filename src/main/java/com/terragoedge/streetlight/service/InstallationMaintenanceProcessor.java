@@ -19,6 +19,8 @@ import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 
 import java.text.SimpleDateFormat;
@@ -1189,7 +1191,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
                             connectionDAO.removeEdgeAllMAC(installMaintenanceLogModel.getIdOnController(),macaddress);
                             connectionDAO.removeEdgeAllFixture(installMaintenanceLogModel.getIdOnController());
                         }
-
+                        removeEdgeSLVMacAddress(installMaintenanceLogModel.getIdOnController());
                     } catch (Exception e) {
                         logger.error("Error in processRemoveAction", e);
                     }
@@ -1206,6 +1208,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
                         }
                         clearDeviceValues(installMaintenanceLogModel.getIdOnController(), installMaintenanceLogModel.getControllerSrtId(), "Pole Removed", installMaintenanceLogModel);
                         slvInterfaceLogEntity.setStatus(MessageConstants.SUCCESS);
+                        removeEdgeSLVMacAddress(installMaintenanceLogModel.getIdOnController());
                     } catch (Exception e) {
                         logger.error("Error in processRemoveAction", e);
                     }
@@ -1222,6 +1225,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
                         }
                         clearDeviceValues(installMaintenanceLogModel.getIdOnController(), installMaintenanceLogModel.getControllerSrtId(), "Pole Knocked-Down", installMaintenanceLogModel);
                         slvInterfaceLogEntity.setStatus(MessageConstants.SUCCESS);
+                        removeEdgeSLVMacAddress(installMaintenanceLogModel.getIdOnController());
                     } catch (Exception e) {
                         logger.error("Error in processRemoveAction", e);
                     }
@@ -1662,5 +1666,13 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
         return responseEntity;
     }
 
+
+
+
+    public void removeEdgeSLVMacAddress(String idOnController){
+        MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
+        params.add("slvIdOnController",idOnController);
+        restService.slv2Edge("/rest/validation/removeSLVMacAddress", HttpMethod.GET,params);
+    }
 
 }

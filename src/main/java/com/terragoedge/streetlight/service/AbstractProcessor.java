@@ -19,8 +19,11 @@ import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
 
 import java.net.URLEncoder;
 import java.text.SimpleDateFormat;
@@ -496,7 +499,7 @@ public abstract class AbstractProcessor {
                 edgeNotebookName = edgeNotebookName + " Acorns";
             }
             if (dimmingGroupName.contains("Node Only") && installStatus != null) {
-                installStatus = InstallStatus.Verified.getValue();
+                //installStatus = InstallStatus.Verified.getValue();
 
             }
         }
@@ -951,6 +954,7 @@ public abstract class AbstractProcessor {
                     slvInterfaceLogEntity.setReplaceOlc(MessageConstants.REPLACEOLC);
                     slvInterfaceLogEntity.setStatus(MessageConstants.SUCCESS);
                     createEdgeAllMac(idOnController, macAddress);
+                    syncMacAddress2Edge(idOnController,macAddress);
                     logger.info("Clear device process starts.");
                     logger.info("Clear device process End.");
                 }
@@ -1324,4 +1328,15 @@ public boolean checkExistingMacAddressValid(EdgeNote edgeNote, InstallMaintenanc
 
         return geozoneId;
     }
+
+
+    public void syncMacAddress2Edge(String idOnController,String macAddress){
+        if(macAddress != null && !macAddress.trim().isEmpty()){
+            MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
+            params.add("slvMacAddress",macAddress);
+            params.add("slvIdOnController",idOnController);
+            restService.slv2Edge("/rest/validation/updateSLVSyncedMAC", HttpMethod.GET,params);
+        }
+    }
+
 }
