@@ -181,9 +181,10 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
                 logger.info("Install  Form  is present.");
                 installMaintenanceLogModel.setInstallFormPresent(true);
                 List<EdgeFormData> edgeFormDatas = formData.getFormDef();
+                String value = null;
                 try {
                     logger.info("before Action Val");
-                    String value = null;
+
                     try {
                         value = getAction(edgeFormDatas, edgeNote.getTitle(), installMaintenanceLogModel, edgeNote, slvInterfaceLogEntity);
                         logger.info("After Action Val");
@@ -227,7 +228,10 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
                     slvInterfaceLogEntity.setErrordetails(MessageConstants.ACTION_NO_VAL);
                     slvInterfaceLogEntity.setStatus(MessageConstants.ERROR);
                 }
-                syncEdgeDates(installMaintenanceLogModel);
+                if(value == null || !value.equals("Remove")){
+                    syncEdgeDates(installMaintenanceLogModel);
+                }
+
                 updatePromotedFormData(edgeNoteCreatedDateTime,installMaintenanceLogModel.getIdOnController());
             }
         }
@@ -339,7 +343,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
         if (installStatusValue != null && installStatusValue.equals("Button Photocell Installation")) {
             DeviceAttributes deviceAttributes = getDeviceValues(loggingModel);
             loggingModel.setButtonPhotoCell(true);
-            if (deviceAttributes.getInstallStatus().equals(InstallStatus.Verified.getValue()) || deviceAttributes.getInstallStatus().equals(InstallStatus.Photocell_Only.getValue())) {
+            if (deviceAttributes != null && deviceAttributes.getInstallStatus() != null && (deviceAttributes.getInstallStatus().equals(InstallStatus.Verified.getValue()) || deviceAttributes.getInstallStatus().equals(InstallStatus.Photocell_Only.getValue()))) {
                 loggingModel.setFixtureQRSame(true);
             }
         } else  if(installStatusValue != null && installStatusValue.equals("Could not complete")){

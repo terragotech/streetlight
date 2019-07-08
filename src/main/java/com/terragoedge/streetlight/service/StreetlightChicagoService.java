@@ -107,7 +107,7 @@ public class StreetlightChicagoService extends AbstractProcessor {
     }
 
 
-    public void run() {
+    public void  run() {
         // Get Already synced noteguids from Database
         List<String> noteGuids = streetlightDao.getNoteIds();
         String accessToken = getEdgeToken();
