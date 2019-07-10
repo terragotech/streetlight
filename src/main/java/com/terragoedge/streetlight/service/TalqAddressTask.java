@@ -59,7 +59,7 @@ public class TalqAddressTask extends AbstractService implements Runnable {
             for (EdgeNote edgeNote : edgeNoteList) {
                 String locationDesc = edgeNote.getLocationDescription();
                 System.out.println("locationDescription is : " + locationDesc);
-                if (locationDesc != null && !locationDesc.contains(locationDescKeyword)) {
+                if (locationDesc == null || (locationDesc != null && !locationDesc.contains(locationDescKeyword))) {
                     logger.info("Current Location Description :" + locationDesc);
                     String oldNoteGuid = edgeNote.getNoteGuid();
                     String notebookGuid = edgeNote.getEdgeNotebook().getNotebookGuid();
