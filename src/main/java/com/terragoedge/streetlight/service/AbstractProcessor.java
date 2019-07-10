@@ -917,7 +917,7 @@ public abstract class AbstractProcessor {
      *
      * @throws ReplaceOLCFailedException
      */
-    public void replaceOLC(String controllerStrIdValue, String idOnController, String macAddress, SLVTransactionLogs slvTransactionLogs, SlvInterfaceLogEntity slvInterfaceLogEntity)
+    public void replaceOLC(String controllerStrIdValue, String idOnController, String macAddress, SLVTransactionLogs slvTransactionLogs, SlvInterfaceLogEntity slvInterfaceLogEntity,String atlasPhysicalPage)
             throws ReplaceOLCFailedException {
 
         try {
@@ -954,7 +954,7 @@ public abstract class AbstractProcessor {
                     slvInterfaceLogEntity.setReplaceOlc(MessageConstants.REPLACEOLC);
                     slvInterfaceLogEntity.setStatus(MessageConstants.SUCCESS);
                     createEdgeAllMac(idOnController, macAddress);
-                    syncMacAddress2Edge(idOnController,macAddress);
+                    syncMacAddress2Edge(idOnController,macAddress,atlasPhysicalPage);
                     logger.info("Clear device process starts.");
                     logger.info("Clear device process End.");
                 }
@@ -1330,11 +1330,15 @@ public boolean checkExistingMacAddressValid(EdgeNote edgeNote, InstallMaintenanc
     }
 
 
-    public void syncMacAddress2Edge(String idOnController,String macAddress){
+    public void syncMacAddress2Edge(String idOnController,String macAddress,String atlasPhysicalPage){
         if(macAddress != null && !macAddress.trim().isEmpty()){
             MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
             params.add("slvMacAddress",macAddress);
             params.add("slvIdOnController",idOnController);
+            if(atlasPhysicalPage != null){
+                params.add("atlasPhysicalPage",atlasPhysicalPage);
+            }
+
             restService.slv2Edge("/rest/validation/updateSLVSyncedMAC", HttpMethod.GET,params);
         }
     }

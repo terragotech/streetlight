@@ -217,6 +217,11 @@ public class StreetlightChicagoService extends AbstractProcessor {
                     }
                     if(!isDroppedPinWorkFlow || (isDroppedPinWorkFlow && isDeviceCreated)) {
                         loadDeviceValues(edgeNote.getTitle(),installMaintenanceLogModel);
+
+                       if(edgeNote.getEdgeNotebook() != null && edgeNote.getEdgeNotebook().getNotebookName() != null &&  ( installMaintenanceLogModel.getAtlasPhysicalPage() == null || installMaintenanceLogModel.getAtlasPhysicalPage().isEmpty()) ){
+                           installMaintenanceLogModel.setAtlasPhysicalPage(edgeNote.getEdgeNotebook().getNotebookName());
+                       }
+
                         installationMaintenanceProcessor.processNewAction(edgeNote, installMaintenanceLogModel, false, utilLocId, slvInterfaceLogEntity);
                        // updateSlvStatusToEdge(installMaintenanceLogModel, edgeNote);
                         LoggingModel loggingModel = installMaintenanceLogModel;

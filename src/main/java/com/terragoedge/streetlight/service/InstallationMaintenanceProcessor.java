@@ -610,7 +610,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
                 } else {
                     if (!loggingModel.isMacAddressUsed()) {
                         slvTransactionLogs = getSLVTransactionLogs(loggingModel);
-                        replaceOLC(controllerStrIdValue, idOnController, macAddress, slvTransactionLogs, slvInterfaceLogEntity);// insert mac address
+                        replaceOLC(controllerStrIdValue, idOnController, macAddress, slvTransactionLogs, slvInterfaceLogEntity,loggingModel.getAtlasPhysicalPage());// insert mac address
                     }
 
                 }
@@ -862,7 +862,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
                 if (nodeMacValue != null && !nodeMacValue.trim().isEmpty() && !loggingModel.isMacAddressUsed()) {
                     try {
                         SLVTransactionLogs slvTransactionLogs = getSLVTransactionLogs(loggingModel);
-                        replaceOLC(loggingModel.getControllerSrtId(), loggingModel.getIdOnController(), "", slvTransactionLogs, slvInterfaceLogEntity);
+                        replaceOLC(loggingModel.getControllerSrtId(), loggingModel.getIdOnController(), "", slvTransactionLogs, slvInterfaceLogEntity,loggingModel.getAtlasPhysicalPage());
                     } catch (Exception e) {
                         String message = e.getMessage();
                     }
@@ -1032,7 +1032,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
             try {
                 if (!loggingModel.isMacAddressUsed()) {
                     SLVTransactionLogs slvTransactionLogs = getSLVTransactionLogs(loggingModel);
-                    replaceOLC(controllerStrIdValue, idOnController, "", slvTransactionLogs, slvInterfaceLogEntity);
+                    replaceOLC(controllerStrIdValue, idOnController, "", slvTransactionLogs, slvInterfaceLogEntity,loggingModel.getAtlasPhysicalPage());
                     statusDescription.append(MessageConstants.EMPTY_REPLACE_OLC_SUCCESS);
                 }
 
@@ -1118,7 +1118,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
             try {
                 if (!loggingModel.isMacAddressUsed()) {
                     SLVTransactionLogs slvTransactionLogs = getSLVTransactionLogs(loggingModel);
-                    replaceOLC(controllerStrIdValue, idOnController, "", slvTransactionLogs, slvInterfaceLogEntity);
+                    replaceOLC(controllerStrIdValue, idOnController, "", slvTransactionLogs, slvInterfaceLogEntity,loggingModel.getAtlasPhysicalPage());
                 }
 
             } catch (ReplaceOLCFailedException e) {
@@ -1168,7 +1168,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
 
                         try {
                             SLVTransactionLogs slvTransactionLogs = getSLVTransactionLogs(installMaintenanceLogModel);
-                            replaceOLC(installMaintenanceLogModel.getControllerSrtId(), installMaintenanceLogModel.getIdOnController(), "", slvTransactionLogs, slvInterfaceLogEntity);
+                            replaceOLC(installMaintenanceLogModel.getControllerSrtId(), installMaintenanceLogModel.getIdOnController(), "", slvTransactionLogs, slvInterfaceLogEntity,null);
                         } catch (Exception e) {
                             e.printStackTrace();
                             logger.error("error in replace OLC:" + e.getMessage());
