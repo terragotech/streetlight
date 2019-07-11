@@ -67,6 +67,14 @@ public abstract class SLVInterfaceService {
             return;
         }
 
+        String reSync =  PropertiesReader.getProperties().getProperty("streetlight.edge.resync");
+        if(reSync != null && reSync.trim().equals("true")){
+            logger.info("ReSync Process Starts.");
+            reSync(accessToken);
+            logger.info("ReSync Process Ends.");
+            return;
+        }
+
         String edgeSlvUrl =  PropertiesReader.getProperties().getProperty("streetlight.edge.slvServerUrl");
 
         Long lastSyncTime =   queryExecutor.getMaxSyncTime();
@@ -99,6 +107,38 @@ public abstract class SLVInterfaceService {
                     }
 
                 }
+            }
+        }
+    }
+
+    private void reSync(String accessToken){
+        BufferedReader bufferedReader = null;
+        try{
+            bufferedReader = new BufferedReader(new FileReader("./data/resynclist.txt"));
+            String noteGuid = null;
+            while ((noteGuid = bufferedReader.readLine()) != null) {
+                try {
+                    run(noteGuid,accessToken);
+                }catch (DatabaseException e){
+                    logger.error("Error while getting value from DB.Due to DB Error we are skipping other notes also",e);
+                    return;
+                }catch (SLVConnectionException e){
+                    logger.error("Unable to connect with SLV Server.");
+                    return;
+                }catch (Exception e){
+                    logger.error("Error while processing this note.NoteGuid:"+noteGuid);
+                }
+            }
+        }catch (Exception e) {
+            logger.error("Error in  reSync.", e);
+        } finally {
+            if (bufferedReader != null) {
+                try {
+                    bufferedReader.close();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+
             }
         }
     }
