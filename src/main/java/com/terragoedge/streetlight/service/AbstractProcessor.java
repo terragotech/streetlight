@@ -83,7 +83,7 @@ public abstract class AbstractProcessor {
         for (EdgeFormData edgeFormData : edgeFormDatas) {
             if (edgeFormData.getId() == id) {
                 String value = edgeFormData.getValue();
-                if (value == null || value.trim().isEmpty() || value.contains("null")) {
+                if (value == null || value.trim().isEmpty() || value.contains("null") || value.equals("Scan Node MAC#")) {
                     throw new NoValueException("Value is Empty or null." + value);
                 }
                 return value;
