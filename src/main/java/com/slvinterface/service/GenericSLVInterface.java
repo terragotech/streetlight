@@ -160,6 +160,7 @@ public class GenericSLVInterface extends  SLVInterfaceService {
             }
         }
         if(previousEdge2SLVData.getFixtureQRScan() != null){
+            addStreetLightData("luminaire.installdate", previousEdge2SLVData.getInstallDate(), paramsList);
             buildFixtureStreetLightData(previousEdge2SLVData.getFixtureQRScan(),paramsList);
         }
 
@@ -191,7 +192,8 @@ public class GenericSLVInterface extends  SLVInterfaceService {
             }
 
             addStreetLightData("power", powerVal, paramsList);
-            addStreetLightData("fixing.type", fixtureInfo[5], paramsList);
+            addStreetLightData("luminaire.type", fixtureInfo[5], paramsList);
+           // addStreetLightData("fixing.type", fixtureInfo[5], paramsList);
             addStreetLightData("device.luminaire.colortemp", fixtureInfo[6], paramsList);
             addStreetLightData("device.luminaire.lumenoutput", fixtureInfo[7], paramsList);
             addStreetLightData("luminaire.DistributionType", fixtureInfo[8], paramsList);
