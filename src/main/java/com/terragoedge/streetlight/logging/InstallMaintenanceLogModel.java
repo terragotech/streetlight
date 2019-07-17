@@ -14,6 +14,16 @@ public class InstallMaintenanceLogModel extends LoggingModel {
 
     private boolean isActionNew;
 
+    private String communicationStatus;
+
+    public String getCommunicationStatus() {
+        return communicationStatus;
+    }
+
+    public void setCommunicationStatus(String communicationStatus) {
+        this.communicationStatus = communicationStatus;
+    }
+
     public String getAtlasPhysicalPage() {
         return atlasPhysicalPage;
     }
@@ -80,10 +90,10 @@ public class InstallMaintenanceLogModel extends LoggingModel {
                 ", isFixtureOnly=" + isFixtureOnly +
                 ", deviceId=" + deviceId +
                 ", comment='" + comment + '\'' +
+                ", atlasPhysicalPage='" + atlasPhysicalPage + '\'' +
                 ", isActionNew=" + isActionNew +
-                ", isFixtureOnly=" + isFixtureOnly +
-                ", deviceId=" + deviceId +
-                ", comment='" + comment + '\'' +
+                ", communicationStatus='" + communicationStatus + '\'' +
+                ", datesHolder=" + datesHolder +
                 '}';
     }
 }

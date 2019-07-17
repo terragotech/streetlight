@@ -147,6 +147,7 @@ public abstract class AbstractProcessor {
         String macAddress = null;
         String luminaireSerialNumber = null;
         String atlasPhysicalPage = null;
+        String communicationSatus = null;
         for (int i = 0; i < arr.size(); i++) {
             JsonObject jsonObject1 = arr.get(i).getAsJsonObject();
             String keyValue = jsonObject1.get("key").getAsString();
@@ -168,6 +169,8 @@ public abstract class AbstractProcessor {
                 luminaireInstallDate = jsonObject1.get("value").getAsString();
             }else if(keyValue != null && keyValue.equals("userproperty.location.atlasphysicalpage")){
                 atlasPhysicalPage = jsonObject1.get("value").getAsString();
+            }else if(keyValue != null && keyValue.equals("CommunicationStatus")){
+                communicationSatus = jsonObject1.get("value").getAsString();
             }
             //userproperty.location.atlasphysicalpage
 
@@ -198,6 +201,10 @@ public abstract class AbstractProcessor {
 
         if(atlasPhysicalPage != null && !atlasPhysicalPage.trim().isEmpty()){
             installMaintenanceLogModel.setAtlasPhysicalPage(atlasPhysicalPage);
+        }
+
+        if(communicationSatus != null && !communicationSatus.trim().isEmpty()){
+            installMaintenanceLogModel.setCommunicationStatus(communicationSatus);
         }
 
         if(nodeInstallDate == null){
