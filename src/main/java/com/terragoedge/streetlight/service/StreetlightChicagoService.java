@@ -6,6 +6,7 @@ import java.io.FileReader;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
+import com.terragoedge.edgeserver.EdgeNotebook;
 import com.terragoedge.edgeserver.FormData;
 import com.terragoedge.streetlight.OpenCsvUtils;
 import com.terragoedge.streetlight.edgeinterface.SlvData;
@@ -213,7 +214,7 @@ public class StreetlightChicagoService extends AbstractProcessor {
                     }
                     boolean isDeviceCreated = false;
                     if(isDroppedPinWorkFlow) {
-                        isDeviceCreated = processDroppedPinWorkflow(edgeNote,slvInterfaceLogEntity,installMaintenanceLogModel);
+                        isDeviceCreated = processDroppedPinWorkflow(edgeNote,slvInterfaceLogEntity,installMaintenanceLogModel,utilLocId);
                     }
                     if(!isDroppedPinWorkFlow || (isDroppedPinWorkFlow && isDeviceCreated)) {
                         loadDeviceValues(edgeNote.getTitle(),installMaintenanceLogModel);
@@ -313,7 +314,7 @@ public class StreetlightChicagoService extends AbstractProcessor {
         return count;
     }
 
-    private boolean processDroppedPinWorkflow(EdgeNote edgeNote,SlvInterfaceLogEntity slvInterfaceLogEntity,InstallMaintenanceLogModel installMaintenanceLogModel){
+    private boolean processDroppedPinWorkflow(EdgeNote edgeNote,SlvInterfaceLogEntity slvInterfaceLogEntity,InstallMaintenanceLogModel installMaintenanceLogModel,String utilLocId){
         SLVTransactionLogs slvTransactionLogs = getSLVTransactionLogs(installMaintenanceLogModel);
         String idOnController = edgeNote.getTitle();
         boolean isDeviceCreated = false;
@@ -348,6 +349,7 @@ public class StreetlightChicagoService extends AbstractProcessor {
                         slvInterfaceLogEntity.setErrordetails("Not able to create device: " + idOnController);
                         isDeviceCreated = false;
                     } else {
+                        callSetDeviceValues(idOnController,utilLocId,edgeNote.getEdgeNotebook(),slvTransactionLogs);
                         logger.info("Device successfully created for this idoncontroller: "+idOnController);
                         isDeviceCreated = true;
                     }
@@ -361,6 +363,21 @@ public class StreetlightChicagoService extends AbstractProcessor {
             isDeviceCreated = true;
         }
         return isDeviceCreated;
+    }
+
+
+    private void callSetDeviceValues(String idOnController,String utilLocId,EdgeNotebook edgeNotebook,SLVTransactionLogs slvTransactionLogs){
+        String controllerStrId = properties.getProperty("streetlight.slv.controllerstrid");
+        List<Object> paramsList = new ArrayList<>();
+        paramsList.add("idOnController=" + idOnController);
+        paramsList.add("controllerStrId=" + controllerStrId);
+        if(edgeNotebook != null) {
+            addStreetLightData("location.atlasphysicalpage", edgeNotebook.getNotebookName(), paramsList);
+        }
+        if (utilLocId != null) {
+            addStreetLightData("location.utillocationid", utilLocId, paramsList);
+        }
+        installationMaintenanceProcessor.setDeviceValues(paramsList,slvTransactionLogs);
     }
     // http://192.168.1.9:8080/edgeServer/oauth/token?grant_type=password&username=admin&password=admin&client_id=edgerestapp
 }
