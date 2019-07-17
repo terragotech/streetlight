@@ -577,7 +577,13 @@ public abstract class SLVInterfaceService {
     protected String dateFormat(Long dateTime) {
         Date date = new Date(Long.valueOf(dateTime));
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
-        dateFormat.setTimeZone(TimeZone.getTimeZone("GMT"));
+        String timeZone = properties.getProperty("streetlight.timezone");
+        if(timeZone != null && !timeZone.trim().isEmpty()){
+            dateFormat.setTimeZone(TimeZone.getTimeZone(timeZone));
+        }else{
+            dateFormat.setTimeZone(TimeZone.getTimeZone("GMT"));
+        }
+
         String dff = dateFormat.format(date);
         return dff;
     }
@@ -616,9 +622,9 @@ public abstract class SLVInterfaceService {
                             break;
                         case FIXTURE:
                             try{
-                                String installDate = valueById(formValuesList,id.getId());
-                                installDate =  dateFormat(Long.valueOf(installDate));
-                                edge2SLVData.setInstallDate(installDate);
+                                String fixtureQRScan = valueById(formValuesList,id.getId());
+                                edge2SLVData.setFixtureQRScan(fixtureQRScan);
+                                edge2SLVData.setPriority(priority);
                             }catch (NoValueException e){
                                 e.printStackTrace();
                             }

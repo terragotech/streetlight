@@ -1,29 +1,38 @@
 {
-  "priority": [{"type":"NEW_DEVICE","order":1}],
+  "priority": [{"type":"REMOVE","order":1},{"type":"UPDATE_DEVICE","order":2},{"type":"NEW_DEVICE","order":3}],
   "config": [
     {
       "type": "NEW_DEVICE",
       "ids": [
         {
-          "id": 85,
+          "id": 121,
           "type": "MAC",
           "isRequired": false
         },
         {
-          "id": 155,
+          "id": 1028,
           "type": "FIXTURE",
           "isRequired": true
-        },
+        }
+      ]
+    },
+    {
+      "type": "UPDATE_DEVICE",
+      "ids": [
         {
-          "id": 118,
-          "type": "IDONCONTROLLER",
+          "id": 27,
+          "type": "MAC",
           "isRequired": true
         }
-      ],
-      "action": [
+      ]
+    },
+    {
+      "type": "REMOVE",
+      "ids": [
         {
-          "id": 17,
-          "value": "New"
+          "id": 99,
+          "type": "MAC",
+          "isRequired": true
         }
       ]
     }

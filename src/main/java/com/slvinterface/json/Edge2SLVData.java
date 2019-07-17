@@ -1,16 +1,24 @@
 package com.slvinterface.json;
 
-import com.slvinterface.enumeration.SLVProcess;
 
 public class Edge2SLVData {
 
     private String title;
     private String idOnController;
-    private String controllerStrId = "TalqBridge@TB516071244";
+    private String controllerStrId;
     private String installDate;
     private String macAddress;
     private Priority priority;
     private String existingMACAddress;
+    private String fixtureQRScan;
+
+    public String getFixtureQRScan() {
+        return fixtureQRScan;
+    }
+
+    public void setFixtureQRScan(String fixtureQRScan) {
+        this.fixtureQRScan = fixtureQRScan;
+    }
 
     public String getExistingMACAddress() {
         return existingMACAddress;

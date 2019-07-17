@@ -2,7 +2,6 @@ package com.slvinterface.service;
 
 import com.slvinterface.entity.SLVSyncTable;
 import com.slvinterface.entity.SLVTransactionLogs;
-import com.slvinterface.exception.NoValueException;
 import com.slvinterface.exception.QRCodeAlreadyUsedException;
 import com.slvinterface.exception.ReplaceOLCFailedException;
 import com.slvinterface.exception.SLVConnectionException;
@@ -11,13 +10,12 @@ import com.slvinterface.utils.PropertiesReader;
 import org.apache.log4j.Logger;
 
 import java.net.URLEncoder;
-import java.text.SimpleDateFormat;
 import java.util.*;
 
-public class SurreySLVInterface extends  SLVInterfaceService {
-    private static final Logger logger = Logger.getLogger(SurreySLVInterface.class);
+public class GenericSLVInterface extends  SLVInterfaceService {
+    private static final Logger logger = Logger.getLogger(GenericSLVInterface.class);
 
-    public SurreySLVInterface()throws Exception{
+    public GenericSLVInterface()throws Exception{
         super();
     }
 
@@ -44,20 +42,30 @@ public class SurreySLVInterface extends  SLVInterfaceService {
 
         if(previousEdge2SLVData != null && previousEdge2SLVData.getPriority() != null){
             String macAddress = previousEdge2SLVData.getMacAddress();
-            if(macAddress == null || macAddress.trim().isEmpty()){
-                slvSyncTable.setStatus("Failure");
-                slvSyncTable.setErrorDetails("MAC Address is Empty.");
-                logger.info("MAC Address is Empty. So Note is not synced.");
-                return;
-            }
             try{
+                //Controller Str Id
+                String controllerStrId = properties.getProperty("streetlight.controller.str.id");
+                previousEdge2SLVData.setControllerStrId(controllerStrId);
+
+                // Id On Controller
+                if(previousEdge2SLVData.getIdOnController() == null){
+                    previousEdge2SLVData.setIdOnController(slvSyncTable.getNoteName());
+                }
                 slvSyncTable.setIdOnController(previousEdge2SLVData.getIdOnController());
 
                 previousEdge2SLVData.setIdOnController(URLEncoder.encode(previousEdge2SLVData.getIdOnController(),"UTF-8"));
                 retryCount = 0;
                 checkTokenValidity(previousEdge2SLVData);
 
-                checkMacAddressExists(macAddress,previousEdge2SLVData.getIdOnController());
+                // Check MAC Address already Present.
+                if(macAddress != null && !macAddress.trim().isEmpty()){
+                    checkMacAddressExists(macAddress,previousEdge2SLVData.getIdOnController());
+                }
+
+                //Install Date
+                String installDate  = dateFormat(slvSyncTable.getNoteCreatedDateTime());
+                previousEdge2SLVData.setInstallDate(installDate);
+
                 slvSync(slvSyncTable,previousEdge2SLVData);
             }catch (SLVConnectionException e){
                 throw new SLVConnectionException(e);
@@ -141,18 +149,58 @@ public class SurreySLVInterface extends  SLVInterfaceService {
             }
         }
 
-
-        String modelFunctionId = "talq.streetlight.v1:lightNodeFunction6";
-
-        try {
-            modelFunctionId =  URLEncoder.encode(modelFunctionId,"UTF-8");
-            addStreetLightData("modelfunctionid",modelFunctionId,paramsList);
-           // addStreetLightData("nodeTypeStrId", modelFunctionId,paramsList);
-        }catch (Exception e){
-            e.printStackTrace();
+        String modelFunctionId = PropertiesReader.getProperties().getProperty("streetlight.model.functionid");
+        //String modelFunctionId = "talq.streetlight.v1:lightNodeFunction6";
+        if(modelFunctionId != null && !modelFunctionId.trim().isEmpty()){
+            try {
+                modelFunctionId =  URLEncoder.encode(modelFunctionId,"UTF-8");
+                addStreetLightData("modelfunctionid",modelFunctionId,paramsList);
+            }catch (Exception e){
+                e.printStackTrace();
+            }
+        }
+        if(previousEdge2SLVData.getFixtureQRScan() != null){
+            buildFixtureStreetLightData(previousEdge2SLVData.getFixtureQRScan(),paramsList);
         }
 
         setDeviceValues(paramsList,slvTransactionLogs);
     }
+
+
+
+    public void buildFixtureStreetLightData(String data, List<Object> paramsList)
+            {
+        String[] fixtureInfo = data.split(",");
+        logger.info("Fixture QR Scan Val length" + fixtureInfo.length);
+        if (fixtureInfo.length >= 13) {
+            addStreetLightData("luminaire.brand", fixtureInfo[0], paramsList);
+
+            String partNumber = fixtureInfo[1].trim();
+            String model = fixtureInfo[2].trim();
+            if (fixtureInfo[1].trim().length() <= fixtureInfo[2].trim().length()) {
+                model = fixtureInfo[1].trim();
+                partNumber = fixtureInfo[2].trim();
+            }
+            addStreetLightData("device.luminaire.partnumber", partNumber, paramsList);
+            addStreetLightData("luminaire.model", model, paramsList);
+            addStreetLightData("device.luminaire.manufacturedate", fixtureInfo[3], paramsList);
+            String powerVal = fixtureInfo[4];
+            if (powerVal != null && !powerVal.isEmpty()) {
+                powerVal = powerVal.replaceAll("W", "");
+                powerVal = powerVal.replaceAll("w", "");
+            }
+
+            addStreetLightData("power", powerVal, paramsList);
+            addStreetLightData("fixing.type", fixtureInfo[5], paramsList);
+            addStreetLightData("device.luminaire.colortemp", fixtureInfo[6], paramsList);
+            addStreetLightData("device.luminaire.lumenoutput", fixtureInfo[7], paramsList);
+            addStreetLightData("luminaire.DistributionType", fixtureInfo[8], paramsList);
+            addStreetLightData("luminaire.colorcode", fixtureInfo[9], paramsList);
+            addStreetLightData("device.luminaire.drivermanufacturer", fixtureInfo[10], paramsList);
+            addStreetLightData("device.luminaire.driverpartnumber", fixtureInfo[11], paramsList);
+            addStreetLightData("ballast.dimmingtype", fixtureInfo[12], paramsList);
+        }
+    }
+
 
 }
