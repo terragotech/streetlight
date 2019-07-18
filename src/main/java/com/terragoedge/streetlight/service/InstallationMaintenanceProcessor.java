@@ -1278,6 +1278,8 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
                 addStreetLightData("cslp.node.install.date", "", paramsList);
                 addStreetLightData("MacAddress", "", paramsList);
                 addStreetLightData("install.date", "", paramsList);
+                addStreetLightData("luminaire.type", "HPS", paramsList);
+                addStreetLightData("DimmingGroupName", "", paramsList);
                 addStreetLightData("installStatus", InstallStatus.To_be_installed.getValue(), paramsList);
                 break;
             case "Pole Removed":
@@ -1285,14 +1287,19 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
                 addStreetLightData("install.date", "", paramsList);
                 addStreetLightData("luminaire.installdate", "", paramsList);
                 addStreetLightData("installStatus", InstallStatus.Removed.getValue(), paramsList);
-                addStreetLightData("luminaire.type", "HPS", paramsList);
+
+                addStreetLightData("DimmingGroupName", "", paramsList);
+                String power = getLuminaireWattage(loggingModel);
+                addStreetLightData("power", power, paramsList);
                 break;
             case "Pole Knocked-Down":
                // clearFixtureValues(paramsList);
                 addStreetLightData("install.date", "", paramsList);
                 addStreetLightData("luminaire.installdate", "", paramsList);
+                addStreetLightData("DimmingGroupName", "", paramsList);
+                power = getLuminaireWattage(loggingModel);
+                addStreetLightData("power", power, paramsList);
                 addStreetLightData("installStatus", InstallStatus.Pole_Knocked_Down.getValue(), paramsList);
-                addStreetLightData("luminaire.type", "HPS", paramsList);
                 break;
         }
         SLVTransactionLogs slvTransactionLogs = getSLVTransactionLogs(loggingModel);
@@ -1302,6 +1309,22 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
         } else {
             logger.error("Error in clearDeviceValues");
         }
+    }
+
+    private String getLuminaireWattage(LoggingModel loggingModel){
+        if(loggingModel.getLuminaireFixturecode() != null && !loggingModel.getLuminaireFixturecode().trim().isEmpty()){
+            if(loggingModel.getLuminaireFixturecode().toUpperCase().contains("PIGGY")){
+                return "100";
+            }
+            if(loggingModel.getLuminaireFixturecode().toUpperCase().contains("COBRAHEAD")){
+                return "250";
+            }
+            if(loggingModel.getLuminaireFixturecode().toUpperCase().contains("FLOOD")){
+                return "400";
+            }
+
+        }
+        return "250";
     }
 
     private void clearFixtureValues(List<Object> paramsList) {

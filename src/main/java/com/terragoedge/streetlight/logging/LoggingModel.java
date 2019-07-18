@@ -46,9 +46,16 @@ public class LoggingModel {
 
     private String slvLuminaireSerialNumber;
 
+    private String luminaireFixturecode;
 
 
+    public String getLuminaireFixturecode() {
+        return luminaireFixturecode;
+    }
 
+    public void setLuminaireFixturecode(String luminaireFixturecode) {
+        this.luminaireFixturecode = luminaireFixturecode;
+    }
 
     public boolean isCouldNotComplete() {
         return isCouldNotComplete;
@@ -358,6 +365,7 @@ public class LoggingModel {
                 ", isCouldNotComplete=" + isCouldNotComplete +
                 ", repairsOption='" + repairsOption + '\'' +
                 ", slvLuminaireSerialNumber='" + slvLuminaireSerialNumber + '\'' +
+                ", luminaireFixturecode='" + luminaireFixturecode + '\'' +
                 '}';
     }
 }

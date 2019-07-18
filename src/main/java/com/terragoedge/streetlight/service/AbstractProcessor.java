@@ -148,6 +148,7 @@ public abstract class AbstractProcessor {
         String luminaireSerialNumber = null;
         String atlasPhysicalPage = null;
         String communicationSatus = null;
+        String fixtureCode = null;
         for (int i = 0; i < arr.size(); i++) {
             JsonObject jsonObject1 = arr.get(i).getAsJsonObject();
             String keyValue = jsonObject1.get("key").getAsString();
@@ -171,6 +172,8 @@ public abstract class AbstractProcessor {
                 atlasPhysicalPage = jsonObject1.get("value").getAsString();
             }else if(keyValue != null && keyValue.equals("CommunicationStatus")){
                 communicationSatus = jsonObject1.get("value").getAsString();
+            }else if(keyValue != null && keyValue.equals("userproperty.luminaire.fixturecode")){
+                fixtureCode = jsonObject1.get("value").getAsString();
             }
             //userproperty.location.atlasphysicalpage
 
@@ -205,6 +208,10 @@ public abstract class AbstractProcessor {
 
         if(communicationSatus != null && !communicationSatus.trim().isEmpty()){
             installMaintenanceLogModel.setCommunicationStatus(communicationSatus);
+        }
+
+        if(fixtureCode != null && !fixtureCode.trim().isEmpty()){
+            installMaintenanceLogModel.setLuminaireFixturecode(fixtureCode);
         }
 
         if(nodeInstallDate == null){
