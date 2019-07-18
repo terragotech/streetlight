@@ -181,15 +181,15 @@ public abstract class SlvInterfaceService extends AbstractSlvService {
                             logger.info("-----------------processedform end---------");
                             //  processSingleForm(edgeFormDataList, edgeNote, slvSyncDetailsError, paramsList, configurationJsonList, geozoneId, controllerStrid);
                         }
-                        System.out.println("Field Activity Present");
+                        logger.info("Field Activity Present");
 
                         processSingleForm(edgeFormDataList, edgeNote, slvSyncDetailsError, paramsList, configurationJsonList, geozoneId, controllerStrid, isResync);
                     } else {
-                        System.out.println("wrong formtemplate");
+                        logger.info("wrong formtemplate");
                         slvSyncDetailsError.setErrorDetails("Form Template [" + formTemplateGuid + "] is not present in this note.");
                     }
                 } catch (Exception e) {
-                    e.printStackTrace();
+                    logger.error("Error",e);
                 } finally {
                     connectionDAO.saveSlvSyncDetails(slvSyncDetailsError);
                 }
@@ -198,7 +198,7 @@ public abstract class SlvInterfaceService extends AbstractSlvService {
                 logger.info("Already slvsynctable has record,its not process");
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            logger.error("Error",e);
         }
     }
 
@@ -229,9 +229,9 @@ public abstract class SlvInterfaceService extends AbstractSlvService {
                             if (!isDeviceExist) {
                                 //Added only for parking templates
                                 logger.info(edgeNote.getTitle() + " is going to Create.");
-                                System.out.println("Device going to create");
+                                logger.info("Device going to create");
                                 createDevice(edgeNote, slvSyncDetail, geozoneId, edgeFormDataList);
-                                System.out.println("Device created");
+                                logger.info("Device created");
                             }
                             if (isReSync) {
                                 logger.info(" empty Replace olc called");
@@ -324,7 +324,7 @@ public abstract class SlvInterfaceService extends AbstractSlvService {
                 }
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            logger.error("Error",e);
         }
         return false;
     }
@@ -452,7 +452,7 @@ public abstract class SlvInterfaceService extends AbstractSlvService {
                     return false;
                 }
             } catch (Exception e) {
-                e.printStackTrace();
+                logger.error("Error",e);
                 return false;
             }
         }
@@ -567,7 +567,7 @@ public abstract class SlvInterfaceService extends AbstractSlvService {
                 try {
                     bufferedReader.close();
                 } catch (Exception e) {
-                    e.printStackTrace();
+                    logger.error("Error",e);
                 }
 
             }

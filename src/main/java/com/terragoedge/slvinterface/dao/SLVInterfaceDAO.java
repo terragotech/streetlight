@@ -23,7 +23,7 @@ public class SLVInterfaceDAO {
         try{
             slvSyncDetailsDao = DaoManager.createDao(connectionSource, SlvSyncDetails.class);
         }catch (Exception e) {
-            e.printStackTrace();
+            logger.error("Error",e);
         }
     }
 

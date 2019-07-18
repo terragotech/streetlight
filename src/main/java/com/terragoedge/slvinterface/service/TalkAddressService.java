@@ -43,7 +43,7 @@ public class TalkAddressService {
                  FileInputStream fis = new FileInputStream("./src/main/resources/sampletal.txt");
                  response = IOUtils.toString(fis);
             }catch (Exception e){
-                e.printStackTrace();
+                logger.error("Error",e)
             }
            // end
           */

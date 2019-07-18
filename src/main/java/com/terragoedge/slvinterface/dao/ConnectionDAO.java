@@ -39,12 +39,12 @@ public enum ConnectionDAO {
                 TableUtils.createTable(connectionSource, SlvSyncDetails.class);
                 TableUtils.createTable(connectionSource, SlvDevice.class);
             }catch (Exception e){
-              //  e.printStackTrace();
+              //  logger.error("Error",e)
             }
             slvSyncDetailsDao = DaoManager.createDao(connectionSource, SlvSyncDetails.class);
             slvDeviceDao = DaoManager.createDao(connectionSource, SlvDevice.class);
         } catch (Exception e) {
-            e.printStackTrace();
+           e.printStackTrace();
         }
 
     }
@@ -58,7 +58,7 @@ public enum ConnectionDAO {
             slvDevice.setProcessedDateTime(System.currentTimeMillis());
             slvDeviceDao.create(slvDevice);
         } catch (Exception e) {
-            e.printStackTrace();
+            logger.error("Error",e);
         }
     }
 
@@ -66,7 +66,7 @@ public enum ConnectionDAO {
         try {
             return slvDeviceDao.queryBuilder().where().eq(SlvDevice.SLV_DEVICE_ID, deviceId).queryForFirst();
         } catch (Exception e) {
-            e.printStackTrace();
+            logger.error("Error",e);
         }
         return null;
     }
@@ -75,7 +75,7 @@ public enum ConnectionDAO {
         try {
             return slvSyncDetailsDao.queryBuilder().where().eq(SlvSyncDetails.NOTE_GUID, deviceId).and().isNull(SlvSyncDetails.TALQ_ADDRESS).queryForFirst();
         } catch (Exception e) {
-            e.printStackTrace();
+            logger.error("Error",e);
         }
         return null;
     }
@@ -84,7 +84,7 @@ public enum ConnectionDAO {
         try {
             slvSyncDetailsDao.createOrUpdate(slvSyncDetails);
         } catch (Exception e) {
-            e.printStackTrace();
+            logger.error("Error",e);
         }
     }
 
@@ -136,7 +136,7 @@ public enum ConnectionDAO {
             return slvSyncDetailsDao.queryBuilder().where().isNull(SlvSyncDetails.TALQ_ADDRESS).and().eq(SlvSyncDetails.STATUS, Status
                     .Success.toString()).query();
         } catch (Exception e) {
-            e.printStackTrace();
+            logger.error("Error",e);
         }
         return new ArrayList<>();
 
@@ -146,7 +146,7 @@ public enum ConnectionDAO {
         try {
             return slvSyncDetailsDao.queryBuilder().query();
         } catch (Exception e) {
-            e.printStackTrace();
+            logger.error("Error",e);
         }
         return new ArrayList<>();
 
@@ -158,7 +158,7 @@ public enum ConnectionDAO {
             deleteBuilder.where().eq(SlvSyncDetails.NOTE_GUID, noteGuid);
             slvSyncDetailsDao.delete(deleteBuilder.prepare());
         } catch (Exception e) {
-            e.printStackTrace();
+            logger.error("Error",e);
         }
     }
 
@@ -166,7 +166,7 @@ public enum ConnectionDAO {
         try {
             slvSyncDetailsDao.update(slvSyncDetails);
         } catch (Exception e) {
-            e.printStackTrace();
+            logger.error("Error",e);
         }
     }
 
@@ -178,7 +178,7 @@ public enum ConnectionDAO {
             updateBuilder.updateColumnValue(SlvDevice.PROCESSED_DATE_TIME,System.currentTimeMillis());
             updateBuilder.update();
         } catch (Exception e) {
-            e.printStackTrace();
+            logger.error("Error",e);
         }
     }
 
@@ -186,7 +186,7 @@ public enum ConnectionDAO {
         try {
             return slvSyncDetailsDao.queryBuilder().where().eq(SlvSyncDetails.NOTENAME, fixtureId).and().isNull(SlvSyncDetails.TALQ_ADDRESS).queryForFirst();
         } catch (Exception e) {
-            e.printStackTrace();
+            logger.error("Error",e);
         }
         return null;
     }

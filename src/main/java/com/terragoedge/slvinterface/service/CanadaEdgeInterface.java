@@ -253,7 +253,7 @@ public class CanadaEdgeInterface extends SlvInterfaceService {
         for (FormData formData : formDataList) {
             List<EdgeFormData> edgeFormDataList = formData.getFormDef();
             for (EdgeFormData edgeFormData : edgeFormDataList) {
-                if (edgeFormData != null) {
+                if (edgeFormData != null && edgeFormData.getLabel() != null) {
                     switch (edgeFormData.getLabel()) {
                         case "SL":
                             if (nullCheck(edgeFormData.getValue()))
@@ -368,13 +368,13 @@ public class CanadaEdgeInterface extends SlvInterfaceService {
             JsonParser jsonParser = new JsonParser();
             mappingJson = (JsonObject) jsonParser.parse(data);
         } catch (Exception e) {
-            e.printStackTrace();
+            logger.error("Error",e);
         } finally {
             if (fis != null) {
                 try {
                     fis.close();
                 } catch (Exception e) {
-                    e.printStackTrace();
+                    logger.error("Error",e);
                 }
 
             }
@@ -393,7 +393,7 @@ public class CanadaEdgeInterface extends SlvInterfaceService {
             defaultDataHashMap = csvToBean.parse();
 
         } catch (Exception e) {
-            e.printStackTrace();
+            logger.error("Error",e);
         }
     }
 

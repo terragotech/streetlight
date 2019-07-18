@@ -106,7 +106,7 @@ public class KingCityEdgeInterface extends SlvInterfaceService{
                      addStreetLightData("powerCorrection", watt+ "", paramsList);
                  }
              }catch (Exception e){
-                 e.printStackTrace();
+                 logger.error("Error",e);
              }
 
 
@@ -187,7 +187,7 @@ public class KingCityEdgeInterface extends SlvInterfaceService{
             defaultDataHashMap = csvToBean.parse();
 
 		} catch (Exception e) {
-			e.printStackTrace();
+			logger.error("Error",e);
 		}
 	}
 
@@ -219,13 +219,13 @@ public class KingCityEdgeInterface extends SlvInterfaceService{
             JsonParser jsonParser = new JsonParser();
             mappingJson = (JsonObject) jsonParser.parse(data);
         }catch (Exception e){
-            e.printStackTrace();
+            logger.error("Error",e);
         }finally {
 	        if(fis != null){
 	            try{
                     fis.close();
                 }catch (Exception e){
-	                e.printStackTrace();
+	                logger.error("Error",e);
                 }
 
             }
