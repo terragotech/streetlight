@@ -14,6 +14,7 @@ public class SlvInterfaceApp {
     public static void main(String[] args) {
         try {
             SlvInterfaceService slvInterfaceService = new SlvInterfaceService();
+//            slvInterfaceService.start();
             while (true) {
                 slvInterfaceService.start();
                 processedDailyReport(slvInterfaceService);
