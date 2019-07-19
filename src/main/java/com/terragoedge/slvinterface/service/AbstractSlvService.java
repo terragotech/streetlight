@@ -17,6 +17,8 @@ import org.wololo.geojson.Feature;
 import org.wololo.geojson.GeoJSONFactory;
 import org.wololo.jts2geojson.GeoJSONReader;
 
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
 import java.util.*;
 
 public abstract class AbstractSlvService extends EdgeService {
@@ -271,13 +273,23 @@ public abstract class AbstractSlvService extends EdgeService {
         return responseEntity;
     }
 
+    public String encode(String data){
+        try{
+            return  URLEncoder.encode(data, "UTF-8");
+        }catch (UnsupportedEncodingException e){
+
+        }
+       return data;
+    }
+
     public GeozoneModel getGeozoneIdByName(String notebookName, int parentId) {
         List<GeozoneModel> geozoneModels = new ArrayList<>();
         String mainUrl = properties.getProperty("streetlight.slv.url.main");
         String getDeviceUrl = properties.getProperty("streetlight.slv.url.getgeozone.name");
         String geozoneUrl = mainUrl + getDeviceUrl;
         List<String> paramsList = new ArrayList<>();
-        paramsList.add("name=" + notebookName);
+
+        paramsList.add("name=" + encode(notebookName));
         if (parentId != -1) {
             paramsList.add("parentId=" + parentId);
         }
@@ -307,7 +319,7 @@ public abstract class AbstractSlvService extends EdgeService {
         return null;
     }
 
-    public GeozoneModel createGeozone(String geoZoneName, int parentId) {
+    public GeozoneModel createGeozone(String geoZoneName, int parentId){
         GeozoneModel geozoneModel = null;
         String mainUrl = properties.getProperty("streetlight.slv.url.main");
         String createGeozoneUrl = properties.getProperty("streetlight.slv.url.creategeozone");
@@ -317,7 +329,7 @@ public abstract class AbstractSlvService extends EdgeService {
         String longitudeMax = properties.getProperty("streetlight.slv.lngMax");
         String geozoneUrl = mainUrl + createGeozoneUrl;
         List<String> paramsList = new ArrayList<>();
-        paramsList.add("name=" + geoZoneName);
+        paramsList.add("name=" +  encode(geoZoneName));
         paramsList.add("parentId=" + parentId);
         paramsList.add("latMin="+latitudeMin);
         paramsList.add("latMax="+latitudeMax);
