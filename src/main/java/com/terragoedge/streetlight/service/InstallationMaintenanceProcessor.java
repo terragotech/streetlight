@@ -1196,6 +1196,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
                             connectionDAO.removeEdgeAllFixture(installMaintenanceLogModel.getIdOnController());
                         }
                         removeEdgeSLVMacAddress(installMaintenanceLogModel.getIdOnController());
+                        connectionDAO.removeAllEdgeFormDates(installMaintenanceLogModel.getIdOnController());
                     } catch (Exception e) {
                         logger.error("Error in processRemoveAction", e);
                     }
@@ -1223,6 +1224,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
                         clearDeviceValues(installMaintenanceLogModel.getIdOnController(), installMaintenanceLogModel.getControllerSrtId(), "Pole Removed", installMaintenanceLogModel);
                         slvInterfaceLogEntity.setStatus(MessageConstants.SUCCESS);
                         removeEdgeSLVMacAddress(installMaintenanceLogModel.getIdOnController());
+                        connectionDAO.removeCurrentEdgeFormDates(installMaintenanceLogModel.getIdOnController());
                     } catch (Exception e) {
                         logger.error("Error in processRemoveAction", e);
                     }
@@ -1250,6 +1252,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
                         clearDeviceValues(installMaintenanceLogModel.getIdOnController(), installMaintenanceLogModel.getControllerSrtId(), "Pole Knocked-Down", installMaintenanceLogModel);
                         slvInterfaceLogEntity.setStatus(MessageConstants.SUCCESS);
                         removeEdgeSLVMacAddress(installMaintenanceLogModel.getIdOnController());
+                        connectionDAO.removeCurrentEdgeFormDates(installMaintenanceLogModel.getIdOnController());
                     } catch (Exception e) {
                         logger.error("Error in processRemoveAction", e);
                     }
@@ -1630,7 +1633,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
         logger.info("createAllSLVDate Process Starts");
         if(slvDates != null){
             saveEdgeSLVDate(slvDates.getCslpNodeDate(),DateType.CSLP_NODE.toString(),idOnController);
-            saveEdgeSLVDate(slvDates.getCslpLumDate(),DateType.CSLP_NODE.toString(),idOnController);
+            saveEdgeSLVDate(slvDates.getCslpLumDate(),DateType.CSLP_LUM.toString(),idOnController);
             saveEdgeSLVDate(slvDates.getNodeInstallDate(),DateType.NODE.toString(),idOnController);
             saveEdgeSLVDate(slvDates.getLumInstallDate(),DateType.LUM.toString(),idOnController);
         }

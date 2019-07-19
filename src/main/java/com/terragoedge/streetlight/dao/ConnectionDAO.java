@@ -7,6 +7,7 @@ import com.j256.ormlite.stmt.DeleteBuilder;
 import com.j256.ormlite.support.ConnectionSource;
 import com.j256.ormlite.table.TableUtils;
 import com.terragoedge.edgeserver.*;
+import com.terragoedge.streetlight.enumeration.DateType;
 import com.terragoedge.streetlight.json.model.*;
 import org.apache.log4j.Logger;
 
@@ -286,6 +287,21 @@ public enum ConnectionDAO {
         }catch (Exception e){
             logger.error("Error in saveEdgeNodeDate",e);
         }
+    }
+
+    public void removeAllEdgeFormDates(String idOnController){
+        try {
+            DeleteBuilder<EdgeSLVDate, String> deleteBuilder = edgeNodeDates.deleteBuilder();
+            deleteBuilder.where().eq("title",idOnController);
+            deleteBuilder.delete();
+        }catch (Exception e){
+            logger.error("Error in removeAllEdgeFormDates",e);
+        }
+    }
+
+    public void removeCurrentEdgeFormDates(String idOnController){
+        deleteEdgeNoteFormDate(idOnController, DateType.LUM.toString());
+        deleteEdgeNoteFormDate(idOnController, DateType.NODE.toString());
     }
 
 
