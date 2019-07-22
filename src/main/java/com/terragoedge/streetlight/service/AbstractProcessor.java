@@ -464,8 +464,9 @@ public abstract class AbstractProcessor {
 
     protected String dateFormat(Long dateTime) {
         Date date = new Date(Long.valueOf(dateTime));
-        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-        dateFormat.setTimeZone(TimeZone.getTimeZone("CST"));
+       // SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+        dateFormat.setTimeZone(TimeZone.getTimeZone("MST"));
         String dff = dateFormat.format(date);
         return dff;
     }
@@ -562,15 +563,9 @@ public abstract class AbstractProcessor {
 
             addStreetLightData("power", powerVal, paramsList);
 
-            String dimmingGroupName = contextListHashMap.get(loggingModel.getIdOnController());
-            logger.info("dimming groupname :"+dimmingGroupName);
             logger.info("stringContainsNumber(fixtureInfo[5]) status :"+stringContainsNumber(fixtureInfo[5]));
             logger.info("stringContainsNumber(fixtureInfo[5]) status :"+stringContainsNumber(fixtureInfo[5]));
-            logger.info("dimming group starting with condition :"+(dimmingGroupName.startsWith("3") || dimmingGroupName.startsWith("11") || dimmingGroupName.startsWith("12")));
-            if (dimmingGroupName != null && stringContainsNumber(fixtureInfo[5]) && (dimmingGroupName.startsWith("3") || dimmingGroupName.startsWith("11") || dimmingGroupName.startsWith("12"))) {
-                fixtureInfo[5] = "LED";
-                logger.info("Entered if Statement Lum Type" +fixtureInfo[5]);
-            }
+            fixtureInfo[5] = "LED";
             logger.info("Final Lum Type" +fixtureInfo[5]);
             //luminaire.type
             addStreetLightData("luminaire.type", fixtureInfo[5], paramsList);
@@ -682,7 +677,7 @@ public abstract class AbstractProcessor {
         return geozoneId;
     }
 
-    protected int createDevice(SLVTransactionLogs slvTransactionLogs,EdgeNote edgeNote,int geoZoneId){
+    protected int createDevice(SLVTransactionLogs slvTransactionLogs,EdgeNote edgeNote,int geoZoneId,InstallMaintenanceLogModel installMaintenanceLogModel){
         int deviceId = -1;
         try {
             String mainUrl = properties.getProperty("streetlight.slv.url.main");
@@ -696,7 +691,7 @@ public abstract class AbstractProcessor {
             JsonObject geometryObject = geojsonObject.get("geometry").getAsJsonObject();
             JsonArray latlngs = geometryObject.get("coordinates").getAsJsonArray();
             paramsList.add("ser=json");
-            paramsList.add("userName="+edgeNote.getTitle());
+            paramsList.add("userName="+installMaintenanceLogModel.getNoteName());
             paramsList.add("categoryStrId="+categoryStrId);
             paramsList.add("geozoneId="+geoZoneId);
             paramsList.add("controllerStrId="+controllerStrId);
@@ -848,7 +843,6 @@ public abstract class AbstractProcessor {
 
 
     protected void loadDefaultVal(EdgeNote edgeNote, InstallMaintenanceLogModel loggingModel) {
-        loggingModel.setIdOnController(edgeNote.getTitle());
         String controllerStrId = properties.getProperty("streetlight.slv.controllerstrid");
         loggingModel.setControllerSrtId(controllerStrId);
         DatesHolder datesHolder = new DatesHolder();
@@ -1089,5 +1083,20 @@ public boolean checkExistingMacAddressValid(EdgeNote edgeNote, InstallMaintenanc
     protected boolean isDatePresent(String title,String date,String type){
         EdgeSLVDate edgeSLVDate = connectionDAO.getEdgeNodeDate(title,date,type);
         return edgeSLVDate != null;
+    }
+
+
+    public void loadIdOnController(EdgeNote edgeNote, InstallMaintenanceLogModel installMaintenanceLogModel)throws NoValueException {
+        String formTemplateGuid = properties.getProperty("edge.formtemplateGuid");
+        for (FormData formData : edgeNote.getFormData()) {
+            if (formData.getFormTemplateGuid().equals(formTemplateGuid) ) {
+                List<EdgeFormData> edgeFormDatas = formData.getFormDef();
+                String idOnController = valueById(edgeFormDatas, 3);
+                String name = valueById(edgeFormDatas, 7);
+                installMaintenanceLogModel.setIdOnController(idOnController);
+                installMaintenanceLogModel.setNoteName(name);
+
+            }
+        }
     }
 }

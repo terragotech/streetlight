@@ -1159,11 +1159,14 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
             //   if(!edgeNote.getCreatedBy().contains("admin")){
             SlvInterfaceLogEntity slvInterfaceLogEntity = new SlvInterfaceLogEntity();
             InstallMaintenanceLogModel installMaintenanceLogModel = new InstallMaintenanceLogModel();
+
+            loadIdOnController(edgeNote,installMaintenanceLogModel);
+            edgeNote.setTitle(installMaintenanceLogModel.getIdOnController());
+
             slvInterfaceLogEntity.setCreateddatetime(System.currentTimeMillis());
             slvInterfaceLogEntity.setResync(true);
             installMaintenanceLogModel.setLastSyncTime(edgeNote.getSyncTime());
             installMaintenanceLogModel.setProcessedNoteId(edgeNote.getNoteGuid());
-            installMaintenanceLogModel.setNoteName(edgeNote.getTitle());
             installMaintenanceLogModel.setParentNoteId(edgeNote.getBaseParentNoteId());
             installMaintenanceLogModel.setCreatedDatetime(String.valueOf(edgeNote.getCreatedDateTime()));
             loadDefaultVal(edgeNote, installMaintenanceLogModel);

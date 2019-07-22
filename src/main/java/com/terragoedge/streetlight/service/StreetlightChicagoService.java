@@ -6,10 +6,12 @@ import java.io.FileReader;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
+import com.terragoedge.edgeserver.EdgeFormData;
 import com.terragoedge.edgeserver.FormData;
 import com.terragoedge.streetlight.OpenCsvUtils;
 import com.terragoedge.streetlight.edgeinterface.SlvData;
 import com.terragoedge.streetlight.edgeinterface.SlvToEdgeService;
+import com.terragoedge.streetlight.exception.NoValueException;
 import com.terragoedge.streetlight.json.model.ExistingMacValidationFailure;
 import com.terragoedge.streetlight.json.model.SLVTransactionLogs;
 import com.terragoedge.streetlight.json.model.SlvInterfaceLogEntity;
@@ -176,16 +178,18 @@ public class StreetlightChicagoService extends AbstractProcessor {
                                    boolean isDroppedPinWorkFlow = isDroppedPinNote(edgeNote,droppedPinTag);
                                    logger.info("isDroppedPinWorkFlow:"+isDroppedPinWorkFlow);
                                    InstallMaintenanceLogModel installMaintenanceLogModel = new InstallMaintenanceLogModel();
+
+                                   loadIdOnController(edgeNote,installMaintenanceLogModel);
+                                   edgeNote.setTitle(installMaintenanceLogModel.getIdOnController());
+
                                    installMaintenanceLogModel.setDroppedPinWorkflow(isDroppedPinWorkFlow);
                                    installMaintenanceLogModel.setProcessedNoteId(edgeNote.getNoteGuid());
-                                   installMaintenanceLogModel.setNoteName(edgeNote.getTitle());
                                    installMaintenanceLogModel.setLastSyncTime(edgeNote.getSyncTime());
                                    installMaintenanceLogModel.setCreatedDatetime(String.valueOf(edgeNote.getCreatedDateTime()));
                                    installMaintenanceLogModel.setParentNoteId(edgeNote.getBaseParentNoteId());
                                    loadDefaultVal(edgeNote, installMaintenanceLogModel);
 
-
-                                   slvInterfaceLogEntity.setIdOnController(edgeNote.getTitle());
+                                   slvInterfaceLogEntity.setIdOnController(installMaintenanceLogModel.getIdOnController());
                                    slvInterfaceLogEntity.setCreateddatetime(System.currentTimeMillis());
                                    slvInterfaceLogEntity.setResync(false);
                                    String utilLocId = null;
@@ -221,6 +225,10 @@ public class StreetlightChicagoService extends AbstractProcessor {
             logger.error("Unable to get message from EdgeServer. Response Code is :" + edgeSlvServerResponse.getStatusCode());
         }
     }
+
+
+
+
 
     public String getYesterdayDate() {
         // 2017-11-01T13:00:00.000-00:00
@@ -299,7 +307,7 @@ public class StreetlightChicagoService extends AbstractProcessor {
 
     private boolean processDroppedPinWorkflow(EdgeNote edgeNote,SlvInterfaceLogEntity slvInterfaceLogEntity,InstallMaintenanceLogModel installMaintenanceLogModel){
         SLVTransactionLogs slvTransactionLogs = getSLVTransactionLogs(installMaintenanceLogModel);
-        String idOnController = edgeNote.getTitle();
+        String idOnController = installMaintenanceLogModel.getIdOnController();
         boolean isDeviceCreated = false;
         boolean isdevicePresent = isDevicePresent(slvTransactionLogs, idOnController);
         logger.info("The device present with the same idoncontroller: "+idOnController+ "result: "+isdevicePresent);
@@ -324,7 +332,7 @@ public class StreetlightChicagoService extends AbstractProcessor {
                     isDeviceCreated = false;
                 }else {
                     logger.info(idOnController+ " this device having one install and maintenance form. So it's going to process");
-                    int deviceId = createDevice(slvTransactionLogs, edgeNote, geozoneid);
+                    int deviceId = createDevice(slvTransactionLogs, edgeNote, geozoneid,installMaintenanceLogModel);
                     logger.info(idOnController+" device created in slv and it's id is: "+deviceId);
                     if (deviceId == -1) {
                         logger.error("Device not created in slv for this idoncontroller: "+idOnController);
