@@ -131,14 +131,12 @@ public class StreetlightChicagoService extends AbstractProcessor {
         String edgeSlvUrl = "http://172.18.255.47/edgeSlvServer/notesGuid?lastSyncTime=";
 
         long lastSynctime = streetlightDao.getLastSyncTime();
-        if(lastSynctime > 0){
-            edgeSlvUrl = edgeSlvUrl + lastSynctime;
-
-        }else{
+        if(lastSynctime < 1){
             lastSynctime = (System.currentTimeMillis() - 600000);
+
         }
 
-
+        edgeSlvUrl = edgeSlvUrl + lastSynctime;
 
         // Get NoteList from edgeserver
         ResponseEntity<String> edgeSlvServerResponse = restService.getRequest(edgeSlvUrl, false, accessToken);
@@ -172,7 +170,8 @@ public class StreetlightChicagoService extends AbstractProcessor {
                                String notesData = responseEntity.getBody();
                                logger.info("rest service data:" + notesData);
                                EdgeNote edgeNote = gson.fromJson(notesData, EdgeNote.class);
-                               if (!edgeNote.getCreatedBy().contains("admin") && !edgeNote.getCreatedBy().contains("slvinterface")) {
+                               String notebookGuid = PropertiesReader.getProperties().getProperty("com.edge.notebook.guid");
+                               if (!edgeNote.getCreatedBy().contains("admin") && !edgeNote.getCreatedBy().contains("slvinterface") && (edgeNote.getEdgeNotebook() != null && edgeNote.getEdgeNotebook().getNotebookGuid().equals(notebookGuid))) {
                                     // Below commented line need for dropped pin workflow in future
                                    boolean isDroppedPinWorkFlow = isDroppedPinNote(edgeNote,droppedPinTag);
                                    logger.info("isDroppedPinWorkFlow:"+isDroppedPinWorkFlow);
@@ -194,7 +193,7 @@ public class StreetlightChicagoService extends AbstractProcessor {
                                    if(isDroppedPinWorkFlow){
                                        utilLocId = "5"+edgeNote.getTitle();
                                    }
-                                   boolean isDeviceCreated = false;
+                                   boolean isDeviceCreated = processDroppedPinWorkflow(edgeNote,slvInterfaceLogEntity,installMaintenanceLogModel);
 
                                    if(!isDroppedPinWorkFlow || (isDroppedPinWorkFlow && isDeviceCreated)) {
                                        loadDeviceValues(edgeNote.getTitle(),installMaintenanceLogModel);
@@ -287,7 +286,7 @@ public class StreetlightChicagoService extends AbstractProcessor {
         return responseEntity;
     }
     private int validateForms(EdgeNote edgeNote){
-        String installFormTemplateGuid = properties.getProperty("amerescousa.edge.formtemplateGuid");
+        String installFormTemplateGuid = properties.getProperty("edge.formtemplateGuid");
         List<FormData> formDatas = edgeNote.getFormData();
         int count = 0;
         for(FormData formData : formDatas){
@@ -305,7 +304,7 @@ public class StreetlightChicagoService extends AbstractProcessor {
         boolean isdevicePresent = isDevicePresent(slvTransactionLogs, idOnController);
         logger.info("The device present with the same idoncontroller: "+idOnController+ "result: "+isdevicePresent);
         if (!isdevicePresent) {
-            int geozoneid = checkGeoZone(edgeNote.getEdgeNotebook().getNotebookName(),slvTransactionLogs);
+            int geozoneid = Integer.valueOf(PropertiesReader.getProperties().getProperty("com.slv.current.geozone.id"));
             if(geozoneid == -1){
                 logger.error("Skipping this device. Dueto there is no geozone present with this name: "+edgeNote.getEdgeNotebook().getNotebookName());
                 slvInterfaceLogEntity.setStatus(MessageConstants.ERROR);
@@ -339,10 +338,7 @@ public class StreetlightChicagoService extends AbstractProcessor {
                 }
             }
         }else{
-            logger.info("Device already present with the same name: "+idOnController);
-            slvInterfaceLogEntity.setStatus(MessageConstants.ERROR);
-            slvInterfaceLogEntity.setErrordetails("device already present with the same name: "+idOnController);
-            isDeviceCreated = false;
+            return true;
         }
         return isDeviceCreated;
     }

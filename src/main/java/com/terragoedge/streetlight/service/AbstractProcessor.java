@@ -691,37 +691,12 @@ public abstract class AbstractProcessor {
             String categoryStrId = properties.getProperty("com.slv.categorystr.id");
             String url = mainUrl + createDeviceMethodName;
             List<String> paramsList = new ArrayList<>();
-            EdgeNotebook edgeNotebook = edgeNote.getEdgeNotebook();
-            List<FormData> formDatas = edgeNote.getFormData();
-            FormData formData = new FormData();
-            formData.setFormTemplateGuid(properties.getProperty("amerescousa.edge.formtemplateGuid"));
-            int pos = formDatas.indexOf(formData);
-            List<EdgeFormData> edgeFormDatas = formDatas.get(pos).getFormDef();
-//            String proposedContext = getFormValue(edgeFormDatas,"Proposed context");
-//            String formFixtureCode = getFormValue(edgeFormDatas,"Fixture Code");
-            String proposedContext = "";
-            String formFixtureCode = "";
-            try {
-                proposedContext = edgeNote.getLocationDescription().split("\\|")[0];
-            }catch (Exception e){
-                e.printStackTrace();
-            }
-            try {
-                formFixtureCode = edgeNote.getLocationDescription().split("\\|")[1];
-            }catch (Exception e){
-                e.printStackTrace();
-            }
-            String atlasPage = Utils.getAtlasPage(edgeNotebook.getNotebookName());
-
-            String atlasGroup = Utils.getAtlasGroup(proposedContext);
-            String fixtureCode = Utils.getFixtureCode(formFixtureCode.startsWith(" ") ? formFixtureCode.substring(1) : formFixtureCode);
-            String fixtureName = atlasPage+"-"+atlasGroup+"-"+edgeNote.getTitle()+"-"+fixtureCode;
             String geoJson = edgeNote.getGeometry();
             JsonObject geojsonObject = jsonParser.parse(geoJson).getAsJsonObject();
             JsonObject geometryObject = geojsonObject.get("geometry").getAsJsonObject();
             JsonArray latlngs = geometryObject.get("coordinates").getAsJsonArray();
             paramsList.add("ser=json");
-            paramsList.add("userName="+fixtureName);
+            paramsList.add("userName="+edgeNote.getTitle());
             paramsList.add("categoryStrId="+categoryStrId);
             paramsList.add("geozoneId="+geoZoneId);
             paramsList.add("controllerStrId="+controllerStrId);
@@ -754,10 +729,9 @@ public abstract class AbstractProcessor {
         try {
             String mainUrl = properties.getProperty("streetlight.slv.url.main");
             String searchDeviceMethodName = properties.getProperty("com.slv.search.device");
-            int firstGeoZoneId = Integer.valueOf(properties.getProperty("com.slv.first.geozone.id"));
+            int firstGeoZoneId = Integer.valueOf(properties.getProperty("com.slv.root.geozone.id"));
             String url = mainUrl + searchDeviceMethodName;
             List<String> paramsList = new ArrayList<>();
-
             paramsList.add("ser=json");
             paramsList.add("geozoneId="+firstGeoZoneId);
             paramsList.add("recurse=true");
@@ -1063,8 +1037,7 @@ public abstract class AbstractProcessor {
         return null;
     }
     protected Boolean isDroppedPinNote(EdgeNote edgeNote,String droppedPinTag){
-
-        return false;
+        return true;
     }
 
 public boolean checkExistingMacAddressValid(EdgeNote edgeNote, InstallMaintenanceLogModel installMaintenanceLogModel) throws Exception{

@@ -27,7 +27,7 @@ public class SlvToEdgeService extends EdgeService {
     public void run(SlvData slvData) {
         logger.info("-----SLV to Edge Sync Process------------");
         logger.info(slvData.toString());
-        String formTemplateGuid = PropertiesReader.getProperties().getProperty("amerescousa.edge.formtemplateGuid");
+        String formTemplateGuid = PropertiesReader.getProperties().getProperty("edge.formtemplateGuid");
         String notesJson = getNoteDetails(slvData.getNoteGuid());
         if (notesJson == null) {
             logger.info("Note not in AmerescoUSA.");

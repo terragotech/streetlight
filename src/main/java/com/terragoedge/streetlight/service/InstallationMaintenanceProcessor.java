@@ -25,128 +25,14 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
         this.macHashMap = macHashMap;
     }
 
-    private static final String INSTATALLATION_AND_MAINTENANCE_GUID = "ce053ac2-cda6-4e25-8dd0-ac30ba79e28b";
 
     final Logger logger = Logger.getLogger(InstallationMaintenanceProcessor.class);
 
 
-    private LoggingModel getExistingIdOnContoller(EdgeNote edgeNote) {
-        String fixtureFormTemplateGuid = properties.getProperty("streetlight.edge.formtemplateguid.fixture");
-        LoggingModel loggingModel = new LoggingModel();
-        for (FormData formData : edgeNote.getFormData()) {
-            if (formData.getFormTemplateGuid().equals(fixtureFormTemplateGuid)) {
-                List<EdgeFormData> fixtureFromDef = formData.getFormDef();
-                loggingModel.setIdOnController(getIdOnController(fixtureFromDef));
-                loggingModel.setControllerSrtId(getControllerStrId(fixtureFromDef));
-            }
-
-        }
-        return loggingModel;
-
-    }
 
 
-    private String getNightRideFormVal(List<FormData> formDataList, EdgeNote edgeNote, LoggingModel loggingModel) {
-        String nightRideTemplateGuid = properties.getProperty("amerescousa.night.ride.formtemplateGuid");
-        logger.info("Night Ride Form TemplateGuid:"+nightRideTemplateGuid);
-        int pos = formDataList.indexOf(nightRideTemplateGuid);
-        if (pos != -1) {
-            logger.info("Night Ride Form is Present");
-            FormData formData = formDataList.get(pos);
-            List<EdgeFormData> edgeFormDatas = formData.getFormDef();
-            try {
-                String nightRideValue = valueById(edgeFormDatas, 1);
-                logger.info("Night Ride Form Val:"+nightRideValue);
-                if(loggingModel.getSlvLuminaireSerialNumber() != null && nightRideValue.contains(loggingModel.getSlvLuminaireSerialNumber())){
-                    logger.info("SlvLuminaireSerialNumber Val:"+loggingModel.getSlvLuminaireSerialNumber());
-                    logger.info("SLV LuminaireSerialNumber and Night Ride Values are same.");
-                    return null;
-                }
-                try {
-                    SlvServerData dbSlvServerData = streetlightDao.getSlvServerData(edgeNote.getTitle());
-                    if (dbSlvServerData != null && dbSlvServerData.getSerialNumber() != null) {
-                        List<String> nightRideList = new ArrayList<>();
-                        String serialNumber = dbSlvServerData.getSerialNumber();
-                        String[] nightRideValues = serialNumber.split(",");
-                        for (String nightRideVal : nightRideValues) {
-                            String[] nightRideValArray = nightRideVal.split(":");
-                            if (nightRideValArray.length > 1) {
-                                nightRideList.add(nightRideValArray[1]);
-                            }
-                        }
-                        boolean res = nightRideList.contains(nightRideValue);
-                        loggingModel.setNigthRideSame(res);
-                    }
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
 
-                return dateFormat(edgeNote.getCreatedDateTime()) + " :" + nightRideValue;
 
-            } catch (NoValueException e) {
-
-            }
-        }
-        return null;
-    }
-
-    private void syncNightRideFormAlone(List<FormData> formDataList, InstallMaintenanceLogModel installMaintenanceLogModel, EdgeNote edgeNote, SlvInterfaceLogEntity slvInterfaceLogEntity) {
-        try {
-            String nightRideKey = properties.getProperty("amerescousa.night.ride.key_for_slv");
-            try {
-
-                String nightRideTemplateGuid = properties.getProperty("amerescousa.night.ride.formtemplateGuid");
-                int pos = formDataList.indexOf(nightRideTemplateGuid);
-                if (pos != -1) {
-                    List<Object> paramsList = new ArrayList<>();
-                    String nightRideValue = getNightRideFormVal(formDataList, edgeNote, installMaintenanceLogModel);
-                    if (nightRideValue != null) {
-                        String idOnController = installMaintenanceLogModel.getIdOnController();
-                        paramsList.add("idOnController=" + idOnController);
-                        paramsList.add("controllerStrId=" + installMaintenanceLogModel.getControllerSrtId());
-                        addStreetLightData(nightRideKey, nightRideValue, paramsList);
-                        SLVTransactionLogs slvTransactionLogs = getSLVTransactionLogs(installMaintenanceLogModel);
-                        int errorCode = setDeviceValues(paramsList, slvTransactionLogs);
-                        if (errorCode != 0) {
-                            installMaintenanceLogModel.setErrorDetails(MessageConstants.ERROR_NIGHTRIDE_FORM_VAL);
-                            installMaintenanceLogModel.setStatus(MessageConstants.ERROR);
-                            slvInterfaceLogEntity.setErrorcategory(MessageConstants.SLV_VALIDATION_ERROR);
-                            slvInterfaceLogEntity.setStatus(MessageConstants.ERROR);
-                            slvInterfaceLogEntity.setErrordetails(MessageConstants.ERROR_NIGHTRIDE_FORM_VAL);
-                            return;
-                        } else {
-                            logger.info("Night ride value successfully updated");
-                            installMaintenanceLogModel.setStatus(MessageConstants.SUCCESS);
-                            slvInterfaceLogEntity.setStatus(MessageConstants.SUCCESS);
-                            logger.info("Status Changed. to Success");
-                        }
-                    } else {
-                        slvInterfaceLogEntity.setErrorcategory(MessageConstants.EDGE_VALIDATION_ERROR);
-                        slvInterfaceLogEntity.setStatus(MessageConstants.ERROR);
-                        slvInterfaceLogEntity.setErrordetails(MessageConstants.NOVALUE_NIGHTRIDE_FORM);
-                        installMaintenanceLogModel.setErrorDetails(MessageConstants.NOVALUE_NIGHTRIDE_FORM);
-                        installMaintenanceLogModel.setStatus(MessageConstants.ERROR);
-                    }
-
-                }
-            } catch (Exception e) {
-                logger.error("Error in while getting nightRideValue's value : ", e);
-                installMaintenanceLogModel.setErrorDetails("Error while syncing Night Ride value.");
-                installMaintenanceLogModel.setStatus(MessageConstants.ERROR);
-                slvInterfaceLogEntity.setErrorcategory(MessageConstants.SLV_VALIDATION_ERROR);
-                slvInterfaceLogEntity.setStatus(MessageConstants.ERROR);
-                slvInterfaceLogEntity.setErrordetails("Error in while getting nightRideValue's value : " + e);
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-            logger.error("Error in while getting nightRideValue's value : ", e);
-            installMaintenanceLogModel.setErrorDetails("Error while syncing Night Ride value.");
-            installMaintenanceLogModel.setStatus(MessageConstants.ERROR);
-            slvInterfaceLogEntity.setStatus(MessageConstants.ERROR);
-            slvInterfaceLogEntity.setErrorcategory(MessageConstants.EDGE_VALIDATION_ERROR);
-            slvInterfaceLogEntity.setErrordetails("Error in while getting nightRideValue's value : " + e);
-        }
-    }
 
     public void processNewAction(EdgeNote edgeNote, InstallMaintenanceLogModel installMaintenanceLogModel, boolean isReSync, String utilLocId, SlvInterfaceLogEntity slvInterfaceLogEntity) {
         slvInterfaceLogEntity.setParentnoteid((edgeNote.getBaseParentNoteId() == null) ? edgeNote.getNoteGuid() : edgeNote.getBaseParentNoteId());
@@ -155,13 +41,11 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
         List<FormData> formDatas = edgeNote.getFormData();
 
         String nightRideKey = properties.getProperty("amerescousa.night.ride.key_for_slv");
-        String formatedValueNR = getNightRideFormVal(formDatas, edgeNote, installMaintenanceLogModel);
-
+        String formTemplateGuid = properties.getProperty("edge.formtemplateGuid");
         boolean isInstallForm = false;
-
         for (FormData formData : formDatas) {
             logger.info("Processing Form :" + formData.getFormTemplateGuid());
-            if (formData.getFormTemplateGuid().equals(INSTATALLATION_AND_MAINTENANCE_GUID) || formData.getFormTemplateGuid().equals("fa47c708-fb82-4877-938c-992e870ae2a4") || formData.getFormTemplateGuid().equals("c8acc150-6228-4a27-bc7e-0fabea0e2b93")) {
+            if (formData.getFormTemplateGuid().equals(formTemplateGuid) ) {
 
                 isInstallForm = true;
 
@@ -186,12 +70,12 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
                         switch (value) {
                             case "New":
                                 slvInterfaceLogEntity.setSelectedAction("New");
-                                processNewGroup(edgeFormDatas, edgeNote, installMaintenanceLogModel, isReSync, utilLocId, nightRideKey, formatedValueNR, slvInterfaceLogEntity);
+                                processNewGroup(edgeFormDatas, edgeNote, installMaintenanceLogModel, isReSync, utilLocId, nightRideKey, null, slvInterfaceLogEntity);
                                 installMaintenanceLogModel.setInstalledDate(edgeNote.getCreatedDateTime());
                                 break;
                             case "Repairs & Outages":
                                 slvInterfaceLogEntity.setSelectedAction("Repairs & Outages");
-                                repairAndOutage(edgeFormDatas, edgeNote, installMaintenanceLogModel, utilLocId, nightRideKey, formatedValueNR, formatedValueNR, slvInterfaceLogEntity);
+                                repairAndOutage(edgeFormDatas, edgeNote, installMaintenanceLogModel, utilLocId, nightRideKey, null, null, slvInterfaceLogEntity);
                                 installMaintenanceLogModel.setReplacedDate(edgeNote.getCreatedDateTime());
                                 break;
                             case "Remove":
@@ -216,7 +100,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
         }
 
         if (!isInstallForm) {
-            syncNightRideFormAlone(formDatas, installMaintenanceLogModel, edgeNote, slvInterfaceLogEntity);
+           // syncNightRideFormAlone(formDatas, installMaintenanceLogModel, edgeNote, slvInterfaceLogEntity);
         }
     }
 
