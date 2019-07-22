@@ -400,20 +400,38 @@ public class CanadaEdgeInterface extends SlvInterfaceService {
 
     public String getGeoZoneValue(String title) {
         logger.info("given idoncontroller BlockName is :" + title);
+        String parking = properties.getProperty("streetlight.edge.parking");
         logger.info("given list:" + gson.toJson(geoZoneDetailsList));
         GeoZoneDetails geoZoneDetails = new GeoZoneDetails();
-        if (title.contains("Block")) {
+        if(parking == null){
+            if (title.contains("Block")) {
+                geoZoneDetails.setName(title);
+            } else {
+                geoZoneDetails.setName("Block " + title);
+            }
+        }else{
             geoZoneDetails.setName(title);
-        } else {
-            geoZoneDetails.setName("Block " + title);
         }
+
         int pos = geoZoneDetailsList.indexOf(geoZoneDetails);
-        System.out.println("idOnController position :" + pos);
+        System.out.println("IdOnController Position :" + pos);
         if (pos != -1) {
             geoZoneDetails = geoZoneDetailsList.get(pos);
             logger.info("given idoncontroller geozoneid is :" + geoZoneDetails.getId());
             System.out.println("geozoneid is :" + geoZoneDetails.getId());
             return geoZoneDetails.getId();
+        }else{
+            logger.info("GeoZone not found."+title.contains("Parks"));
+            if(title.contains("Parks")){
+                for(GeoZoneDetails geoZoneTemp : geoZoneDetailsList){
+                    logger.info("geoZoneTemp.getName()"+geoZoneTemp.getName()+":"+geoZoneTemp.getName().contains("Parks"));
+
+                    if(geoZoneTemp.getName().contains("Parks")){
+                        return geoZoneTemp.getId();
+                    }
+                }
+            }
+
         }
         logger.info("given idoncontroller geozoneid is null");
         return null;
@@ -444,8 +462,19 @@ public class CanadaEdgeInterface extends SlvInterfaceService {
             System.out.println("BlockName" + blockName);
             // String blockName = valueById(edgeFormDataList, 32);
             logger.info("Block Name:" + blockName);
-            logger.info("34 idoncontroller BlockName is :" + valueById(edgeFormDataList, 34));
-            logger.info("32 idoncontroller BlockName is :" + valueById(edgeFormDataList, 32));
+            try {
+                logger.info("34 idoncontroller BlockName is :" + valueById(edgeFormDataList, 34));
+            }catch (Exception e){
+
+            }
+
+            try {
+                logger.info("32 idoncontroller BlockName is :" + valueById(edgeFormDataList, 32));
+            }catch (Exception e){
+
+            }
+
+
             geoZoneId = getGeoZoneValue(blockName);
             if (geoZoneId == null) {
                 logger.error("No GeoZone");
