@@ -11,6 +11,16 @@ public class Edge2SLVData {
     private String macAddress;
     private Priority priority;
     private String existingMACAddress;
+    private String fixutreQRScan;
+
+
+    public String getFixutreQRScan() {
+        return fixutreQRScan;
+    }
+
+    public void setFixutreQRScan(String fixutreQRScan) {
+        this.fixutreQRScan = fixutreQRScan;
+    }
 
     public String getExistingMACAddress() {
         return existingMACAddress;
@@ -78,6 +88,7 @@ public class Edge2SLVData {
                 ", macAddress='" + macAddress + '\'' +
                 ", priority=" + priority +
                 ", existingMACAddress='" + existingMACAddress + '\'' +
+                ", fixutreQRScan='" + fixutreQRScan + '\'' +
                 '}';
     }
 }

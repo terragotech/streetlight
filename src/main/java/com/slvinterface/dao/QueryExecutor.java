@@ -2,12 +2,17 @@ package com.slvinterface.dao;
 
 import com.j256.ormlite.dao.Dao;
 import com.j256.ormlite.dao.DaoManager;
+import com.j256.ormlite.dao.RawRowMapper;
 import com.j256.ormlite.support.ConnectionSource;
 import com.j256.ormlite.table.TableUtils;
 import com.slvinterface.entity.EdgeAllMac;
 import com.slvinterface.entity.SLVSyncTable;
 import com.slvinterface.entity.SLVTransactionLogs;
 import org.apache.log4j.Logger;
+
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
 
 public class QueryExecutor {
 
@@ -108,6 +113,23 @@ public class QueryExecutor {
             e.printStackTrace();
         }
         return -1L;
+    }
+
+
+    public List<String> getEdgeNoteGuid(String formTemplateGuid) {
+        try {
+            List<String> noteGuids = slvSyncTablesDao.queryRaw("select noteguid from edgenote, edgeform where edgenote.isdeleted = false  and edgenote.iscurrent = true  and  edgenote.noteid =  edgeform.edgenoteentity_noteid and edgenote.createddatetime > 1563972120602 and edgenote.title = 'LC2D' and edgeform.formtemplateguid = '" + formTemplateGuid + "';", new RawRowMapper<String>() {
+                @Override
+                public String mapRow(String[] columnNames, String[] resultColumns) throws SQLException {
+                    return resultColumns[0];
+                }
+            }).getResults();
+            return noteGuids;
+        } catch (Exception e) {
+            logger.error("Error in getNoteGuids",e);
+        }
+        return  new ArrayList<>();
+
     }
 
 }

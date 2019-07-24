@@ -74,41 +74,26 @@ public abstract class SLVInterfaceService {
             logger.info("ReSync Process Ends.");
             return;
         }
+        //streetlight.edge.formtemplate.guid
+        String formTemplateGuid = PropertiesReader.getProperties().getProperty("streetlight.edge.formtemplate.guid");
+        List<String> noteGuidsList = queryExecutor.getEdgeNoteGuid(formTemplateGuid);
+        System.out.println("noteList: " + noteGuidsList);
 
-        String edgeSlvUrl =  PropertiesReader.getProperties().getProperty("streetlight.edge.slvServerUrl");
-
-        Long lastSyncTime =   queryExecutor.getMaxSyncTime();
-        if(lastSyncTime == -1){
-            lastSyncTime = System.currentTimeMillis() - (30 * 60000);
-        }
-        edgeSlvUrl = edgeSlvUrl +"/notesGuid?lastSyncTime="+lastSyncTime;
-        // Get NoteList from edgeserver
-        ResponseEntity<String> edgeSlvServerResponse = edgeRestService.getRequest(edgeSlvUrl, false, accessToken);
-
-        // Process only response code as success
-        if (edgeSlvServerResponse.getStatusCode().is2xxSuccessful()) {
-            // Get Response String
-            String notesGuids = edgeSlvServerResponse.getBody();
-            JsonArray noteGuidsJsonArray = (JsonArray) jsonParser.parse(notesGuids);
-            if (noteGuidsJsonArray != null && !noteGuidsJsonArray.isJsonNull()) {
-                for (JsonElement noteGuidJson : noteGuidsJsonArray) {
-                    String noteGuid = noteGuidJson.getAsString();
-                    logger.info("Current NoteGuid:"+noteGuid);
-                    try {
-                        run(noteGuid,accessToken);
-                    }catch (DatabaseException e){
-                        logger.error("Error while getting value from DB.Due to DB Error we are skipping other notes also",e);
-                        return;
-                    }catch (SLVConnectionException e){
-                        logger.error("Unable to connect with SLV Server.");
-                        return;
-                    }catch (Exception e){
-                        logger.error("Error while processing this note.NoteGuid:"+noteGuid);
-                    }
-
-                }
+        for (String edgeNoteGuid : noteGuidsList) {
+            logger.info("Current NoteGuid:"+edgeNoteGuid);
+            try {
+                run(edgeNoteGuid,accessToken);
+            }catch (DatabaseException e){
+                logger.error("Error while getting value from DB.Due to DB Error we are skipping other notes also",e);
+                return;
+            }catch (SLVConnectionException e){
+                logger.error("Unable to connect with SLV Server.");
+                return;
+            }catch (Exception e){
+                logger.error("Error while processing this note.NoteGuid:"+edgeNoteGuid);
             }
         }
+
     }
 
     private void reSync(String accessToken){
@@ -240,7 +225,7 @@ public abstract class SLVInterfaceService {
                 return;
             }
 
-            processFormData(formDataList,slvSyncTable);
+            processFormData(formDataList,slvSyncTable,edgeNote);
         }catch (SLVConnectionException e){
             throw new SLVConnectionException(e);
         }catch (Exception e) {
@@ -552,7 +537,7 @@ public abstract class SLVInterfaceService {
     }
 
 
-    public void processFormData(List<FormData> formDataList, SLVSyncTable slvSyncTable)throws SLVConnectionException{
+    public void processFormData(List<FormData> formDataList, SLVSyncTable slvSyncTable,EdgeNote edgeNote)throws SLVConnectionException{
 
     }
 
@@ -616,9 +601,10 @@ public abstract class SLVInterfaceService {
                             break;
                         case FIXTURE:
                             try{
-                                String installDate = valueById(formValuesList,id.getId());
-                                installDate =  dateFormat(Long.valueOf(installDate));
-                                edge2SLVData.setInstallDate(installDate);
+                                String fixtureQRScan = valueById(formValuesList,id.getId());
+                               // installDate =  dateFormat(Long.valueOf(installDate));
+                                edge2SLVData.setFixutreQRScan(fixtureQRScan);
+                                edge2SLVData.setPriority(priority);
                             }catch (NoValueException e){
                                 e.printStackTrace();
                             }

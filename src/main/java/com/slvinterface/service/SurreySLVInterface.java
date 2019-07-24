@@ -24,7 +24,7 @@ public class SurreySLVInterface extends  SLVInterfaceService {
 
 
     // 118 - Controller ID, Node Installation Date -  155,Scan Node QR Code - 85,New Node QR Code-132,Replacement Date-159,
-    public void processFormData(List<FormData> formDataList, SLVSyncTable slvSyncTable)throws SLVConnectionException{
+    public void processFormData(List<FormData> formDataList, SLVSyncTable slvSyncTable,EdgeNote edgeNote)throws SLVConnectionException{
         Edge2SLVData previousEdge2SLVData = null;
         for(FormData formData : formDataList){
             Edge2SLVData currentEdge2SLVData = new Edge2SLVData();
@@ -44,20 +44,22 @@ public class SurreySLVInterface extends  SLVInterfaceService {
 
         if(previousEdge2SLVData != null && previousEdge2SLVData.getPriority() != null){
             String macAddress = previousEdge2SLVData.getMacAddress();
-            if(macAddress == null || macAddress.trim().isEmpty()){
-                slvSyncTable.setStatus("Failure");
-                slvSyncTable.setErrorDetails("MAC Address is Empty.");
-                logger.info("MAC Address is Empty. So Note is not synced.");
-                return;
-            }
+            String installDate =  dateFormat(Long.valueOf(edgeNote.getCreatedDateTime()));
+            previousEdge2SLVData.setInstallDate(installDate);
             try{
                 slvSyncTable.setIdOnController(previousEdge2SLVData.getIdOnController());
+                if(slvSyncTable.getIdOnController() == null || slvSyncTable.getIdOnController().trim().isEmpty()){
+                    slvSyncTable.setIdOnController(edgeNote.getTitle());
+                    previousEdge2SLVData.setIdOnController(edgeNote.getTitle());
+                }
 
                 previousEdge2SLVData.setIdOnController(URLEncoder.encode(previousEdge2SLVData.getIdOnController(),"UTF-8"));
                 retryCount = 0;
                 checkTokenValidity(previousEdge2SLVData);
+                if(macAddress != null && !macAddress.trim().isEmpty()){
+                    checkMacAddressExists(macAddress,previousEdge2SLVData.getIdOnController());
+                }
 
-                checkMacAddressExists(macAddress,previousEdge2SLVData.getIdOnController());
                 slvSync(slvSyncTable,previousEdge2SLVData);
             }catch (SLVConnectionException e){
                 throw new SLVConnectionException(e);
@@ -106,16 +108,16 @@ public class SurreySLVInterface extends  SLVInterfaceService {
 
             case UPDATE_DEVICE:
                 slvSyncTable.setSelectedAction("Replace WorkFlow");
-                replaceOLC(previousEdge2SLVData.getControllerStrId(),previousEdge2SLVData.getIdOnController(),"",slvSyncTable);
+                //replaceOLC(previousEdge2SLVData.getControllerStrId(),previousEdge2SLVData.getIdOnController(),"",slvSyncTable);
                 setDeviceVal(slvSyncTable,previousEdge2SLVData);
-                replaceOLC(previousEdge2SLVData.getControllerStrId(),previousEdge2SLVData.getIdOnController(),previousEdge2SLVData.getMacAddress(),slvSyncTable);
+                //replaceOLC(previousEdge2SLVData.getControllerStrId(),previousEdge2SLVData.getIdOnController(),previousEdge2SLVData.getMacAddress(),slvSyncTable);
                 slvSyncTable.setStatus("Success");
                 break;
 
             case NEW_DEVICE:
                 slvSyncTable.setSelectedAction("Install WorkFlow");
                 setDeviceVal(slvSyncTable,previousEdge2SLVData);
-                replaceOLC(previousEdge2SLVData.getControllerStrId(),previousEdge2SLVData.getIdOnController(),previousEdge2SLVData.getMacAddress(),slvSyncTable);
+                //replaceOLC(previousEdge2SLVData.getControllerStrId(),previousEdge2SLVData.getIdOnController(),previousEdge2SLVData.getMacAddress(),slvSyncTable);
                 slvSyncTable.setStatus("Success");
                 break;
 
@@ -129,7 +131,10 @@ public class SurreySLVInterface extends  SLVInterfaceService {
         List<Object> paramsList = new ArrayList<>();
         loadVal(paramsList,previousEdge2SLVData);
         addStreetLightData("installStatus","Installed",paramsList);
-        addStreetLightData("MacAddress",previousEdge2SLVData.getMacAddress(),paramsList);
+        if(previousEdge2SLVData.getMacAddress() != null){
+            addStreetLightData("MacAddress",previousEdge2SLVData.getMacAddress(),paramsList);
+        }
+
         addStreetLightData("install.date",previousEdge2SLVData.getInstallDate(),paramsList);
 
         String slvCalender = PropertiesReader.getProperties().getProperty("streetlight.calendar");
@@ -151,8 +156,44 @@ public class SurreySLVInterface extends  SLVInterfaceService {
         }catch (Exception e){
             e.printStackTrace();
         }
+        try{
+            buildFixtureStreetLightData(previousEdge2SLVData.getFixutreQRScan(),paramsList);
+        }catch (Exception e){
+            e.printStackTrace();
+        }
 
         setDeviceValues(paramsList,slvTransactionLogs);
+    }
+
+
+    public void buildFixtureStreetLightData(String data, List<Object> paramsList) throws Exception{
+        if(data != null && !data.trim().isEmpty()){
+
+            String[] fixtureInfo = data.split(",");
+            if (fixtureInfo.length >= 9) {
+                addStreetLightData("luminaire.brand", URLEncoder.encode(fixtureInfo[0],"UTF-8"), paramsList);
+                addStreetLightData("device.luminaire.partnumber", URLEncoder.encode(fixtureInfo[1],"UTF-8"), paramsList);
+                addStreetLightData("luminaire.model", URLEncoder.encode(fixtureInfo[2],"UTF-8"), paramsList);
+                addStreetLightData("ballast.brand", URLEncoder.encode(fixtureInfo[3],"UTF-8"), paramsList);
+                addStreetLightData("ballast.type", URLEncoder.encode(fixtureInfo[4],"UTF-8"), paramsList);
+                addStreetLightData("ballast.dimmingtype", URLEncoder.encode(fixtureInfo[5],"UTF-8"), paramsList);
+                addStreetLightData("luminaire.distributiontype", URLEncoder.encode(fixtureInfo[6],"UTF-8"), paramsList);
+                addStreetLightData("luminaire.DistributionType",URLEncoder.encode(fixtureInfo[6],"UTF-8"), paramsList);
+
+                String powerVal = fixtureInfo[7];
+                if (powerVal != null && !powerVal.isEmpty()) {
+                    powerVal = powerVal.replaceAll("W", "");
+                    powerVal = powerVal.replaceAll("w", "");
+                }
+
+
+                addStreetLightData("power", URLEncoder.encode(powerVal,"UTF-8"), paramsList);
+                addStreetLightData("device.luminaire.colortemp", URLEncoder.encode(fixtureInfo[8],"UTF-8"), paramsList);
+
+            }
+        }
+
+
     }
 
 }
