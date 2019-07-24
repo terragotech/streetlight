@@ -1398,7 +1398,11 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
         try {
             cslpNodeInstallDate = valueById(edgeFormDatas, 169);
             if(cslpNodeInstallDate != null && !cslpNodeInstallDate.trim().isEmpty()){
-                edgeSLVDates.setCslpNodeDate(getStartOfDay(cslpNodeInstallDate));
+                try{
+                    edgeSLVDates.setCslpNodeDate(getStartOfDay(cslpNodeInstallDate));
+                }catch (Exception e){
+                    logger.error("Error in cslpNodeInstallDate:"+cslpNodeInstallDate,e);
+                }
             }
 
             logger.info("cslpNodeInstallDate Val" + cslpNodeInstallDate);
@@ -1412,10 +1416,12 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
         try {
             cslpLumInstallDate = valueById(edgeFormDatas, 170);
             if(cslpLumInstallDate != null && !cslpLumInstallDate.trim().isEmpty()){
-                edgeSLVDates.setCslpLumDate(getStartOfDay(cslpLumInstallDate));
+                try{
+                    edgeSLVDates.setCslpLumDate(getStartOfDay(cslpLumInstallDate));
+                }catch (Exception e){
+                    logger.error("Error in cslpLumInstallDate:"+cslpLumInstallDate,e);
+                }
             }
-
-
             logger.info("cslpLumInstallDate Val" + cslpLumInstallDate);
         } catch (NoValueException e) {
             logger.error("CSLP Lum Install Date is empty", e);
@@ -1427,7 +1433,12 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
         try {
             installDate = valueById(edgeFormDatas, 171);
             if(installDate != null && !installDate.trim().isEmpty()){
-                edgeSLVDates.setNodeInstallDate(getStartOfDay(installDate));
+                try{
+                    edgeSLVDates.setNodeInstallDate(getStartOfDay(installDate));
+                }catch (Exception e){
+                    logger.error("Error in installDate:"+installDate,e);
+                }
+
             }
 
 
@@ -1442,7 +1453,12 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
         try {
             lumInstallDate = valueById(edgeFormDatas, 172);
             if(lumInstallDate != null && !lumInstallDate.trim().isEmpty()){
-                edgeSLVDates.setLumInstallDate(getStartOfDay(lumInstallDate));
+                try{
+                    edgeSLVDates.setLumInstallDate(getStartOfDay(lumInstallDate));
+                }catch (Exception e){
+                    logger.error("Error in lumInstallDate:"+lumInstallDate,e);
+                }
+
             }
             logger.info("lumInstallDate Val" + lumInstallDate);
         } catch (NoValueException e) {

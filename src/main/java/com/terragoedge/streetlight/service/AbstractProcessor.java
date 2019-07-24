@@ -83,7 +83,7 @@ public abstract class AbstractProcessor {
         for (EdgeFormData edgeFormData : edgeFormDatas) {
             if (edgeFormData.getId() == id) {
                 String value = edgeFormData.getValue();
-                if (value == null || value.trim().isEmpty() || value.contains("null") || value.equals("Scan Node MAC#")) {
+                if (value == null || value.trim().isEmpty() || value.contains("null") || value.equals("Scan Node MAC#") ) {
                     throw new NoValueException("Value is Empty or null." + value);
                 }
                 return value;
@@ -962,7 +962,12 @@ public abstract class AbstractProcessor {
             // As per doc, errorcode is 0 for success. Otherwise, its not success.
             if (errorStatus.equals("ERROR")) {
                 String value = replaceOlcResponse.get("value").getAsString();
+                if(macAddress != null && !macAddress.trim().isEmpty()){
+                    createEdgeAllMac(idOnController, macAddress);
+                    syncMacAddress2Edge(idOnController,macAddress,atlasPhysicalPage);
+                }
                 throw new ReplaceOLCFailedException(value);
+
             } else {
                 if (macAddress != null && !macAddress.trim().isEmpty()) {
                     slvInterfaceLogEntity.setReplaceOlc(MessageConstants.REPLACEOLC);
