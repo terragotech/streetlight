@@ -6,6 +6,7 @@ import java.io.FileReader;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
+import com.terragoedge.edgeserver.EdgeFormData;
 import com.terragoedge.edgeserver.EdgeNotebook;
 import com.terragoedge.edgeserver.FormData;
 import com.terragoedge.streetlight.OpenCsvUtils;
@@ -348,8 +349,54 @@ public class StreetlightChicagoService extends AbstractProcessor {
                         slvInterfaceLogEntity.setStatus(MessageConstants.ERROR);
                         slvInterfaceLogEntity.setErrordetails("Not able to create device: " + idOnController);
                         isDeviceCreated = false;
-                    } else {
-                        callSetDeviceValues(idOnController,utilLocId,edgeNote.getEdgeNotebook(),slvTransactionLogs);
+                    } else
+                        {
+                        //Handle Extra value in SetDevice values
+                        String installationFormTemplateGUID = PropertiesReader.getProperties().getProperty("amerescousa.edge.formtemplateGuid");
+                        String strpoleHeightID = PropertiesReader.getProperties().getProperty("droppedpin.poleheightid");
+                        String strfixtureCodeID = PropertiesReader.getProperties().getProperty("droppedpin.fixturecodeid");
+                        int poleHeightID = Integer.parseInt(strpoleHeightID);
+                        int fixtureCodeID = Integer.parseInt(strfixtureCodeID);
+
+                        List<FormData> lstFormData = edgeNote.getFormData();
+                        String poleHeight = "";
+                        String fixtureCode = "";
+                        logger.info("Looking for installation form");
+                        for(FormData cur:lstFormData)
+                        {
+                            if(cur.getFormGuid()== installationFormTemplateGUID)
+                            {
+                                logger.info("Found installation form");
+                                List<EdgeFormData> lstEdgeFormData = cur.getFormDef();
+                                for(EdgeFormData eformData:lstEdgeFormData)
+                                {
+                                    if(eformData.getId() == poleHeightID)
+                                    {
+                                        logger.info("Found Pole height");
+                                        String value = eformData.getValue();
+                                        if(value != null && (!value.equals("")))
+                                        {
+                                            poleHeight = value;
+                                            logger.info("pole height assigned");
+                                        }
+
+                                    }
+                                    if(eformData.getId() == fixtureCodeID) {
+                                        logger.info("Found fixture code");
+                                        String value = eformData.getValue();
+                                        if(value != null && (!value.equals("")))
+                                        {
+                                            fixtureCode = value;
+                                            logger.info("fixture code assigned");
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        callSetDeviceValues(idOnController,utilLocId,edgeNote.getEdgeNotebook(),
+                                poleHeight,
+                                fixtureCode,
+                                slvTransactionLogs);
                         logger.info("Device successfully created for this idoncontroller: "+idOnController);
                         isDeviceCreated = true;
                     }
@@ -366,7 +413,11 @@ public class StreetlightChicagoService extends AbstractProcessor {
     }
 
 
-    private void callSetDeviceValues(String idOnController,String utilLocId,EdgeNotebook edgeNotebook,SLVTransactionLogs slvTransactionLogs){
+    private void callSetDeviceValues(String idOnController,String utilLocId,
+                                     EdgeNotebook edgeNotebook,
+                                     String poleHeight,
+                                     String fixtureCode,
+                                     SLVTransactionLogs slvTransactionLogs){
         String controllerStrId = properties.getProperty("streetlight.slv.controllerstrid");
         List<Object> paramsList = new ArrayList<>();
         paramsList.add("idOnController=" + idOnController);
@@ -376,6 +427,12 @@ public class StreetlightChicagoService extends AbstractProcessor {
         }
         if (utilLocId != null) {
             addStreetLightData("location.utillocationid", utilLocId, paramsList);
+        }
+        if(poleHeight != null) {
+            addStreetLightData("pole.height", poleHeight, paramsList);
+        }
+        if(fixtureCode != null) {
+            addStreetLightData("luminaire.fixturecode", fixtureCode, paramsList);
         }
         installationMaintenanceProcessor.setDeviceValues(paramsList,slvTransactionLogs);
     }
