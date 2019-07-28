@@ -132,8 +132,8 @@ public class StreetlightChicagoService extends AbstractProcessor {
 
 
 
-
-        String edgeSlvUrl = "http://199.233.241.175/edgeSlvServer/notesGuid?lastSyncTime=";
+        String edgeSlvUrl =  PropertiesReader.getProperties().getProperty("streetlight.edge.slvserver.url");
+        edgeSlvUrl = edgeSlvUrl+"/notesGuid?lastSyncTime=";
 
         long lastSynctime = streetlightDao.getLastSyncTime();
         if(lastSynctime > 0){

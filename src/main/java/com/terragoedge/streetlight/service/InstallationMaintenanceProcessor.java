@@ -1702,7 +1702,8 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
 
                 if(hasData){
                     String requestJson = gson.toJson(promotedFormData);
-                    String edgeSlvUrl = "http://199.233.241.175/edgeSlvServer/updatePromotedFormDates";
+                   String edgeSlvUrl = PropertiesReader.getProperties().getProperty("streetlight.edge.slvserver.url");
+                     edgeSlvUrl = edgeSlvUrl+"/updatePromotedFormDates";
                     serverCall(edgeSlvUrl,HttpMethod.POST,requestJson);
                 }else{
                     logger.info("No Dates available to update promoted data");
