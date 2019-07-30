@@ -706,6 +706,7 @@ public abstract class AbstractProcessor {
     public void buildFixtureStreetLightData(String data, List<Object> paramsList, EdgeNote edgeNote, SlvServerData slvServerData, LoggingModel loggingModel)
             throws InValidBarCodeException {
         if(data.startsWith("LB60") || data.startsWith("Luminaire Manufacturer")){
+            logger.info("Default Value Parser Starts");
             processFixtureQRScan(data,paramsList,edgeNote,slvServerData,loggingModel);
             return;
         }else if(data.startsWith("Existing")){
