@@ -626,16 +626,93 @@ public abstract class AbstractProcessor {
         addStreetLightData("device.luminaire.colortemp", "3000K", paramsList);
         slvServerData.setLuminaireColorTemp("3000K");
 
+    }
 
 
+    private void processExistingFixtureQRScan(String data,List<Object> paramsList,SlvServerData slvServerData){
+        if(data != null && !data.trim().isEmpty()){
+            String[] fixtureQrScan =  data.split(",");
+            String lumBrand =  addExistingFixtureQRScan(fixtureQrScan,paramsList,0,"Existing LED","luminaire.brand");
+            if(lumBrand != null){
+                slvServerData.setLuminaireBrand(lumBrand);
+            }
+            String lumPartNum =  addExistingFixtureQRScan(fixtureQrScan,paramsList,1,"Node Only","device.luminaire.partnumber");
+            if(lumPartNum != null){
+                slvServerData.setLuminairePartNumber(lumPartNum);
+            }
+            String lumModel =  addExistingFixtureQRScan(fixtureQrScan,paramsList,2,"Node Only","luminaire.model");
+            if(lumModel != null){
+                slvServerData.setLuminaireModel(lumModel);
+            }
+            String lumManu =  addExistingFixtureQRScan(fixtureQrScan,paramsList,3,"Node Only","device.luminaire.manufacturedate");
+            if(lumManu != null){
+                slvServerData.setLuminaireManufacturedate(lumBrand);
+            }
+             addExistingFixtureQRScan(fixtureQrScan,paramsList,4,"Unknown","power");
+
+             addExistingFixtureQRScan(fixtureQrScan,paramsList,5,"LED","luminaire.type");
+
+            String lumColor =  addExistingFixtureQRScan(fixtureQrScan,paramsList,6,"Node Only","device.luminaire.colortemp");
+            if(lumColor != null){
+                slvServerData.setLuminaireColorTemp(lumColor);
+            }
+            String lumLumen =  addExistingFixtureQRScan(fixtureQrScan,paramsList,7,"Node Only","device.luminaire.lumenoutput");
+            if(lumLumen != null){
+                slvServerData.setLumenOutput(lumLumen);
+            }
+            String lumDist =  addExistingFixtureQRScan(fixtureQrScan,paramsList,8,"Node Only","luminaire.DistributionType");
+            if(lumDist != null){
+                slvServerData.setDistributionType(lumDist);
+            }
+            String lumColorCode = addExistingFixtureQRScan(fixtureQrScan,paramsList,9,"","luminaire.colorcode");
+            if(lumColorCode != null){
+                slvServerData.setColorCode(lumColorCode);
+            }
+            String lumDriverManu = addExistingFixtureQRScan(fixtureQrScan,paramsList,10,"","device.luminaire.drivermanufacturer");
+            if(lumDriverManu != null){
+                slvServerData.setDriverManufacturer(lumDriverManu);
+            }
+            String lumDriverPart =  addExistingFixtureQRScan(fixtureQrScan,paramsList,11,"","device.luminaire.driverpartnumber");
+            if(lumDriverPart != null){
+                slvServerData.setDriverPartNumber(lumDriverPart);
+            }
+            String dimmingType =  addExistingFixtureQRScan(fixtureQrScan,paramsList,12,"","ballast.dimmingtype");
+            if(dimmingType != null){
+                slvServerData.setDimmingType(dimmingType);
+            }
+
+        }
 
     }
 
+
+
+    private String addExistingFixtureQRScan(String[] fixtureQrScan,List<Object> paramsList,int pos,String defaultVal,String key){
+        try{
+             String fixtureQrScanVal = fixtureQrScan[pos];
+            fixtureQrScanVal = (fixtureQrScanVal == null || fixtureQrScanVal.trim().isEmpty()) ? defaultVal : fixtureQrScanVal;
+            addStreetLightData(key, fixtureQrScanVal, paramsList);
+            return fixtureQrScanVal;
+        }catch (ArrayIndexOutOfBoundsException e ){
+
+        }
+        addStreetLightData(key, defaultVal, paramsList);
+        return null;
+    }
+
+
+
+
     public void buildFixtureStreetLightData(String data, List<Object> paramsList, EdgeNote edgeNote, SlvServerData slvServerData, LoggingModel loggingModel)
             throws InValidBarCodeException {
-        if(data.equals("LB6023120LED") || data.startsWith("Luminaire Manufacturer")){
+        if(data.startsWith("LB60") || data.startsWith("Luminaire Manufacturer")){
             processFixtureQRScan(data,paramsList,edgeNote,slvServerData,loggingModel);
             return;
+        }else if(data.startsWith("Existing")){
+            logger.info("Existing Parser Starts");
+            processExistingFixtureQRScan(data,paramsList,slvServerData);
+            logger.info("After Existing Parser current value in paramsList are: "+paramsList.toString());
+            logger.info("Existing Parser Ends");
         }
         String[] fixtureInfo = data.split(",");
         logger.info("Fixture QR Scan Val length" + fixtureInfo.length);
