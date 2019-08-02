@@ -49,6 +49,16 @@ public class LoggingModel {
     private String luminaireFixturecode;
 
 
+    private boolean isNodeOnly;
+
+    public boolean isNodeOnly() {
+        return isNodeOnly;
+    }
+
+    public void setNodeOnly(boolean nodeOnly) {
+        isNodeOnly = nodeOnly;
+    }
+
     public String getLuminaireFixturecode() {
         return luminaireFixturecode;
     }

@@ -477,10 +477,11 @@ public abstract class AbstractProcessor {
             logger.info("Fixture QR scan not empty and set cslp.lum.install.date" + dateFormat(edgeNote.getCreatedDateTime()));
             boolean isLumDate = isLumDatePresent(idOnContoller);
             boolean isButtonPhotoCelll = loggingModel.isButtonPhotoCell();
-            if (!isLumDate && !isButtonPhotoCelll) {
+           boolean isNodeOnly =  loggingModel.isNodeOnly();
+            if (!isLumDate && !isButtonPhotoCelll && !isNodeOnly) {
                 addStreetLightData("cslp.lum.install.date", dateFormat(edgeNote.getCreatedDateTime()), paramsList);
             }
-            if (!isButtonPhotoCelll) {
+            if (!isButtonPhotoCelll && !isNodeOnly) {
                 addStreetLightData("luminaire.installdate", dateFormat(edgeNote.getCreatedDateTime()), paramsList);
             }
             // As per Mail Conversion - Re: New Release updated on Test Server (.175) - 4.6.18

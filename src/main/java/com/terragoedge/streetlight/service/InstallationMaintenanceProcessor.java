@@ -556,6 +556,10 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
                 logger.info("atlasphysicalpage is empty.");
                 addStreetLightData("location.atlasphysicalpage", edgeNote.getEdgeNotebook().getNotebookName(), paramsList);
             }
+
+            if (fixerQrScanValue != null && !loggingModel.isFixtureQRSame() && fixerQrScanValue.startsWith("Existing")) {
+                loggingModel.setNodeOnly(true);
+            }
             addOtherParams(edgeNote, paramsList, idOnController, utilLocId, isNew, fixerQrScanValue, macAddress, loggingModel);
 
 
@@ -569,7 +573,8 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
                 addStreetLightData(nightRideKey, nightRideValue, paramsList);
             }
             boolean isButtonPhotoCell = loggingModel.isButtonPhotoCell();
-            if (isButtonPhotoCell) {
+            boolean isNodeOnly = loggingModel.isNodeOnly();
+            if (isButtonPhotoCell || isNodeOnly) {
                 addStreetLightData("install.date", dateFormat(edgeNote.getCreatedDateTime()), paramsList);
             }
             if (macAddress != null && !macAddress.trim().isEmpty() && !loggingModel.isMacAddressUsed()) {
@@ -577,7 +582,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
                 if (!isNodeDatePresent && !isButtonPhotoCell) {
                     addStreetLightData("cslp.node.install.date", dateFormat(edgeNote.getCreatedDateTime()), paramsList);
                 }
-                if (!isButtonPhotoCell) {
+                if (!isButtonPhotoCell && !isNodeOnly) {
                     addStreetLightData("install.date", dateFormat(edgeNote.getCreatedDateTime()), paramsList);
                 }
                 addStreetLightData("MacAddress", macAddress, paramsList);
