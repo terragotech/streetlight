@@ -164,9 +164,9 @@ public abstract class AbstractProcessor {
                 installMaintenanceLogModel.setSlvMacaddress(macAddress);
             }else if (keyValue != null && keyValue.equals("userproperty.luminaire.serialnumber")) {
                 luminaireSerialNumber = jsonObject1.get("value").getAsString();
-            }else if (keyValue != null && keyValue.equals("userproperty.cslp.node.install.date")) {
-                nodeInstallDate = jsonObject1.get("value").getAsString();
             }else if (keyValue != null && keyValue.equals("install.date")) {
+                nodeInstallDate = jsonObject1.get("value").getAsString();
+            }else if (keyValue != null && keyValue.equals("userproperty.luminaire.installdate")) {
                 luminaireInstallDate = jsonObject1.get("value").getAsString();
             }else if(keyValue != null && keyValue.equals("userproperty.location.atlasphysicalpage")){
                 atlasPhysicalPage = jsonObject1.get("value").getAsString();

@@ -16,6 +16,27 @@ public class InstallMaintenanceLogModel extends LoggingModel {
 
     private String communicationStatus;
 
+
+    private boolean isInstallOnWrongFix;
+    private boolean isPoleKnockDown;
+
+
+    public boolean isInstallOnWrongFix() {
+        return isInstallOnWrongFix;
+    }
+
+    public void setInstallOnWrongFix(boolean installOnWrongFix) {
+        isInstallOnWrongFix = installOnWrongFix;
+    }
+
+    public boolean isPoleKnockDown() {
+        return isPoleKnockDown;
+    }
+
+    public void setPoleKnockDown(boolean poleKnockDown) {
+        isPoleKnockDown = poleKnockDown;
+    }
+
     public String getCommunicationStatus() {
         return communicationStatus;
     }

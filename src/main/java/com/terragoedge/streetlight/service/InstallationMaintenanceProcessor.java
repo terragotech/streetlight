@@ -232,7 +232,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
                     syncEdgeDates(installMaintenanceLogModel);
                 }
 
-                updatePromotedFormData(edgeNoteCreatedDateTime,installMaintenanceLogModel.getIdOnController());
+                updatePromotedFormData(edgeNoteCreatedDateTime,installMaintenanceLogModel.getIdOnController(),installMaintenanceLogModel);
             }
         }
 
@@ -1200,6 +1200,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
                             connectionDAO.removeEdgeAllMAC(installMaintenanceLogModel.getIdOnController(),macaddress);
                             connectionDAO.removeEdgeAllFixture(installMaintenanceLogModel.getIdOnController());
                         }
+                        installMaintenanceLogModel.setInstallOnWrongFix(true);
                         removeEdgeSLVMacAddress(installMaintenanceLogModel.getIdOnController());
                         connectionDAO.removeAllEdgeFormDates(installMaintenanceLogModel.getIdOnController());
                     } catch (Exception e) {
@@ -1230,6 +1231,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
                         slvInterfaceLogEntity.setStatus(MessageConstants.SUCCESS);
                         removeEdgeSLVMacAddress(installMaintenanceLogModel.getIdOnController());
                         connectionDAO.removeCurrentEdgeFormDates(installMaintenanceLogModel.getIdOnController());
+                        installMaintenanceLogModel.setPoleKnockDown(true);
                     } catch (Exception e) {
                         logger.error("Error in processRemoveAction", e);
                     }
@@ -1257,6 +1259,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
                         clearDeviceValues(installMaintenanceLogModel.getIdOnController(), installMaintenanceLogModel.getControllerSrtId(), "Pole Knocked-Down", installMaintenanceLogModel);
                         slvInterfaceLogEntity.setStatus(MessageConstants.SUCCESS);
                         removeEdgeSLVMacAddress(installMaintenanceLogModel.getIdOnController());
+                        installMaintenanceLogModel.setPoleKnockDown(true);
                         connectionDAO.removeCurrentEdgeFormDates(installMaintenanceLogModel.getIdOnController());
                     } catch (Exception e) {
                         logger.error("Error in processRemoveAction", e);
@@ -1470,6 +1473,8 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
             logger.error("Lum Install Date is empty", e);
         }
 
+
+        logger.info("Edge Dates:"+gson.toJson(edgeFormDatas));
         getSlvSyncDates(installMaintenanceLogModel,edgeSLVDates);
     }
 
@@ -1682,7 +1687,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
      * @param slvDates
      * @param idOnController
      */
-    public void updatePromotedFormData(SLVDates slvDates,String idOnController){
+    public void updatePromotedFormData(SLVDates slvDates,String idOnController,InstallMaintenanceLogModel installMaintenanceLogModel){
         try{
             if(slvDates != null){
                 boolean hasData = false;
@@ -1706,8 +1711,18 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
                 }
 
                 if(hasData){
-                    String requestJson = gson.toJson(promotedFormData);
-                   String edgeSlvUrl = PropertiesReader.getProperties().getProperty("streetlight.edge.slvserver.url");
+                    if(installMaintenanceLogModel.isInstallOnWrongFix()){
+                        promotedFormData.setCslpLumInstallDate("");
+                        promotedFormData.setCslpNodeInstallDate("");
+                        promotedFormData.setInstallDate("");
+                        promotedFormData.setLumInstallDate("");
+                    }else if(installMaintenanceLogModel.isPoleKnockDown()){
+                        promotedFormData.setInstallDate("");
+                        promotedFormData.setLumInstallDate("");
+                    }
+
+                     String requestJson = gson.toJson(promotedFormData);
+                     String edgeSlvUrl = PropertiesReader.getProperties().getProperty("streetlight.edge.slvserver.url");
                      edgeSlvUrl = edgeSlvUrl+"/updatePromotedFormDates";
                     serverCall(edgeSlvUrl,HttpMethod.POST,requestJson);
                 }else{
