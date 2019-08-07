@@ -31,7 +31,7 @@ public class Utils {
 
     public static String installDateFormat(Long dateTime) {
         Date date = new Date(Long.valueOf(dateTime));
-        SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy");
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");//2019-05-24
         dateFormat.setTimeZone(TimeZone.getTimeZone("EST"));
         String dff = dateFormat.format(date);
         return dff;
