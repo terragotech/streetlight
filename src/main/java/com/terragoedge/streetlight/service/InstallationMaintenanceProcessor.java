@@ -1292,24 +1292,24 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
                 addStreetLightData("luminaire.type", "HPS", paramsList);
                 addStreetLightData("DimmingGroupName", "", paramsList);
                 addStreetLightData("installStatus", InstallStatus.To_be_installed.getValue(), paramsList);
+
+                String power = getLuminaireWattage(loggingModel);
+                logger.info("Power:"+power);
+                addStreetLightData("power", power, paramsList);
                 break;
             case "Pole Removed":
                // clearFixtureValues(paramsList);
                 addStreetLightData("install.date", "", paramsList);
                 addStreetLightData("luminaire.installdate", "", paramsList);
                 addStreetLightData("installStatus", InstallStatus.Removed.getValue(), paramsList);
-
                 addStreetLightData("DimmingGroupName", "", paramsList);
-                String power = getLuminaireWattage(loggingModel);
-                addStreetLightData("power", power, paramsList);
+
                 break;
             case "Pole Knocked-Down":
                // clearFixtureValues(paramsList);
                 addStreetLightData("install.date", "", paramsList);
                 addStreetLightData("luminaire.installdate", "", paramsList);
                 addStreetLightData("DimmingGroupName", "", paramsList);
-                power = getLuminaireWattage(loggingModel);
-                addStreetLightData("power", power, paramsList);
                 addStreetLightData("installStatus", InstallStatus.Pole_Knocked_Down.getValue(), paramsList);
                 break;
         }
@@ -1323,6 +1323,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
     }
 
     private String getLuminaireWattage(LoggingModel loggingModel){
+        logger.info("Luminaire Fixturecode :"+loggingModel.getLuminaireFixturecode());
         if(loggingModel.getLuminaireFixturecode() != null && !loggingModel.getLuminaireFixturecode().trim().isEmpty()){
             if(loggingModel.getLuminaireFixturecode().toUpperCase().contains("PIGGY")){
                 return "100";
@@ -1474,7 +1475,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
         }
 
 
-        logger.info("Edge Dates:"+gson.toJson(edgeFormDatas));
+        logger.info("Edge Dates:"+gson.toJson(edgeSLVDates));
         getSlvSyncDates(installMaintenanceLogModel,edgeSLVDates);
     }
 

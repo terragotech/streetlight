@@ -226,6 +226,7 @@ public abstract class AbstractProcessor {
 
         logger.info("SLVDates :" + gson.toJson(slvDates));
         logger.info("SLVDates :" + gson.toJson(slvDatesTemp));
+        logger.info("installMaintenanceLogModel: "+gson.toJson(installMaintenanceLogModel));
         cslpDateHashMap.put(idOnController, slvDates);
         cslpDateHashMap.put(idOnController,slvDatesTemp);
         macHashMap.put(idOnController, macAddress);
