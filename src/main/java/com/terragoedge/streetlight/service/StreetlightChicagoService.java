@@ -445,7 +445,7 @@ public class StreetlightChicagoService extends AbstractProcessor {
             addStreetLightData("location.utillocationid", utilLocId, paramsList);
         }
 
-        addStreetLightData("location.cdotlamptype", "CDOLOCATION_TYPE_STREET", paramsList);
+        addStreetLightData("location.cdotlocationtype", "CDOLOCATION_TYPE_STREET", paramsList);
         addPoleHeightFixtureCodeComedLite(edgeNote,paramsList);
 
         installationMaintenanceProcessor.setDeviceValues(paramsList,slvTransactionLogs);
