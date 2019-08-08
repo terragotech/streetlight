@@ -370,7 +370,7 @@ public class StreetlightChicagoService extends AbstractProcessor {
     }
 
 
-    private void addPoleHeightFixture(EdgeNote edgeNote,List<Object> paramsList ){
+    private void addPoleHeightFixtureCodeComedLite(EdgeNote edgeNote, List<Object> paramsList ){
         String installationFormTemplateGUID = PropertiesReader.getProperties().getProperty("amerescousa.edge.formtemplateGuid");
         String strPoleHeightID = PropertiesReader.getProperties().getProperty("edge.formtemplate.poleheight.id");
         String strFixtureCodeID = PropertiesReader.getProperties().getProperty("edge.formtemplate.fixturecode.id");
@@ -404,6 +404,20 @@ public class StreetlightChicagoService extends AbstractProcessor {
         }
         if(fixtureCode != null) {
             addStreetLightData("luminaire.fixturecode", fixtureCode, paramsList);
+            String comedLiteTypeData = "";
+            if(fixtureCode.equals("Cobrahead Alley"))
+            {
+                comedLiteTypeData = "Alley Light";
+            }
+            else if(fixtureCode.equals("Viaduct"))
+            {
+                comedLiteTypeData = "Viaduct Light";
+            }
+            else
+            {
+                comedLiteTypeData = "Street Light";
+            }
+            addStreetLightData("comed.litetype", comedLiteTypeData, paramsList);
         }
 
     }
@@ -420,13 +434,19 @@ public class StreetlightChicagoService extends AbstractProcessor {
 
         if(edgeNotebook != null) {
             addStreetLightData("location.atlasphysicalpage", edgeNotebook.getNotebookName(), paramsList);
+            addStreetLightData("location.atlaspage", edgeNotebook.getNotebookName(), paramsList);
         }
+
+        addStreetLightData("network.lowvoltagethreshold","108",paramsList);
+        addStreetLightData("network.highvoltagethreshold","264",paramsList);
+        addStreetLightData("location.locationtype","Pole", paramsList);
 
         if (utilLocId != null) {
             addStreetLightData("location.utillocationid", utilLocId, paramsList);
         }
 
-        addPoleHeightFixture(edgeNote,paramsList);
+        addStreetLightData("lamp.cdotlamptype", "CDOLOCATION_TYPE_STREET", paramsList);
+        addPoleHeightFixtureCodeComedLite(edgeNote,paramsList);
 
         installationMaintenanceProcessor.setDeviceValues(paramsList,slvTransactionLogs);
     }
