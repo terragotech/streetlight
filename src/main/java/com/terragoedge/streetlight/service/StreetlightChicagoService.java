@@ -439,7 +439,7 @@ public class StreetlightChicagoService extends AbstractProcessor {
 
         addStreetLightData("network.lowvoltagethreshold","108",paramsList);
         addStreetLightData("network.highvoltagethreshold","264",paramsList);
-        addStreetLightData("location.locationtype","Pole", paramsList);
+        addStreetLightData("location.locationtype","LOCATION_TYPE_POLE", paramsList);
 
         if (utilLocId != null) {
             addStreetLightData("location.utillocationid", utilLocId, paramsList);
