@@ -34,7 +34,15 @@ public class InstallMaintenanceModel {
     private String skippedReason;
     private String reasonforReplacement;
     private String action;
+    private String headToHead;
 
+    public String getHeadToHead() {
+        return headToHead;
+    }
+
+    public void setHeadToHead(String headToHead) {
+        this.headToHead = headToHead;
+    }
 
     public String getRemovalReason() {
         return removalReason;

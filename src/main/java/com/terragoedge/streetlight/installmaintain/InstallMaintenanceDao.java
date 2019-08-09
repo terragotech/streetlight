@@ -273,7 +273,7 @@ public class InstallMaintenanceDao extends UtilDao {
                 CSVWriter.NO_ESCAPE_CHARACTER,
                 CSVWriter.DEFAULT_LINE_END);
         String[] headerRecord = {"Title", "Action", "MAC Address", "User Id", "Fixture QR Scan", "Fixture Type",
-                "Context", "Lat", "Lng", "Date Time", "Is ReplaceNode", "Existing Node MAC Address", "New Node MAC Address", "New Fixture QR Scan", "Reason for Replacement", "Reason for removal", "Resolved Issue", "Resolved Comment", "Scan Existing MAC if wrong", "UnableToRepair Issue", "unableToRepair Comment", "InstallStatus", "Skipped Fixture Reason", "Skipped Reason"};
+                "Context", "Lat", "Lng", "Date Time", "Is ReplaceNode", "Existing Node MAC Address", "New Node MAC Address", "New Fixture QR Scan", "Reason for Replacement", "Reason for removal", "Resolved Issue", "Resolved Comment", "Scan Existing MAC if wrong", "UnableToRepair Issue", "unableToRepair Comment", "InstallStatus", "Skipped Fixture Reason", "Skipped Reason","Head-to-head"};
         csvWriter.writeNext(headerRecord);
         return csvWriter;
     }
@@ -338,7 +338,8 @@ public class InstallMaintenanceDao extends UtilDao {
                     addDoubleQuotes(noteData.getInstallMaintenanceModel().getUnableToRepairComment()),
                     addDoubleQuotes(noteData.getInstallMaintenanceModel().getInstallStatus()),
                     addDoubleQuotes(noteData.getInstallMaintenanceModel().getSkippedFixtureReason()),
-                    addDoubleQuotes(noteData.getInstallMaintenanceModel().getSkippedReason())
+                    addDoubleQuotes(noteData.getInstallMaintenanceModel().getSkippedReason()),
+                    addDoubleQuotes(noteData.getInstallMaintenanceModel().getHeadToHead())
 
             });
         }
@@ -415,6 +416,8 @@ public class InstallMaintenanceDao extends UtilDao {
             List<EdgeFormData> edgeFormDatas = gson.fromJson(formDef, new TypeToken<List<EdgeFormData>>() {
             }.getType());
             String action = getValue(17, edgeFormDatas);
+            String headToHeadStatus = getValue(174,edgeFormDatas);
+            installMaintenanceModel.setHeadToHead(headToHeadStatus);
             logger.info("selected new action:" + action);
             if (action == null) {
                 action = "";
