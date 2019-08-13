@@ -111,7 +111,7 @@
                             <goal>single</goal>
                         </goals>
                         <configuration>
-                            <finalName>slv_staging</finalName>
+                            <finalName>slv_interface</finalName>
 
                             <archive>
                                 <manifest>
