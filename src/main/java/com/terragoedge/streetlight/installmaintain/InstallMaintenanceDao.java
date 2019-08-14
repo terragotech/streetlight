@@ -416,8 +416,6 @@ public class InstallMaintenanceDao extends UtilDao {
             List<EdgeFormData> edgeFormDatas = gson.fromJson(formDef, new TypeToken<List<EdgeFormData>>() {
             }.getType());
             String action = getValue(17, edgeFormDatas);
-            String headToHeadStatus = getValue(174,edgeFormDatas);
-            installMaintenanceModel.setHeadToHead(headToHeadStatus);
             logger.info("selected new action:" + action);
             if (action == null) {
                 action = "";
@@ -451,6 +449,7 @@ public class InstallMaintenanceDao extends UtilDao {
                                 // installMaintenanceModel.setAction("New");
                                 installMaintenanceModel.setMacAddress(setValue(installMaintenanceModel.getMacAddress(), getValue(idsList.getMac(), edgeFormDatas)));
                                 installMaintenanceModel.setFixtureQRScan(setValue(installMaintenanceModel.getFixtureQRScan(), getValue(idsList.getFix(), edgeFormDatas)));
+                                installMaintenanceModel.setHeadToHead(setValue(installMaintenanceModel.getHeadToHead(), getValue(idsList.getHeadToHeadWiring(), edgeFormDatas)));
                                 break;
                             case RN:
                                 // installMaintenanceModel.setAction(Constants.REPLACE_NODE_ONLY);

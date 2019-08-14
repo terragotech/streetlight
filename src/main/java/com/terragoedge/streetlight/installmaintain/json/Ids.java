@@ -15,7 +15,16 @@ public class Ids {
     private int skippedfixtureReason;
     private int unabletorepaircomment;
     private int reasonforreplacement;
+    private int headToHeadWiring;
 
+
+    public int getHeadToHeadWiring() {
+        return headToHeadWiring;
+    }
+
+    public void setHeadToHeadWiring(int headToHeadWiring) {
+        this.headToHeadWiring = headToHeadWiring;
+    }
 
     public int getRemove() {
         return remove;

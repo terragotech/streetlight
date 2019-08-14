@@ -12,7 +12,8 @@
           "mac": 19,
           "fix": 20,
           "exMac": -1,
-          "exFix": -1
+          "exFix": -1,
+          "headToHeadWiring":174
         }
       },
       {

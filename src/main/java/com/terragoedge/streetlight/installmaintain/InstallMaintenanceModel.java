@@ -298,6 +298,9 @@ public class InstallMaintenanceModel {
         if (unableToRepairComment != null && !unableToRepairComment.trim().isEmpty()) {
             return true;
         }
+        if (headToHead != null && !headToHead.trim().isEmpty()) {
+            return true;
+        }
         return false;
     }
 
@@ -332,6 +335,7 @@ public class InstallMaintenanceModel {
         if (o == null || getClass() != o.getClass()) return false;
         InstallMaintenanceModel that = (InstallMaintenanceModel) o;
         return Objects.equals(macAddress, that.macAddress) &&
+                Objects.equals(headToHead, that.headToHead) &&
                 Objects.equals(macAddressRNF, that.macAddressRNF) &&
                 Objects.equals(macAddressRN, that.macAddressRN) &&
                 Objects.equals(fixtureQRScan, that.fixtureQRScan) &&
@@ -349,7 +353,7 @@ public class InstallMaintenanceModel {
 
     @Override
     public int hashCode() {
-        return Objects.hash(macAddress, macAddressRNF, macAddressRN, fixtureQRScan, fixtureQRScanRNF, fixtureQRScanRF, removalReason, resolvedIssue, resolvedComment, existingMacIfWrong, unableToRepairIssue, installStatus);
+        return Objects.hash(macAddress,headToHead, macAddressRNF, macAddressRN, fixtureQRScan, fixtureQRScanRNF, fixtureQRScanRF, removalReason, resolvedIssue, resolvedComment, existingMacIfWrong, unableToRepairIssue, installStatus);
     }
 
     @Override
