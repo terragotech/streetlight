@@ -20,6 +20,15 @@ public class NoteData {
     private String noteGuid;
     private String fixtureType;
     private InstallMaintenanceModel installMaintenanceModel;
+    private String noteBookName;
+
+    public String getNoteBookName() {
+        return noteBookName;
+    }
+
+    public void setNoteBookName(String noteBookName) {
+        this.noteBookName = noteBookName;
+    }
 
     public InstallMaintenanceModel getInstallMaintenanceModel() {
         return installMaintenanceModel;

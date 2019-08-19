@@ -272,7 +272,7 @@ public class InstallMaintenanceDao extends UtilDao {
                 CSVWriter.NO_QUOTE_CHARACTER,
                 CSVWriter.NO_ESCAPE_CHARACTER,
                 CSVWriter.DEFAULT_LINE_END);
-        String[] headerRecord = {"Title", "Action", "MAC Address", "User Id", "Fixture QR Scan", "Fixture Type",
+        String[] headerRecord = {"Title", "Physical atlas page","Action", "MAC Address", "User Id", "Fixture QR Scan", "Fixture Type",
                 "Context", "Lat", "Lng", "Date Time", "Is ReplaceNode", "Existing Node MAC Address", "New Node MAC Address", "New Fixture QR Scan", "Reason for Replacement", "Reason for removal", "Resolved Issue", "Resolved Comment", "Scan Existing MAC if wrong", "UnableToRepair Issue", "unableToRepair Comment", "InstallStatus", "Skipped Fixture Reason", "Skipped Reason","Head-to-head wiring installation"};
         csvWriter.writeNext(headerRecord);
         return csvWriter;
@@ -307,6 +307,7 @@ public class InstallMaintenanceDao extends UtilDao {
 
     private void writeCSV(NoteData noteData, CSVWriter csvWriter, List<DuplicateModel> duplicateModelList) {
         loadNotesData(noteData);
+        loadAtlasPhysicalPage(noteData);
         if ((!noteData.getCreatedBy().equals("admin") && !noteData.getCreatedBy().equals("slvinterface"))) {
             if (noteData.getInstallMaintenanceModel().getRemovalReason() == null) {
                 checkMACDuplicate(noteData, duplicateModelList);
@@ -316,6 +317,7 @@ public class InstallMaintenanceDao extends UtilDao {
             logger.info(noteData);
             csvWriter.writeNext(new String[]{
                     noteData.getTitle(),
+                    noteData.getNoteBookName(),
                     addDoubleQuotes(noteData.getInstallMaintenanceModel().getAction()),
                     addDoubleQuotes(noteData.getInstallMaintenanceModel().getMacAddress()),
                     noteData.getCreatedBy(),
@@ -533,7 +535,26 @@ public class InstallMaintenanceDao extends UtilDao {
         }
     }
 
-
+    public void loadAtlasPhysicalPage(NoteData currentNoteData)
+    {
+        Statement queryStatement = null;
+        ResultSet queryResponse = null;
+        try {
+            queryStatement = connection.createStatement();
+            String sql = "select edgenotebook.notebookname as notebookname from edgenote,edgenotebook where edgenote.noteguid = '" + currentNoteData.getNoteGuid() +"' and edgenote.notebookid=edgenotebook.notebookid;";
+            queryResponse = queryStatement.executeQuery(sql);
+            String noteBookName = "";
+            while (queryResponse.next()) {
+                noteBookName = queryResponse.getString("notebookname");
+            }
+            currentNoteData.setNoteBookName(noteBookName);
+        }catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            closeResultSet(queryResponse);
+            closeStatement(queryStatement);
+        }
+    }
     public void loadNotesData(NoteData currentNoteData) {
         Statement queryStatement = null;
         ResultSet queryResponse = null;
