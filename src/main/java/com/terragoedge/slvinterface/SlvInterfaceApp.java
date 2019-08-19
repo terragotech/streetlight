@@ -17,7 +17,7 @@ public class SlvInterfaceApp {
 //            slvInterfaceService.start();
             while (true) {
                 slvInterfaceService.start();
-                processedDailyReport(slvInterfaceService);
+//                processedDailyReport(slvInterfaceService);
                 if(PropertiesReader.getProperties().getProperty("com.slv.resync").equals("true")){
                     return;
                 }
