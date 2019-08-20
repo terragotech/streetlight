@@ -646,10 +646,13 @@ public abstract class AbstractProcessor {
             if(lumModel != null){
                 slvServerData.setLuminaireModel(lumModel);
             }
+
+            // Fix: ES-257
+            /*
             String lumManu =  addExistingFixtureQRScan(fixtureQrScan,paramsList,3,"Node Only","device.luminaire.manufacturedate");
             if(lumManu != null){
                 slvServerData.setLuminaireManufacturedate(lumBrand);
-            }
+            }*/
              addExistingFixtureQRScan(fixtureQrScan,paramsList,4,"Unknown","power");
 
              addExistingFixtureQRScan(fixtureQrScan,paramsList,5,"LED","luminaire.type");
