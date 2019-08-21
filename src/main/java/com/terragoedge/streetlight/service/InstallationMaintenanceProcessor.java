@@ -1198,8 +1198,9 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
                             logger.info("IdOnController:"+installMaintenanceLogModel.getIdOnController());
                             logger.info("MACAddress:"+macaddress);
                             connectionDAO.removeEdgeAllMAC(installMaintenanceLogModel.getIdOnController(),macaddress);
-                            connectionDAO.removeEdgeAllFixture(installMaintenanceLogModel.getIdOnController());
                         }
+
+                        connectionDAO.removeEdgeAllFixture(installMaintenanceLogModel.getIdOnController());
                         installMaintenanceLogModel.setInstallOnWrongFix(true);
                         removeEdgeSLVMacAddress(installMaintenanceLogModel.getIdOnController());
                         connectionDAO.removeAllEdgeFormDates(installMaintenanceLogModel.getIdOnController());
