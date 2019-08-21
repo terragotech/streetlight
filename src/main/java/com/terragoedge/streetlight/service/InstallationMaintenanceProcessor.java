@@ -689,7 +689,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
             return;
         }
         logger.info("cdotIssue :" + cdotIssue);
-        String controllerStarId = getControllerStrId(edgeFormDatas);
+        String controllerStarId = loggingModel.getControllerSrtId();
         String idOnController = loggingModel.getIdOnController();
         paramsList.add("idOnController=" + idOnController);
         paramsList.add("controllerStrId=" + controllerStarId);
