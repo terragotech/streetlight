@@ -708,15 +708,19 @@ public abstract class AbstractProcessor {
 
 
 
-    public void buildFixtureStreetLightData(String data, List<Object> paramsList, EdgeNote edgeNote, SlvServerData slvServerData, LoggingModel loggingModel)
+    public void buildFixtureStreetLightData(String data, List<Object> paramsList, EdgeNote edgeNote, SlvServerData slvServerData, InstallMaintenanceLogModel loggingModel)
             throws InValidBarCodeException {
         if(data.startsWith("LB60") || data.startsWith("Luminaire Manufacturer")){
+            //ES-265
+            addCustomerNumber(edgeNote,loggingModel,paramsList);
             logger.info("Default Value Parser Starts");
             processFixtureQRScan(data,paramsList,edgeNote,slvServerData,loggingModel);
             return;
         }else if(data.startsWith("Existing")){
             logger.info("Existing Parser Starts");
             processExistingFixtureQRScan(data,paramsList,slvServerData);
+            //ES-265
+            addCustomerNumber(edgeNote,loggingModel,paramsList);
             logger.info("After Existing Parser current value in paramsList are: "+paramsList.toString());
             logger.info("Existing Parser Ends");
         }
@@ -791,6 +795,8 @@ public abstract class AbstractProcessor {
             slvServerData.setDriverPartNumber(fixtureInfo[11]);
             addStreetLightData("ballast.dimmingtype", fixtureInfo[12], paramsList);
             slvServerData.setDimmingType(fixtureInfo[12]);
+            //ES-265
+            addCustomerNumber(edgeNote,loggingModel,paramsList);
 
         } else {
             /*throw new InValidBarCodeException(
@@ -1014,7 +1020,7 @@ public abstract class AbstractProcessor {
      *
      * @throws ReplaceOLCFailedException
      */
-    public void replaceOLC(String controllerStrIdValue, String idOnController, String macAddress, SLVTransactionLogs slvTransactionLogs, SlvInterfaceLogEntity slvInterfaceLogEntity,String atlasPhysicalPage,LoggingModel loggingModel)
+    public void replaceOLC(String controllerStrIdValue, String idOnController, String macAddress, SLVTransactionLogs slvTransactionLogs, SlvInterfaceLogEntity slvInterfaceLogEntity,String atlasPhysicalPage,InstallMaintenanceLogModel loggingModel,EdgeNote edgeNote)
             throws ReplaceOLCFailedException {
 
         try {
@@ -1048,6 +1054,7 @@ public abstract class AbstractProcessor {
                 if(macAddress != null && !macAddress.trim().isEmpty()){
                     createEdgeAllMac(idOnController, macAddress);
                     syncMacAddress2Edge(idOnController,macAddress,atlasPhysicalPage);
+                    syncAccountNumber(paramsList,loggingModel,edgeNote,Utils.UN_SUCCESSFUL,macAddress);
                 }
                 throw new ReplaceOLCFailedException(value);
 
@@ -1057,6 +1064,7 @@ public abstract class AbstractProcessor {
                     slvInterfaceLogEntity.setStatus(MessageConstants.SUCCESS);
                     createEdgeAllMac(idOnController, macAddress);
                     syncMacAddress2Edge(idOnController,macAddress,atlasPhysicalPage);
+                    syncAccountNumber(paramsList,loggingModel,edgeNote,Utils.SUCCESSFUL,macAddress);
                     logger.info("Clear device process starts.");
                     logger.info("Clear device process End.");
                 }
@@ -1460,21 +1468,25 @@ public boolean checkExistingMacAddressValid(EdgeNote edgeNote, InstallMaintenanc
         addStreetLightData("account.number", stringBuilder.toString(), paramsList);
     }
 
+    //ES-265
+    private void addCustomerNumber(EdgeNote edgeNote,InstallMaintenanceLogModel installMaintenanceLogModel,List paramsList){
+        if(installMaintenanceLogModel.isReplace()){
+            StringBuilder stringBuilder = new StringBuilder();
+            stringBuilder.append("Last Modified By");
+            stringBuilder.append(" - ");
+            stringBuilder.append(edgeNote.getCreatedBy());
+            stringBuilder.append(" - ");
+            stringBuilder.append(dateFormat(edgeNote.getCreatedDateTime()));
+            addStreetLightData("customer.number", stringBuilder.toString(), paramsList);
+        }
 
-    private void addCustomerNumber(EdgeNote edgeNote,List paramsList){
-        StringBuilder stringBuilder = new StringBuilder();
-        stringBuilder.append("Last Modified By");
-        stringBuilder.append(" - ");
-        stringBuilder.append(edgeNote.getCreatedBy());
-        stringBuilder.append(" - ");
-        stringBuilder.append(dateFormat(edgeNote.getCreatedDateTime()));
-        addStreetLightData("customer.number", stringBuilder.toString(), paramsList);
 
     }
 
 
-    public void syncAccountNumber(List<Object> paramsList,InstallMaintenanceLogModel installMaintenanceLogModel){
-        if(paramsList.size() > 0){
+    public void syncAccountNumber(List<Object> paramsList,InstallMaintenanceLogModel installMaintenanceLogModel,EdgeNote edgeNote,String status,String macAddress){
+        if(paramsList.size() > 0 && installMaintenanceLogModel.isReplace()){
+            addAccountNumber(edgeNote,status,macAddress,paramsList);
             logger.info("Date value is Present. Syncing Date value....");
             String idOnController = installMaintenanceLogModel.getIdOnController();
             paramsList.add("idOnController=" + idOnController);
