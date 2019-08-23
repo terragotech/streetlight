@@ -4,6 +4,10 @@ import com.terragoedge.streetlight.enumeration.FixtureCodeType;
 
 public class Utils {
 
+
+    public static final String SUCCESSFUL = "Successful";
+    public static final String UN_SUCCESSFUL = "Unsuccessful";
+
     public static String getAtlasPage(String atlasPage){
         atlasPage = atlasPage.replaceAll("-","");
         if(atlasPage.length() > 4){

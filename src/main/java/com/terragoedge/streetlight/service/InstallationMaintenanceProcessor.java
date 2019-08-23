@@ -2,6 +2,7 @@ package com.terragoedge.streetlight.service;
 
 import com.terragoedge.edgeserver.*;
 import com.terragoedge.streetlight.PropertiesReader;
+import com.terragoedge.streetlight.Utils;
 import com.terragoedge.streetlight.enumeration.InstallStatus;
 import com.terragoedge.streetlight.enumeration.DateType;
 import com.terragoedge.streetlight.exception.*;
@@ -175,7 +176,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
             noteCreatedDateTime = String.valueOf(edgeNote.getCreatedDateTime());
             logger.info("Processing Form :" + formData.getFormTemplateGuid());
             if (formData.getFormTemplateGuid().equals(INSTATALLATION_AND_MAINTENANCE_GUID) || formData.getFormTemplateGuid().equals("fa47c708-fb82-4877-938c-992e870ae2a4") || formData.getFormTemplateGuid().equals("c8acc150-6228-4a27-bc7e-0fabea0e2b93")) {
-
+                installMaintenanceLogModel.setReplace(false);
                 isInstallForm = true;
 
                 logger.info("Install  Form  is present.");
@@ -206,6 +207,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
                                 break;
                             case "Repairs & Outages":
                                 installMaintenanceLogModel.setActionNew(false);
+                                installMaintenanceLogModel.setReplace(true);
                                 slvInterfaceLogEntity.setSelectedAction("Repairs & Outages");
                                 repairAndOutage(edgeFormDatas, edgeNote, installMaintenanceLogModel, utilLocId, nightRideKey, formatedValueNR, formatedValueNR, slvInterfaceLogEntity);
                                 installMaintenanceLogModel.setReplacedDate(edgeNote.getCreatedDateTime());
@@ -1019,11 +1021,19 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
 
             String controllerStrIdValue = loggingModel.getControllerSrtId();
 
-            boolean isMatched = checkExistingMacAddressValid(edgeNote,loggingModel);
-            if(!isMatched){
-                return;
-            }
+
             if (newNodeMacAddress != null && !newNodeMacAddress.isEmpty()) {
+                // Check Existing MAC Address matches with SLV or not.
+                boolean isMatched = checkExistingMacAddressValid(edgeNote,loggingModel);
+                if(!isMatched){
+                    // If not, set Account Number value as Unsuccessful.
+                    List<Object> paramsList = new ArrayList<>();
+                    addAccountNumber(edgeNote, Utils.UN_SUCCESSFUL,newNodeMacAddress,paramsList);
+                    syncAccountNumber(paramsList,loggingModel);
+                    return;
+                }
+
+
                 try {
                     checkMacAddressExists(newNodeMacAddress, idOnController, nightRideKey, nightRideValue, loggingModel, slvInterfaceLogEntity);
                 } catch (QRCodeAlreadyUsedException e1) {

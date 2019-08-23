@@ -14,12 +14,23 @@ public class InstallMaintenanceLogModel extends LoggingModel {
 
     private boolean isActionNew;
 
+
+    private boolean isReplace;
+
     private String communicationStatus;
 
 
     private boolean isInstallOnWrongFix;
     private boolean isPoleKnockDown;
 
+
+    public boolean isReplace() {
+        return isReplace;
+    }
+
+    public void setReplace(boolean replace) {
+        isReplace = replace;
+    }
 
     public boolean isInstallOnWrongFix() {
         return isInstallOnWrongFix;

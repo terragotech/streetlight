@@ -1014,7 +1014,7 @@ public abstract class AbstractProcessor {
      *
      * @throws ReplaceOLCFailedException
      */
-    public void replaceOLC(String controllerStrIdValue, String idOnController, String macAddress, SLVTransactionLogs slvTransactionLogs, SlvInterfaceLogEntity slvInterfaceLogEntity,String atlasPhysicalPage)
+    public void replaceOLC(String controllerStrIdValue, String idOnController, String macAddress, SLVTransactionLogs slvTransactionLogs, SlvInterfaceLogEntity slvInterfaceLogEntity,String atlasPhysicalPage,LoggingModel loggingModel)
             throws ReplaceOLCFailedException {
 
         try {
@@ -1443,6 +1443,49 @@ public boolean checkExistingMacAddressValid(EdgeNote edgeNote, InstallMaintenanc
 
             restService.slv2Edge("/rest/validation/updateSLVSyncedMAC", HttpMethod.GET,params);
         }
+    }
+
+
+    public void addAccountNumber(EdgeNote edgeNote,String status,String macAddress,List paramsList){
+        StringBuilder stringBuilder = new StringBuilder();
+        stringBuilder.append("Last Modified By");
+        stringBuilder.append(" - ");
+        stringBuilder.append(edgeNote.getCreatedBy());
+        stringBuilder.append(" - ");
+        stringBuilder.append(dateFormat(edgeNote.getCreatedDateTime()));
+        stringBuilder.append(" - ");
+        stringBuilder.append(status);
+        stringBuilder.append(" - ");
+        stringBuilder.append(macAddress);
+        addStreetLightData("account.number", stringBuilder.toString(), paramsList);
+    }
+
+
+    private void addCustomerNumber(EdgeNote edgeNote,List paramsList){
+        StringBuilder stringBuilder = new StringBuilder();
+        stringBuilder.append("Last Modified By");
+        stringBuilder.append(" - ");
+        stringBuilder.append(edgeNote.getCreatedBy());
+        stringBuilder.append(" - ");
+        stringBuilder.append(dateFormat(edgeNote.getCreatedDateTime()));
+        addStreetLightData("customer.number", stringBuilder.toString(), paramsList);
+
+    }
+
+
+    public void syncAccountNumber(List<Object> paramsList,InstallMaintenanceLogModel installMaintenanceLogModel){
+        if(paramsList.size() > 0){
+            logger.info("Date value is Present. Syncing Date value....");
+            String idOnController = installMaintenanceLogModel.getIdOnController();
+            paramsList.add("idOnController=" + idOnController);
+            paramsList.add("controllerStrId=" + installMaintenanceLogModel.getControllerSrtId());
+            SLVTransactionLogs slvTransactionLogs = getSLVTransactionLogs(installMaintenanceLogModel);
+            int errorCode = setDeviceValues(paramsList, slvTransactionLogs);
+            logger.info("Error Code:"+errorCode);
+        }else{
+            logger.info("No Date value is present");
+        }
+
     }
 
 }
