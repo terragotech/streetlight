@@ -1,15 +1,15 @@
 package com.terrago.jsoncsvconvertor;
 
 public class Data {
-    private String id;
+    private int id;
     private String label;
     private String value;
 
-    public String getId() {
+    public int getId() {
         return id;
     }
 
-    public void setId(String id) {
+    public void setId(int id) {
         this.id = id;
     }
 
@@ -22,6 +22,10 @@ public class Data {
     }
 
     public String getValue() {
+        if(value != null){
+            value = value.replace(label+"#","");
+        }
+
         return value;
     }
 

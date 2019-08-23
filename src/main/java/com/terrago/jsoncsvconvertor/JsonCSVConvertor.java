@@ -1,7 +1,11 @@
 package com.terrago.jsoncsvconvertor;
 
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonParser;
 import com.google.gson.reflect.TypeToken;
+import com.opencsv.CSVReader;
 import com.opencsv.CSVWriter;
 import org.apache.commons.io.IOUtils;
 
@@ -11,7 +15,88 @@ import java.util.List;
 
 public class JsonCSVConvertor {
 
-    public static void main(String[] r) throws Exception {
+    public static void main(String[] r)throws Exception{
+        List<String> dataInList = IOUtils.readLines(new FileInputStream("/Users/Nithish/Documents/office/data-fix/Aug23/comed_data.csv"));
+        Gson gson = new GsonBuilder()
+                .setLenient()
+                .create();
+        ;
+        List<EdgeData> edgeDataList = new ArrayList<>();
+        int  i = 0;
+        for(String dataRaw : dataInList){
+            //System.out.println(dataRaw);
+            EdgeData edgeData = new EdgeData();
+            edgeDataList.add(edgeData);
+            //CSVReader reader = new CSVReader(new StringReader(dataRaw));
+            String[] line = dataRaw.split("::");
+
+           // while ((line = reader.readNext()) != null) {
+                i = i +1;
+                System.out.println(i);
+
+                String noteguid = line[0];
+                String data = line[1].substring(1,line[1].length() - 1);
+            System.out.println(data);
+           // JsonParser parser = new JsonParser();
+
+           //JsonArray jsonArray =  (JsonArray) parser.parse(data);
+                List<Data> dataList = gson.fromJson(data, new TypeToken<List<Data>>() {
+                }.getType());
+
+            edgeData.setTitle(noteguid);
+
+                for (Data data1 : dataList) {
+                    switch (data1.getId()+"") {
+                        case "121":
+                            if(edgeData.getMacAddress() != null){
+                                edgeData.setMacAddress(edgeData.getMacAddress() +","+data1.getValue());
+                            }else{
+                                edgeData.setMacAddress(data1.getValue());
+                            }
+
+                            break;
+                        case "27":
+
+                            if(edgeData.getMacAddressRNF() != null){
+                                edgeData.setMacAddressRNF(edgeData.getMacAddressRNF() +","+data1.getValue());
+                            }else{
+                                edgeData.setMacAddressRNF(data1.getValue());
+                            }
+                            break;
+
+                        case "99":
+
+                            if(edgeData.getMacAddressRN() != null){
+                                edgeData.setMacAddressRN(edgeData.getMacAddressRN() +","+data1.getValue());
+                            }else{
+                                edgeData.setMacAddressRN(data1.getValue());
+                            }
+
+                            break;
+
+                        case "1":
+                            edgeData.setAction(data1.getValue());
+                            break;
+
+                        case "title":
+
+                            break;
+
+                    }
+                }
+
+
+           // }
+        }
+
+
+
+
+
+        generateInstallCSVFile(edgeDataList,"/Users/Nithish/Documents/office/data-fix/Aug23/res_1.csv");
+    }
+
+    public static void main_1(String[] r) throws Exception {
        List<String> dataInList = IOUtils.readLines(new FileInputStream("/Users/Nithish/Documents/office/data-fix/Aug21/edge_current_data_aug_21.csv"));
         List<EdgeData> edgeDataList = new ArrayList<>();
        for(String data : dataInList){
@@ -22,12 +107,17 @@ public class JsonCSVConvertor {
            EdgeData edgeData = new EdgeData();
            edgeDataList.add(edgeData);
            for (Data data1 : dataList) {
-               switch (data1.getId()) {
+               switch (data1.getId()+"") {
                    case "19":
                        edgeData.setMacAddress(data1.getValue());
                        break;
                    case "26":
-                       edgeData.setMacAddressRNF(data1.getValue());
+                       if(edgeData.getMacAddressRNF() != null){
+                           edgeData.setMacAddressRNF(edgeData.getMacAddressRNF() +","+data1.getValue());
+                       }else{
+                           edgeData.setMacAddressRNF(data1.getValue());
+                       }
+
                        break;
                    case "36":
                        edgeData.setExMacAddressRNF(data1.getValue());
@@ -73,16 +163,13 @@ public class JsonCSVConvertor {
     public static List<String[]> toStringInstallReportArray(List<EdgeData> installtionReportJsons) {
         List<String[]> records = new ArrayList<String[]>();
         //add header record
-        records.add(new String[]{"Title", "macAddress","exMacAddressRNF","macAddressRNF","exMacAddressRN","macAddressRN","CreateDate","Action"});
+        records.add(new String[]{"Title", "macAddress","macAddressRNF","macAddressRN","Action"});
         for (EdgeData edgeData : installtionReportJsons) {
             records.add(new String[]{
                     nullCheck(edgeData.getTitle()),
                     nullCheck(edgeData.getMacAddress()),
-                    nullCheck(edgeData.getExMacAddressRNF()),
                     nullCheck(edgeData.getMacAddressRNF()),
-                    nullCheck(edgeData.getExMacAddressRN()),
                     nullCheck(edgeData.getMacAddressRN()),
-                    edgeData.getCreateDateTime()+"",
                     nullCheck(edgeData.getAction())
             });
         }
