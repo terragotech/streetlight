@@ -351,7 +351,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
         } else  if(installStatusValue != null && installStatusValue.equals("Could not complete")){
             DeviceAttributes deviceAttributes = getDeviceValues(loggingModel);
             String installStatus = properties.getProperty("could_note_complete_install_status");
-            if (deviceAttributes.getInstallStatus().equals(installStatus)) {
+            if (deviceAttributes != null && deviceAttributes.getInstallStatus() != null && deviceAttributes.getInstallStatus().equals(installStatus)) {
                 logger.info("Current edge and SLV Install Status is same (Could not be installed)");
                 loggingModel.setCouldNotComplete(true);
             }
@@ -793,7 +793,11 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
                         return;
                     }
                 }
+                logger.info("Before addUserToLuminaireSerialNumber nightRideValue:"+nightRideValue);
+                logger.info("Start of addUserToLuminaireSerialNumber");
                 nightRideValue = addUserToLuminaireSerialNumber(nightRideValue,edgeNote.getCreatedBy());
+                logger.info("End of addUserToLuminaireSerialNumber");
+                logger.info("After addUserToLuminaireSerialNumber nightRideValue:"+nightRideValue);
                 int errorCode = sync2SlvInstallStatus(loggingModel.getIdOnController(), loggingModel.getControllerSrtId(), loggingModel, nightRideKey, nightRideValue);
                 if (errorCode != 0) {
                     loggingModel.setErrorDetails("Error while updating Could not complete install status.Corresponding Error code :" + errorCode);
@@ -1111,6 +1115,14 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
             logger.info("Existing MAC Address match result:"+isMatched);
             if(!isMatched){
                 logger.info("Existing MAC Address not match with SLV. So Current note is skipped.");
+
+                if(!isMatched){
+                    logger.info("Existing MAC Address not Matched with SLV.");
+                    // If not, set Account Number value as Unsuccessful.
+                    List<Object> paramsList = new ArrayList<>();
+                    syncAccountNumber(paramsList,loggingModel,edgeNote, Utils.UN_SUCCESSFUL,newNodeMacAddress);
+                }
+
                 return;
             }
 

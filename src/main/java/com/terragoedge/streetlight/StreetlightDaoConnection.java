@@ -8,34 +8,35 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public class StreetlightDaoConnection {
-	private static StreetlightDaoConnection dbInstance;
-	private static Connection connection;
+    private static StreetlightDaoConnection dbInstance;
+    private static Connection connection;
 
-	private StreetlightDaoConnection() {
-		// private constructor //
-	}
+    private StreetlightDaoConnection() {
+        // private constructor //
+    }
 
-	public static StreetlightDaoConnection getInstance() {
-		if (dbInstance == null) {
-			dbInstance = new StreetlightDaoConnection();
-		}
-		return dbInstance;
-	}
+    public static StreetlightDaoConnection getInstance() {
+        if (dbInstance == null) {
+            dbInstance = new StreetlightDaoConnection();
+        }
+        return dbInstance;
+    }
 
-	public Connection getConnection() {
-		if (connection == null) {
-			try {
-				String host = "jdbc:postgresql://localhost:5432/terragoedge";
-				//String host = "jdbc:postgresql://localhost:5432/terragoedge_staging";
-				String username = "postgres";
-				String password = "password";
-				connection = DriverManager.getConnection(host, username, password);
-			} catch (SQLException ex) {
-				Logger.getLogger(StreetlightDaoConnection.class.getName()).log(Level.SEVERE, null, ex);
-			}
-		}
+    public Connection getConnection() {
+        if (connection == null) {
+            try {
+                String dbUrl = PropertiesReader.getProperties().getProperty("edge.db.url");
+                //String host = "jdbc:postgresql://localhost:5432/terragoedge";
+                //String host = "jdbc:postgresql://localhost:5432/terragoedge_staging";
+                String username = "postgres";
+                String password = "password";
+                connection = DriverManager.getConnection(dbUrl, username, password);
+            } catch (SQLException ex) {
+                Logger.getLogger(StreetlightDaoConnection.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
 
-		return connection;
+        return connection;
 
-	}
+    }
 }

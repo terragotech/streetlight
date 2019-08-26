@@ -478,7 +478,7 @@ public abstract class AbstractProcessor {
             logger.info("Fixture QR scan not empty and set cslp.lum.install.date" + dateFormat(edgeNote.getCreatedDateTime()));
             boolean isLumDate = isLumDatePresent(idOnContoller);
             boolean isButtonPhotoCelll = loggingModel.isButtonPhotoCell();
-           boolean isNodeOnly =  loggingModel.isNodeOnly();
+            boolean isNodeOnly =  loggingModel.isNodeOnly();
             if (!isLumDate && !isButtonPhotoCelll && !isNodeOnly) {
                 addStreetLightData("cslp.lum.install.date", dateFormat(edgeNote.getCreatedDateTime()), paramsList);
             }
@@ -1054,7 +1054,8 @@ public abstract class AbstractProcessor {
                 if(macAddress != null && !macAddress.trim().isEmpty()){
                     createEdgeAllMac(idOnController, macAddress);
                     syncMacAddress2Edge(idOnController,macAddress,atlasPhysicalPage);
-                    syncAccountNumber(paramsList,loggingModel,edgeNote,Utils.UN_SUCCESSFUL,macAddress);
+                    paramsList = new ArrayList<>();
+                    syncAccountNumber(paramsList,loggingModel,edgeNote,Utils.SUCCESSFUL,macAddress);
                     syncCustomerName(loggingModel);// TODO This for testing
                 }
                 throw new ReplaceOLCFailedException(value);
@@ -1065,6 +1066,7 @@ public abstract class AbstractProcessor {
                     slvInterfaceLogEntity.setStatus(MessageConstants.SUCCESS);
                     createEdgeAllMac(idOnController, macAddress);
                     syncMacAddress2Edge(idOnController,macAddress,atlasPhysicalPage);
+                    paramsList = new ArrayList<>();
                     syncAccountNumber(paramsList,loggingModel,edgeNote,Utils.SUCCESSFUL,macAddress);
                     syncCustomerName(loggingModel);
                 }
@@ -1467,7 +1469,7 @@ public boolean checkExistingMacAddressValid(EdgeNote edgeNote, InstallMaintenanc
         stringBuilder.append(status);
         stringBuilder.append(" - ");
         stringBuilder.append(macAddress);
-        addStreetLightData("account.number", stringBuilder.toString(), paramsList);
+        addStreetLightData("client.accountnumber", stringBuilder.toString(), paramsList);
         logger.info("End of addAccountNumber");
     }
 
@@ -1481,7 +1483,7 @@ public boolean checkExistingMacAddressValid(EdgeNote edgeNote, InstallMaintenanc
             stringBuilder.append(edgeNote.getCreatedBy());
             stringBuilder.append(" - ");
             stringBuilder.append(dateFormat(edgeNote.getCreatedDateTime()));
-            addStreetLightData("customer.number", stringBuilder.toString(), paramsList);
+            addStreetLightData("client.number", stringBuilder.toString(), paramsList);
             logger.info("Customer Number Added.");
         }
         logger.info("End of addCustomerNumber Method.");
@@ -1492,7 +1494,7 @@ public boolean checkExistingMacAddressValid(EdgeNote edgeNote, InstallMaintenanc
 
     public void syncAccountNumber(List<Object> paramsList,InstallMaintenanceLogModel installMaintenanceLogModel,EdgeNote edgeNote,String status,String macAddress){
         logger.info("Start of syncAccountNumber");
-        if(paramsList.size() > 0 && installMaintenanceLogModel.isReplace()){
+        if(installMaintenanceLogModel.isReplace()){
             logger.info("AccountNumber values going to sync with SLV.");
             addAccountNumber(edgeNote,status,macAddress,paramsList);
             String idOnController = installMaintenanceLogModel.getIdOnController();
@@ -1531,7 +1533,7 @@ public boolean checkExistingMacAddressValid(EdgeNote edgeNote, InstallMaintenanc
     public void addCustomerName(InstallMaintenanceLogModel installMaintenanceLogModel, List<Object> paramsList){
         logger.info("Start of addCustomerName Method.");
         if(installMaintenanceLogModel.isActionNew() && installMaintenanceLogModel.isAmerescoUser()){
-            addStreetLightData("customer.name", "Ameresco Install", paramsList);
+            addStreetLightData("client.name", "Ameresco Install", paramsList);
             logger.info("Customer Name Added.");
         }
         logger.info("End of addCustomerName Method.");
