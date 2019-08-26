@@ -1026,6 +1026,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
                 // Check Existing MAC Address matches with SLV or not.
                 boolean isMatched = checkExistingMacAddressValid(edgeNote,loggingModel);
                 if(!isMatched){
+                    logger.info("Existing MAC Address not Matched with SLV.");
                     // If not, set Account Number value as Unsuccessful.
                     List<Object> paramsList = new ArrayList<>();
                     syncAccountNumber(paramsList,loggingModel,edgeNote, Utils.UN_SUCCESSFUL,newNodeMacAddress);
@@ -1366,49 +1367,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
         addStreetLightData("ballast.dimmingtype", "", paramsList);
     }
 
-    public void reSync(String noteGuid, String accessToken, boolean isResync, String utilLocId, boolean isFromRemoveAction) throws Exception {
-        logger.info("resync method called ");
-        // Get Edge Server Url from properties
-        String url = PropertiesReader.getProperties().getProperty("streetlight.edge.url.main");
 
-        url = url + PropertiesReader.getProperties().getProperty("streetlight.edge.url.notes.get");
-
-        url = url + "/" + noteGuid;
-        logger.info("Given url is :" + url);
-        // Get NoteList from edgeserver
-        ResponseEntity<String> responseEntity = restService.getRequest(url, false, accessToken);
-
-        // Process only response code as success
-        if (responseEntity.getStatusCode().is2xxSuccessful()) {
-            // Get Response String
-            String notesData = responseEntity.getBody();
-            logger.info("rest service data:" + notesData);
-            EdgeNote edgeNote = gson.fromJson(notesData, EdgeNote.class);
-            //   if(!edgeNote.getCreatedBy().contains("admin")){
-            SlvInterfaceLogEntity slvInterfaceLogEntity = new SlvInterfaceLogEntity();
-            InstallMaintenanceLogModel installMaintenanceLogModel = new InstallMaintenanceLogModel();
-            slvInterfaceLogEntity.setCreateddatetime(System.currentTimeMillis());
-            slvInterfaceLogEntity.setResync(true);
-            installMaintenanceLogModel.setLastSyncTime(edgeNote.getSyncTime());
-            installMaintenanceLogModel.setProcessedNoteId(edgeNote.getNoteGuid());
-            installMaintenanceLogModel.setNoteName(edgeNote.getTitle());
-            installMaintenanceLogModel.setParentNoteId(edgeNote.getBaseParentNoteId());
-            installMaintenanceLogModel.setCreatedDatetime(String.valueOf(edgeNote.getCreatedDateTime()));
-            loadDefaultVal(edgeNote, installMaintenanceLogModel);
-            loadDeviceValues(installMaintenanceLogModel.getIdOnController(), installMaintenanceLogModel);
-            logger.info("going to call processnew action");
-            boolean isDroppedPinWorkFlow = isDroppedPinNote(edgeNote,droppedPinTag);
-            processNewAction(edgeNote, installMaintenanceLogModel, isResync, utilLocId, slvInterfaceLogEntity);
-
-            //updateSlvStatusToEdge(installMaintenanceLogModel, edgeNote);
-            LoggingModel loggingModel = installMaintenanceLogModel;
-            streetlightDao.insertProcessedNotes(loggingModel, installMaintenanceLogModel);
-            if (isFromRemoveAction) {
-                connectionDAO.deleteDuplicateMacAddress(noteGuid);
-            }
-            //  }
-        }
-    }
 
 
     private void loadDateValFromEdge(List<EdgeFormData> edgeFormDatas,InstallMaintenanceLogModel installMaintenanceLogModel){

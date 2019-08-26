@@ -1055,6 +1055,7 @@ public abstract class AbstractProcessor {
                     createEdgeAllMac(idOnController, macAddress);
                     syncMacAddress2Edge(idOnController,macAddress,atlasPhysicalPage);
                     syncAccountNumber(paramsList,loggingModel,edgeNote,Utils.UN_SUCCESSFUL,macAddress);
+                    syncCustomerName(loggingModel);// TODO This for testing
                 }
                 throw new ReplaceOLCFailedException(value);
 
@@ -1065,8 +1066,7 @@ public abstract class AbstractProcessor {
                     createEdgeAllMac(idOnController, macAddress);
                     syncMacAddress2Edge(idOnController,macAddress,atlasPhysicalPage);
                     syncAccountNumber(paramsList,loggingModel,edgeNote,Utils.SUCCESSFUL,macAddress);
-                    logger.info("Clear device process starts.");
-                    logger.info("Clear device process End.");
+                    syncCustomerName(loggingModel);
                 }
 
             }
@@ -1096,12 +1096,13 @@ public abstract class AbstractProcessor {
     }
 
 
-    protected void loadDefaultVal(EdgeNote edgeNote, InstallMaintenanceLogModel loggingModel) {
+    protected void loadDefaultVal(EdgeNote edgeNote, InstallMaintenanceLogModel loggingModel,String accessToken) {
         loggingModel.setIdOnController(edgeNote.getTitle());
         String controllerStrId = properties.getProperty("streetlight.slv.controllerstrid");
         loggingModel.setControllerSrtId(controllerStrId);
         DatesHolder datesHolder = new DatesHolder();
         loggingModel.setDatesHolder(datesHolder);
+        checkAmerescoUser(accessToken,loggingModel,edgeNote.getCreatedBy());
     }
 
     private void sendNightRideToSLV(String idOnController, String nightRideKey, String nightRideValue, LoggingModel loggingModel) {
@@ -1455,6 +1456,7 @@ public boolean checkExistingMacAddressValid(EdgeNote edgeNote, InstallMaintenanc
 
 
     public void addAccountNumber(EdgeNote edgeNote,String status,String macAddress,List paramsList){
+        logger.info("Start of addAccountNumber");
         StringBuilder stringBuilder = new StringBuilder();
         stringBuilder.append("Last Modified By");
         stringBuilder.append(" - ");
@@ -1466,10 +1468,12 @@ public boolean checkExistingMacAddressValid(EdgeNote edgeNote, InstallMaintenanc
         stringBuilder.append(" - ");
         stringBuilder.append(macAddress);
         addStreetLightData("account.number", stringBuilder.toString(), paramsList);
+        logger.info("End of addAccountNumber");
     }
 
     //ES-265
     private void addCustomerNumber(EdgeNote edgeNote,InstallMaintenanceLogModel installMaintenanceLogModel,List paramsList){
+        logger.info("Start of addCustomerNumber Method.");
         if(installMaintenanceLogModel.isReplace()){
             StringBuilder stringBuilder = new StringBuilder();
             stringBuilder.append("Last Modified By");
@@ -1478,16 +1482,19 @@ public boolean checkExistingMacAddressValid(EdgeNote edgeNote, InstallMaintenanc
             stringBuilder.append(" - ");
             stringBuilder.append(dateFormat(edgeNote.getCreatedDateTime()));
             addStreetLightData("customer.number", stringBuilder.toString(), paramsList);
+            logger.info("Customer Number Added.");
         }
-
+        logger.info("End of addCustomerNumber Method.");
+        addCustomerName(installMaintenanceLogModel,paramsList);
 
     }
 
 
     public void syncAccountNumber(List<Object> paramsList,InstallMaintenanceLogModel installMaintenanceLogModel,EdgeNote edgeNote,String status,String macAddress){
+        logger.info("Start of syncAccountNumber");
         if(paramsList.size() > 0 && installMaintenanceLogModel.isReplace()){
+            logger.info("AccountNumber values going to sync with SLV.");
             addAccountNumber(edgeNote,status,macAddress,paramsList);
-            logger.info("Date value is Present. Syncing Date value....");
             String idOnController = installMaintenanceLogModel.getIdOnController();
             paramsList.add("idOnController=" + idOnController);
             paramsList.add("controllerStrId=" + installMaintenanceLogModel.getControllerSrtId());
@@ -1495,9 +1502,63 @@ public boolean checkExistingMacAddressValid(EdgeNote edgeNote, InstallMaintenanc
             int errorCode = setDeviceValues(paramsList, slvTransactionLogs);
             logger.info("Error Code:"+errorCode);
         }else{
-            logger.info("No Date value is present");
+            logger.info("syncAccountNumber Not Called.");
         }
+        logger.info("End of syncAccountNumber");
+    }
 
+
+
+    public void syncCustomerName(InstallMaintenanceLogModel installMaintenanceLogModel){
+        logger.info("Start of syncCustomerName");
+        if(installMaintenanceLogModel.isActionNew() && installMaintenanceLogModel.isAmerescoUser()){
+            List<Object> paramsList = new ArrayList<>();
+            String idOnController = installMaintenanceLogModel.getIdOnController();
+            paramsList.add("idOnController=" + idOnController);
+            addCustomerName(installMaintenanceLogModel,paramsList);
+            paramsList.add("controllerStrId=" + installMaintenanceLogModel.getControllerSrtId());
+            SLVTransactionLogs slvTransactionLogs = getSLVTransactionLogs(installMaintenanceLogModel);
+            int errorCode = setDeviceValues(paramsList, slvTransactionLogs);
+            logger.info("Error Code:"+errorCode);
+        }else{
+            logger.info("syncCustomerName Not Called.");
+        }
+        logger.info("End of syncCustomerName");
+
+    }
+
+
+    public void addCustomerName(InstallMaintenanceLogModel installMaintenanceLogModel, List<Object> paramsList){
+        logger.info("Start of addCustomerName Method.");
+        if(installMaintenanceLogModel.isActionNew() && installMaintenanceLogModel.isAmerescoUser()){
+            addStreetLightData("customer.name", "Ameresco Install", paramsList);
+            logger.info("Customer Name Added.");
+        }
+        logger.info("End of addCustomerName Method.");
+    }
+
+
+    public void checkAmerescoUser(String accessToken, InstallMaintenanceLogModel installMaintenanceLogModel, String userName) {
+        logger.info("Start of checkAmerescoUser");
+        String url = PropertiesReader.getProperties().getProperty("streetlight.edge.url.main");
+        url = url + PropertiesReader.getProperties().getProperty("com.edge.url.get.groupids");
+        url = url + "?userName=" + userName;
+        logger.info("Given url is :" + url);
+        ResponseEntity<String> responseEntity = restService.getRequest(url, true, accessToken);
+        logger.info("Response Code:"+responseEntity.getStatusCodeValue());
+        if (responseEntity.getStatusCodeValue() == HttpStatus.OK.value()) {
+            String reponseData = responseEntity.getBody();
+            JsonArray groupJsonArray = jsonParser.parse(reponseData).getAsJsonArray();
+            String amerescoGroups = PropertiesReader.getProperties().getProperty("com.edge.ameresco.groupids");
+            logger.info("Ameresco Groups:"+amerescoGroups);
+            for (JsonElement groupJsonElement : groupJsonArray) {
+                if (groupJsonElement.getAsString().equals(amerescoGroups)) {
+                    logger.info("Ameresco User added.");
+                    installMaintenanceLogModel.setAmerescoUser(true);
+                }
+            }
+        }
+        logger.info("End of checkAmerescoUser");
     }
 
 }

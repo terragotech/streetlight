@@ -23,6 +23,16 @@ public class InstallMaintenanceLogModel extends LoggingModel {
     private boolean isInstallOnWrongFix;
     private boolean isPoleKnockDown;
 
+    private boolean isAmerescoUser;
+
+
+    public boolean isAmerescoUser() {
+        return isAmerescoUser;
+    }
+
+    public void setAmerescoUser(boolean amerescoUser) {
+        isAmerescoUser = amerescoUser;
+    }
 
     public boolean isReplace() {
         return isReplace;
@@ -124,7 +134,11 @@ public class InstallMaintenanceLogModel extends LoggingModel {
                 ", comment='" + comment + '\'' +
                 ", atlasPhysicalPage='" + atlasPhysicalPage + '\'' +
                 ", isActionNew=" + isActionNew +
+                ", isReplace=" + isReplace +
                 ", communicationStatus='" + communicationStatus + '\'' +
+                ", isInstallOnWrongFix=" + isInstallOnWrongFix +
+                ", isPoleKnockDown=" + isPoleKnockDown +
+                ", isAmerescoUser=" + isAmerescoUser +
                 ", datesHolder=" + datesHolder +
                 '}';
     }
