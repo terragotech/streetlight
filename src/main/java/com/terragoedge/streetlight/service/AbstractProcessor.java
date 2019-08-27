@@ -1469,7 +1469,7 @@ public boolean checkExistingMacAddressValid(EdgeNote edgeNote, InstallMaintenanc
         stringBuilder.append(status);
         stringBuilder.append(" - ");
         stringBuilder.append(macAddress);
-        addStreetLightData("client.accountnumber", stringBuilder.toString(), paramsList);
+        addStreetLightData("comed.componentffectivedate", stringBuilder.toString(), paramsList);
         logger.info("End of addAccountNumber");
     }
 
@@ -1483,7 +1483,7 @@ public boolean checkExistingMacAddressValid(EdgeNote edgeNote, InstallMaintenanc
             stringBuilder.append(edgeNote.getCreatedBy());
             stringBuilder.append(" - ");
             stringBuilder.append(dateFormat(edgeNote.getCreatedDateTime()));
-            addStreetLightData("client.number", stringBuilder.toString(), paramsList);
+            addStreetLightData("comed.locationeffectivedate", stringBuilder.toString(), paramsList);
             logger.info("Customer Number Added.");
         }
         logger.info("End of addCustomerNumber Method.");
