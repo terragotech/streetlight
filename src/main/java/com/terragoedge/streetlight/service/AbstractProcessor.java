@@ -240,11 +240,22 @@ public abstract class AbstractProcessor {
     }
 
 
+
     protected String slvDateFormat(String dateVal,String dateType){
         logger.info(dateType+":"+dateVal);
         if(dateVal.contains("-")){
             try {
                 DateTimeFormatter fmt = DateTimeFormat.forPattern("yyyy-MM-dd HH:mm:ss")
+                        .withZone(DateTimeZone.forTimeZone(TimeZone.getTimeZone("CST")));
+                DateTime dt =  fmt.parseDateTime(dateVal);
+
+                return String.valueOf(dt.withTimeAtStartOfDay().getMillis());
+            }catch (Exception e){
+                logger.error("Error in slvDateFormat",e);
+            }
+
+            try {
+                DateTimeFormatter fmt = DateTimeFormat.forPattern("yyyy-MM-dd HH:mm:ss.SSS")
                         .withZone(DateTimeZone.forTimeZone(TimeZone.getTimeZone("CST")));
                 DateTime dt =  fmt.parseDateTime(dateVal);
 
