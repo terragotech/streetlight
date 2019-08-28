@@ -620,14 +620,24 @@ public abstract class AbstractProcessor {
     }
 
     private void addPower(LoggingModel loggingModel, String powerVal, List<Object> paramsList) {
+        logger.info("Start of addPower");
+        logger.info("Is Power Added:"+loggingModel.isPowerAdded());
+        logger.info("Is Dropped Pin Workflow:"+loggingModel.isDroppedPinWorkflow());
+        logger.info("Is Node Only:"+loggingModel.isNodeOnly());
+        logger.info("Is Button Photocell:"+loggingModel.isButtonPhotoCell());
         if(!loggingModel.isPowerAdded()){
+            logger.info("Wattage not Yet Added.");
             if (loggingModel.isDroppedPinWorkflow() && (loggingModel.isNodeOnly() || loggingModel.isButtonPhotoCell())){
+                logger.info("Current Fixture is Dropped Pin and Either Node only or Button PhotoCell.");
+                logger.info("Fixture Code: "+loggingModel.getLuminaireFixturecode());
+                logger.info("Is Node Only: "+loggingModel.getLuminaireFixturecode());
+                logger.info("Is Button PhotoCell: "+loggingModel.getLuminaireFixturecode());
                 if(loggingModel.getLuminaireFixturecode() != null){
-                    if(loggingModel.isNodeOnly() && loggingModel.getLuminaireFixturecode().toUpperCase().contains("COBRAHEAD")){
+                    if(loggingModel.isNodeOnly() && !loggingModel.isButtonPhotoCell() && loggingModel.getLuminaireFixturecode().toUpperCase().contains("COBRAHEAD")){
                         addStreetLightData("power", "125", paramsList);
                         loggingModel.setPowerAdded(true);
                         return;
-                    }else if(loggingModel.isButtonPhotoCell() && loggingModel.getLuminaireFixturecode().toUpperCase().contains("PIGGYBACK")){
+                    }else if(loggingModel.isButtonPhotoCell() && loggingModel.getLuminaireFixturecode().toUpperCase().contains("PIGGY")){
                         addStreetLightData("power", "50", paramsList);
                         loggingModel.setPowerAdded(true);
                         return;
@@ -635,11 +645,13 @@ public abstract class AbstractProcessor {
                 }
             }
             if(powerVal != null){
+                logger.info("Default Power Value is added.");
                 addStreetLightData("power", powerVal, paramsList);
                 loggingModel.setPowerAdded(true);
             }
 
         }
+        logger.info("End of addPower");
 
     }
 

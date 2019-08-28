@@ -546,7 +546,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
         try {
 
             List<Object> paramsList = new ArrayList<>();
-
+            loggingModel.setPowerAdded(false);
             paramsList.add("idOnController=" + idOnController);
             paramsList.add("controllerStrId=" + controllerStrIdValue);
             SlvServerData slvServerData = new SlvServerData();
