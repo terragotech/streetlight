@@ -646,6 +646,7 @@ public abstract class AbstractProcessor {
             }
             if(powerVal != null){
                 logger.info("Default Power Value is added.");
+                logger.info("Power Val:"+powerVal);
                 addStreetLightData("power", powerVal, paramsList);
                 loggingModel.setPowerAdded(true);
             }
