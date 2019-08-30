@@ -1316,6 +1316,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
                 addStreetLightData("install.date", "", paramsList);
                 addStreetLightData("luminaire.type", "HPS", paramsList);
                 addStreetLightData("DimmingGroupName", "", paramsList);
+                addStreetLightData("client.name", "", paramsList);
                 addStreetLightData("installStatus", InstallStatus.To_be_installed.getValue(), paramsList);
 
                 String power = getLuminaireWattage(loggingModel);
