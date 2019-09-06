@@ -7,96 +7,114 @@ import com.google.gson.JsonParser;
 import com.google.gson.reflect.TypeToken;
 import com.opencsv.CSVReader;
 import com.opencsv.CSVWriter;
+import com.terrago.jsoncsvconvertor.promoted.PromotedConfig;
+import com.terrago.jsoncsvconvertor.promoted.PromotedDatum;
 import org.apache.commons.io.IOUtils;
 
 import java.io.*;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class JsonCSVConvertor {
 
     public static void main(String[] r)throws Exception{
+        Map<String,EdgeData> edgeDataMap = new HashMap<>();
         List<String> dataInList = IOUtils.readLines(new FileInputStream("/Users/Nithish/Documents/office/data-fix/Aug23/comed_data.csv"));
         Gson gson = new GsonBuilder()
                 .setLenient()
                 .create();
         ;
+        processSLVData(edgeDataMap);
         List<EdgeData> edgeDataList = new ArrayList<>();
         int  i = 0;
         for(String dataRaw : dataInList){
-            //System.out.println(dataRaw);
-            EdgeData edgeData = new EdgeData();
-            edgeDataList.add(edgeData);
-            //CSVReader reader = new CSVReader(new StringReader(dataRaw));
-            String[] line = dataRaw.split("::");
 
-           // while ((line = reader.readNext()) != null) {
-                i = i +1;
-                System.out.println(i);
-
-                String noteguid = line[0];
-                String data = line[1].substring(1,line[1].length() - 1);
-            System.out.println(data);
-           // JsonParser parser = new JsonParser();
-
-           //JsonArray jsonArray =  (JsonArray) parser.parse(data);
-                List<Data> dataList = gson.fromJson(data, new TypeToken<List<Data>>() {
-                }.getType());
-
-            edgeData.setTitle(noteguid);
-
-                for (Data data1 : dataList) {
-                    switch (data1.getId()+"") {
-                        case "121":
-                            if(edgeData.getMacAddress() != null){
-                                edgeData.setMacAddress(edgeData.getMacAddress() +","+data1.getValue());
-                            }else{
-                                edgeData.setMacAddress(data1.getValue());
-                            }
-
-                            break;
-                        case "27":
-
-                            if(edgeData.getMacAddressRNF() != null){
-                                edgeData.setMacAddressRNF(edgeData.getMacAddressRNF() +","+data1.getValue());
-                            }else{
-                                edgeData.setMacAddressRNF(data1.getValue());
-                            }
-                            break;
-
-                        case "99":
-
-                            if(edgeData.getMacAddressRN() != null){
-                                edgeData.setMacAddressRN(edgeData.getMacAddressRN() +","+data1.getValue());
-                            }else{
-                                edgeData.setMacAddressRN(data1.getValue());
-                            }
-
-                            break;
-
-                        case "1":
-                            edgeData.setAction(data1.getValue());
-                            break;
-
-                        case "title":
-
-                            break;
-
-                    }
-                }
-
-
-           // }
         }
-
-
 
 
 
         generateInstallCSVFile(edgeDataList,"/Users/Nithish/Documents/office/data-fix/Aug23/res_1.csv");
     }
 
-    public static void main_1(String[] r) throws Exception {
+
+    public static void  processEdgeData(Map<String,EdgeData> edgeDataMap)throws  Exception{
+        List<String> dataInList = IOUtils.readLines(new FileInputStream("/Users/Nithish/Documents/office/data-fix/Aug23/comed_data.csv"));
+        Gson gson = new GsonBuilder()
+                .setLenient()
+                .create();
+        for(String data : dataInList){
+            List<PromotedConfig> promotedConfigList =  gson.fromJson(data,new TypeToken<List<PromotedConfig>>() {
+            }.getType());
+            for(PromotedConfig promotedConfig : promotedConfigList){
+                List<PromotedDatum> promotedDatumList =  promotedConfig.getPromotedData();
+                String title = null;
+                String cslpNode = null;
+                String cslpLum = null;
+                String nodeInstall = null;
+                String lumInstall = null;
+                for(PromotedDatum promotedDatum : promotedDatumList){
+                    switch (promotedDatum.getComponentId()){
+                        case "3":
+                            title = promotedDatum.getValue();
+                            break;
+                        case "169":
+                            cslpNode = promotedDatum.getValue();
+                            break;
+                        case "170":
+                            cslpLum  = promotedDatum.getValue();
+                            break;
+                        case "171":
+                            nodeInstall = promotedDatum.getValue();
+                            break;
+                        case "162":
+                            lumInstall = promotedDatum.getValue();
+                            break;
+                    }
+                }
+                if(!edgeDataMap.containsKey(title)){
+                    EdgeData edgeData = new EdgeData();
+                    edgeDataMap.put(title,edgeData);
+                }
+                EdgeData edgeData = edgeDataMap.get(title);
+                edgeData.setEdgeCslpNodeInstallDate(Long.valueOf(getStringDate(cslpNode)));
+                edgeData.setEdgeCslpLumInstallDate(Long.valueOf(getStringDate(cslpLum)));
+                edgeData.setEdgeInstallDate(Long.valueOf(getStringDate(nodeInstall)));
+                edgeData.setEdgeLumInstallDate(Long.valueOf(getStringDate(lumInstall)));
+
+
+            }
+        }
+    }
+
+    public  static String getStringDate(String val){
+        try{
+            Long.valueOf(val);
+            return val;
+        }catch (Exception e){
+
+        }
+        return "0";
+    }
+
+
+    public static  void  processSLVData(Map<String,EdgeData> edgeDataMap)throws  Exception{
+       CSVReader csvReader = new CSVReader(new FileReader(""));
+        String[] dataInList = null;
+        while((dataInList = csvReader.readNext()) != null){
+            EdgeData edgeData = new EdgeData();
+            edgeDataMap.put(dataInList[0],edgeData);
+            edgeData.setTitle(dataInList[0]);
+            edgeData.setSlvCslpNodeInstallDate(dataInList[1].trim().isEmpty() ? 0 : Long.valueOf(dataInList[1].trim()));
+            edgeData.setSlvCslpLumInstallDate(dataInList[2].trim().isEmpty() ? 0 : Long.valueOf(dataInList[2].trim()));
+            edgeData.setEdgeInstallDate(dataInList[3].trim().isEmpty() ? 0 : Long.valueOf(dataInList[3].trim()));
+            edgeData.setSlvLumInstallDate(dataInList[4].trim().isEmpty() ? 0 : Long.valueOf(dataInList[4].trim()));
+        }
+
+    }
+
+   /* public static void main_1(String[] r) throws Exception {
        List<String> dataInList = IOUtils.readLines(new FileInputStream("/Users/Nithish/Documents/office/data-fix/Aug21/edge_current_data_aug_21.csv"));
         List<EdgeData> edgeDataList = new ArrayList<>();
        for(String data : dataInList){
@@ -144,7 +162,7 @@ public class JsonCSVConvertor {
        }
         generateInstallCSVFile(edgeDataList,"/Users/Nithish/Documents/office/data-fix/Aug21/res_1.csv");
 
-    }
+    }*/
 
 
     public static void generateInstallCSVFile(List<EdgeData> csvReportModelList, String filePath) throws IOException {
