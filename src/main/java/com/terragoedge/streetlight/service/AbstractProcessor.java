@@ -1182,13 +1182,18 @@ public abstract class AbstractProcessor {
     }
 
 
-    protected void loadDefaultVal(EdgeNote edgeNote, InstallMaintenanceLogModel loggingModel,String accessToken) {
+    protected void loadDefaultVal(EdgeNote edgeNote, InstallMaintenanceLogModel loggingModel,String accessToken,String droppedPinUser) {
         loggingModel.setIdOnController(edgeNote.getTitle());
         String controllerStrId = properties.getProperty("streetlight.slv.controllerstrid");
         loggingModel.setControllerSrtId(controllerStrId);
         DatesHolder datesHolder = new DatesHolder();
         loggingModel.setDatesHolder(datesHolder);
-        checkAmerescoUser(accessToken,loggingModel,edgeNote.getCreatedBy());
+        if(loggingModel.isDroppedPinWorkflow()){
+            checkAmerescoUser(accessToken,loggingModel,droppedPinUser);
+        }else {
+            checkAmerescoUser(accessToken,loggingModel,edgeNote.getCreatedBy());
+        }
+
     }
 
     private void sendNightRideToSLV(String idOnController, String nightRideKey, String nightRideValue, LoggingModel loggingModel) {
@@ -1423,6 +1428,17 @@ public abstract class AbstractProcessor {
         return isDroppedPinWorkFlow;
     }
 
+
+    protected String getDroppedPinUser(EdgeNote edgeNote){
+        List<String> tags = edgeNote.getTags();
+        for(String tag: tags){
+            if(tag.startsWith("user")){
+                return tag = tag.replace("user","").trim();
+            }
+        }
+        return null;
+    }
+
 public boolean checkExistingMacAddressValid(EdgeNote edgeNote, InstallMaintenanceLogModel installMaintenanceLogModel) throws Exception{
         try {
             logger.info("Validate Existing MacAddress");
@@ -1648,11 +1664,19 @@ public boolean checkExistingMacAddressValid(EdgeNote edgeNote, InstallMaintenanc
     }
 
 
+    //ES-275
     protected void addProposedContext(ProContextLookupData proContextLookupData,List<Object> paramsList,InstallMaintenanceLogModel installMaintenanceLogModel){
         if(installMaintenanceLogModel.isDroppedPinWorkflow() && installMaintenanceLogModel.isAmerescoUser()){
             ProContextLookupData dbProContextLookupData =  connectionDAO.getProContextLookupData(proContextLookupData);
             if(dbProContextLookupData != null && dbProContextLookupData.getProposedContext() != null){
-                addStreetLightData("location.proposedcontext", dbProContextLookupData.getProposedContext(), paramsList);
+                if(installMaintenanceLogModel.isNodeOnly() && !installMaintenanceLogModel.isButtonPhotoCell()){
+                    addStreetLightData("location.proposedcontext", "Node Only", paramsList);
+                }else if(!installMaintenanceLogModel.isNodeOnly() && installMaintenanceLogModel.isButtonPhotoCell()){
+                    addStreetLightData("location.proposedcontext", "Photocell Only", paramsList);
+                }else {
+                    addStreetLightData("location.proposedcontext", dbProContextLookupData.getProposedContext(), paramsList);
+                }
+
             }
         }
 

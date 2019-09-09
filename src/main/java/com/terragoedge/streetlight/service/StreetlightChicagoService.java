@@ -200,7 +200,13 @@ public class StreetlightChicagoService extends AbstractProcessor {
                     installMaintenanceLogModel.setLastSyncTime(edgeNote.getSyncTime());
                     installMaintenanceLogModel.setCreatedDatetime(String.valueOf(edgeNote.getCreatedDateTime()));
                     installMaintenanceLogModel.setParentNoteId(edgeNote.getBaseParentNoteId());
-                    loadDefaultVal(edgeNote, installMaintenanceLogModel,accessToken);
+                    //ES-274
+                    String droppedPinUser = null;
+                    if(isDroppedPinWorkFlow){
+                        droppedPinUser = getDroppedPinUser(edgeNote);
+                    }
+
+                    loadDefaultVal(edgeNote, installMaintenanceLogModel,accessToken,droppedPinUser);
 
 
                     slvInterfaceLogEntity.setIdOnController(edgeNote.getTitle());
@@ -445,6 +451,7 @@ public class StreetlightChicagoService extends AbstractProcessor {
         addStreetLightData("location.cdotlocationtype", "CDOLOCATION_TYPE_STREET", paramsList);
         addPoleHeightFixtureCodeComedLite(edgeNote,paramsList);
 
+        //ES-274
         if(installMaintenanceLogModel.isAmerescoUser()){
             addStreetLightData("comed.projectname","Ameresco dropped pin", paramsList);
         }
