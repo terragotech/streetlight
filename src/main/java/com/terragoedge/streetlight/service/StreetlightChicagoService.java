@@ -350,7 +350,7 @@ public class StreetlightChicagoService extends AbstractProcessor {
                     } else
                         {
                         //Handle Extra value in SetDevice values
-                        callSetDeviceValues(idOnController,utilLocId,edgeNote, slvTransactionLogs);
+                        callSetDeviceValues(idOnController,utilLocId,edgeNote, slvTransactionLogs,installMaintenanceLogModel);
                         logger.info("Device successfully created for this idoncontroller: "+idOnController);
                         isDeviceCreated = true;
                     }
@@ -422,7 +422,7 @@ public class StreetlightChicagoService extends AbstractProcessor {
 
     private void callSetDeviceValues(String idOnController,String utilLocId,
                                      EdgeNote edgeNote,
-                                     SLVTransactionLogs slvTransactionLogs){
+                                     SLVTransactionLogs slvTransactionLogs,InstallMaintenanceLogModel installMaintenanceLogModel){
         String controllerStrId = properties.getProperty("streetlight.slv.controllerstrid");
         List<Object> paramsList = new ArrayList<>();
         paramsList.add("idOnController=" + idOnController);
@@ -444,6 +444,10 @@ public class StreetlightChicagoService extends AbstractProcessor {
 
         addStreetLightData("location.cdotlocationtype", "CDOLOCATION_TYPE_STREET", paramsList);
         addPoleHeightFixtureCodeComedLite(edgeNote,paramsList);
+
+        if(installMaintenanceLogModel.isAmerescoUser()){
+            addStreetLightData("comed.projectname","Ameresco dropped pin", paramsList);
+        }
 
         installationMaintenanceProcessor.setDeviceValues(paramsList,slvTransactionLogs);
     }
