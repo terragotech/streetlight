@@ -14,6 +14,7 @@ import org.springframework.web.client.RestTemplate;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.net.URI;
+import java.net.URLEncoder;
 import java.util.*;
 
 public class SlvRestService {
@@ -28,9 +29,13 @@ public class SlvRestService {
         Set<String> keys = streetLightDataParams.keySet();
         List<String> values = new ArrayList<String>();
         for (String key : keys) {
-            String val = streetLightDataParams.get(key) != null ? streetLightDataParams.get(key).toString() : "";
-            String tem = key + "=" + val;
-            values.add(tem);
+            try {
+                String val = streetLightDataParams.get(key) != null ? streetLightDataParams.get(key).toString() : "";
+                String tem = key + "=" + URLEncoder.encode(val.trim(), "UTF-8");
+                values.add(tem);
+            }catch (Exception e){
+                e.printStackTrace();
+            }
         }
         String params = StringUtils.join(values, "&");
         url = url + "?" + params;

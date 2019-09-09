@@ -24,6 +24,7 @@ import org.wololo.geojson.Feature;
 import org.wololo.geojson.GeoJSONFactory;
 import org.wololo.jts2geojson.GeoJSONReader;
 
+import java.net.URLEncoder;
 import java.util.*;
 
 public abstract class AbstractSlvService extends EdgeService {
@@ -283,8 +284,13 @@ public abstract class AbstractSlvService extends EdgeService {
     }
 
     public void addStreetLightData(String key, String value, List<Object> paramsList) {
-        paramsList.add("valueName=" + key.trim());
-        paramsList.add("value=" + value.trim());
+
+            paramsList.add("valueName=" + key.trim());
+        try {
+            paramsList.add("value=" + URLEncoder.encode(value.trim(), "UTF-8"));
+        }catch (Exception e){
+            logger.error("Error while encoding value in addStreetLightData",e);
+        }
     }
 
     public void addOtherParams(EdgeNote edgeNote, List<Object> paramsList) {
