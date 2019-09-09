@@ -6,9 +6,7 @@ import java.io.FileReader;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
-import com.terragoedge.edgeserver.EdgeFormData;
-import com.terragoedge.edgeserver.EdgeNotebook;
-import com.terragoedge.edgeserver.FormData;
+import com.terragoedge.edgeserver.*;
 import com.terragoedge.streetlight.OpenCsvUtils;
 import com.terragoedge.streetlight.edgeinterface.SlvData;
 import com.terragoedge.streetlight.edgeinterface.SlvToEdgeService;
@@ -24,7 +22,6 @@ import org.springframework.http.*;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
-import com.terragoedge.edgeserver.EdgeNote;
 import com.terragoedge.streetlight.PropertiesReader;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
@@ -450,5 +447,8 @@ public class StreetlightChicagoService extends AbstractProcessor {
 
         installationMaintenanceProcessor.setDeviceValues(paramsList,slvTransactionLogs);
     }
+
+
+
     // http://192.168.1.9:8080/edgeServer/oauth/token?grant_type=password&username=admin&password=admin&client_id=edgerestapp
 }

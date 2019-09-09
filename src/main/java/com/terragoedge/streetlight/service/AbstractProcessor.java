@@ -544,7 +544,7 @@ public abstract class AbstractProcessor {
 
         addStreetLightData("DimmingGroupName", edgeNotebookName, paramsList);
         // addStreetLightData("DimmingGroupName", "Group Calendar 1", paramsList);
-        addPower(loggingModel,null,paramsList);
+        addPower(loggingModel,null,paramsList,null);
     }
 
     protected void addFixtureQrScanData(String key, String value, List<Object> paramsList) {
@@ -619,7 +619,7 @@ public abstract class AbstractProcessor {
         return false;
     }
 
-    private void addPower(LoggingModel loggingModel, String powerVal, List<Object> paramsList) {
+    private void addPower(LoggingModel loggingModel, String powerVal, List<Object> paramsList,ProContextLookupData proContextLookupData) {
         logger.info("Start of addPower");
         logger.info("Is Power Added:"+loggingModel.isPowerAdded());
         logger.info("Is Dropped Pin Workflow:"+loggingModel.isDroppedPinWorkflow());
@@ -635,10 +635,18 @@ public abstract class AbstractProcessor {
                 if(loggingModel.getLuminaireFixturecode() != null){
                     if(loggingModel.isNodeOnly() && !loggingModel.isButtonPhotoCell() && loggingModel.getLuminaireFixturecode().toUpperCase().contains("COBRAHEAD")){
                         addStreetLightData("power", "125", paramsList);
+                        if(proContextLookupData != null){
+                            proContextLookupData.setLumWattage("125");
+                        }
+
                         loggingModel.setPowerAdded(true);
                         return;
                     }else if(loggingModel.isButtonPhotoCell() && loggingModel.getLuminaireFixturecode().toUpperCase().contains("PIGGY")){
                         addStreetLightData("power", "50", paramsList);
+                        if(proContextLookupData != null){
+                            proContextLookupData.setLumWattage("50");
+                        }
+
                         loggingModel.setPowerAdded(true);
                         return;
                     }
@@ -648,6 +656,9 @@ public abstract class AbstractProcessor {
                 logger.info("Default Power Value is added.");
                 logger.info("Power Val:"+powerVal);
                 addStreetLightData("power", powerVal, paramsList);
+                if(proContextLookupData != null){
+                    proContextLookupData.setLumWattage(powerVal);
+                }
                 loggingModel.setPowerAdded(true);
             }
 
@@ -656,9 +667,10 @@ public abstract class AbstractProcessor {
 
     }
 
-    private void processFixtureQRScan(String data, List<Object> paramsList, EdgeNote edgeNote, SlvServerData slvServerData, LoggingModel loggingModel){
+    private void processFixtureQRScan(String data, List<Object> paramsList, EdgeNote edgeNote, SlvServerData slvServerData, LoggingModel loggingModel,ProContextLookupData proContextLookupData){
         addStreetLightData("luminaire.brand", "Acuity", paramsList);
         slvServerData.setLuminaireBrand("Acuity");
+
 
         addStreetLightData("device.luminaire.partnumber", "MVOLT WFL 30K TM GYSDP10KVMP PER7 NL RFD275482", paramsList);
         slvServerData.setLuminairePartNumber("MVOLT WFL 30K TM GYSDP10KVMP PER7 NL RFD275482");
@@ -669,7 +681,7 @@ public abstract class AbstractProcessor {
         addStreetLightData("device.luminaire.manufacturedate", "01/28/2019", paramsList);
         slvServerData.setLuminaireManufacturedate("01/28/2019");
 
-        addPower(loggingModel,"119",paramsList);
+        addPower(loggingModel,"119",paramsList,proContextLookupData);
 
         addStreetLightData("luminaire.type", "LED", paramsList);
 
@@ -680,18 +692,18 @@ public abstract class AbstractProcessor {
     }
 
 
-    private void processExistingFixtureQRScan(String data,List<Object> paramsList,SlvServerData slvServerData,InstallMaintenanceLogModel loggingModel){
+    private void processExistingFixtureQRScan(String data,List<Object> paramsList,SlvServerData slvServerData,InstallMaintenanceLogModel loggingModel,ProContextLookupData proContextLookupData){
         if(data != null && !data.trim().isEmpty()){
             String[] fixtureQrScan =  data.split(",");
-            String lumBrand =  addExistingFixtureQRScan(fixtureQrScan,paramsList,0,"Existing LED","luminaire.brand",loggingModel);
+            String lumBrand =  addExistingFixtureQRScan(fixtureQrScan,paramsList,0,"Existing LED","luminaire.brand",loggingModel,proContextLookupData);
             if(lumBrand != null){
                 slvServerData.setLuminaireBrand(lumBrand);
             }
-            String lumPartNum =  addExistingFixtureQRScan(fixtureQrScan,paramsList,1,"Node Only","device.luminaire.partnumber",loggingModel);
+            String lumPartNum =  addExistingFixtureQRScan(fixtureQrScan,paramsList,1,"Node Only","device.luminaire.partnumber",loggingModel,proContextLookupData);
             if(lumPartNum != null){
                 slvServerData.setLuminairePartNumber(lumPartNum);
             }
-            String lumModel =  addExistingFixtureQRScan(fixtureQrScan,paramsList,2,"Node Only","luminaire.model",loggingModel);
+            String lumModel =  addExistingFixtureQRScan(fixtureQrScan,paramsList,2,"Node Only","luminaire.model",loggingModel,proContextLookupData);
             if(lumModel != null){
                 slvServerData.setLuminaireModel(lumModel);
             }
@@ -702,35 +714,35 @@ public abstract class AbstractProcessor {
             if(lumManu != null){
                 slvServerData.setLuminaireManufacturedate(lumBrand);
             }*/
-             addExistingFixtureQRScan(fixtureQrScan,paramsList,4,"Unknown","power",loggingModel);
+             addExistingFixtureQRScan(fixtureQrScan,paramsList,4,"Unknown","power",loggingModel,proContextLookupData);
 
-             addExistingFixtureQRScan(fixtureQrScan,paramsList,5,"LED","luminaire.type",loggingModel);
+             addExistingFixtureQRScan(fixtureQrScan,paramsList,5,"LED","luminaire.type",loggingModel,proContextLookupData);
 
-            String lumColor =  addExistingFixtureQRScan(fixtureQrScan,paramsList,6,"Node Only","device.luminaire.colortemp",loggingModel);
+            String lumColor =  addExistingFixtureQRScan(fixtureQrScan,paramsList,6,"Node Only","device.luminaire.colortemp",loggingModel,proContextLookupData);
             if(lumColor != null){
                 slvServerData.setLuminaireColorTemp(lumColor);
             }
-            String lumLumen =  addExistingFixtureQRScan(fixtureQrScan,paramsList,7,"Node Only","device.luminaire.lumenoutput",loggingModel);
+            String lumLumen =  addExistingFixtureQRScan(fixtureQrScan,paramsList,7,"Node Only","device.luminaire.lumenoutput",loggingModel,proContextLookupData);
             if(lumLumen != null){
                 slvServerData.setLumenOutput(lumLumen);
             }
-            String lumDist =  addExistingFixtureQRScan(fixtureQrScan,paramsList,8,"Node Only","luminaire.DistributionType",loggingModel);
+            String lumDist =  addExistingFixtureQRScan(fixtureQrScan,paramsList,8,"Node Only","luminaire.DistributionType",loggingModel,proContextLookupData);
             if(lumDist != null){
                 slvServerData.setDistributionType(lumDist);
             }
-            String lumColorCode = addExistingFixtureQRScan(fixtureQrScan,paramsList,9,"","luminaire.colorcode",loggingModel);
+            String lumColorCode = addExistingFixtureQRScan(fixtureQrScan,paramsList,9,"","luminaire.colorcode",loggingModel,proContextLookupData);
             if(lumColorCode != null){
                 slvServerData.setColorCode(lumColorCode);
             }
-            String lumDriverManu = addExistingFixtureQRScan(fixtureQrScan,paramsList,10,"","device.luminaire.drivermanufacturer",loggingModel);
+            String lumDriverManu = addExistingFixtureQRScan(fixtureQrScan,paramsList,10,"","device.luminaire.drivermanufacturer",loggingModel,proContextLookupData);
             if(lumDriverManu != null){
                 slvServerData.setDriverManufacturer(lumDriverManu);
             }
-            String lumDriverPart =  addExistingFixtureQRScan(fixtureQrScan,paramsList,11,"","device.luminaire.driverpartnumber",loggingModel);
+            String lumDriverPart =  addExistingFixtureQRScan(fixtureQrScan,paramsList,11,"","device.luminaire.driverpartnumber",loggingModel,proContextLookupData);
             if(lumDriverPart != null){
                 slvServerData.setDriverPartNumber(lumDriverPart);
             }
-            String dimmingType =  addExistingFixtureQRScan(fixtureQrScan,paramsList,12,"","ballast.dimmingtype",loggingModel);
+            String dimmingType =  addExistingFixtureQRScan(fixtureQrScan,paramsList,12,"","ballast.dimmingtype",loggingModel,proContextLookupData);
             if(dimmingType != null){
                 slvServerData.setDimmingType(dimmingType);
             }
@@ -740,14 +752,14 @@ public abstract class AbstractProcessor {
     }
 
 
-    private String addExistingFixtureQRScan(String[] fixtureQrScan, List<Object> paramsList, int pos, String defaultVal, String key,InstallMaintenanceLogModel logModel) {
+    private String addExistingFixtureQRScan(String[] fixtureQrScan, List<Object> paramsList, int pos, String defaultVal, String key,InstallMaintenanceLogModel logModel,ProContextLookupData proContextLookupData) {
         try {
             String fixtureQrScanVal = fixtureQrScan[pos];
             fixtureQrScanVal = (fixtureQrScanVal == null || fixtureQrScanVal.trim().isEmpty()) ? defaultVal : fixtureQrScanVal;
             if(!key.equals("power")){
                 addStreetLightData(key, fixtureQrScanVal, paramsList);
             }else{
-                addPower(logModel,fixtureQrScanVal,paramsList);
+                addPower(logModel,fixtureQrScanVal,paramsList,proContextLookupData);
             }
 
             return fixtureQrScanVal;
@@ -758,9 +770,16 @@ public abstract class AbstractProcessor {
         if(!key.equals("power")){
             addStreetLightData(key, defaultVal, paramsList);
         }else{
-            addPower(logModel,defaultVal,paramsList);
+            addPower(logModel,defaultVal,paramsList,proContextLookupData);
         }
         return null;
+    }
+
+    private void addProContextLookupData(ProContextLookupData proContextLookupData,SlvServerData slvServerData,List<Object> paramsList,InstallMaintenanceLogModel installMaintenanceLogModel){
+        proContextLookupData.setLumBrand(slvServerData.getLuminaireBrand());
+        proContextLookupData.setLumModel(slvServerData.getLuminaireModel());
+        proContextLookupData.setLumPartNumber(slvServerData.getLuminairePartNumber());
+        addProposedContext(proContextLookupData,paramsList,installMaintenanceLogModel);
     }
 
 
@@ -768,19 +787,24 @@ public abstract class AbstractProcessor {
 
     public void buildFixtureStreetLightData(String data, List<Object> paramsList, EdgeNote edgeNote, SlvServerData slvServerData, InstallMaintenanceLogModel loggingModel)
             throws InValidBarCodeException {
+        ProContextLookupData proContextLookupData = new ProContextLookupData();
+
         if(data.startsWith("LB60") || data.startsWith("Luminaire Manufacturer")){
             //ES-265
             addCustomerNumber(edgeNote,loggingModel,paramsList);
             logger.info("Default Value Parser Starts");
-            processFixtureQRScan(data,paramsList,edgeNote,slvServerData,loggingModel);
+            processFixtureQRScan(data,paramsList,edgeNote,slvServerData,loggingModel,proContextLookupData);
+            addProContextLookupData(proContextLookupData,slvServerData,paramsList,loggingModel);
             return;
         }else if(data.startsWith("Existing")){
             logger.info("Existing Parser Starts");
-            processExistingFixtureQRScan(data,paramsList,slvServerData,loggingModel);
+            processExistingFixtureQRScan(data,paramsList,slvServerData,loggingModel,proContextLookupData);
             //ES-265
             addCustomerNumber(edgeNote,loggingModel,paramsList);
             logger.info("After Existing Parser current value in paramsList are: "+paramsList.toString());
             logger.info("Existing Parser Ends");
+            addProContextLookupData(proContextLookupData,slvServerData,paramsList,loggingModel);
+            return;
         }
         String[] fixtureInfo = data.split(",");
         logger.info("Fixture QR Scan Val length" + fixtureInfo.length);
@@ -822,7 +846,7 @@ public abstract class AbstractProcessor {
                 powerVal = powerVal.replaceAll("w", "");
             }
 
-            addPower(loggingModel,powerVal,paramsList);
+            addPower(loggingModel,powerVal,paramsList,proContextLookupData);
             //addStreetLightData("power", powerVal, paramsList);
 
             String dimmingGroupName = contextListHashMap.get(loggingModel.getIdOnController());
@@ -856,6 +880,7 @@ public abstract class AbstractProcessor {
             slvServerData.setDimmingType(fixtureInfo[12]);
             //ES-265
             addCustomerNumber(edgeNote,loggingModel,paramsList);
+            addProContextLookupData(proContextLookupData,slvServerData,paramsList,loggingModel);
 
         } else {
             /*throw new InValidBarCodeException(
@@ -1620,6 +1645,17 @@ public boolean checkExistingMacAddressValid(EdgeNote edgeNote, InstallMaintenanc
             }
         }
         logger.info("End of checkAmerescoUser");
+    }
+
+
+    protected void addProposedContext(ProContextLookupData proContextLookupData,List<Object> paramsList,InstallMaintenanceLogModel installMaintenanceLogModel){
+        if(installMaintenanceLogModel.isDroppedPinWorkflow() && installMaintenanceLogModel.isAmerescoUser()){
+            ProContextLookupData dbProContextLookupData =  connectionDAO.getProContextLookupData(proContextLookupData);
+            if(dbProContextLookupData != null && dbProContextLookupData.getProposedContext() != null){
+                addStreetLightData("location.proposedcontext", dbProContextLookupData.getProposedContext(), paramsList);
+            }
+        }
+
     }
 
 }
