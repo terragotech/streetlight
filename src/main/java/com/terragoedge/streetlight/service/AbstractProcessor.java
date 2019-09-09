@@ -1188,7 +1188,7 @@ public abstract class AbstractProcessor {
         loggingModel.setControllerSrtId(controllerStrId);
         DatesHolder datesHolder = new DatesHolder();
         loggingModel.setDatesHolder(datesHolder);
-        if(loggingModel.isDroppedPinWorkflow()){
+        if(loggingModel.isDroppedPinWorkflow() && droppedPinUser != null){
             checkAmerescoUser(accessToken,loggingModel,droppedPinUser);
         }else {
             checkAmerescoUser(accessToken,loggingModel,edgeNote.getCreatedBy());
