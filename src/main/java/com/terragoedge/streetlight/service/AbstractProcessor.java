@@ -1432,8 +1432,8 @@ public abstract class AbstractProcessor {
     protected String getDroppedPinUser(EdgeNote edgeNote){
         List<String> tags = edgeNote.getTags();
         for(String tag: tags){
-            if(tag.startsWith("user")){
-                return tag = tag.replace("user","").trim();
+            if(tag.startsWith("user:")){
+                return tag.replace("user:","").trim();
             }
         }
         return null;
