@@ -1666,9 +1666,25 @@ public boolean checkExistingMacAddressValid(EdgeNote edgeNote, InstallMaintenanc
 
     //ES-275
     protected void addProposedContext(ProContextLookupData proContextLookupData,List<Object> paramsList,InstallMaintenanceLogModel installMaintenanceLogModel){
+        logger.info("ProContextLookupData:"+proContextLookupData.toString());
+        logger.info("isDroppedPinWorkflow"+installMaintenanceLogModel.isDroppedPinWorkflow());
+        logger.info("isAmerescoUser"+installMaintenanceLogModel.isAmerescoUser());
         if(installMaintenanceLogModel.isDroppedPinWorkflow() && installMaintenanceLogModel.isAmerescoUser()){
-            ProContextLookupData dbProContextLookupData =  connectionDAO.getProContextLookupData(proContextLookupData);
+            boolean isLumModelExact = false;
+            boolean isLumPartExact = false;
+            if(proContextLookupData.getLumBrand().toLowerCase().startsWith("Philips")){
+               int res = updateLumModel(proContextLookupData);
+               if(res == 1){
+                   isLumModelExact = true;
+                   isLumPartExact = true;
+               }else if(res == 0){
+                   isLumModelExact = true;
+               }
+            }
+            ProContextLookupData dbProContextLookupData =  connectionDAO.getProContextLookupData(proContextLookupData,isLumModelExact,isLumPartExact);
+            logger.info("DB ProContextLookupData"+dbProContextLookupData);
             if(dbProContextLookupData != null && dbProContextLookupData.getProposedContext() != null){
+                logger.info("DB ProContextLookupData"+dbProContextLookupData.toString());
                 if(installMaintenanceLogModel.isNodeOnly() && !installMaintenanceLogModel.isButtonPhotoCell()){
                     addStreetLightData("location.proposedcontext", "Node Only", paramsList);
                 }else if(!installMaintenanceLogModel.isNodeOnly() && installMaintenanceLogModel.isButtonPhotoCell()){
@@ -1680,6 +1696,38 @@ public boolean checkExistingMacAddressValid(EdgeNote edgeNote, InstallMaintenanc
             }
         }
 
+    }
+
+
+    private int updateLumModel(ProContextLookupData proContextLookupData){
+        int flag = -1;
+        if(proContextLookupData.getLumModel() != null){
+            if(proContextLookupData.getLumModel().startsWith("RFM")){
+                proContextLookupData.setLumModel("RFM");
+                flag = 0;
+                if(proContextLookupData.getLumPartNumber().startsWith("[RFM-077]-[108W32LED3K-001]-G2-R2M")){
+                    flag = 1;
+                    proContextLookupData.setLumPartNumber("[RFM-077]-[108W32LED3K-001]-G2-R2M");
+                }else if(proContextLookupData.getLumPartNumber().startsWith("[RFM-077]-[108W32LED3K-002]-G2-R3S")){
+                    flag = 1;
+                    proContextLookupData.setLumPartNumber("[RFM-077]-[108W32LED3K-002]-G2-R3S");
+                }else if(proContextLookupData.getLumPartNumber().startsWith("[RFM-077]-[108W32LED3K-002]-T-R3S")){
+                    flag = 1;
+                    proContextLookupData.setLumPartNumber("[RFM-077]-[108W32LED3K-002]-T-R3S");
+                }
+            }else if(proContextLookupData.getLumModel().startsWith("RFL")){
+                flag = 0;
+                if(proContextLookupData.getLumPartNumber().startsWith("[RFL-053]-[180W80LED3K-003]-G2-R2M")){
+                    flag = 1;
+                    proContextLookupData.setLumPartNumber("[RFL-053]-[180W80LED3K-003]-G2-R2M");
+                }else if(proContextLookupData.getLumPartNumber().startsWith("[RFL-053]-[180W80LED3K-003]-T-R2M")){
+                    flag = 1;
+                    proContextLookupData.setLumPartNumber("[RFL-053]-[180W80LED3K-003]-T-R2M");
+                }
+            }
+
+        }
+        return flag;
     }
 
 }

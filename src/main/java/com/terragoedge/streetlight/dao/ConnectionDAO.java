@@ -334,20 +334,32 @@ public enum ConnectionDAO {
     }
 
 
-    public ProContextLookupData getProContextLookupData(ProContextLookupData proContextLookupData) {
+    public ProContextLookupData getProContextLookupData(ProContextLookupData proContextLookupData,boolean isLumModelExact,boolean isLumPartExact) {
         try {
             QueryBuilder<ProContextLookupData, String> queryBuilder = proContextLookupDao.queryBuilder();
             Where<ProContextLookupData, String> where = queryBuilder.where();
-            where.eq(ProContextLookupData.LUM_BRAND, proContextLookupData.getLumBrand());
+            where.eq(ProContextLookupData.LUM_BRAND, proContextLookupData.getLumBrand().trim());
             if (proContextLookupData.getLumModel() != null) {
-                where.and().eq(ProContextLookupData.LUM_MODEL, proContextLookupData.getLumModel());
+                if(isLumModelExact){
+                    where.and().eq(ProContextLookupData.LUM_MODEL, proContextLookupData.getLumModel().trim());
+                }else{
+                    where.and().like(ProContextLookupData.LUM_MODEL, proContextLookupData.getLumModel().trim()+"%");
+                }
+
             }
             if (proContextLookupData.getLumPartNumber() != null) {
-                where.and().eq(ProContextLookupData.LUM_PART_NUM, proContextLookupData.getLumPartNumber());
+                if(isLumPartExact){
+                    where.and().eq(ProContextLookupData.LUM_PART_NUM, proContextLookupData.getLumPartNumber().trim());
+                }else{
+                    where.and().like(ProContextLookupData.LUM_PART_NUM, proContextLookupData.getLumPartNumber().trim()+"%");
+                }
+
             }
             if (proContextLookupData.getLumWattage() != null) {
-                where.and().eq(ProContextLookupData.LUM_WATTAGE, proContextLookupData.getLumWattage());
+                where.and().eq(ProContextLookupData.LUM_WATTAGE, proContextLookupData.getLumWattage().trim());
             }
+            logger.info("------Raw Query--------------");
+            logger.info(queryBuilder.prepareStatementString());
            return queryBuilder.queryForFirst();
         } catch (Exception e) {
             logger.error("Error in getProContextLookupData");
