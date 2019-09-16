@@ -557,6 +557,14 @@ public abstract class AbstractProcessor {
         paramsList.add("valueName=" + key.trim());
        // paramsList.add("value=" + value.trim());
         try{
+            /* The following code for changing ";" to "."  based on the request of the customer */
+            if(value != null)
+            {
+                if(!value.equals(""))
+                {
+                    value.replaceAll (";",".");
+                }
+            }
             paramsList.add("value=" + URLEncoder.encode(value.trim(), "UTF-8"));
         }catch (Exception e){
             logger.error("Error in addStreetLightData",e);
