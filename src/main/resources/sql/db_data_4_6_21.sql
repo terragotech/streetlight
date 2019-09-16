@@ -32,4 +32,7 @@ insert into pro_context_lookup("proposed_context","lum_brand","lum_model","lum_p
 insert into pro_context_lookup("proposed_context","lum_brand","lum_model","lum_part_no","lum_wattage") values ('13 - Arterial Acorn (Retrofit)','LV Manufacturing','Retro Arterial PB','RETRO57LEDEBGRAY','62');
 
 
+insert into pro_context_lookup("proposed_context","lum_brand","lum_model","lum_part_no") values ('Node Only','Existing LED','Node Only','Node Only');
+
+
 insert into pro_context_lookup("proposed_context","lum_brand","lum_wattage") values ('F - Flood','Acuity','62');

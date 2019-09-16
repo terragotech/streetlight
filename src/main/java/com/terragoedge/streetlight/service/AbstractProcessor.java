@@ -799,6 +799,7 @@ public abstract class AbstractProcessor {
         }else if(data.startsWith("Existing")){
             logger.info("Existing Parser Starts");
             processExistingFixtureQRScan(data,paramsList,slvServerData,loggingModel,proContextLookupData);
+            proContextLookupData.setLumWattage(null);
             //ES-265
             addCustomerNumber(edgeNote,loggingModel,paramsList);
             logger.info("After Existing Parser current value in paramsList are: "+paramsList.toString());
@@ -1667,12 +1668,12 @@ public boolean checkExistingMacAddressValid(EdgeNote edgeNote, InstallMaintenanc
     //ES-275
     protected void addProposedContext(ProContextLookupData proContextLookupData,List<Object> paramsList,InstallMaintenanceLogModel installMaintenanceLogModel){
         logger.info("ProContextLookupData:"+proContextLookupData.toString());
-        logger.info("isDroppedPinWorkflow"+installMaintenanceLogModel.isDroppedPinWorkflow());
-        logger.info("isAmerescoUser"+installMaintenanceLogModel.isAmerescoUser());
+        logger.info("isDroppedPinWorkflow:"+installMaintenanceLogModel.isDroppedPinWorkflow());
+        logger.info("isAmerescoUser:"+installMaintenanceLogModel.isAmerescoUser());
         if(installMaintenanceLogModel.isDroppedPinWorkflow() && installMaintenanceLogModel.isAmerescoUser()){
             boolean isLumModelExact = false;
             boolean isLumPartExact = false;
-            if(proContextLookupData.getLumBrand().toLowerCase().startsWith("Philips")){
+            if(proContextLookupData.getLumBrand().toLowerCase().startsWith("philips")){
                int res = updateLumModel(proContextLookupData);
                if(res == 1){
                    isLumModelExact = true;
@@ -1685,10 +1686,10 @@ public boolean checkExistingMacAddressValid(EdgeNote edgeNote, InstallMaintenanc
             logger.info("DB ProContextLookupData"+dbProContextLookupData);
             if(dbProContextLookupData != null && dbProContextLookupData.getProposedContext() != null){
                 logger.info("DB ProContextLookupData"+dbProContextLookupData.toString());
-                if(installMaintenanceLogModel.isNodeOnly() && !installMaintenanceLogModel.isButtonPhotoCell()){
-                    addStreetLightData("location.proposedcontext", "Node Only", paramsList);
-                }else if(!installMaintenanceLogModel.isNodeOnly() && installMaintenanceLogModel.isButtonPhotoCell()){
+                if(dbProContextLookupData.getLumBrand() != null && dbProContextLookupData.getLumBrand().toLowerCase().startsWith("existing") && installMaintenanceLogModel.isButtonPhotoCell()){
                     addStreetLightData("location.proposedcontext", "Photocell Only", paramsList);
+                }else if(dbProContextLookupData.getLumBrand() != null && dbProContextLookupData.getLumBrand().toLowerCase().startsWith("existing") && installMaintenanceLogModel.isNodeOnly()){
+                    addStreetLightData("location.proposedcontext", "Node Only", paramsList);
                 }else {
                     addStreetLightData("location.proposedcontext", dbProContextLookupData.getProposedContext(), paramsList);
                 }
