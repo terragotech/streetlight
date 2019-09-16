@@ -1392,7 +1392,13 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
             cslpNodeInstallDate = valueById(edgeFormDatas, 169);
             if(cslpNodeInstallDate != null && !cslpNodeInstallDate.trim().isEmpty()){
                 try{
-                    edgeSLVDates.setCslpNodeDate(getStartOfDay(cslpNodeInstallDate));
+                    String strCSLPNodeInstallDate = getStartOfDay(cslpNodeInstallDate);
+                    long dateCSLPNodeInstallDate = Long.parseLong(strCSLPNodeInstallDate);
+                    //Compare Date for Validity above 2015
+                    if(dateCSLPNodeInstallDate > 1420092000000L)
+                    {
+                        edgeSLVDates.setCslpNodeDate(strCSLPNodeInstallDate);
+                    }
                 }catch (Exception e){
                     logger.error("Error in cslpNodeInstallDate:"+cslpNodeInstallDate,e);
                 }
@@ -1410,7 +1416,13 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
             cslpLumInstallDate = valueById(edgeFormDatas, 170);
             if(cslpLumInstallDate != null && !cslpLumInstallDate.trim().isEmpty()){
                 try{
-                    edgeSLVDates.setCslpLumDate(getStartOfDay(cslpLumInstallDate));
+                    String strCSLPLumInstallDate = getStartOfDay(cslpLumInstallDate);
+                    long dateCSLPLumInstallDate = Long.parseLong(strCSLPLumInstallDate);
+                    //Compare Date for Validity above 2015
+                    if(dateCSLPLumInstallDate > 1420092000000L) {
+                        edgeSLVDates.setCslpLumDate(strCSLPLumInstallDate);
+                    }
+
                 }catch (Exception e){
                     logger.error("Error in cslpLumInstallDate:"+cslpLumInstallDate,e);
                 }
@@ -1427,7 +1439,13 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
             installDate = valueById(edgeFormDatas, 171);
             if(installDate != null && !installDate.trim().isEmpty()){
                 try{
-                    edgeSLVDates.setNodeInstallDate(getStartOfDay(installDate));
+                    String strinstallDate = getStartOfDay(installDate);
+                    long lnginstallDate = Long.parseLong(strinstallDate);
+                    if(lnginstallDate > 1420092000000L)
+                    {
+                        edgeSLVDates.setNodeInstallDate(strinstallDate);
+                    }
+
                 }catch (Exception e){
                     logger.error("Error in installDate:"+installDate,e);
                 }
@@ -1447,7 +1465,11 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
             lumInstallDate = valueById(edgeFormDatas, 172);
             if(lumInstallDate != null && !lumInstallDate.trim().isEmpty()){
                 try{
-                    edgeSLVDates.setLumInstallDate(getStartOfDay(lumInstallDate));
+                    String strLumInstallDate = getStartOfDay(lumInstallDate);
+                    long lngLumInstallDate = Long.parseLong(strLumInstallDate);
+                    if(lngLumInstallDate > 1420092000000L) {
+                        edgeSLVDates.setLumInstallDate(strLumInstallDate);
+                    }
                 }catch (Exception e){
                     logger.error("Error in lumInstallDate:"+lumInstallDate,e);
                 }
