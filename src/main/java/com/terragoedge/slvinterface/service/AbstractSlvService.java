@@ -287,7 +287,7 @@ public abstract class AbstractSlvService extends EdgeService {
 
             paramsList.add("valueName=" + key.trim());
         try {
-            paramsList.add("value=" + URLEncoder.encode(value.trim(), "UTF-8"));
+            paramsList.add("value=" + URLEncoder(value.trim()));
         }catch (Exception e){
             logger.error("Error while encoding value in addStreetLightData",e);
         }
@@ -334,6 +334,10 @@ public abstract class AbstractSlvService extends EdgeService {
 
     }
 
+    public String URLEncoder(String value)throws Exception{
+      return   URLEncoder.encode(value, "UTF-8");
+    }
+
     public void replaceOLC(String controllerStrIdValue, String idOnController, String macAddress)
             throws ReplaceOLCFailedException {
         try {
@@ -346,7 +350,7 @@ public abstract class AbstractSlvService extends EdgeService {
             List<Object> paramsList = new ArrayList<Object>();
             paramsList.add("methodName=" + replaceOlc);
             paramsList.add("controllerStrId=" + controllerStrId);
-            paramsList.add("idOnController=" + idOnController);
+            paramsList.add("idOnController=" + URLEncoder(idOnController));
             paramsList.add("newNetworkId=" + macAddress);
             paramsList.add("ser=json");
             String params = StringUtils.join(paramsList, "&");
@@ -362,6 +366,8 @@ public abstract class AbstractSlvService extends EdgeService {
                 logger.info("Replace Olc error is :"+errorStatus);
                 String value = replaceOlcResponse.get("value").getAsString();
                 throw new ReplaceOLCFailedException(value);
+            }else{
+                connectionDAO.updateSlvDevice(idOnController, macAddress);
             }
 
         } catch (Exception e) {

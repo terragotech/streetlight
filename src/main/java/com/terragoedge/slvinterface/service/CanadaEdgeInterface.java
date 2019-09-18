@@ -92,15 +92,20 @@ public class CanadaEdgeInterface extends SlvInterfaceService {
 
     @Override
     public void processSetDevice(List<EdgeFormData> edgeFormDataList, ConfigurationJson configurationJson, EdgeNote edgeNote, List<Object> paramsList, SlvSyncDetails slvSyncDetails, String controllerStrIdValue) throws NoValueException, DeviceUpdationFailedException {
-        paramsList.add("idOnController=" + edgeNote.getTitle());
-        addStreetLightData("idOnController", edgeNote.getTitle(), paramsList);
-        paramsList.add("controllerStrId=" + controllerStrIdValue);
-        logger.info("processSetvalue 1"+gson.toJson(paramsList));
-        addOtherParams(edgeNote, paramsList);
-        logger.info("processSetvalue 2"+gson.toJson(paramsList));
-        updateDeviceValues(paramsList, edgeNote, edgeFormDataList);
-        logger.info("processSetvalue 3"+gson.toJson(paramsList));
-        setDeviceValues(paramsList, slvSyncDetails);
+        try{
+            paramsList.add("idOnController=" + URLEncoder(edgeNote.getTitle()));
+            addStreetLightData("idOnController", edgeNote.getTitle(), paramsList);
+            paramsList.add("controllerStrId=" + controllerStrIdValue);
+            logger.info("processSetvalue 1"+gson.toJson(paramsList));
+            addOtherParams(edgeNote, paramsList);
+            logger.info("processSetvalue 2"+gson.toJson(paramsList));
+            updateDeviceValues(paramsList, edgeNote, edgeFormDataList);
+            logger.info("processSetvalue 3"+gson.toJson(paramsList));
+            setDeviceValues(paramsList, slvSyncDetails);
+        }catch (Exception e){
+            logger.error("Error in processSetDevice");
+        }
+
     }
 
 

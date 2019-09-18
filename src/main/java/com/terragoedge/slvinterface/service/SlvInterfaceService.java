@@ -31,6 +31,7 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.lang.reflect.Type;
+import java.net.URLEncoder;
 import java.util.*;
 
 import static com.terragoedge.slvinterface.utils.Utils.dateFormat;
@@ -281,8 +282,8 @@ public abstract class SlvInterfaceService extends AbstractSlvService {
             slvSyncDetail.setErrorDetails("Existing QR Code [" + e.getMacAddress() + "] is not matched with SVL.");
             slvSyncDetail.setStatus(Status.Failure.toString());
         }
+
         slvSyncDetail.setProcessedDateTime(new Date().getTime());
-        connectionDAO.updateSlvDevice(slvSyncDetail.getNoteName(), slvSyncDetail.getMacAddress());
 
     }
 
@@ -301,7 +302,7 @@ public abstract class SlvInterfaceService extends AbstractSlvService {
             String url = mainUrl + deviceUrl;
             List<String> paramsList = new ArrayList<>();
             paramsList.add("attributeName=idOnController");
-            paramsList.add("attributeValue=" + idOnController);
+            paramsList.add("attributeValue=" + URLEncoder(idOnController));
             paramsList.add("recurse=true");
             paramsList.add("returnedInfo=lightDevicesList");
             paramsList.add("attributeOperator=eq-i");

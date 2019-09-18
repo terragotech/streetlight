@@ -85,7 +85,7 @@ public class SlvRestService {
                 ResponseEntity<String> responseEntity = callSlvWithToken(true,url);
                 return responseEntity;
             }catch (Exception e){
-                e.printStackTrace();
+                logger.error("Error in callSlvWithToken",e);
             }
         }else {
             HttpHeaders headers = getHeaders(accessToken);
@@ -116,7 +116,7 @@ public class SlvRestService {
                 ResponseEntity<String> responseEntity = callSlvWithToken(true,url);
                 return responseEntity;
             }catch (Exception e){
-                e.printStackTrace();
+                logger.error("Error in getPostRequest",e);
             }
         }else {
             HttpHeaders headers = getHeaders(accessToken);
@@ -185,7 +185,7 @@ public class SlvRestService {
         try{
             SlvRestTemplate.INSTANCE.reConnect();
         }catch (Exception e){
-            e.printStackTrace();
+            logger.error("Error in callSlvWithToken",e);
         }
         HttpResponse response = SlvRestTemplate.INSTANCE.httpClient.execute(isGetRequest ? getSlvGetHeaders(url) : getSlvPostHeaders(url), SlvRestTemplate.INSTANCE.httpContext);
         String responseBody = getResponseBody(response);
