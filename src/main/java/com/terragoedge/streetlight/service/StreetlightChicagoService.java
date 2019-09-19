@@ -212,7 +212,8 @@ public class StreetlightChicagoService extends AbstractProcessor {
                     String utilLocId = null;
                     // Below commented lines need for dropped pin workflow in future
                     if(isDroppedPinWorkFlow){
-                        utilLocId = "5"+edgeNote.getTitle();
+                        //As per Email Communication, "5" is removed from utilLocId Fwd: Utility Location ID For Dropped Pins (20190918)
+                        utilLocId = edgeNote.getTitle();
                     }
                     boolean isDeviceCreated = false;
                     if(isDroppedPinWorkFlow) {
