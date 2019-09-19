@@ -34,13 +34,6 @@ public class SlvInterfaceService extends AbstractSlvService {
 
     public void start() {
         System.out.println("Start method called");
-        String accessToken = getEdgeToken();
-        System.out.println("AccessToken is :" + accessToken);
-        logger.info("AccessToken is :" + accessToken);
-        if (accessToken == null) {
-            logger.error("Edge Invalid UserName and Password.");
-            return;
-        }
         // Already Processed NoteGuids
         //  List<String> noteGuids = slvInterfaceDAO.getNoteGuids();
         WorkFlowFormId installworkFlowFormId = null;
@@ -87,25 +80,33 @@ public class SlvInterfaceService extends AbstractSlvService {
             try {
                 if (!isAlreadyProcessed(edgenoteGuid)) {
                     String restUrl = url + edgenoteGuid;
-                    ResponseEntity<String> responseEntity = slvRestService.getRequest(restUrl, false, accessToken);
-                    if (responseEntity.getStatusCode().is2xxSuccessful()) {
-                        String notesData = responseEntity.getBody();
-                        EdgeNote edgeNote = gson.fromJson(notesData, EdgeNote.class);
-                        logger.info("Processed Note title size :" + gson.toJson(edgeNote));
-                        logger.info("ProcessNoteGuid is :" + edgenoteGuid);
-                        logger.info("ProcessNoteTitle is :" + edgeNote.getTitle());
-                        List<String> formTemplateGuids = getProcessingFormTemplateGuids(edgeNote);
-                        if(formTemplateGuids.size() == 0){
-                            logger.error("There is no processing form attached to this note. So skipping."+edgeNote.getNoteGuid());
-                        }else if(formTemplateGuids.size() > 1){
-                            logger.error("There are more processing form attached to this note. So skipping."+edgeNote.getNoteGuid());
-                        }else {
-                            logger.error("There is only one processing form attached to this note. So continuing process."+edgeNote.getNoteGuid());
-                            String formTemplateGuid = formTemplateGuids.get(0);
-                            processEdgeNote(edgeNote, formTemplateGuid, false, formTemplateGuid.equals(installFormtemplateGuid) ? installworkFlowFormId : newFixtureworkFlowFormId);
+
+                    String accessToken = getEdgeToken();
+                    System.out.println("AccessToken is :" + accessToken);
+                    logger.info("AccessToken is :" + accessToken);
+                    if (accessToken == null) {
+                        logger.error("Edge Invalid UserName and Password.");
+                    }else {
+                        ResponseEntity<String> responseEntity = slvRestService.getRequest(restUrl, false, accessToken);
+                        if (responseEntity.getStatusCode().is2xxSuccessful()) {
+                            String notesData = responseEntity.getBody();
+                            EdgeNote edgeNote = gson.fromJson(notesData, EdgeNote.class);
+                            logger.info("Processed Note title size :" + gson.toJson(edgeNote));
+                            logger.info("ProcessNoteGuid is :" + edgenoteGuid);
+                            logger.info("ProcessNoteTitle is :" + edgeNote.getTitle());
+                            List<String> formTemplateGuids = getProcessingFormTemplateGuids(edgeNote);
+                            if(formTemplateGuids.size() == 0){
+                                logger.error("There is no processing form attached to this note. So skipping."+edgeNote.getNoteGuid());
+                            }else if(formTemplateGuids.size() > 1){
+                                logger.error("There are more processing form attached to this note. So skipping."+edgeNote.getNoteGuid());
+                            }else {
+                                logger.error("There is only one processing form attached to this note. So continuing process."+edgeNote.getNoteGuid());
+                                String formTemplateGuid = formTemplateGuids.get(0);
+                                processEdgeNote(edgeNote, formTemplateGuid, false, formTemplateGuid.equals(installFormtemplateGuid) ? installworkFlowFormId : newFixtureworkFlowFormId);
+                            }
+                        }else{
+                            logger.info("getting edge note from rest call is failed noteguid: "+edgenoteGuid);
                         }
-                    }else{
-                        logger.info("getting edge note from rest call is failed noteguid: "+edgenoteGuid);
                     }
                 }else{
                     logger.info("this guid"+edgenoteGuid+" present in processed items");

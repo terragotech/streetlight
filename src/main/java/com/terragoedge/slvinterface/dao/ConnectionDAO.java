@@ -66,7 +66,7 @@ public enum ConnectionDAO {
     public List<String> getEdgeNoteGuid(String installFormTemplateGuid,String newFixtureFormTemplateGuid,long maxSyncTime) {
         try {
 
-            List<String> noteGuids = slvSyncDetailsDao.queryRaw("select noteguid from edgenote, edgeform where edgenote.isdeleted = false and edgenote.iscurrent = true and edgenote.noteid = edgeform.edgenoteentity_noteid and (edgeform.formtemplateguid = '" + installFormTemplateGuid + "' or edgeform.formtemplateguid = '" + newFixtureFormTemplateGuid + "') and edgenote.synctime > "+maxSyncTime+";", new RawRowMapper<String>() {
+            List<String> noteGuids = slvSyncDetailsDao.queryRaw("select noteguid from edgenote, edgeform where edgenote.isdeleted = false and edgenote.iscurrent = true and edgenote.noteid = edgeform.edgenoteentity_noteid and (edgeform.formtemplateguid = '" + installFormTemplateGuid + "' or edgeform.formtemplateguid = '" + newFixtureFormTemplateGuid + "') and edgenote.synctime > "+maxSyncTime+" order by edgenote.synctime asc;", new RawRowMapper<String>() {
                 @Override
                 public String mapRow(String[] columnNames, String[] resultColumns) throws SQLException {
                     return resultColumns[0];
