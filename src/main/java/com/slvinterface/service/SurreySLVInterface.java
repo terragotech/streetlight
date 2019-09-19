@@ -101,6 +101,8 @@ public class SurreySLVInterface extends  SLVInterfaceService {
             case REMOVE:
                 slvSyncTable.setSelectedAction("Remove WorkFlow");
                 replaceOLC(previousEdge2SLVData.getControllerStrId(),previousEdge2SLVData.getIdOnController(),"",slvSyncTable);
+                clearValue(slvSyncTable,previousEdge2SLVData);
+                queryExecutor.removeEdgeAllMac(previousEdge2SLVData.getIdOnController());
                 slvSyncTable.setStatus("Success");
                 break;
 
@@ -124,6 +126,17 @@ public class SurreySLVInterface extends  SLVInterfaceService {
     }
 
 
+    private void clearValue(SLVSyncTable slvSyncTable,Edge2SLVData previousEdge2SLVData){
+        SLVTransactionLogs slvTransactionLogs = getSLVTransVal(slvSyncTable);
+        List<Object> paramsList = new ArrayList<>();
+        loadVal(paramsList,previousEdge2SLVData);
+        addStreetLightData("installStatus","To be installed",paramsList);
+        addStreetLightData("installStatus","",paramsList);
+        setDeviceValues(paramsList,slvTransactionLogs);
+
+    }
+
+
     private void setDeviceVal(SLVSyncTable slvSyncTable,Edge2SLVData previousEdge2SLVData){
         SLVTransactionLogs slvTransactionLogs = getSLVTransVal(slvSyncTable);
         List<Object> paramsList = new ArrayList<>();
@@ -142,7 +155,7 @@ public class SurreySLVInterface extends  SLVInterfaceService {
         }
 
 
-        String modelFunctionId = "talq.streetlight.v1:lightNodeFunction6";
+        String modelFunctionId = PropertiesReader.getProperties().getProperty("streetlight.slv.equipment.type");
 
         try {
             modelFunctionId =  URLEncoder.encode(modelFunctionId,"UTF-8");

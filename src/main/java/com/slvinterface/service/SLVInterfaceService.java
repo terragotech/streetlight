@@ -152,6 +152,7 @@ public abstract class SLVInterfaceService {
                 return;
             }
         } catch (Exception e) {
+            logger.error("Error in DB",e);
             throw new DatabaseException(e);
         }
 
@@ -177,10 +178,12 @@ public abstract class SLVInterfaceService {
                 String notesData = responseEntity.getBody();
                 processNoteData(notesData,slvSyncTable);
             } else {
+                logger.error("Unable to Get Note Details from Edge Server and status code is:"+responseEntity.getStatusCode());
                 slvSyncTable.setErrorDetails("Unable to Get Note Details from Edge Server and status code is:"+responseEntity.getStatusCode());
             }
 
         }catch (SLVConnectionException e){
+            logger.error("Error in SLVConnectionException",e);
             slvSyncTable.setStatus("Failure");
             slvSyncTable.setErrorDetails(e.getMessage());
             throw new SLVConnectionException(e);
@@ -441,6 +444,11 @@ public abstract class SLVInterfaceService {
         queryExecutor.saveEdgeAllMac(edgeAllMacData);
     }
 
+
+    public void removeEdgeAllMac(String title){
+
+    }
+
     private void setSLVTransactionLogs(SLVTransactionLogs slvTransactionLogs, String request, CallType callType) {
         slvTransactionLogs.setRequestDetails(request);
         slvTransactionLogs.setTypeOfCall(callType);
@@ -614,7 +622,7 @@ public abstract class SLVInterfaceService {
 
 
                             break;
-                        case FIXTURE:
+                        case DATE:
                             try{
                                 String installDate = valueById(formValuesList,id.getId());
                                 installDate =  dateFormat(Long.valueOf(installDate));

@@ -11,7 +11,7 @@
         },
         {
           "id": 13,
-          "type": "FIXTURE",
+          "type": "DATE",
           "isRequired": true
         },
         {

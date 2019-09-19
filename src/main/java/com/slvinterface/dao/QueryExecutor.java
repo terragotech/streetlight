@@ -2,6 +2,7 @@ package com.slvinterface.dao;
 
 import com.j256.ormlite.dao.Dao;
 import com.j256.ormlite.dao.DaoManager;
+import com.j256.ormlite.stmt.DeleteBuilder;
 import com.j256.ormlite.support.ConnectionSource;
 import com.j256.ormlite.table.TableUtils;
 import com.slvinterface.entity.EdgeAllMac;
@@ -63,6 +64,17 @@ public class QueryExecutor {
         try {
             edgeAllMacsDao.create(edgeAllMac);
         } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+
+    public void removeEdgeAllMac(String title){
+        try{
+           DeleteBuilder deleteBuilder =  edgeAllMacsDao.deleteBuilder();
+            deleteBuilder.where().eq(EdgeAllMac.TITLE,title);
+            deleteBuilder.delete();
+        }catch (Exception e){
             e.printStackTrace();
         }
     }
