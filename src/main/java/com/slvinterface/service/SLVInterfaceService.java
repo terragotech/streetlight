@@ -17,7 +17,10 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.log4j.Logger;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
@@ -668,6 +671,35 @@ public abstract class SLVInterfaceService {
                     return;
                 }
             }
+        }
+    }
+
+
+    /**
+     * Remove MAC Address from the Duplicate list
+     * @param idOnController
+     */
+    public void removeEdgeSLVMacAddress(String idOnController){
+        MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
+        params.add("slvIdOnController",idOnController);
+        edgeRestService.slv2Edge("/rest/validation/removeSLVMacAddress", HttpMethod.GET,params);
+    }
+
+    /**
+     * Add MAC Adderss to the Duplicate Validation list
+     * @param idOnController
+     * @param macAddress
+     * @param atlasPhysicalPage
+     */
+    public void syncMacAddress2Edge(String idOnController,String macAddress,String atlasPhysicalPage){
+        if(macAddress != null && !macAddress.trim().isEmpty()){
+            MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
+            params.add("slvMacAddress",macAddress);
+            params.add("slvIdOnController",idOnController);
+            if(atlasPhysicalPage != null){
+                params.add("atlasPhysicalPage",atlasPhysicalPage);
+            }
+            edgeRestService.slv2Edge("/rest/validation/updateSLVSyncedMAC", HttpMethod.GET,params);
         }
     }
 }

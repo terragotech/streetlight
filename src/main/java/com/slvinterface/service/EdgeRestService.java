@@ -8,7 +8,9 @@ import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
+import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.util.UriComponentsBuilder;
 
 public class EdgeRestService {
 
@@ -74,6 +76,28 @@ public class EdgeRestService {
         HttpHeaders headers = new HttpHeaders();
         headers.add("Authorization",  "Bearer "+accessToken);
         return headers;
+    }
+
+
+    public ResponseEntity<String> slv2Edge(String httpUrl,  HttpMethod httpMethod, MultiValueMap<String, String> params){
+        HttpHeaders headers = getEdgeHeaders();
+        RestTemplate restTemplate = new RestTemplate();
+        HttpEntity request = new HttpEntity<>(headers);
+
+        String url = PropertiesReader.getProperties().getProperty("streetlight.edge.url.main");
+        url = url + httpUrl;
+
+        UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromHttpUrl(url);
+
+        uriBuilder.queryParams(params);
+
+        ResponseEntity<String> response = restTemplate.exchange(uriBuilder.toUriString(), httpMethod, request, String.class);
+        logger.info("------------ Response ------------------");
+        logger.info("Response Code:" + response.getStatusCode().toString());
+        String responseBody = response.getBody();
+        logger.info(responseBody);
+        logger.info("------------ Response End ------------------");
+        return response;
     }
 
 }
