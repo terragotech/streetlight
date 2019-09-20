@@ -527,11 +527,16 @@ public abstract class SLVInterfaceService {
                 String value = replaceOlcResponse.get("value").getAsString();
                 throw new ReplaceOLCFailedException(value);
             } else {
-                if (macAddress != null && !macAddress.trim().isEmpty()) {
-                    logger.info("Adding MAC Address to the Local DB.");
-                    createEdgeAllMac(idOnController, macAddress);
-                }
 
+
+            }
+            // -- For Production We Need to move this in else part.
+            if (macAddress != null && !macAddress.trim().isEmpty()) {
+                logger.info("Adding MAC Address to the Local DB.");
+                //createEdgeAllMac(slvSyncTable.getIdOnController(), macAddress);
+                syncMacAddress2Edge(slvSyncTable.getIdOnController(),macAddress,null);
+            }else{
+                removeEdgeSLVMacAddress(slvSyncTable.getIdOnController());
             }
 
         } catch (Exception e) {

@@ -71,7 +71,7 @@ public class QueryExecutor {
 
     public void removeEdgeAllMac(String title){
         try{
-           DeleteBuilder deleteBuilder =  edgeAllMacsDao.deleteBuilder();
+            DeleteBuilder deleteBuilder =  edgeAllMacsDao.deleteBuilder();
             deleteBuilder.where().eq(EdgeAllMac.TITLE,title);
             deleteBuilder.delete();
         }catch (Exception e){
