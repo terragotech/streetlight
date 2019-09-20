@@ -3,6 +3,7 @@ package com.slvinterface.service;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.slvinterface.utils.PropertiesReader;
+import org.apache.commons.codec.binary.Base64;
 import org.apache.log4j.Logger;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -84,7 +85,7 @@ public class EdgeRestService {
         RestTemplate restTemplate = new RestTemplate();
         HttpEntity request = new HttpEntity<>(headers);
 
-        String url = PropertiesReader.getProperties().getProperty("streetlight.edge.url.main");
+        String url = PropertiesReader.getProperties().getProperty("streetlight.edge.slvServerUrl");
         url = url + httpUrl;
 
         UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromHttpUrl(url);
@@ -98,6 +99,21 @@ public class EdgeRestService {
         logger.info(responseBody);
         logger.info("------------ Response End ------------------");
         return response;
+    }
+
+
+    private HttpHeaders getEdgeHeaders() {
+        String userName = PropertiesReader.getProperties().getProperty("streetlight.edge.username");
+        String password = PropertiesReader.getProperties().getProperty("streetlight.edge.password");
+        HttpHeaders headers = new HttpHeaders();
+        String plainCreds = userName + ":" + password;
+
+        byte[] plainCredsBytes = plainCreds.getBytes();
+        byte[] base64CredsBytes = Base64.encodeBase64(plainCredsBytes);
+        String base64Creds = new String(base64CredsBytes);
+
+        headers.add("Authorization", "Basic " + base64Creds);
+        return headers;
     }
 
 }
