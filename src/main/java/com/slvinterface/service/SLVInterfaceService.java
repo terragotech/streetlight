@@ -210,6 +210,7 @@ public abstract class SLVInterfaceService {
             loadDeviceValues(edge2SLVData.getIdOnController(),deviceEntity);
             return;
         }catch (NoValueException e){
+            logger.error("Error in checkTokenValidity",e);
             return;
         }catch (Exception e){
             retryCount = retryCount + 1;
@@ -327,6 +328,7 @@ public abstract class SLVInterfaceService {
 
         boolean isExistMacAddress = queryExecutor.isExistMacAddress(idOnController, macAddress);
         if (isExistMacAddress) {
+            logger.info("Given MAC Address Already Present in Local DB.");
             throw new QRCodeAlreadyUsedException("QR code [" + macAddress + "] is already processed.", macAddress);
         }
         logger.info("Getting Mac Address from SLV.");
@@ -439,7 +441,7 @@ public abstract class SLVInterfaceService {
 
     public void createEdgeAllMac(String title, String macAddress) {
         EdgeAllMac edgeAllMacData = new EdgeAllMac();
-        edgeAllMacData.setMacAddress(macAddress);
+        edgeAllMacData.setMacAddress(macAddress.toUpperCase());
         edgeAllMacData.setNoteTitle(title);
         queryExecutor.saveEdgeAllMac(edgeAllMacData);
     }
@@ -523,6 +525,7 @@ public abstract class SLVInterfaceService {
                 throw new ReplaceOLCFailedException(value);
             } else {
                 if (macAddress != null && !macAddress.trim().isEmpty()) {
+                    logger.info("Adding MAC Address to the Local DB.");
                     createEdgeAllMac(idOnController, macAddress);
                 }
 
@@ -601,6 +604,7 @@ public abstract class SLVInterfaceService {
         List<Priority> priorities = conditionsJson.getPriority();
         List<Config> configList = conditionsJson.getConfigList();
         for(Priority priority : priorities){
+            logger.info("Current Priority is "+ priority.toString());
             Config temp = new Config();
             temp.setType(priority.getType());
 
@@ -614,10 +618,11 @@ public abstract class SLVInterfaceService {
                         case MAC:
                             try{
                                 String macAddress = valueById(formValuesList,id.getId()).toUpperCase();
+                                logger.info("MAC Address:"+macAddress);
                                 edge2SLVData.setMacAddress(macAddress);
                                 edge2SLVData.setPriority(priority);
                             }catch (NoValueException e){
-                                e.printStackTrace();
+                                logger.error("Error in processFormData",e);
                             }
 
 
@@ -625,10 +630,12 @@ public abstract class SLVInterfaceService {
                         case DATE:
                             try{
                                 String installDate = valueById(formValuesList,id.getId());
+                                logger.info("Date Value:"+installDate);
                                 installDate =  dateFormat(Long.valueOf(installDate));
+                                logger.info("After Format:"+installDate);
                                 edge2SLVData.setInstallDate(installDate);
                             }catch (NoValueException e){
-                                e.printStackTrace();
+                                logger.error("Error in processFormData",e);
                             }
 
                             break;
@@ -636,18 +643,20 @@ public abstract class SLVInterfaceService {
                         case IDONCONTROLLER:
                             try{
                                 String idOnController = valueById(formValuesList,id.getId());
+                                logger.info("IdOnController:"+idOnController);
                                 edge2SLVData.setIdOnController(idOnController);
                             }catch (NoValueException e){
-                                e.printStackTrace();
+                                logger.error("Error in processFormData",e);
                             }
                             break;
 
                         case EXISTING_MAC:
                             try{
                                 String existingMACAddress = valueById(formValuesList,id.getId());
+                                logger.info("Existing MAC Address:"+existingMACAddress);
                                 edge2SLVData.setExistingMACAddress(existingMACAddress);
                             }catch (NoValueException e){
-                                e.printStackTrace();
+                                logger.error("Error in processFormData",e);
                             }
                             break;
 
@@ -655,6 +664,7 @@ public abstract class SLVInterfaceService {
                 }
 
                 if(edge2SLVData.getPriority() != null){
+                    logger.info("Values are Present:"+edge2SLVData.getPriority());
                     return;
                 }
             }
