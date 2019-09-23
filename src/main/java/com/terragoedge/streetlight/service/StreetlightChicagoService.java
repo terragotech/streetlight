@@ -8,6 +8,7 @@ import java.util.*;
 
 import com.terragoedge.edgeserver.*;
 import com.terragoedge.streetlight.OpenCsvUtils;
+import com.terragoedge.streetlight.dao.ClientAccountEntity;
 import com.terragoedge.streetlight.edgeinterface.SlvData;
 import com.terragoedge.streetlight.edgeinterface.SlvToEdgeService;
 import com.terragoedge.streetlight.exception.NoValueException;
@@ -455,11 +456,67 @@ public class StreetlightChicagoService extends AbstractProcessor {
         if(installMaintenanceLogModel.isAmerescoUser()){
             addStreetLightData("comed.projectname","Ameresco dropped pin", paramsList);
         }
+        //ES-279
+        String clientAccountNumber = getClientAccountNumber(installMaintenanceLogModel,edgeNote);
+        if(clientAccountNumber != null){
+            addStreetLightData("client.accountnumber", clientAccountNumber, paramsList);
+        }
 
         installationMaintenanceProcessor.setDeviceValues(paramsList,slvTransactionLogs);
     }
 
 
+    private String getClientAccountNumber(InstallMaintenanceLogModel installMaintenanceLogModel,EdgeNote edgeNote){
+        String clientAccountNumber = "CDOT";
+        String atlasPageName = "";
+        int atlasPageRange = 0;
+        String physicalAtalasPage = installMaintenanceLogModel.getAtlasPhysicalPage();
+        if(physicalAtalasPage.contains("-")){
+            String[] atlaspageValues = physicalAtalasPage.split("-", -1);
+            if(atlaspageValues.length == 2){
+                atlasPageName = atlaspageValues[0];
+                atlasPageRange = Integer.valueOf(atlaspageValues[1]);
+                if(atlasPageRange >= 4 && atlasPageRange <= 26){//North
+                    clientAccountNumber += " CN ";
+                }else if(atlasPageRange >= 27 && atlasPageRange <= 55){
+                    clientAccountNumber += " CS ";
+                }
+            }else{
+                return null;
+            }
+            String fixtureCode = getFixtureCode(edgeNote);
+            if(fixtureCode.equals("Viaduct")){
+                clientAccountNumber += "Subway";
+                return clientAccountNumber;
+            }else{
+                ClientAccountEntity clientAccountEntity = connectionDAO.getClientAccountName(atlasPageName,atlasPageRange);
+                if(clientAccountEntity != null){
+                    clientAccountNumber += clientAccountEntity.getValue();
+                    return clientAccountNumber;
+                }else{
+                    return null;
+                }
+            }
+        }else{
+            return null;
+        }
+    }
+
+private String getFixtureCode(EdgeNote edgeNote){
+    String fixtureCode = "";
+    List<FormData> formDatas = edgeNote.getFormData();
+    for(FormData formData : formDatas){
+        if(formData.getFormTemplateGuid().equals(properties.getProperty("amerescousa.edge.formtemplateGuid"))){
+            List<EdgeFormData> edgeFormDatas = formData.getFormDef();
+            for(EdgeFormData edgeFormData : edgeFormDatas){
+                if(edgeFormData.getId() == Integer.valueOf(properties.getProperty("edge.formtemplate.fixturecode.id"))){
+                    fixtureCode = edgeFormData.getValue();
+                }
+            }
+        }
+    }
+    return fixtureCode;
+}
 
     // http://192.168.1.9:8080/edgeServer/oauth/token?grant_type=password&username=admin&password=admin&client_id=edgerestapp
 }
