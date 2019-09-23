@@ -1,12 +1,26 @@
 package com.terragoedge.streetlight.dao;
 
+import com.j256.ormlite.field.DatabaseField;
 import com.j256.ormlite.table.DatabaseTable;
 // create table client_account_name(key text,value text,max int);
 @DatabaseTable(tableName = "client_account_name")
 public class ClientAccountEntity {
+    @DatabaseField(columnName = "key")
     private String key;
+    @DatabaseField(columnName = "value")
     private String value;
+    @DatabaseField(columnName = "max")
     private int max;
+    @DatabaseField(columnName = "area")
+    private String area;
+
+    public String getArea() {
+        return area;
+    }
+
+    public void setArea(String area) {
+        this.area = area;
+    }
 
     public String getKey() {
         return key;
@@ -38,6 +52,7 @@ public class ClientAccountEntity {
                 "key='" + key + '\'' +
                 ", value='" + value + '\'' +
                 ", max=" + max +
+                ", area='" + area + '\'' +
                 '}';
     }
 }

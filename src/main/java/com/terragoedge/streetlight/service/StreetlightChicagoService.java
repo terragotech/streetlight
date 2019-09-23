@@ -470,6 +470,7 @@ public class StreetlightChicagoService extends AbstractProcessor {
         String clientAccountNumber = "CDOT";
         String atlasPageName = "";
         int atlasPageRange = 0;
+        String area = null;
         String physicalAtalasPage = installMaintenanceLogModel.getAtlasPhysicalPage();
         if(physicalAtalasPage.contains("-")){
             String[] atlaspageValues = physicalAtalasPage.split("-", -1);
@@ -477,9 +478,14 @@ public class StreetlightChicagoService extends AbstractProcessor {
                 atlasPageName = atlaspageValues[0];
                 atlasPageRange = Integer.valueOf(atlaspageValues[1]);
                 if(atlasPageRange >= 4 && atlasPageRange <= 26){//North
-                    clientAccountNumber += " CN ";
+                    area = "CN";
                 }else if(atlasPageRange >= 27 && atlasPageRange <= 55){
-                    clientAccountNumber += " CS ";
+                    area = "CS";
+                }
+                if(area != null){
+                    clientAccountNumber += " "+area+" ";
+                }else{
+                    return null;
                 }
             }else{
                 return null;
@@ -489,7 +495,7 @@ public class StreetlightChicagoService extends AbstractProcessor {
                 clientAccountNumber += "Subway";
                 return clientAccountNumber;
             }else{
-                ClientAccountEntity clientAccountEntity = connectionDAO.getClientAccountName(atlasPageName,atlasPageRange);
+                ClientAccountEntity clientAccountEntity = connectionDAO.getClientAccountName(atlasPageName,atlasPageRange,area);
                 if(clientAccountEntity != null){
                     clientAccountNumber += clientAccountEntity.getValue();
                     return clientAccountNumber;

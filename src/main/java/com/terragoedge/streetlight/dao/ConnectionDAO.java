@@ -369,9 +369,9 @@ public enum ConnectionDAO {
         return null;
     }
 
-    public ClientAccountEntity getClientAccountName(String phsicalAtlasPage,int max){
+    public ClientAccountEntity getClientAccountName(String phsicalAtlasPage,int max,String area){
         try{
-            return clientAccountEntityDao.queryBuilder().where().eq("key",phsicalAtlasPage).le("max",max).queryForFirst();
+            return clientAccountEntityDao.queryBuilder().where().eq("key",phsicalAtlasPage).and().le("max",max).and().eq("area",area).queryForFirst();
         }catch (Exception e){
             e.printStackTrace();
         }
