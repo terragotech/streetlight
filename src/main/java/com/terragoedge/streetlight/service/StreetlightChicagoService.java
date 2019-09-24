@@ -458,6 +458,7 @@ public class StreetlightChicagoService extends AbstractProcessor {
         }
         //ES-279
         String clientAccountNumber = getClientAccountNumber(installMaintenanceLogModel,edgeNote);
+        logger.info("callSetDeviceValues: clientAccountNumber = "+clientAccountNumber);
         if(clientAccountNumber != null){
             addStreetLightData("client.accountnumber", clientAccountNumber, paramsList);
         }
@@ -467,43 +468,54 @@ public class StreetlightChicagoService extends AbstractProcessor {
 
 
     private String getClientAccountNumber(InstallMaintenanceLogModel installMaintenanceLogModel,EdgeNote edgeNote){
-        String clientAccountNumber = "CDOT";
-        String atlasPageName = "";
-        int atlasPageRange = 0;
-        String area = null;
-        String physicalAtalasPage = installMaintenanceLogModel.getAtlasPhysicalPage();
-        if(physicalAtalasPage.contains("-")){
-            String[] atlaspageValues = physicalAtalasPage.split("-", -1);
-            if(atlaspageValues.length == 2){
-                atlasPageName = atlaspageValues[0];
-                atlasPageRange = Integer.valueOf(atlaspageValues[1]);
-                if(atlasPageRange >= 4 && atlasPageRange <= 26){//North
-                    area = "CN";
-                }else if(atlasPageRange >= 27 && atlasPageRange <= 55){
-                    area = "CS";
-                }
-                if(area != null){
-                    clientAccountNumber += " "+area+" ";
-                }else{
+        try {
+            String clientAccountNumber = "CDOT";
+            String atlasPageName = "";
+            int atlasPageRange = 0;
+            String area = null;
+            String physicalAtalasPage = installMaintenanceLogModel.getAtlasPhysicalPage();
+            logger.info("getClientAccountNumber: physicalAtalasPage= " + physicalAtalasPage);
+            if (physicalAtalasPage.contains("-")) {
+                String[] atlaspageValues = physicalAtalasPage.split("-", -1);
+                logger.info("getClientAccountNumber: atlaspageValues= " + atlaspageValues);
+                if (atlaspageValues.length == 2) {
+                    atlasPageName = atlaspageValues[0];
+                    atlasPageRange = Integer.valueOf(atlaspageValues[1]);
+                    logger.info("getClientAccountNumber: atlasPageName= " + atlasPageName);
+                    logger.info("getClientAccountNumber: atlasPageRange= " + atlasPageRange);
+                    if (atlasPageRange >= 4 && atlasPageRange <= 26) {//North
+                        area = "CN";
+                    } else if (atlasPageRange >= 27 && atlasPageRange <= 55) {
+                        area = "CS";
+                    }
+                    if (area != null) {
+                        clientAccountNumber += " " + area + " ";
+                    } else {
+                        return null;
+                    }
+                } else {
                     return null;
                 }
-            }else{
+                String fixtureCode = getFixtureCode(edgeNote);
+                logger.info("getClientAccountNumber: fixtureCode= " + fixtureCode);
+                if (fixtureCode.equals("Viaduct")) {
+                    clientAccountNumber += "Subway";
+                    return clientAccountNumber;
+                } else {
+                    ClientAccountEntity clientAccountEntity = connectionDAO.getClientAccountName(atlasPageName, atlasPageRange, area);
+                    logger.info("getClientAccountNumber: clientAccountEntity= " + gson.toJson(clientAccountEntity));
+                    if (clientAccountEntity != null) {
+                        clientAccountNumber += clientAccountEntity.getValue();
+                        return clientAccountNumber;
+                    } else {
+                        return null;
+                    }
+                }
+            } else {
                 return null;
             }
-            String fixtureCode = getFixtureCode(edgeNote);
-            if(fixtureCode.equals("Viaduct")){
-                clientAccountNumber += "Subway";
-                return clientAccountNumber;
-            }else{
-                ClientAccountEntity clientAccountEntity = connectionDAO.getClientAccountName(atlasPageName,atlasPageRange,area);
-                if(clientAccountEntity != null){
-                    clientAccountNumber += clientAccountEntity.getValue();
-                    return clientAccountNumber;
-                }else{
-                    return null;
-                }
-            }
-        }else{
+        }catch (Exception e){
+            logger.error("Error in getClientAccountNumber", e);
             return null;
         }
     }

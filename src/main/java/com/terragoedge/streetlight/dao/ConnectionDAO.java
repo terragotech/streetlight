@@ -373,7 +373,7 @@ public enum ConnectionDAO {
         try{
             return clientAccountEntityDao.queryBuilder().where().eq("key",phsicalAtlasPage).and().le("max",max).and().eq("area",area).queryForFirst();
         }catch (Exception e){
-            e.printStackTrace();
+            logger.error("Error in getClientAccountName",e);
         }
         return null;
     }
