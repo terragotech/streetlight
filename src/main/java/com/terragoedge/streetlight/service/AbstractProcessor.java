@@ -562,7 +562,8 @@ public abstract class AbstractProcessor {
             {
                 if(!value.equals(""))
                 {
-                    value.replaceAll (";",".");
+                    value = value.replaceAll (";",".");
+                    value = value.replaceAll("'","");
                 }
             }
             paramsList.add("value=" + URLEncoder.encode(value.trim(), "UTF-8"));

@@ -2,7 +2,7 @@ package com.terragoedge.streetlight.dao;
 
 import com.j256.ormlite.field.DatabaseField;
 import com.j256.ormlite.table.DatabaseTable;
-// create table client_account_name(key text,value text,max int);
+// create table client_account_name(key text,value text,max int,area text);
 @DatabaseTable(tableName = "client_account_name")
 public class ClientAccountEntity {
     @DatabaseField(columnName = "key")
