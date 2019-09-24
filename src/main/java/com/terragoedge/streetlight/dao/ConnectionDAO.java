@@ -371,7 +371,8 @@ public enum ConnectionDAO {
 
     public ClientAccountEntity getClientAccountName(String phsicalAtlasPage,int max,String area){
         try{
-            return clientAccountEntityDao.queryBuilder().where().eq("key",phsicalAtlasPage).and().le("max",max).and().eq("area",area).queryForFirst();
+            //select * from client_account_name where key='L' and max<=12 and area='CN';
+            return clientAccountEntityDao.queryBuilder().where().eq("key",phsicalAtlasPage).and().ge("max",max).and().eq("area",area).queryForFirst();
         }catch (Exception e){
             logger.error("Error in getClientAccountName",e);
         }

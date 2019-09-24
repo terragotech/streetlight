@@ -219,15 +219,14 @@ public class StreetlightChicagoService extends AbstractProcessor {
                         utilLocId = "5"+edgeNote.getTitle();
                     }
                     boolean isDeviceCreated = false;
+                    if(edgeNote.getEdgeNotebook() != null && edgeNote.getEdgeNotebook().getNotebookName() != null &&  ( installMaintenanceLogModel.getAtlasPhysicalPage() == null || installMaintenanceLogModel.getAtlasPhysicalPage().isEmpty()) ){
+                        installMaintenanceLogModel.setAtlasPhysicalPage(edgeNote.getEdgeNotebook().getNotebookName());
+                    }
                     if(isDroppedPinWorkFlow) {
                         isDeviceCreated = processDroppedPinWorkflow(edgeNote,slvInterfaceLogEntity,installMaintenanceLogModel,utilLocId);
                     }
                     if(!isDroppedPinWorkFlow || (isDroppedPinWorkFlow && isDeviceCreated)) {
                         loadDeviceValues(edgeNote.getTitle(),installMaintenanceLogModel);
-
-                       if(edgeNote.getEdgeNotebook() != null && edgeNote.getEdgeNotebook().getNotebookName() != null &&  ( installMaintenanceLogModel.getAtlasPhysicalPage() == null || installMaintenanceLogModel.getAtlasPhysicalPage().isEmpty()) ){
-                           installMaintenanceLogModel.setAtlasPhysicalPage(edgeNote.getEdgeNotebook().getNotebookName());
-                       }
 
                         installationMaintenanceProcessor.processNewAction(edgeNote, installMaintenanceLogModel, false, utilLocId, slvInterfaceLogEntity);
                        // updateSlvStatusToEdge(installMaintenanceLogModel, edgeNote);
