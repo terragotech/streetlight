@@ -9,6 +9,7 @@ import java.util.*;
 import com.terragoedge.edgeserver.*;
 import com.terragoedge.streetlight.OpenCsvUtils;
 import com.terragoedge.streetlight.dao.ClientAccountEntity;
+import com.terragoedge.streetlight.dao.CommissionErrorEntity;
 import com.terragoedge.streetlight.edgeinterface.SlvData;
 import com.terragoedge.streetlight.edgeinterface.SlvToEdgeService;
 import com.terragoedge.streetlight.exception.NoValueException;
@@ -17,6 +18,9 @@ import com.terragoedge.streetlight.json.model.SLVTransactionLogs;
 import com.terragoedge.streetlight.json.model.SlvInterfaceLogEntity;
 import com.terragoedge.streetlight.logging.InstallMaintenanceLogModel;
 import com.terragoedge.streetlight.logging.LoggingModel;
+import org.apache.commons.lang3.ArrayUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.http.util.TextUtils;
 import org.apache.log4j.Logger;
 import org.joda.time.DateTime;
 import org.springframework.http.*;
@@ -287,10 +291,10 @@ public class StreetlightChicagoService extends AbstractProcessor {
         }catch (Exception e){
            logger.error("Error in edgeSlvserverCall",e);
         }
-        return uploadFileToEdgeSlvServer(url,outputFilePath);
+        return uploadFileToEdgeSlvServer(url,outputFilePath,null,null,null);
     }
 
-    private ResponseEntity<String> uploadFileToEdgeSlvServer(String url,String outputFilePath){
+    private ResponseEntity<String> uploadFileToEdgeSlvServer(String url,String outputFilePath,String subject,String emailBody,String receipents){
         RestTemplate restTemplate = new RestTemplate();
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.MULTIPART_FORM_DATA);
@@ -298,6 +302,15 @@ public class StreetlightChicagoService extends AbstractProcessor {
         MultiValueMap<String, Object> body
                 = new LinkedMultiValueMap<>();
         body.add("file", new File(outputFilePath));
+        if(subject != null){
+            body.add("subject",subject);
+        }
+        if(emailBody != null){
+            body.add("body",emailBody);
+        }
+        if(receipents != null){
+            body.add("receipents",receipents);
+        }
 
         HttpEntity<MultiValueMap<String, Object>> requestEntity
                 = new HttpEntity<>(headers);
@@ -535,5 +548,45 @@ private String getFixtureCode(EdgeNote edgeNote){
     return fixtureCode;
 }
 
+public void sendCommissionErrorReport(){
+        try {
+            String folderPath = "./commission_error";
+            File folder = new File(folderPath);
+            if (!folder.exists()) {
+                folder.mkdir();
+            }
+            List<String[]> csvDatas = new ArrayList<>();
+            String[] csvTitles = {"idoncontroller", "noteguid", "macaddress", "note_created_time", "processed_time", "request", "response"};
+            csvDatas.add(csvTitles);
+            List<CommissionErrorEntity> commissionErrorEntities = connectionDAO.getCommissionErrors();
+            for (CommissionErrorEntity commissionErrorEntity : commissionErrorEntities) {
+                List<String> csvData = new ArrayList<>();
+                csvData.add(commissionErrorEntity.getTitle());
+                csvData.add(commissionErrorEntity.getNoteGuid());
+                csvData.add(commissionErrorEntity.getMacAddress());
+                csvData.add(OpenCsvUtils.getFormatedDateTime(commissionErrorEntity.getNoteCreteatedDateTime()));
+                csvData.add(OpenCsvUtils.getFormatedDateTime(commissionErrorEntity.getProcessedTime()));
+                csvData.add(commissionErrorEntity.getRequest());
+                csvData.add(commissionErrorEntity.getResponse());
+                csvDatas.add(csvData.toArray(new String[csvData.size()]));
+            }
+            String csvFileName = OpenCsvUtils.getCsvFileName();
+            String csvFilePath = folderPath + "/commission_error_" + csvFileName;
+            try {
+                OpenCsvUtils.csvWriterAll(csvDatas, csvFilePath);
+            } catch (Exception e) {
+                logger.error("Error in CSV Writting: ", e);
+            }
+            logger.info("Commission Error Report generated");
+            File csvFile = new File(csvFilePath);
+            logger.info("Commission Error Report exist");
+            if (csvFile.exists()) {
+                uploadFileToEdgeSlvServer(properties.getProperty("com.report.email.url"), csvFilePath, properties.getProperty("com.report.commissionerror.subject"), properties.getProperty("com.report.commissionerror.body"), properties.getProperty("com.report.commissionerror.email.receipents"));
+                logger.info("Commission Error Report sent");
+            }
+        }catch (Exception e){
+            logger.error("Error in sendCommissionErrorReport: ",e);
+        }
+}
     // http://192.168.1.9:8080/edgeServer/oauth/token?grant_type=password&username=admin&password=admin&client_id=edgerestapp
 }

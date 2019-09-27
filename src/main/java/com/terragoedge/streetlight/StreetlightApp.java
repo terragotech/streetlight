@@ -12,6 +12,7 @@ import java.util.Date;
 public class StreetlightApp {
     private static final Logger logger = Logger.getLogger(StreetlightApp.class);
     private static boolean isReportProcessed = false;
+    private static boolean isCommissionErrorReportProcessed = false;
 
 
 	public static void main(String[] args) {
@@ -36,6 +37,18 @@ public class StreetlightApp {
                 }else{
                     if(isReportProcessed){
                         isReportProcessed = false;
+                    }
+                }
+                if(hours == Integer.valueOf(PropertiesReader.getProperties().getProperty("com.commissionerror.report.time"))){
+                    logger.info("commissioning error report time reached");
+                    if(!isCommissionErrorReportProcessed){
+                        streetlightChicagoService.sendCommissionErrorReport();
+                        logger.info("commissioning error report sent");
+                        isCommissionErrorReportProcessed = true;
+                    }
+                }else{
+                    if(isCommissionErrorReportProcessed){
+                        isCommissionErrorReportProcessed = false;
                     }
                 }
                 Thread.sleep(30000);

@@ -4,6 +4,7 @@ import com.google.gson.*;
 import com.terragoedge.edgeserver.*;
 import com.terragoedge.streetlight.PropertiesReader;
 import com.terragoedge.streetlight.Utils;
+import com.terragoedge.streetlight.dao.CommissionErrorEntity;
 import com.terragoedge.streetlight.dao.ConnectionDAO;
 import com.terragoedge.streetlight.dao.StreetlightDao;
 import com.terragoedge.streetlight.enumeration.CallType;
@@ -1137,6 +1138,17 @@ public abstract class AbstractProcessor {
             url = url + "?" + params;
             setSLVTransactionLogs(slvTransactionLogs, url, CallType.REPLACE_OLC);
             ResponseEntity<String> response = restService.getPostRequest(url, null);
+            if(response.getStatusCode() != HttpStatus.OK){
+                CommissionErrorEntity commissionErrorEntity = new CommissionErrorEntity();
+                commissionErrorEntity.setMacAddress(macAddress);
+                commissionErrorEntity.setNoteCreteatedDateTime(edgeNote.getCreatedDateTime());
+                commissionErrorEntity.setProcessedTime(System.currentTimeMillis());
+                commissionErrorEntity.setNoteGuid(edgeNote.getNoteGuid());
+                commissionErrorEntity.setRequest(url);
+                commissionErrorEntity.setResponse(response.getBody());
+                commissionErrorEntity.setTitle(idOnController);
+                connectionDAO.saveCommissionError(commissionErrorEntity);
+            }
             String responseString = response.getBody();
             setResponseDetails(slvTransactionLogs, responseString);
             JsonObject replaceOlcResponse = (JsonObject) jsonParser.parse(responseString);

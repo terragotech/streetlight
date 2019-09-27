@@ -36,6 +36,7 @@ public enum ConnectionDAO {
     public Dao<SlvInterfaceLogEntity, String> slvInterfaceLogDao = null;
     public Dao<ExistingMacValidationFailure, String> existingMacValidationFailureDao = null;
     public Dao<ClientAccountEntity, String> clientAccountEntityDao = null;
+    public Dao<CommissionErrorEntity, String> commissionErrorEntityDao = null;
 
 
     public Dao<EdgeSLVDate, String> edgeNodeDates = null;
@@ -96,6 +97,12 @@ public enum ConnectionDAO {
                 //logger.error("Error in openConnection", e);
             }
 
+            try {
+                TableUtils.createTableIfNotExists(connectionSource, CommissionErrorEntity.class);
+            } catch (Exception e) {
+                //logger.error("Error in openConnection", e);
+            }
+
 
             try {
                 TableUtils.createTableIfNotExists(connectionSource, EdgeSLVDate.class);
@@ -116,6 +123,7 @@ public enum ConnectionDAO {
             clientAccountEntityDao = DaoManager.createDao(connectionSource, ClientAccountEntity.class);
 
             proContextLookupDao = DaoManager.createDao(connectionSource,ProContextLookupData.class);
+            commissionErrorEntityDao = DaoManager.createDao(connectionSource,CommissionErrorEntity.class);
 
             System.out.println("Connected.....");
         } catch (Exception e) {
@@ -377,6 +385,23 @@ public enum ConnectionDAO {
             logger.error("Error in getClientAccountName",e);
         }
         return null;
+    }
+
+    public void saveCommissionError(CommissionErrorEntity commissionErrorEntity){
+        try{
+            commissionErrorEntityDao.create(commissionErrorEntity);
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+    }
+
+    public List<CommissionErrorEntity> getCommissionErrors(){
+        try{
+            return commissionErrorEntityDao.queryBuilder().orderBy("note_created_date_time", true).query();
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+        return new ArrayList<>();
     }
 
 
