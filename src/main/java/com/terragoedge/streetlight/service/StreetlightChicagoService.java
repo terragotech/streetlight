@@ -559,30 +559,32 @@ public void sendCommissionErrorReport(){
             String[] csvTitles = {"idoncontroller", "noteguid", "macaddress", "note_created_time", "processed_time", "request", "response"};
             csvDatas.add(csvTitles);
             List<CommissionErrorEntity> commissionErrorEntities = connectionDAO.getCommissionErrors();
-            for (CommissionErrorEntity commissionErrorEntity : commissionErrorEntities) {
-                List<String> csvData = new ArrayList<>();
-                csvData.add(commissionErrorEntity.getTitle());
-                csvData.add(commissionErrorEntity.getNoteGuid());
-                csvData.add(commissionErrorEntity.getMacAddress());
-                csvData.add(OpenCsvUtils.getFormatedDateTime(commissionErrorEntity.getNoteCreteatedDateTime()));
-                csvData.add(OpenCsvUtils.getFormatedDateTime(commissionErrorEntity.getProcessedTime()));
-                csvData.add(commissionErrorEntity.getRequest());
-                csvData.add(commissionErrorEntity.getResponse());
-                csvDatas.add(csvData.toArray(new String[csvData.size()]));
-            }
-            String csvFileName = OpenCsvUtils.getCsvFileName();
-            String csvFilePath = folderPath + "/commission_error_" + csvFileName;
-            try {
-                OpenCsvUtils.csvWriterAll(csvDatas, csvFilePath);
-            } catch (Exception e) {
-                logger.error("Error in CSV Writting: ", e);
-            }
-            logger.info("Commission Error Report generated");
-            File csvFile = new File(csvFilePath);
-            logger.info("Commission Error Report exist");
-            if (csvFile.exists()) {
-                uploadFileToEdgeSlvServer(properties.getProperty("com.report.email.url"), csvFilePath, properties.getProperty("com.report.commissionerror.subject"), properties.getProperty("com.report.commissionerror.body"), properties.getProperty("com.report.commissionerror.email.receipents"));
-                logger.info("Commission Error Report sent");
+            if(commissionErrorEntities.size() > 0) {
+                for (CommissionErrorEntity commissionErrorEntity : commissionErrorEntities) {
+                    List<String> csvData = new ArrayList<>();
+                    csvData.add(commissionErrorEntity.getTitle());
+                    csvData.add(commissionErrorEntity.getNoteGuid());
+                    csvData.add(commissionErrorEntity.getMacAddress());
+                    csvData.add(OpenCsvUtils.getFormatedDateTime(commissionErrorEntity.getNoteCreteatedDateTime()));
+                    csvData.add(OpenCsvUtils.getFormatedDateTime(commissionErrorEntity.getProcessedTime()));
+                    csvData.add(commissionErrorEntity.getRequest());
+                    csvData.add(commissionErrorEntity.getResponse());
+                    csvDatas.add(csvData.toArray(new String[csvData.size()]));
+                }
+                String csvFileName = OpenCsvUtils.getCsvFileName();
+                String csvFilePath = folderPath + "/commission_error_" + csvFileName;
+                try {
+                    OpenCsvUtils.csvWriterAll(csvDatas, csvFilePath);
+                } catch (Exception e) {
+                    logger.error("Error in CSV Writting: ", e);
+                }
+                logger.info("Commission Error Report generated");
+                File csvFile = new File(csvFilePath);
+                logger.info("Commission Error Report exist");
+                if (csvFile.exists()) {
+                    uploadFileToEdgeSlvServer(properties.getProperty("com.report.email.url"), csvFilePath, properties.getProperty("com.report.commissionerror.subject"), properties.getProperty("com.report.commissionerror.body"), properties.getProperty("com.report.commissionerror.email.receipents"));
+                    logger.info("Commission Error Report sent");
+                }
             }
         }catch (Exception e){
             logger.error("Error in sendCommissionErrorReport: ",e);

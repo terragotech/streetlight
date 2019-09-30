@@ -1139,15 +1139,17 @@ public abstract class AbstractProcessor {
             setSLVTransactionLogs(slvTransactionLogs, url, CallType.REPLACE_OLC);
             ResponseEntity<String> response = restService.getPostRequest(url, null);
             if(response.getStatusCode() != HttpStatus.OK){
-                CommissionErrorEntity commissionErrorEntity = new CommissionErrorEntity();
-                commissionErrorEntity.setMacAddress(macAddress);
-                commissionErrorEntity.setNoteCreteatedDateTime(edgeNote.getCreatedDateTime());
-                commissionErrorEntity.setProcessedTime(System.currentTimeMillis());
-                commissionErrorEntity.setNoteGuid(edgeNote.getNoteGuid());
-                commissionErrorEntity.setRequest(url);
-                commissionErrorEntity.setResponse(response.getBody());
-                commissionErrorEntity.setTitle(idOnController);
-                connectionDAO.saveCommissionError(commissionErrorEntity);
+                saveCommissionError(macAddress,edgeNote,idOnController,url,response.getBody());
+            }else{
+                try {
+                    JsonObject jsonObject = (JsonObject) jsonParser.parse(response.getBody());
+                    String status = jsonObject.get("status").getAsString();
+                    if(status.equals("ERROR")){
+                        saveCommissionError(macAddress,edgeNote,idOnController,url,response.getBody());
+                    }
+                }catch (Exception e){
+                    logger.error("Error while parsing replace OLC response", e);
+                }
             }
             String responseString = response.getBody();
             setResponseDetails(slvTransactionLogs, responseString);
@@ -1752,4 +1754,15 @@ public boolean checkExistingMacAddressValid(EdgeNote edgeNote, InstallMaintenanc
         return flag;
     }
 
+    private void saveCommissionError(String macAddress,EdgeNote edgeNote,String idOnController,String url,String responseBody){
+        CommissionErrorEntity commissionErrorEntity = new CommissionErrorEntity();
+        commissionErrorEntity.setMacAddress(macAddress);
+        commissionErrorEntity.setNoteCreteatedDateTime(edgeNote.getCreatedDateTime());
+        commissionErrorEntity.setProcessedTime(System.currentTimeMillis());
+        commissionErrorEntity.setNoteGuid(edgeNote.getNoteGuid());
+        commissionErrorEntity.setRequest(url);
+        commissionErrorEntity.setResponse(responseBody);
+        commissionErrorEntity.setTitle(idOnController);
+        connectionDAO.saveCommissionError(commissionErrorEntity);
+    }
 }
