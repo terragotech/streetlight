@@ -571,7 +571,7 @@ public void sendCommissionErrorReport(){
                     csvData.add(commissionErrorEntity.getResponse());
                     csvDatas.add(csvData.toArray(new String[csvData.size()]));
                 }
-                String csvFileName = OpenCsvUtils.getCsvFileName();
+                String csvFileName = OpenCsvUtils.getCsvFileName()+".csv";
                 String csvFilePath = folderPath + "/commission_error_" + csvFileName;
                 try {
                     OpenCsvUtils.csvWriterAll(csvDatas, csvFilePath);
