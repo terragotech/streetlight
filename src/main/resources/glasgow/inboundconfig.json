@@ -1,0 +1,26 @@
+{
+  "slvfields" : [{"slvfield":"name","id":"3"},
+    {"slvfield":"idoncontroller","id":"15"},
+    {"slvfield":"address","id":"12"},
+    {"slvfield":"location_city","id":"10"},
+    {"slvfield":"geozonepath","id":"14"},
+    {"slvfield":"pole_type","id":"9"},
+    {"slvfield":"device_premise","id":"8"},
+    {"slvfield":"luminaire_brand","id":"6"},
+    {"slvfield":"luminaire_model","id":"5"},
+    {"slvfield":"luminaire_type","id":"4"},
+    {"slvfield":"luminaire_distributiontype","id":"13"},
+    {"slvfield":"CONST.VALUE","id":"17","value":"Install"},
+    {"slvfield":"macaddress","id":"22"},
+    {"slvfield":"CONST.VALUE.INSTALL_STATUS","id":"21","value":"Completed,Not Yet Complete"},
+    {"slvfield":"CONST.VALUE","id":"1","value":"Hide"}
+  ],
+  "slvchangefields" : [{"slvfield":"macaddress","id":"22"}],
+  "formtemplateguid":"99f5300b-c1e4-4734-94f0-1ec70a35d6ae",
+  "completenotelayerguid":"3ca2ad17-0b9d-46cf-a716-18fb87ea7bd9",
+  "notcompletenotelayerguid":"06683596-6950-4dce-ad3a-388caa0e1731",
+  "defaultnotelayerguid":"3ca2ad17-0b9d-46cf-a716-18fb87ea7bd9",
+  "usedefaultlayerguid":"false",
+  "slvnmacaddressfield":"macaddress",
+  "slvquery" : "name,idoncontroller,address,location_city,geozonepath,pole_type,device_premise,luminaire_brand,luminaire_model,luminaire_type,luminaire_distributiontype,macaddress,install_date,lat,lng"
+}

@@ -1,0 +1,29 @@
+{
+  "slvfields" : [{"slvfield":"name","id":"12"},
+    {"slvfield":"idoncontroller","id":"13"},
+    {"slvfield":"address","id":"14"},
+    {"slvfield":"reference","id":"2"},
+    {"slvfield":"CUSTOM.VALUE.1","id":"7"},
+    {"slvfield":"dimminggroupname","id":"3"},
+    {"slvfield":"device_node_hwtype","id":"8"},
+    {"slvfield":"power","id":"10"},
+    {"slvfield":"luminaire_brand","id":"11"},
+    {"slvfield":"geozonepath","id":"9"},
+    {"slvfield":"macaddress","id":"17"},
+    {"slvfield":"CONST.VALUE","id":"41","value":"Hide"},
+    {"slvfield":"CONST.VALUE","id":"54","value":"Hide"},
+    {"slvfield":"CONST.VALUE","id":"36","value":"Hide"},
+    {"slvfield":"CONST.VALUE","id":"15","value":"Install Light"},
+    {"slvfield":"CONST.VALUE","id":"23","value":"Smart Controller"},
+    {"slvfield":"CONST.VALUE.INSTALL_STATUS","id":"20","value":"Completed,Not Yet Complete"}
+
+  ],
+  "slvchangefields" : [{"slvfield":"macaddress","id":"17"}],
+  "formtemplateguid":"3d7d83ce-2212-4729-9321-e613e99bd061",
+  "completenotelayerguid":"dd362590-432b-4d60-9455-2867aeb2d8a8",
+  "notcompletenotelayerguid":"c9d4e4ae-be28-429e-ade7-9f87f0f48510",
+  "defaultnotelayerguid":"dd362590-432b-4d60-9455-2867aeb2d8a8",
+  "usedefaultlayerguid":"false",
+  "slvnmacaddressfield":"macaddress",
+  "slvquery" : "idoncontroller,address,reference,dimminggroupname,device_node_hwtype,power,luminaire_brand,geozonepath,name,macaddress,installStatus,lat,lng,install_date"
+}
