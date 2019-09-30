@@ -1,5 +1,12 @@
 package com.terrago.jsoncsvconvertor;
 
+import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
+
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.TimeZone;
+
 public class EdgeData {
     private String title;
     private long slvCslpNodeInstallDate;
@@ -99,5 +106,75 @@ public class EdgeData {
                 ", edgeLumInstallDate=" + edgeLumInstallDate +
                 '}';
     }
+
+
+
+    public boolean isEqual(){
+
+        boolean res = true;
+        if(slvCslpLumInstallDate != edgeCslpLumInstallDate){
+            res = false;
+        }else{
+            slvCslpLumInstallDate = 0;
+            edgeCslpLumInstallDate = 0;
+        }
+
+        if(slvCslpNodeInstallDate != edgeCslpNodeInstallDate){
+            res = false;
+        }else{
+            slvCslpNodeInstallDate = 0;
+            edgeCslpNodeInstallDate = 0;
+        }
+
+        if(slvInstallDate != edgeInstallDate){
+            res = false;
+        }else{
+            slvInstallDate = 0;
+            edgeInstallDate = 0;
+        }
+
+        if(slvLumInstallDate != edgeLumInstallDate){
+            res = false;
+        }else{
+            slvLumInstallDate = 0;
+            edgeLumInstallDate = 0;
+        }
+
+        return res;
+    }
+
+
+    public boolean compareStartOfDay(){
+        boolean res = true;
+        if(!isSameDay(slvCslpNodeInstallDate,edgeCslpNodeInstallDate)){
+            res = false;
+        }
+
+        if(!isSameDay(slvCslpLumInstallDate,edgeCslpLumInstallDate)){
+            res = false;
+        }
+
+        if(!isSameDay(slvLumInstallDate,edgeLumInstallDate)){
+            res = false;
+        }
+
+        if(!isSameDay(slvInstallDate,edgeInstallDate)){
+            res = false;
+        }
+
+        return  res;
+
+    }
+
+
+    public boolean isSameDay(long slvDate,long edgeDate){
+        SimpleDateFormat fmt = new SimpleDateFormat("yyyyMMdd");
+        System.out.println("D1"+fmt.format(new Date(edgeDate)));
+        System.out.println("D2"+fmt.format(new Date(slvDate)));
+        return fmt.format(new Date(edgeDate)).equals(fmt.format(new Date(slvDate)));
+    }
+
+
+
 }
 

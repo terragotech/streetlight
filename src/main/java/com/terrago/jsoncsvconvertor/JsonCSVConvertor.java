@@ -9,83 +9,119 @@ import com.opencsv.CSVReader;
 import com.opencsv.CSVWriter;
 import com.terrago.jsoncsvconvertor.promoted.PromotedConfig;
 import com.terrago.jsoncsvconvertor.promoted.PromotedDatum;
+import com.terrago.jsoncsvconvertor.utils.DataConnection;
 import org.apache.commons.io.IOUtils;
+import org.apache.log4j.Logger;
+import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
+import org.joda.time.format.DateTimeFormat;
+import org.joda.time.format.DateTimeFormatter;
 
 import java.io.*;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.Statement;
+import java.text.SimpleDateFormat;
+import java.util.*;
 
 public class JsonCSVConvertor {
 
+private static final Logger logger = Logger.getLogger(JsonCSVConvertor.class);
+
     public static void main(String[] r)throws Exception{
         Map<String,EdgeData> edgeDataMap = new HashMap<>();
-        List<String> dataInList = IOUtils.readLines(new FileInputStream("/Users/Nithish/Documents/office/data-fix/Aug23/comed_data.csv"));
-        Gson gson = new GsonBuilder()
-                .setLenient()
-                .create();
-        ;
         processSLVData(edgeDataMap);
-        List<EdgeData> edgeDataList = new ArrayList<>();
-        int  i = 0;
-        for(String dataRaw : dataInList){
+        processEdgeData(edgeDataMap);
+        Collection<EdgeData> edgeDataCollection =  edgeDataMap.values();
+        List<EdgeData> results = new ArrayList<>();
+        List<EdgeData> dayMatchRes = new ArrayList<>();
+       for(EdgeData edgeData : edgeDataCollection){
+          boolean isEqual = edgeData.isEqual();
+          if(!isEqual){
+              boolean dayMatch =  edgeData.compareStartOfDay();
+              if(dayMatch){
+                  dayMatchRes.add(edgeData);
+              }else{
+                  results.add(edgeData);
+              }
 
-        }
+          }
+       }
+        generateInstallCSVFile(results,getFolderName()+"/res.csv");
+        generateInstallCSVFile(dayMatchRes,getFolderName()+"/daymatch.csv");
+    }
 
 
-
-        generateInstallCSVFile(edgeDataList,"/Users/Nithish/Documents/office/data-fix/Aug23/res_1.csv");
+    public static  String getFolderName(){
+        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy_MM_dd");
+        String folderName = simpleDateFormat.format(new Date());
+        File file = new File("./"+folderName+"/");
+        file.mkdirs();
+        return file.getPath();
     }
 
 
     public static void  processEdgeData(Map<String,EdgeData> edgeDataMap)throws  Exception{
-        List<String> dataInList = IOUtils.readLines(new FileInputStream("/Users/Nithish/Documents/office/data-fix/Aug23/comed_data.csv"));
-        Gson gson = new GsonBuilder()
-                .setLenient()
-                .create();
-        for(String data : dataInList){
-            List<PromotedConfig> promotedConfigList =  gson.fromJson(data,new TypeToken<List<PromotedConfig>>() {
-            }.getType());
-            for(PromotedConfig promotedConfig : promotedConfigList){
-                List<PromotedDatum> promotedDatumList =  promotedConfig.getPromotedData();
-                String title = null;
-                String cslpNode = null;
-                String cslpLum = null;
-                String nodeInstall = null;
-                String lumInstall = null;
-                for(PromotedDatum promotedDatum : promotedDatumList){
-                    switch (promotedDatum.getComponentId()){
-                        case "3":
-                            title = promotedDatum.getValue();
-                            break;
-                        case "169":
-                            cslpNode = promotedDatum.getValue();
-                            break;
-                        case "170":
-                            cslpLum  = promotedDatum.getValue();
-                            break;
-                        case "171":
-                            nodeInstall = promotedDatum.getValue();
-                            break;
-                        case "162":
-                            lumInstall = promotedDatum.getValue();
-                            break;
-                    }
-                }
-                if(!edgeDataMap.containsKey(title)){
-                    EdgeData edgeData = new EdgeData();
-                    edgeDataMap.put(title,edgeData);
-                }
-                EdgeData edgeData = edgeDataMap.get(title);
-                edgeData.setEdgeCslpNodeInstallDate(Long.valueOf(getStringDate(cslpNode)));
-                edgeData.setEdgeCslpLumInstallDate(Long.valueOf(getStringDate(cslpLum)));
-                edgeData.setEdgeInstallDate(Long.valueOf(getStringDate(nodeInstall)));
-                edgeData.setEdgeLumInstallDate(Long.valueOf(getStringDate(lumInstall)));
+        Connection connection = DataConnection.getConnetion();
+        Statement statement = null;
+        try {
+            logger.info("Going to load data from Edge Data.");
+            Gson gson = new Gson();
+            statement = connection.createStatement();
+            ResultSet rs = statement.executeQuery("select promotedvalue from promotedformdata_31");
+            while (rs.next()) {
+                String promotedValue = rs.getString("promotedvalue");
 
+                List<PromotedConfig> promotedConfigList =  gson.fromJson(promotedValue,new TypeToken<List<PromotedConfig>>() {
+                }.getType());
+                for(PromotedConfig promotedConfig : promotedConfigList){
+                    List<PromotedDatum> promotedDatumList =  promotedConfig.getPromotedData();
+                    String title = null;
+                    String cslpNode = null;
+                    String cslpLum = null;
+                    String nodeInstall = null;
+                    String lumInstall = null;
+                    for(PromotedDatum promotedDatum : promotedDatumList){
+                        switch (promotedDatum.getComponentId()){
+                            case "3":
+                                title = promotedDatum.getValue();
+                                break;
+                            case "169":
+                                cslpNode = promotedDatum.getValue();
+                                break;
+                            case "170":
+                                cslpLum  = promotedDatum.getValue();
+                                break;
+                            case "171":
+                                nodeInstall = promotedDatum.getValue();
+                                break;
+                            case "172":
+                                lumInstall = promotedDatum.getValue();
+                                break;
+                        }
+                    }
+                    if(!edgeDataMap.containsKey(title)){
+                        EdgeData edgeData = new EdgeData();
+                        edgeDataMap.put(title,edgeData);
+                    }
+                    EdgeData edgeData = edgeDataMap.get(title);
+                    edgeData.setEdgeCslpNodeInstallDate(Long.valueOf(getStringDate(cslpNode)));
+                    edgeData.setEdgeCslpLumInstallDate(Long.valueOf(getStringDate(cslpLum)));
+                    edgeData.setEdgeInstallDate(Long.valueOf(getStringDate(nodeInstall)));
+                    edgeData.setEdgeLumInstallDate(Long.valueOf(getStringDate(lumInstall)));
+                }
 
             }
+            logger.info("Edge Data has been loaded.");
+        }catch (Exception e){
+           logger.error("Error in processEdgeData",e);
+        }finally {
+            if(statement != null){
+                statement.close();
+            }
         }
+
+
     }
 
     public  static String getStringDate(String val){
@@ -98,20 +134,79 @@ public class JsonCSVConvertor {
         return "0";
     }
 
-
+//idoncontroller;cslp_node_install_date;cslp_lum_install_date;luminaire_installdate;install_date
     public static  void  processSLVData(Map<String,EdgeData> edgeDataMap)throws  Exception{
-       CSVReader csvReader = new CSVReader(new FileReader(""));
-        String[] dataInList = null;
-        while((dataInList = csvReader.readNext()) != null){
-            EdgeData edgeData = new EdgeData();
-            edgeDataMap.put(dataInList[0],edgeData);
-            edgeData.setTitle(dataInList[0]);
-            edgeData.setSlvCslpNodeInstallDate(dataInList[1].trim().isEmpty() ? 0 : Long.valueOf(dataInList[1].trim()));
-            edgeData.setSlvCslpLumInstallDate(dataInList[2].trim().isEmpty() ? 0 : Long.valueOf(dataInList[2].trim()));
-            edgeData.setEdgeInstallDate(dataInList[3].trim().isEmpty() ? 0 : Long.valueOf(dataInList[3].trim()));
-            edgeData.setSlvLumInstallDate(dataInList[4].trim().isEmpty() ? 0 : Long.valueOf(dataInList[4].trim()));
+        Connection connection = DataConnection.getConnetion();
+        Statement statement = null;
+        try {
+            logger.info("Getting Data from SLV.");
+            statement = connection.createStatement();
+            ResultSet rs = statement.executeQuery("select idoncontroller,cslp_node_install_date,cslp_lum_install_date,install_date,luminaire_installdate from slvdata");
+            while (rs.next()) {
+
+                String idOnController = rs.getString("idoncontroller");
+                String cslpNodeInstallDate = rs.getString("cslp_node_install_date");
+                String cslpLumInstallDate = rs.getString("cslp_lum_install_date");
+                String installDate = rs.getString("install_date");
+                String lumInstallDate = rs.getString("luminaire_installdate");
+
+
+                EdgeData edgeData = new EdgeData();
+                edgeDataMap.put(idOnController,edgeData);
+                edgeData.setTitle(idOnController);
+                edgeData.setSlvCslpNodeInstallDate(toMilli(cslpNodeInstallDate));
+                edgeData.setSlvCslpLumInstallDate(toMilli(cslpLumInstallDate));
+                edgeData.setSlvLumInstallDate(toMilli(lumInstallDate));
+                edgeData.setSlvInstallDate(toMilli(installDate));
+            }
+            logger.info("SLV Data has been loaded.");
+            logger.info("Total Records:"+edgeDataMap.keySet().size());
+        }catch (Exception e){
+            logger.error("Error in processSLVData",e);
+        }finally {
+            if(statement != null){
+                statement.close();
+            }
         }
 
+
+    }
+
+
+    private static  long toMilli(String dateVal){
+        if(dateVal != null && !dateVal.trim().isEmpty()){
+            try{
+                DateTimeFormatter fmt = DateTimeFormat.forPattern("yyyy-MM-dd HH:mm:ss").withZone(DateTimeZone.forTimeZone(TimeZone.getTimeZone("CST")));
+                DateTime dt =  fmt.parseDateTime(dateVal);
+                return dt.withTimeAtStartOfDay().getMillis();
+            }catch (Exception e){
+
+
+                try{
+                    DateTimeFormatter fmt = DateTimeFormat.forPattern("yyyy-MM-dd").withZone(DateTimeZone.forTimeZone(TimeZone.getTimeZone("CST")));
+                    DateTime dt =  fmt.parseDateTime(dateVal);
+                    return dt.withTimeAtStartOfDay().getMillis();
+                }catch (Exception e1){
+
+
+                    try{
+                        DateTimeFormatter fmt = DateTimeFormat.forPattern("yyyy-MM-dd HH:mm:ss.SSS").withZone(DateTimeZone.forTimeZone(TimeZone.getTimeZone("CST")));
+                        DateTime dt =  fmt.parseDateTime(dateVal);
+                        return dt.withTimeAtStartOfDay().getMillis();
+                    }catch (Exception e2){
+                        try{
+                            DateTimeFormatter fmt = DateTimeFormat.forPattern("yyyy-MM-dd HH:mm").withZone(DateTimeZone.forTimeZone(TimeZone.getTimeZone("CST")));
+                            DateTime dt =  fmt.parseDateTime(dateVal);
+                            return dt.withTimeAtStartOfDay().getMillis();
+                        }catch (Exception e3){
+                            e3.printStackTrace();
+                        }
+                    }
+                }
+            }
+
+        }
+        return 0;
     }
 
    /* public static void main_1(String[] r) throws Exception {
@@ -181,14 +276,18 @@ public class JsonCSVConvertor {
     public static List<String[]> toStringInstallReportArray(List<EdgeData> installtionReportJsons) {
         List<String[]> records = new ArrayList<String[]>();
         //add header record
-        records.add(new String[]{"Title", "macAddress","macAddressRNF","macAddressRN","Action"});
+        records.add(new String[]{"Title", "SLV_CSLP_Node_Date","Edge_CSLP_Node_Date","SLV_CSLP_Lum_Date","Edge_CSLP_Lum_Date","SLV_Lum_Date","Edge_Lum_Date","SLV_Install_Date","Edge_Install_Date"});
         for (EdgeData edgeData : installtionReportJsons) {
             records.add(new String[]{
                     nullCheck(edgeData.getTitle()),
-                    nullCheck(edgeData.getMacAddress()),
-                    nullCheck(edgeData.getMacAddressRNF()),
-                    nullCheck(edgeData.getMacAddressRN()),
-                    nullCheck(edgeData.getAction())
+                    nullCheck(String.valueOf(edgeData.getSlvCslpNodeInstallDate())),
+                    nullCheck(String.valueOf(edgeData.getEdgeCslpNodeInstallDate())),
+                    nullCheck(String.valueOf(edgeData.getSlvCslpLumInstallDate())),
+                    nullCheck(String.valueOf(edgeData.getEdgeCslpLumInstallDate())),
+                    nullCheck(String.valueOf(edgeData.getSlvLumInstallDate())),
+                    nullCheck(String.valueOf(edgeData.getEdgeLumInstallDate())),
+                    nullCheck(String.valueOf(edgeData.getSlvInstallDate())),
+                    nullCheck(String.valueOf(edgeData.getEdgeInstallDate())),
             });
         }
         return records;
@@ -196,7 +295,7 @@ public class JsonCSVConvertor {
 
 
     public static String nullCheck(String str) {
-        if (str == null || str.equals("null") || str.equals("(null)") || str.equals("Null")) {
+        if (str == null || str.equals("null") || str.equals("(null)") || str.equals("Null") || str.equals("0")) {
             return "";
         }
         return str;
