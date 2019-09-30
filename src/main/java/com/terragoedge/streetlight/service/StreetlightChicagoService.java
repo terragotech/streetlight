@@ -313,7 +313,7 @@ public class StreetlightChicagoService extends AbstractProcessor {
         }
 
         HttpEntity<MultiValueMap<String, Object>> requestEntity
-                = new HttpEntity<>(headers);
+                = new HttpEntity<>(body,headers);
 
         ResponseEntity<String> responseEntity = restTemplate.postForEntity(url, requestEntity, String.class);
         logger.info("------------ Response ------------------");
