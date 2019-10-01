@@ -19,6 +19,7 @@ import com.vividsolutions.jts.geom.Geometry;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.wololo.geojson.Feature;
 import org.wololo.geojson.GeoJSONFactory;
@@ -92,7 +93,13 @@ public abstract class AbstractSlvService extends EdgeService {
 
     public ResponseEntity<String> createDevice(EdgeNote edgenote,
                                                String geoZoneId) {
-
+        String title = null;
+        try{
+            title = URLEncoder(edgenote.getTitle());
+        }catch (Exception e){
+            logger.error("Error while encode title: ",e);
+            return new ResponseEntity<String>("Error while encoding idoncontroller", HttpStatus.INTERNAL_SERVER_ERROR);
+        }
         Feature feature = (Feature) GeoJSONFactory.create(edgenote.getGeometry());
 
         // parse Geometry from Feature
@@ -111,7 +118,7 @@ public abstract class AbstractSlvService extends EdgeService {
         streetLightDataParams.put("methodName", methodName);
         streetLightDataParams.put("categoryStrId", categoryStrId);
         streetLightDataParams.put("controllerStrId", controllerStrId);
-        streetLightDataParams.put("idOnController", edgenote.getTitle());
+        streetLightDataParams.put("idOnController", title);
         streetLightDataParams.put("geoZoneId", geoZoneId);
         streetLightDataParams.put("lng", String.valueOf(geom.getCoordinate().x));
         streetLightDataParams.put("lat", String.valueOf(geom.getCoordinate().y));

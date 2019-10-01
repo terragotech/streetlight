@@ -514,6 +514,13 @@ public abstract class SlvInterfaceService extends AbstractSlvService {
 
                 }
                 logger.info("newNodeMacAddress:" + newNodeMacAddress);
+
+                if(newNodeMacAddress == null ||  newNodeMacAddress.trim().isEmpty()){
+                    if(macID.isRequired()){
+                        throw new NoValueException("MAC Address is Empty: "+edgeNote.getTitle());
+
+                    }
+                }
                 if (newNodeMacAddress.contains("null") || newNodeMacAddress.equals("null")) {
                     throw new MacAddressProcessedException("InValid MAC address." + edgeNote.getTitle(), newNodeMacAddress);
                 }

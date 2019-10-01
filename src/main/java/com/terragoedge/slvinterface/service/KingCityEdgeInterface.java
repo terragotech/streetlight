@@ -5,6 +5,7 @@ import java.io.FileInputStream;
 import java.io.FileReader;
 import java.io.IOException;
 import java.lang.reflect.Type;
+import java.net.URLEncoder;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
@@ -136,7 +137,14 @@ public class KingCityEdgeInterface extends SlvInterfaceService{
 
     @Override
     public void processSetDevice(List<EdgeFormData> edgeFormDataList, ConfigurationJson configurationJson, EdgeNote edgeNote, List<Object> paramsList, SlvSyncDetails slvSyncDetails, String controllerStrIdValue) throws NoValueException, DeviceUpdationFailedException {
-        paramsList.add("idOnController=" + edgeNote.getTitle());
+        String title = null;
+        try {
+            title = URLEncoder.encode(edgeNote.getTitle(), "UTF-8");
+        }catch (Exception e){
+            logger.error("Error while encoding idoncontroller in processSetDevice: ", e);
+            return;
+        }
+	    paramsList.add("idOnController=" + title);
         paramsList.add("controllerStrId=" + controllerStrIdValue);
         addStreetLightData("idOnController", edgeNote.getTitle(), paramsList);
         addOtherParams(edgeNote, paramsList);
