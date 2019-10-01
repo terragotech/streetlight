@@ -885,7 +885,7 @@ public abstract class AbstractProcessor {
             }
 
             //Re: SLV: Invalid Luminaire Type For Philips Fixture Scans (20190925) as per mail conversion
-            if(slvServerData.getLuminaireModel() != null && slvServerData.getLuminaireModel().toLowerCase().startsWith("philips")){
+            if(slvServerData.getLuminaireBrand() != null && slvServerData.getLuminaireBrand().toLowerCase().startsWith("philips")){
                 fixtureInfo[5] = "LED";
             }
 
