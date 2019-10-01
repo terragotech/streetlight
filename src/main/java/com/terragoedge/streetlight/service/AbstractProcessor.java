@@ -149,11 +149,13 @@ public abstract class AbstractProcessor {
         String atlasPhysicalPage = null;
         String communicationSatus = null;
         String fixtureCode = null;
+        String proposedContextValue = null;
         for (int i = 0; i < arr.size(); i++) {
             JsonObject jsonObject1 = arr.get(i).getAsJsonObject();
             String keyValue = jsonObject1.get("key").getAsString();
             if (keyValue != null && keyValue.equals(proposedContextKey)) {
                 String proposedContext = jsonObject1.get("value").getAsString();
+                proposedContextValue = proposedContext;
                 contextListHashMap.put(idOnController, proposedContext);
             } else if (keyValue != null && keyValue.equals(cslInstallDateKey)) {
                 cslpNodeInstall = jsonObject1.get("value").getAsString();
@@ -212,6 +214,10 @@ public abstract class AbstractProcessor {
 
         if(fixtureCode != null && !fixtureCode.trim().isEmpty()){
             installMaintenanceLogModel.setLuminaireFixturecode(fixtureCode);
+        }
+
+        if(proposedContextValue != null && !proposedContextValue.trim().isEmpty()){
+            installMaintenanceLogModel.setProposedContext(proposedContextValue);
         }
 
         if(nodeInstallDate == null){
@@ -785,10 +791,12 @@ public abstract class AbstractProcessor {
     }
 
     private void addProContextLookupData(ProContextLookupData proContextLookupData,SlvServerData slvServerData,List<Object> paramsList,InstallMaintenanceLogModel installMaintenanceLogModel){
-        proContextLookupData.setLumBrand(slvServerData.getLuminaireBrand());
-        proContextLookupData.setLumModel(slvServerData.getLuminaireModel());
-        proContextLookupData.setLumPartNumber(slvServerData.getLuminairePartNumber());
-        addProposedContext(proContextLookupData,paramsList,installMaintenanceLogModel);
+        if(installMaintenanceLogModel.getProposedContext() == null || installMaintenanceLogModel.getProposedContext().isEmpty()){
+            proContextLookupData.setLumBrand(slvServerData.getLuminaireBrand());
+            proContextLookupData.setLumModel(slvServerData.getLuminaireModel());
+            proContextLookupData.setLumPartNumber(slvServerData.getLuminairePartNumber());
+            addProposedContext(proContextLookupData,paramsList,installMaintenanceLogModel);
+        }
     }
 
 
@@ -1004,25 +1012,12 @@ public abstract class AbstractProcessor {
             formData.setFormTemplateGuid(properties.getProperty("amerescousa.edge.formtemplateGuid"));
             int pos = formDatas.indexOf(formData);
             List<EdgeFormData> edgeFormDatas = formDatas.get(pos).getFormDef();
-//            String proposedContext = getFormValue(edgeFormDatas,"Proposed context");
-//            String formFixtureCode = getFormValue(edgeFormDatas,"Fixture Code");
-            String proposedContext = "";
-            String formFixtureCode = "";
-            try {
-                proposedContext = edgeNote.getLocationDescription().split("\\|")[0];
-            }catch (Exception e){
-                e.printStackTrace();
-            }
-            try {
-                formFixtureCode = edgeNote.getLocationDescription().split("\\|")[1];
-            }catch (Exception e){
-                e.printStackTrace();
-            }
+            String proposedContext = getFormValue(edgeFormDatas,16);
+            String formFixtureCode = getFormValue(edgeFormDatas,12);
+
             String atlasPage = Utils.getAtlasPage(edgeNotebook.getNotebookName());
 
-            String atlasGroup = Utils.getAtlasGroup(proposedContext);
-            String fixtureCode = Utils.getFixtureCode(formFixtureCode.startsWith(" ") ? formFixtureCode.substring(1) : formFixtureCode);
-            String fixtureName = atlasPage+"-"+atlasGroup+"-"+edgeNote.getTitle()+"-"+fixtureCode;
+            String fixtureName = getFixtureName(proposedContext,formFixtureCode,atlasPage,edgeNote.getTitle());
             String geoJson = edgeNote.getGeometry();
             JsonObject geojsonObject = jsonParser.parse(geoJson).getAsJsonObject();
             JsonObject geometryObject = geojsonObject.get("geometry").getAsJsonObject();
@@ -1493,7 +1488,14 @@ public boolean checkExistingMacAddressValid(EdgeNote edgeNote, InstallMaintenanc
         }
         return "";
     }
-
+    private String getFormValue(List<EdgeFormData> edgeFormDatas,int id){
+        for(EdgeFormData edgeFormData : edgeFormDatas){
+            if(edgeFormData.getId() == id){
+                return edgeFormData.getValue();
+            }
+        }
+        return "";
+    }
 
     protected boolean isDatePresent(String title,String date,String type){
         EdgeSLVDate edgeSLVDate = connectionDAO.getEdgeNodeDate(title,date,type);
@@ -1706,10 +1708,16 @@ public boolean checkExistingMacAddressValid(EdgeNote edgeNote, InstallMaintenanc
                 logger.info("DB ProContextLookupData"+dbProContextLookupData.toString());
                 if(dbProContextLookupData.getLumBrand() != null && dbProContextLookupData.getLumBrand().toLowerCase().startsWith("existing") && installMaintenanceLogModel.isButtonPhotoCell()){
                     addStreetLightData("location.proposedcontext", "Photocell Only", paramsList);
+                    String fixtureName = getFixtureName("Photocell Only",installMaintenanceLogModel.getLuminaireFixturecode(),installMaintenanceLogModel.getAtlasPhysicalPage(),installMaintenanceLogModel.getNoteName());
+                    addStreetLightData("userName", fixtureName, paramsList);
                 }else if(dbProContextLookupData.getLumBrand() != null && dbProContextLookupData.getLumBrand().toLowerCase().startsWith("existing") && installMaintenanceLogModel.isNodeOnly()){
                     addStreetLightData("location.proposedcontext", "Node Only", paramsList);
+                    String fixtureName = getFixtureName("Node Only",installMaintenanceLogModel.getLuminaireFixturecode(),installMaintenanceLogModel.getAtlasPhysicalPage(),installMaintenanceLogModel.getNoteName());
+                    addStreetLightData("userName", fixtureName, paramsList);
                 }else {
                     addStreetLightData("location.proposedcontext", dbProContextLookupData.getProposedContext(), paramsList);
+                    String fixtureName = getFixtureName(dbProContextLookupData.getProposedContext(),installMaintenanceLogModel.getLuminaireFixturecode(),installMaintenanceLogModel.getAtlasPhysicalPage(),installMaintenanceLogModel.getNoteName());
+                    addStreetLightData("userName", fixtureName, paramsList);
                 }
 
             }
@@ -1751,6 +1759,13 @@ public boolean checkExistingMacAddressValid(EdgeNote edgeNote, InstallMaintenanc
 
         }
         return flag;
+    }
+
+    private String getFixtureName(String proposedContext,String formFixtureCode,String atlasPage,String title){
+        String atlasGroup = Utils.getAtlasGroup(proposedContext);
+        String fixtureCode = Utils.getFixtureCode(formFixtureCode.startsWith(" ") ? formFixtureCode.substring(1) : formFixtureCode);
+        String fixtureName = atlasPage+"-"+atlasGroup+"-"+title+"-"+fixtureCode;
+        return fixtureName;
     }
 
 }

@@ -24,7 +24,16 @@ public class InstallMaintenanceLogModel extends LoggingModel {
     private boolean isPoleKnockDown;
 
     private boolean isAmerescoUser;
+    private String proposedContext;
 
+
+    public String getProposedContext() {
+        return proposedContext;
+    }
+
+    public void setProposedContext(String proposedContext) {
+        this.proposedContext = proposedContext;
+    }
 
     public boolean isAmerescoUser() {
         return isAmerescoUser;
@@ -139,6 +148,7 @@ public class InstallMaintenanceLogModel extends LoggingModel {
                 ", isInstallOnWrongFix=" + isInstallOnWrongFix +
                 ", isPoleKnockDown=" + isPoleKnockDown +
                 ", isAmerescoUser=" + isAmerescoUser +
+                ", proposedContext='" + proposedContext + '\'' +
                 ", datesHolder=" + datesHolder +
                 '}';
     }
