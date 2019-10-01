@@ -25,6 +25,7 @@ public class InstallMaintenanceLogModel extends LoggingModel {
 
     private boolean isAmerescoUser;
     private String proposedContext;
+    private String atlasGroup;
 
 
     private boolean isBulkImport;
@@ -145,6 +146,14 @@ public class InstallMaintenanceLogModel extends LoggingModel {
         isFixtureOnly = fixtureOnly;
     }
 
+    public String getAtlasGroup() {
+        return atlasGroup;
+    }
+
+    public void setAtlasGroup(String atlasGroup) {
+        this.atlasGroup = atlasGroup;
+    }
+
     @Override
     public String toString() {
         return "InstallMaintenanceLogModel{" +
@@ -160,6 +169,8 @@ public class InstallMaintenanceLogModel extends LoggingModel {
                 ", isPoleKnockDown=" + isPoleKnockDown +
                 ", isAmerescoUser=" + isAmerescoUser +
                 ", proposedContext='" + proposedContext + '\'' +
+                ", atlasGroup='" + atlasGroup + '\'' +
+                ", isBulkImport=" + isBulkImport +
                 ", datesHolder=" + datesHolder +
                 '}';
     }

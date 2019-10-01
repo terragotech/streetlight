@@ -150,6 +150,7 @@ public abstract class AbstractProcessor {
         String communicationSatus = null;
         String fixtureCode = null;
         String proposedContextValue = null;
+        String atlasGroupValue = null;
         for (int i = 0; i < arr.size(); i++) {
             JsonObject jsonObject1 = arr.get(i).getAsJsonObject();
             String keyValue = jsonObject1.get("key").getAsString();
@@ -176,6 +177,8 @@ public abstract class AbstractProcessor {
                 communicationSatus = jsonObject1.get("value").getAsString();
             }else if(keyValue != null && keyValue.equals("userproperty.luminaire.fixturecode")){
                 fixtureCode = jsonObject1.get("value").getAsString();
+            }else if(keyValue != null && keyValue.equals("userProperty.network.atlasgroup")){
+                atlasGroupValue = jsonObject1.get("value").getAsString();
             }
             //userproperty.location.atlasphysicalpage
 
@@ -218,6 +221,10 @@ public abstract class AbstractProcessor {
 
         if(proposedContextValue != null && !proposedContextValue.trim().isEmpty()){
             installMaintenanceLogModel.setProposedContext(proposedContextValue);
+        }
+
+        if(atlasGroupValue != null && !atlasGroupValue.trim().isEmpty()){
+            installMaintenanceLogModel.setAtlasGroup(atlasGroupValue);
         }
 
         if(nodeInstallDate == null){
@@ -1011,7 +1018,7 @@ public abstract class AbstractProcessor {
         return geozoneId;
     }
 
-    protected int createDevice(SLVTransactionLogs slvTransactionLogs,EdgeNote edgeNote,int geoZoneId){
+    protected int createDevice(SLVTransactionLogs slvTransactionLogs,EdgeNote edgeNote,int geoZoneId,String atlasGroup){
         int deviceId = -1;
         try {
             String mainUrl = properties.getProperty("streetlight.slv.url.main");
@@ -1031,7 +1038,7 @@ public abstract class AbstractProcessor {
 
             String atlasPage = Utils.getAtlasPage(edgeNotebook.getNotebookName());
 
-            String fixtureName = getFixtureName(proposedContext,formFixtureCode,atlasPage,edgeNote.getTitle());
+            String fixtureName = getFixtureName(proposedContext,formFixtureCode,atlasPage,edgeNote.getTitle(),atlasGroup);
             String geoJson = edgeNote.getGeometry();
             JsonObject geojsonObject = jsonParser.parse(geoJson).getAsJsonObject();
             JsonObject geometryObject = geojsonObject.get("geometry").getAsJsonObject();
@@ -1722,15 +1729,15 @@ public boolean checkExistingMacAddressValid(EdgeNote edgeNote, InstallMaintenanc
                 logger.info("DB ProContextLookupData"+dbProContextLookupData.toString());
                 if(dbProContextLookupData.getLumBrand() != null && dbProContextLookupData.getLumBrand().toLowerCase().startsWith("existing") && installMaintenanceLogModel.isButtonPhotoCell()){
                     addStreetLightData("location.proposedcontext", "Photocell Only", paramsList);
-                    String fixtureName = getFixtureName("Photocell Only",installMaintenanceLogModel.getLuminaireFixturecode(),installMaintenanceLogModel.getAtlasPhysicalPage(),installMaintenanceLogModel.getNoteName());
+                    String fixtureName = getFixtureName("Photocell Only",installMaintenanceLogModel.getLuminaireFixturecode(),installMaintenanceLogModel.getAtlasPhysicalPage(),installMaintenanceLogModel.getNoteName(),installMaintenanceLogModel.getAtlasGroup());
                     addStreetLightData("userName", fixtureName, paramsList);
                 }else if(dbProContextLookupData.getLumBrand() != null && dbProContextLookupData.getLumBrand().toLowerCase().startsWith("existing") && installMaintenanceLogModel.isNodeOnly()){
                     addStreetLightData("location.proposedcontext", "Node Only", paramsList);
-                    String fixtureName = getFixtureName("Node Only",installMaintenanceLogModel.getLuminaireFixturecode(),installMaintenanceLogModel.getAtlasPhysicalPage(),installMaintenanceLogModel.getNoteName());
+                    String fixtureName = getFixtureName("Node Only",installMaintenanceLogModel.getLuminaireFixturecode(),installMaintenanceLogModel.getAtlasPhysicalPage(),installMaintenanceLogModel.getNoteName(),installMaintenanceLogModel.getAtlasGroup());
                     addStreetLightData("userName", fixtureName, paramsList);
                 }else {
                     addStreetLightData("location.proposedcontext", dbProContextLookupData.getProposedContext(), paramsList);
-                    String fixtureName = getFixtureName(dbProContextLookupData.getProposedContext(),installMaintenanceLogModel.getLuminaireFixturecode(),installMaintenanceLogModel.getAtlasPhysicalPage(),installMaintenanceLogModel.getNoteName());
+                    String fixtureName = getFixtureName(dbProContextLookupData.getProposedContext(),installMaintenanceLogModel.getLuminaireFixturecode(),installMaintenanceLogModel.getAtlasPhysicalPage(),installMaintenanceLogModel.getNoteName(),installMaintenanceLogModel.getAtlasGroup());
                     addStreetLightData("userName", fixtureName, paramsList);
                 }
 
@@ -1775,8 +1782,19 @@ public boolean checkExistingMacAddressValid(EdgeNote edgeNote, InstallMaintenanc
         return flag;
     }
 
-    private String getFixtureName(String proposedContext,String formFixtureCode,String atlasPage,String title){
-        String atlasGroup = Utils.getAtlasGroup(proposedContext);
+    private String getFixtureName(String proposedContext,String formFixtureCode,String atlasPage,String title,String atlasGroupValue){
+        String atlasGroup = null;
+        if(atlasGroupValue != null && !atlasGroupValue.equals("") && !atlasGroupValue.equals("0")){
+            int size = atlasGroupValue.length();
+            if(size == 2){
+                atlasGroup = atlasGroupValue;
+            }else if(size == 1){
+                atlasGroup = "0"+atlasGroupValue;
+            }
+        }
+        if(atlasGroup == null) {
+            atlasGroup = Utils.getAtlasGroup(proposedContext);
+        }
         String fixtureCode = Utils.getFixtureCode(formFixtureCode.startsWith(" ") ? formFixtureCode.substring(1) : formFixtureCode);
         String fixtureName = atlasPage+"-"+atlasGroup+"-"+title+"-"+fixtureCode;
         return fixtureName;
