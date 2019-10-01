@@ -349,7 +349,7 @@ public class StreetlightChicagoService extends AbstractProcessor {
                     isDeviceCreated = false;
                 }else {
                     logger.info(idOnController+ " this device having one install and maintenance form. So it's going to process");
-                    int deviceId = createDevice(slvTransactionLogs, edgeNote, geozoneid);
+                    int deviceId = createDevice(slvTransactionLogs, edgeNote, geozoneid,installMaintenanceLogModel.getAtlasGroup());
                     logger.info(idOnController+" device created in slv and it's id is: "+deviceId);
                     if (deviceId == -1) {
                         logger.error("Device not created in slv for this idoncontroller: "+idOnController);
