@@ -1793,7 +1793,8 @@ public boolean checkExistingMacAddressValid(EdgeNote edgeNote, InstallMaintenanc
             if(bulkImportTag.equals(tag)){
                 String url = PropertiesReader.getProperties().getProperty("streetlight.edge.url.main");
                 url = url + PropertiesReader.getProperties().getProperty("com.edge.url.bulkimport.check");
-                logger.info("Bulk Import Url:"+url);
+                url = url + "?noteGuid="+edgeNote.getNoteGuid();
+                 logger.info("Bulk Import Url:"+url);
                 ResponseEntity<String> responseEntity = restService.getRequest(url, false, accessToken);
                 if(responseEntity.getStatusCode().is2xxSuccessful()){
                     logger.info("Current Note is created via Bulk Import.");
