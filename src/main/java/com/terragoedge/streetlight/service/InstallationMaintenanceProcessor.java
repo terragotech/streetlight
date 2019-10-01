@@ -577,15 +577,27 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
             boolean isButtonPhotoCell = loggingModel.isButtonPhotoCell();
             boolean isNodeOnly = loggingModel.isNodeOnly();
             if (isButtonPhotoCell || isNodeOnly) {
-                addStreetLightData("install.date", dateFormat(edgeNote.getCreatedDateTime()), paramsList);
+                // If its bulk import, then we need to send only Form Date value
+                if(!loggingModel.isBulkImport()){
+                    addStreetLightData("install.date", dateFormat(edgeNote.getCreatedDateTime()), paramsList);
+                }
+
             }
             if (macAddress != null && !macAddress.trim().isEmpty() && !loggingModel.isMacAddressUsed()) {
                 boolean isNodeDatePresent = isNodeDatePresent(idOnController);
                 if (!isNodeDatePresent && !isButtonPhotoCell) {
-                    addStreetLightData("cslp.node.install.date", dateFormat(edgeNote.getCreatedDateTime()), paramsList);
+                    // If its bulk import, then we need to send only Form Date value
+                    if(!loggingModel.isBulkImport()){
+                        addStreetLightData("cslp.node.install.date", dateFormat(edgeNote.getCreatedDateTime()), paramsList);
+                    }
+
                 }
                 if (!isButtonPhotoCell && !isNodeOnly) {
-                    addStreetLightData("install.date", dateFormat(edgeNote.getCreatedDateTime()), paramsList);
+                    // If its bulk import, then we need to send only Form Date value
+                    if(!loggingModel.isBulkImport()){
+                        addStreetLightData("install.date", dateFormat(edgeNote.getCreatedDateTime()), paramsList);
+                    }
+
                 }
                 addStreetLightData("MacAddress", macAddress, paramsList);
             }

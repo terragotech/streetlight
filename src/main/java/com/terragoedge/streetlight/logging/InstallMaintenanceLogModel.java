@@ -27,6 +27,17 @@ public class InstallMaintenanceLogModel extends LoggingModel {
     private String proposedContext;
 
 
+    private boolean isBulkImport;
+
+
+    public boolean isBulkImport() {
+        return isBulkImport;
+    }
+
+    public void setBulkImport(boolean bulkImport) {
+        isBulkImport = bulkImport;
+    }
+
     public String getProposedContext() {
         return proposedContext;
     }

@@ -497,10 +497,18 @@ public abstract class AbstractProcessor {
             boolean isButtonPhotoCelll = loggingModel.isButtonPhotoCell();
             boolean isNodeOnly =  loggingModel.isNodeOnly();
             if (!isLumDate && !isButtonPhotoCelll && !isNodeOnly) {
-                addStreetLightData("cslp.lum.install.date", dateFormat(edgeNote.getCreatedDateTime()), paramsList);
+                // If its bulk import, then we need to send only Form Date value
+                if(!loggingModel.isBulkImport()){
+                    addStreetLightData("cslp.lum.install.date", dateFormat(edgeNote.getCreatedDateTime()), paramsList);
+                }
+
             }
             if (!isButtonPhotoCelll && !isNodeOnly) {
-                addStreetLightData("luminaire.installdate", dateFormat(edgeNote.getCreatedDateTime()), paramsList);
+                // If its bulk import, then we need to send only Form Date value
+                if(!loggingModel.isBulkImport()){
+                    addStreetLightData("luminaire.installdate", dateFormat(edgeNote.getCreatedDateTime()), paramsList);
+                }
+
             }
             // As per Mail Conversion - Re: New Release updated on Test Server (.175) - 4.6.18
             if(fixerQrScanValue.startsWith("Existing") && loggingModel.isActionNew()){
@@ -875,6 +883,12 @@ public abstract class AbstractProcessor {
                 fixtureInfo[5] = "LED";
                 logger.info("Entered if Statement Lum Type" +fixtureInfo[5]);
             }
+
+            //Re: SLV: Invalid Luminaire Type For Philips Fixture Scans (20190925) as per mail conversion
+            if(slvServerData.getLuminaireModel() != null && slvServerData.getLuminaireModel().toLowerCase().startsWith("philips")){
+                fixtureInfo[5] = "LED";
+            }
+
             logger.info("Final Lum Type" +fixtureInfo[5]);
             //luminaire.type
             addStreetLightData("luminaire.type", fixtureInfo[5], paramsList);
@@ -1766,6 +1780,27 @@ public boolean checkExistingMacAddressValid(EdgeNote edgeNote, InstallMaintenanc
         String fixtureCode = Utils.getFixtureCode(formFixtureCode.startsWith(" ") ? formFixtureCode.substring(1) : formFixtureCode);
         String fixtureName = atlasPage+"-"+atlasGroup+"-"+title+"-"+fixtureCode;
         return fixtureName;
+    }
+
+
+
+    public void isBulkImport(EdgeNote edgeNote,String accessToken,InstallMaintenanceLogModel loggingModel){
+        List<String> tags = edgeNote.getTags();
+        for(String tag: tags){
+            logger.info("Edge Note Tag:"+tag);
+            String bulkImportTag = PropertiesReader.getProperties().getProperty("com.edge.bulkimport.tag");
+            logger.info("Bulk Import Tag:"+tag);
+            if(bulkImportTag.equals(tag)){
+                String url = PropertiesReader.getProperties().getProperty("streetlight.edge.url.main");
+                url = url + PropertiesReader.getProperties().getProperty("com.edge.url.bulkimport.check");
+                logger.info("Bulk Import Url:"+url);
+                ResponseEntity<String> responseEntity = restService.getRequest(url, false, accessToken);
+                if(responseEntity.getStatusCode().is2xxSuccessful()){
+                    logger.info("Current Note is created via Bulk Import.");
+                    loggingModel.setBulkImport(true);
+                }
+            }
+        }
     }
 
 }

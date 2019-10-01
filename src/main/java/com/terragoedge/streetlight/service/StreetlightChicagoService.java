@@ -207,6 +207,9 @@ public class StreetlightChicagoService extends AbstractProcessor {
                         droppedPinUser = getDroppedPinUser(edgeNote);
                     }
 
+                    // Check Current note is created via Bulk Import
+                    isBulkImport(edgeNote,accessToken,installMaintenanceLogModel);
+
                     loadDefaultVal(edgeNote, installMaintenanceLogModel,accessToken,droppedPinUser);
 
 
