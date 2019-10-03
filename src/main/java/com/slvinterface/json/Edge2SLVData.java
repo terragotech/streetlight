@@ -11,6 +11,16 @@ public class Edge2SLVData {
     private Priority priority;
     private String existingMACAddress;
     private String fixtureQRScan;
+    private String installStatus;
+
+
+    public String getInstallStatus() {
+        return installStatus;
+    }
+
+    public void setInstallStatus(String installStatus) {
+        this.installStatus = installStatus;
+    }
 
     public String getFixtureQRScan() {
         return fixtureQRScan;
@@ -86,6 +96,8 @@ public class Edge2SLVData {
                 ", macAddress='" + macAddress + '\'' +
                 ", priority=" + priority +
                 ", existingMACAddress='" + existingMACAddress + '\'' +
+                ", fixtureQRScan='" + fixtureQRScan + '\'' +
+                ", installStatus='" + installStatus + '\'' +
                 '}';
     }
 }

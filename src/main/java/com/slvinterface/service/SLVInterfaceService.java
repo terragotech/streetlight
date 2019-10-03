@@ -12,12 +12,16 @@ import com.slvinterface.exception.*;
 import com.slvinterface.json.*;
 import com.slvinterface.utils.PropertiesReader;
 import com.slvinterface.utils.ResourceDetails;
+import com.vividsolutions.jts.geom.Geometry;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.log4j.Logger;
 import org.springframework.http.ResponseEntity;
+import org.wololo.geojson.Feature;
+import org.wololo.geojson.GeoJSONFactory;
+import org.wololo.jts2geojson.GeoJSONReader;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
@@ -78,6 +82,7 @@ public abstract class SLVInterfaceService {
         String edgeSlvUrl =  PropertiesReader.getProperties().getProperty("streetlight.edge.slvServerUrl");
 
         Long lastSyncTime =   queryExecutor.getMaxSyncTime();
+//        Long lastSyncTime =   1570078800000L;
         if(lastSyncTime == -1){
             lastSyncTime = System.currentTimeMillis() - (30 * 60000);
         }
@@ -199,14 +204,15 @@ public abstract class SLVInterfaceService {
 
     }
 
-    public void checkTokenValidity(Edge2SLVData edge2SLVData)throws SLVConnectionException{
+    public void checkTokenValidity(EdgeNote edgeNote,Edge2SLVData edge2SLVData)throws SLVConnectionException{
         try{
             logger.info("Checking Token Validity.");
             logger.info("Current RetryCount:"+retryCount);
             DeviceEntity deviceEntity = new DeviceEntity();
-            loadDeviceValues(edge2SLVData.getIdOnController(),deviceEntity);
+            loadDeviceValues(edgeNote,edge2SLVData);
             return;
         }catch (NoValueException e){
+            logger.error("Error in NoValueException: ", e);
             return;
         }catch (Exception e){
             retryCount = retryCount + 1;
@@ -220,8 +226,9 @@ public abstract class SLVInterfaceService {
                     Thread.sleep(30000);
                 }
                 RestTemplate.INSTANCE.reConnect();
-                checkTokenValidity(edge2SLVData);
+                checkTokenValidity(edgeNote,edge2SLVData);
             }catch (Exception e1){
+                logger.error("Error in SLVConnectionException: ", e);
                 throw new SLVConnectionException("Unable to connect with SLV.",e);
             }
 
@@ -231,16 +238,18 @@ public abstract class SLVInterfaceService {
     private void processNoteData(String notesData, SLVSyncTable slvSyncTable)throws SLVConnectionException {
         try {
             EdgeNote edgeNote = gson.fromJson(notesData, EdgeNote.class);
-            populateSLVSyncTable(edgeNote, slvSyncTable);
-            List<FormData> formDataList = getFormDataList(edgeNote);
-            if(formDataList.size() < 1){
-                slvSyncTable.setErrorDetails("Form Template is not present.");
-                slvSyncTable.setStatus("Failure");
-                logger.info("Form Template is not present.");
-                return;
-            }
+            if(!edgeNote.getCreatedBy().equals("admin") && !edgeNote.getCreatedBy().equals("slvinterface")) {
+                populateSLVSyncTable(edgeNote, slvSyncTable);
+                List<FormData> formDataList = getFormDataList(edgeNote);
+                if (formDataList.size() < 1) {
+                    slvSyncTable.setErrorDetails("Form Template is not present.");
+                    slvSyncTable.setStatus("Failure");
+                    logger.info("Form Template is not present.");
+                    return;
+                }
 
-            processFormData(formDataList,slvSyncTable);
+                processFormData(formDataList, slvSyncTable, edgeNote);
+            }
         }catch (SLVConnectionException e){
             throw new SLVConnectionException(e);
         }catch (Exception e) {
@@ -366,8 +375,9 @@ public abstract class SLVInterfaceService {
 
     }
 
-    public void loadDeviceValues(String idOnController, DeviceEntity deviceEntity) throws NoValueException,SLVUnAuthorizeException, IOException, ClientProtocolException {
+    public void loadDeviceValues(EdgeNote edgeNote,Edge2SLVData edge2SLVData) throws NoValueException,SLVUnAuthorizeException, IOException, ClientProtocolException {
         logger.info("loadDeviceValues called.");
+        String idOnController = URLEncoder.encode(edgeNote.getTitle(),"UTF-8");
         String mainUrl = properties.getProperty("streetlight.slv.base.url");
         String deviceUrl = properties.getProperty("streetlight.slv.url.search.device");
         String url = mainUrl + deviceUrl;
@@ -389,10 +399,10 @@ public abstract class SLVInterfaceService {
             if(responseString != null){
                 int id = processDeviceJson(responseString);
                 logger.info("LoadDevice Id :" + id);
-
                 if (id == 0) {
+                    logger.info("Device not present.calling create device");
+                    createDevice(edgeNote,edge2SLVData);
                     logger.info("csl and context hashmap are cleared");
-                    throw new NoValueException("Device id:[" + idOnController + "] does not exists in SLV server");
                 } else {
                     String subDeviceUrl = getDeviceUrl(id);
                     logger.info("subDevice url:" + subDeviceUrl);
@@ -502,6 +512,7 @@ public abstract class SLVInterfaceService {
             paramsList.add("ser=json");
             String params = StringUtils.join(paramsList, "&");
             url = url + "?" + params;
+            logger.info("Replace OLC url: "+url);
             setSLVTransactionLogs(slvTransactionLogs, url, CallType.REPLACE_OLC);
             HttpResponse response = slvRestService.callGetMethod(url);
             String responseString =  slvRestService.getResponseBody(response);
@@ -552,7 +563,7 @@ public abstract class SLVInterfaceService {
     }
 
 
-    public void processFormData(List<FormData> formDataList, SLVSyncTable slvSyncTable)throws SLVConnectionException{
+    public void processFormData(List<FormData> formDataList, SLVSyncTable slvSyncTable,EdgeNote edgeNote)throws SLVConnectionException{
 
     }
 
@@ -588,6 +599,18 @@ public abstract class SLVInterfaceService {
         return dff;
     }
 
+    public String getSlvDateFormat(String date,String format){
+        try{
+            SimpleDateFormat simpleDateFormat = new SimpleDateFormat(format);
+            Date date1 = simpleDateFormat.parse(date);
+            SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+            return dateFormat.format(date1);
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+        return "";
+    }
+
 
     /**
      * Populate EdgeValue to Edge2SLVData from FormValue based on Configuration JSON
@@ -598,6 +621,23 @@ public abstract class SLVInterfaceService {
         List<FormValues> formValuesList = formData.getFormDef();
         List<Priority> priorities = conditionsJson.getPriority();
         List<Config> configList = conditionsJson.getConfigList();
+        String installStatus = "";
+        try {
+            installStatus = valueById(formValuesList, Integer.valueOf(properties.getProperty("streetlight.edge.install.status.id")));
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+
+        String installdate = "";
+        try {
+            installdate = valueById(formValuesList, Integer.valueOf(properties.getProperty("streetlight.edge.install.date.id")));
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+        if(!installdate.equals("")){
+            edge2SLVData.setInstallDate(dateFormat(Long.valueOf(installdate)));
+        }
+        edge2SLVData.setInstallStatus(installStatus);
         for(Priority priority : priorities){
             Config temp = new Config();
             temp.setType(priority.getType());
@@ -644,6 +684,9 @@ public abstract class SLVInterfaceService {
                             try{
                                 String existingMACAddress = valueById(formValuesList,id.getId());
                                 edge2SLVData.setExistingMACAddress(existingMACAddress);
+                                if(id.getId() == 93){// Remove
+                                    edge2SLVData.setPriority(priority);
+                                }
                             }catch (NoValueException e){
                                 e.printStackTrace();
                             }
@@ -657,5 +700,62 @@ public abstract class SLVInterfaceService {
                 }
             }
         }
+    }
+
+
+    public HttpResponse createDevice(EdgeNote edgenote,Edge2SLVData edge2SLVData) {
+        try {
+            logger.info("Create device in slv");
+            Feature feature = (Feature) GeoJSONFactory.create(edgenote.getGeometry());
+
+            // parse Geometry from Feature
+            GeoJSONReader reader = new GeoJSONReader();
+            Geometry geom = reader.read(feature.getGeometry());
+            String idoncontroller = "";
+            try {
+                idoncontroller = URLEncoder.encode(edgenote.getTitle(), "UTF-8");
+            } catch (Exception e) {
+                logger.error("Error while encode idoncontroller:", e);
+            }
+            if (idoncontroller.equals("")) {
+                return null;
+            }
+
+            String mainUrl = properties.getProperty("streetlight.slv.base.url");
+            String serveletApiUrl = properties.getProperty("streetlight.slv.url.device.create");
+            String url = mainUrl + serveletApiUrl;
+            String methodName = properties.getProperty("streetlight.slv.device.create.methodName");
+            String categoryStrId = properties.getProperty("streetlight.categorystr.id");
+            String controllerStrId = edge2SLVData.getControllerStrId();
+            String nodeTypeStrId = properties.getProperty("streetlight.slv.equipment.type");
+            Map<String, String> streetLightDataParams = new HashMap<String, String>();
+            streetLightDataParams.put("methodName", methodName);
+            streetLightDataParams.put("categoryStrId", URLEncoder.encode(categoryStrId,"UTF-8"));
+            streetLightDataParams.put("controllerStrId", URLEncoder.encode(controllerStrId,"UTF-8"));
+            streetLightDataParams.put("idOnController", idoncontroller);
+            streetLightDataParams.put("userName", idoncontroller);
+            streetLightDataParams.put("geoZoneId", properties.getProperty("streetlight.root.geozone"));
+            streetLightDataParams.put("lng", String.valueOf(geom.getCoordinate().x));
+            streetLightDataParams.put("lat", String.valueOf(geom.getCoordinate().y));
+            streetLightDataParams.put("nodeTypeStrId", URLEncoder.encode(nodeTypeStrId,"UTF-8"));
+            streetLightDataParams.put("ser", "json");
+            // streetLightDataParams.put("modelFunctionId", nodeTypeStrId);
+            // modelFunctionId
+
+            Set<String> keys = streetLightDataParams.keySet();
+            List<String> values = new ArrayList<String>();
+            for (String key : keys) {
+                String val = streetLightDataParams.get(key) != null ? streetLightDataParams.get(key).toString() : "";
+                String tem = key + "=" + val;
+                values.add(tem);
+            }
+            String params = StringUtils.join(values, "&");
+            url = url + "?" + params;
+
+            return slvRestService.callGetMethod(url);
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+        return null;
     }
 }

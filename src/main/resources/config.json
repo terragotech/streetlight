@@ -5,13 +5,8 @@
       "type": "NEW_DEVICE",
       "ids": [
         {
-          "id": 121,
+          "id": 22,
           "type": "MAC",
-          "isRequired": false
-        },
-        {
-          "id": 1028,
-          "type": "FIXTURE",
           "isRequired": true
         }
       ]
@@ -23,6 +18,11 @@
           "id": 27,
           "type": "MAC",
           "isRequired": true
+        },
+        {
+          "id": 10038,
+          "type": "EXISTING_MAC",
+          "isRequired": false
         }
       ]
     },
@@ -30,9 +30,9 @@
       "type": "REMOVE",
       "ids": [
         {
-          "id": 99,
-          "type": "MAC",
-          "isRequired": true
+          "id": 93,
+          "type": "EXISTING_MAC",
+          "isRequired": false
         }
       ]
     }

@@ -2,6 +2,7 @@ package com.slvinterface.service;
 
 import com.slvinterface.entity.SLVSyncTable;
 import com.slvinterface.entity.SLVTransactionLogs;
+import com.slvinterface.enumeration.SLVProcess;
 import com.slvinterface.exception.QRCodeAlreadyUsedException;
 import com.slvinterface.exception.ReplaceOLCFailedException;
 import com.slvinterface.exception.SLVConnectionException;
@@ -22,7 +23,7 @@ public class GenericSLVInterface extends  SLVInterfaceService {
 
 
     // 118 - Controller ID, Node Installation Date -  155,Scan Node QR Code - 85,New Node QR Code-132,Replacement Date-159,
-    public void processFormData(List<FormData> formDataList, SLVSyncTable slvSyncTable)throws SLVConnectionException{
+    public void processFormData(List<FormData> formDataList, SLVSyncTable slvSyncTable,EdgeNote edgeNote)throws SLVConnectionException{
         Edge2SLVData previousEdge2SLVData = null;
         for(FormData formData : formDataList){
             Edge2SLVData currentEdge2SLVData = new Edge2SLVData();
@@ -55,18 +56,22 @@ public class GenericSLVInterface extends  SLVInterfaceService {
 
                 previousEdge2SLVData.setIdOnController(URLEncoder.encode(previousEdge2SLVData.getIdOnController(),"UTF-8"));
                 retryCount = 0;
-                checkTokenValidity(previousEdge2SLVData);
+                checkTokenValidity(edgeNote,previousEdge2SLVData);
 
                 // Check MAC Address already Present.
-                if(macAddress != null && !macAddress.trim().isEmpty()){
-                    checkMacAddressExists(macAddress,previousEdge2SLVData.getIdOnController());
+                if((macAddress != null && !macAddress.trim().isEmpty()) || previousEdge2SLVData.getPriority().getType() == SLVProcess.REMOVE){
+                    if(previousEdge2SLVData.getPriority().getType() == SLVProcess.REMOVE){
+                        previousEdge2SLVData.setMacAddress("");
+                        slvSync(slvSyncTable,previousEdge2SLVData);
+                    }else{
+                        checkMacAddressExists(macAddress,previousEdge2SLVData.getIdOnController());
+                        slvSync(slvSyncTable,previousEdge2SLVData);
+                    }
                 }
 
-                //Install Date
+                /*//Install Date
                 String installDate  = dateFormat(slvSyncTable.getNoteCreatedDateTime());
-                previousEdge2SLVData.setInstallDate(installDate);
-
-                slvSync(slvSyncTable,previousEdge2SLVData);
+                previousEdge2SLVData.setInstallDate(installDate);*/
             }catch (SLVConnectionException e){
                 throw new SLVConnectionException(e);
             }catch (QRCodeAlreadyUsedException e){
@@ -113,8 +118,10 @@ public class GenericSLVInterface extends  SLVInterfaceService {
                 break;
 
             case UPDATE_DEVICE:
+                logger.info("Replace workflow called");
                 slvSyncTable.setSelectedAction("Replace WorkFlow");
                 replaceOLC(previousEdge2SLVData.getControllerStrId(),previousEdge2SLVData.getIdOnController(),"",slvSyncTable);
+                logger.info("empty replace olc called");
                 setDeviceVal(slvSyncTable,previousEdge2SLVData);
                 replaceOLC(previousEdge2SLVData.getControllerStrId(),previousEdge2SLVData.getIdOnController(),previousEdge2SLVData.getMacAddress(),slvSyncTable);
                 slvSyncTable.setStatus("Success");
@@ -136,33 +143,32 @@ public class GenericSLVInterface extends  SLVInterfaceService {
         SLVTransactionLogs slvTransactionLogs = getSLVTransVal(slvSyncTable);
         List<Object> paramsList = new ArrayList<>();
         loadVal(paramsList,previousEdge2SLVData);
-        addStreetLightData("installStatus","Installed",paramsList);
-        addStreetLightData("MacAddress",previousEdge2SLVData.getMacAddress(),paramsList);
+        addStreetLightData("installStatus",previousEdge2SLVData.getInstallStatus(),paramsList);
+//        addStreetLightData("MacAddress",previousEdge2SLVData.getMacAddress(),paramsList);
         addStreetLightData("install.date",previousEdge2SLVData.getInstallDate(),paramsList);
 
-        String slvCalender = PropertiesReader.getProperties().getProperty("streetlight.calendar");
+        /*String slvCalender = PropertiesReader.getProperties().getProperty("streetlight.calendar");
         if(slvCalender != null && !slvCalender.trim().isEmpty()){
             try {
                 addStreetLightData("DimmingGroupName",slvCalender,paramsList);
             }catch (Exception e){
                 e.printStackTrace();
             }
-        }
+        }*/
 
         String modelFunctionId = PropertiesReader.getProperties().getProperty("streetlight.model.functionid");
         //String modelFunctionId = "talq.streetlight.v1:lightNodeFunction6";
         if(modelFunctionId != null && !modelFunctionId.trim().isEmpty()){
             try {
-                modelFunctionId =  URLEncoder.encode(modelFunctionId,"UTF-8");
-                addStreetLightData("modelfunctionid",modelFunctionId,paramsList);
+                addStreetLightData("modelFunctionId",modelFunctionId,paramsList);
             }catch (Exception e){
                 e.printStackTrace();
             }
         }
-        if(previousEdge2SLVData.getFixtureQRScan() != null){
+        /*if(previousEdge2SLVData.getFixtureQRScan() != null){
             addStreetLightData("luminaire.installdate", previousEdge2SLVData.getInstallDate(), paramsList);
             buildFixtureStreetLightData(previousEdge2SLVData.getFixtureQRScan(),paramsList);
-        }
+        }*/
 
         setDeviceValues(paramsList,slvTransactionLogs);
     }
