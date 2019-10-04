@@ -8,6 +8,11 @@
           "id": 22,
           "type": "MAC",
           "isRequired": true
+        },
+        {
+          "id": 51,
+          "type": "FIXTURE",
+          "isRequired": false
         }
       ]
     },
