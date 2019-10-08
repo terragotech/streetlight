@@ -111,12 +111,12 @@
                             <goal>single</goal>
                         </goals>
                         <configuration>
-                            <finalName>promoted_data_verification</finalName>
+                            <finalName>slv_server_status</finalName>
 
                             <archive>
                                 <manifest>
                                     <mainClass>
-                                        com.terrago.jsoncsvconvertor.JsonCSVConvertor
+                                        com.terragoedge.streetlight.StreetlightApp
                                     </mainClass>
                                 </manifest>
                             </archive>

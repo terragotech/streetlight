@@ -9,6 +9,29 @@ public class PingIP {
 
     private static final Logger logger = Logger.getLogger(PingIP.class);
 
+
+    public static  boolean isVPNConnected(){
+        try {
+            Process p = Runtime.getRuntime().exec("vpncli state");
+            BufferedReader inputStream = new BufferedReader(
+                    new InputStreamReader(p.getInputStream()));
+
+            String s = "";
+            // reading output stream of the command
+           StringBuilder stringBuilder = new StringBuilder();
+            while ((s = inputStream.readLine()) != null) {
+                logger.info(s);
+                stringBuilder.append(s);
+
+            }
+           return !stringBuilder.toString().contains("Disconnected");
+
+        } catch (Exception e) {
+            logger.error("Error in runSystemCommand",e);
+        }
+        return false;
+    }
+
     public static boolean runSystemCommand(String command) {
 
         try {
@@ -23,7 +46,7 @@ public class PingIP {
                 logger.info(s);
                 i = i + 1;
                 if (i > 5) {
-                    if (s.startsWith("Request timeout")) {
+                    if (s.startsWith("Request time")) {
                         return false;
                     } else {
                         return true;
