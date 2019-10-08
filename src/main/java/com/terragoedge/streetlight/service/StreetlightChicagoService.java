@@ -23,6 +23,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.http.util.TextUtils;
 import org.apache.log4j.Logger;
 import org.joda.time.DateTime;
+import org.springframework.core.io.FileSystemResource;
 import org.springframework.http.*;
 
 import com.google.gson.JsonArray;
@@ -301,7 +302,7 @@ public class StreetlightChicagoService extends AbstractProcessor {
 
         MultiValueMap<String, Object> body
                 = new LinkedMultiValueMap<>();
-        body.add("file", new File(outputFilePath));
+        body.add("file", new FileSystemResource(outputFilePath));
         if(subject != null){
             body.add("subject",subject);
         }
