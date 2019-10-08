@@ -74,7 +74,7 @@ public abstract class AbstractSlvService extends EdgeService {
             streetLightDataParams.put("methodName", methodName);
             streetLightDataParams.put("categoryStrId", categoryStrId);
             streetLightDataParams.put("controllerStrId", controllerStrId);
-            streetLightDataParams.put("idOnController", jpsWorkflowModel.getIdOnController());
+            streetLightDataParams.put("idOnController", encode(jpsWorkflowModel.getIdOnController().trim()));
             streetLightDataParams.put("geoZoneId", String.valueOf(jpsWorkflowModel.getGeozoneId()));
             streetLightDataParams.put("lng", String.valueOf(geom.getCoordinate().x));
             streetLightDataParams.put("lat", String.valueOf(geom.getCoordinate().y));
@@ -166,7 +166,7 @@ public abstract class AbstractSlvService extends EdgeService {
             List<Object> paramsList = new ArrayList<Object>();
             paramsList.add("methodName=" + replaceOlc);
             paramsList.add("controllerStrId=" + controllerStrId);
-            paramsList.add("idOnController=" + idOnController);
+            paramsList.add("idOnController=" + encode(idOnController.trim()));
             paramsList.add("newNetworkId=" + macAddress);
             paramsList.add("ser=json");
             String params = StringUtils.join(paramsList, "&");
@@ -224,7 +224,7 @@ public abstract class AbstractSlvService extends EdgeService {
             String url = mainUrl + deviceUrl;
             List<String> paramsList = new ArrayList<>();
             paramsList.add("attributeName=idOnController");
-            paramsList.add("attributeValue=" + idOnController);
+            paramsList.add("attributeValue=" + encode(idOnController.trim()));
             paramsList.add("recurse=true");
             paramsList.add("returnedInfo=lightDevicesList");
             paramsList.add("attributeOperator=eq-i");
@@ -277,7 +277,7 @@ public abstract class AbstractSlvService extends EdgeService {
         try{
             return  URLEncoder.encode(data, "UTF-8");
         }catch (UnsupportedEncodingException e){
-
+            logger.error("Error while encoding data: "+data,e);
         }
        return data;
     }

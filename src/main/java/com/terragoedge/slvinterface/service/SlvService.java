@@ -231,7 +231,7 @@ public class SlvService extends AbstractSlvService {
 
     private ResponseEntity<String> callSetDeviceValues(JPSWorkflowModel jpsWorkflowModel) {
         List<Object> paramList = new ArrayList<>();
-        paramList.add("idOnController=" + jpsWorkflowModel.getIdOnController());
+        paramList.add("idOnController=" + encode(jpsWorkflowModel.getIdOnController().trim()));
         paramList.add("controllerStrId=" + jpsWorkflowModel.getControllerStrId());
         addStreetLightData("address", jpsWorkflowModel.getAddress1(), paramList);
         addStreetLightData("location.streetdescription", jpsWorkflowModel.getStreetdescription(), paramList);
@@ -241,7 +241,7 @@ public class SlvService extends AbstractSlvService {
         addStreetLightData("provider.name", jpsWorkflowModel.getProvider_name(), paramList);
 //        addStreetLightData("geoZone path", jpsWorkflowModel.getGeozonePath(), paramList);
         addStreetLightData("network.highvoltagethreshold", String.valueOf(jpsWorkflowModel.getHighvoltagethreshold()), paramList);
-        addStreetLightData("idOnController", jpsWorkflowModel.getIdOnController(), paramList);
+        addStreetLightData("idOnController", jpsWorkflowModel.getIdOnController().trim(), paramList);
         addStreetLightData("installStatus", jpsWorkflowModel.getInstallStatus(), paramList);
         addStreetLightData("lampType", jpsWorkflowModel.getLampType(), paramList);
         addStreetLightData("power", jpsWorkflowModel.getPower(), paramList);
@@ -249,11 +249,11 @@ public class SlvService extends AbstractSlvService {
         addStreetLightData("location.locationtype", jpsWorkflowModel.getLocationtype(), paramList);
 //        addStreetLightData("lng", jpsWorkflowModel.getLng(), paramList);
         addStreetLightData("network.lowvoltagethreshold", String.valueOf(jpsWorkflowModel.getLowvoltagethreshold()), paramList);
-        addStreetLightData("name", jpsWorkflowModel.getIdOnController(), paramList);
+        addStreetLightData("name", jpsWorkflowModel.getIdOnController().trim(), paramList);
         addStreetLightData("pole.type", jpsWorkflowModel.getPole_type(), paramList);
         addStreetLightData("model", jpsWorkflowModel.getModel(), paramList);
         // addStreetLightData("MacAddress", jpsWorkflowModel.getMacAddress(), paramList);
-        addStreetLightData("location.utillocationid", jpsWorkflowModel.getUtillocationid(), paramList);
+        addStreetLightData("location.utillocationid", encode(jpsWorkflowModel.getUtillocationid().trim()), paramList);
         addStreetLightData("fixing.type", jpsWorkflowModel.getFixing_type(), paramList);
         addStreetLightData("install.date", jpsWorkflowModel.getInstall_date(), paramList);
         addStreetLightData("network.type", jpsWorkflowModel.getNetwork_type(), paramList);
