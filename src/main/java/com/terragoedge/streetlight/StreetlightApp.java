@@ -51,7 +51,7 @@ public class StreetlightApp {
                         if(vpnLastMailTime == 0){
                             vpnLastMailTime = System.currentTimeMillis();
                         }else{
-                            if((System.currentTimeMillis() - vpnLastMailTime) >= (1000 * 60 * 10)){
+                            if((System.currentTimeMillis() - vpnLastMailTime) >= (1000 * 60 * 5)){
                                 vpnLastMailTime = System.currentTimeMillis();
                                 logger.info("VPN is Not Connected......");
                                 String serverUrl = properties.getProperty("com.edge.url.vpndown.url");
