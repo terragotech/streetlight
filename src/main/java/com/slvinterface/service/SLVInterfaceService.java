@@ -611,13 +611,23 @@ public abstract class SLVInterfaceService {
         return "";
     }
 
-
+    private String checkValue(List<FormValues> formValuesList, int id) throws NoValueException {
+        String result = "";
+        try {
+            result = valueById(formValuesList, id);
+        }
+        catch (Exception e)
+        {
+            e.printStackTrace();
+        }
+        return result;
+    }
     /**
      * Populate EdgeValue to Edge2SLVData from FormValue based on Configuration JSON
      * @param formData
      * @param edge2SLVData
      */
-    public void processFormData(FormData formData,Edge2SLVData edge2SLVData){
+    public void processFormData(FormData formData,Edge2SLVData edge2SLVData,EdgeNote edgeNote){
         List<FormValues> formValuesList = formData.getFormDef();
         List<Priority> priorities = conditionsJson.getPriority();
         List<Config> configList = conditionsJson.getConfigList();
@@ -638,6 +648,84 @@ public abstract class SLVInterfaceService {
             edge2SLVData.setInstallDate(dateFormat(Long.valueOf(installdate)));
         }
         edge2SLVData.setInstallStatus(installStatus);
+
+        try{
+            String premiseNodeLocation = checkValue(formValuesList, Integer.valueOf(properties.getProperty("streetlight.edge.premiseNodeLocation.id")));
+            edge2SLVData.setPremiseNodeLocation(premiseNodeLocation);
+            String poleNo = checkValue(formValuesList, Integer.valueOf(properties.getProperty("streetlight.edge.poleNo.id")));
+            edge2SLVData.setPoleNo(poleNo);
+            String StreetAddress = checkValue(formValuesList, Integer.valueOf(properties.getProperty("streetlight.edge.StreetAddress.id")));
+            edge2SLVData.setStreetAddress(StreetAddress);
+            String LLCGrid = checkValue(formValuesList, Integer.valueOf(properties.getProperty("streetlight.edge.LLCGrid.id")));
+            edge2SLVData.setLLCGrid(LLCGrid);
+            String fixtureOwnerShipCode = checkValue(formValuesList, Integer.valueOf(properties.getProperty("streetlight.edge.fixtureOwnerShipCode.id")));
+            edge2SLVData.setFixtureOwnerShipCode(fixtureOwnerShipCode);
+            String fixturecompatibleUnit = checkValue(formValuesList, Integer.valueOf(properties.getProperty("streetlight.edge.fixturecompatibleUnit.id")));
+            edge2SLVData.setFixturecompatibleUnit(fixturecompatibleUnit);
+            String armCompatibleUnit = checkValue(formValuesList, Integer.valueOf(properties.getProperty("streetlight.edge.armCompatibleUnit.id")));
+            edge2SLVData.setArmCompatibleUnit(armCompatibleUnit);
+            String supplyType = checkValue(formValuesList, Integer.valueOf(properties.getProperty("streetlight.edge.supplyType.id")));
+            edge2SLVData.setSupplyType(supplyType);
+            String fixtureStyle = checkValue(formValuesList, Integer.valueOf(properties.getProperty("streetlight.edge.fixtureStyle.id")));
+            edge2SLVData.setFixtureStyle(fixtureStyle);
+            String lightInstallationDate = checkValue(formValuesList, Integer.valueOf(properties.getProperty("streetlight.edge.lightInstallationDate.id")));
+            /*if(!lightInstallationDate.equals(""))
+            {
+                lightInstallationDate = dateFormat(Long.valueOf(lightInstallationDate));
+            }*/
+            edge2SLVData.setLightInstallationDate(lightInstallationDate);
+            String armSize = checkValue(formValuesList, Integer.valueOf(properties.getProperty("streetlight.edge.armSize.id")));
+            edge2SLVData.setArmSize(armSize);
+            String armType = checkValue(formValuesList, Integer.valueOf(properties.getProperty("streetlight.edge.armType.id")));
+            edge2SLVData.setArmType(armType);
+            String lightLocationType = checkValue(formValuesList, Integer.valueOf(properties.getProperty("streetlight.edge.lightLocationType.id")));
+            edge2SLVData.setLightLocationType(lightLocationType);
+            Feature feature = (Feature) GeoJSONFactory.create(edgeNote.getGeometry());
+            GeoJSONReader reader = new GeoJSONReader();
+            Geometry geom = reader.read(feature.getGeometry());
+            String latitude = String.valueOf(geom.getCoordinate().y);
+            String longitude = String.valueOf(geom.getCoordinate().x);
+            edge2SLVData.setLatitude(latitude);
+            edge2SLVData.setLongitude(longitude);
+            String associatedTransformer = checkValue(formValuesList, Integer.valueOf(properties.getProperty("streetlight.edge.associatedTransformer.id")));
+            edge2SLVData.setAssociatedTransformer(associatedTransformer);
+            String llcVoltage= checkValue(formValuesList, Integer.valueOf(properties.getProperty("streetlight.edge.llcVoltage.id")));
+            edge2SLVData.setLlcVoltage(llcVoltage);
+            String shade = checkValue(formValuesList, Integer.valueOf(properties.getProperty("streetlight.edge.shade.id")));
+            edge2SLVData.setShade(shade);
+            String height = checkValue(formValuesList, Integer.valueOf(properties.getProperty("streetlight.edge.height.id")));
+            edge2SLVData.setHeight(height);
+            String poleInstallationDate = checkValue(formValuesList, Integer.valueOf(properties.getProperty("streetlight.edge.poleInstallationDate.id")));
+            /*if(!poleInstallationDate.equals(""))
+            {
+                poleInstallationDate = dateFormat(Long.valueOf(poleInstallationDate));
+            }*/
+            edge2SLVData.setPoleInstallationDate(poleInstallationDate);
+            String poleColor = checkValue(formValuesList, Integer.valueOf(properties.getProperty("streetlight.edge.poleColor.id")));
+            edge2SLVData.setPoleColor(poleColor);
+            String material = checkValue(formValuesList, Integer.valueOf(properties.getProperty("streetlight.edge.material.id")));
+            edge2SLVData.setMaterial(material);
+
+            String slopShroud = checkValue(formValuesList, Integer.valueOf(properties.getProperty("streetlight.edge.slopShroud.id")));
+            edge2SLVData.setSlopShroud(slopShroud);
+            String poleOwnershipCode = checkValue(formValuesList, Integer.valueOf(properties.getProperty("streetlight.edge.poleOwnershipCode.id")));
+            edge2SLVData.setPoleOwnershipCode(poleOwnershipCode);
+
+            String fixtureWattage = checkValue(formValuesList, Integer.valueOf(properties.getProperty("streetlight.edge.fixtureWattage.id")));
+            edge2SLVData.setFixtureWattage(fixtureWattage);
+            String lampType= checkValue(formValuesList, Integer.valueOf(properties.getProperty("streetlight.edge.lampType.id")));
+            edge2SLVData.setLampType(lampType);
+            String fixtureType = checkValue(formValuesList, Integer.valueOf(properties.getProperty("streetlight.edge.fixtureType.id")));
+            edge2SLVData.setFixtureType(fixtureType);
+            String fixtureColor = checkValue(formValuesList, Integer.valueOf(properties.getProperty("streetlight.edge.fixtureColor.id")));
+            edge2SLVData.setFixtureColor(fixtureColor);
+            String installComments = checkValue(formValuesList, Integer.valueOf(properties.getProperty("streetlight.edge.installComments.id")));
+            edge2SLVData.setInstallComments(installComments);
+        }
+        catch (Exception e)
+        {
+            e.printStackTrace();
+        }
         for(Priority priority : priorities){
             Config temp = new Config();
             temp.setType(priority.getType());

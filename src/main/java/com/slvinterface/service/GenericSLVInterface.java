@@ -8,6 +8,7 @@ import com.slvinterface.exception.ReplaceOLCFailedException;
 import com.slvinterface.exception.SLVConnectionException;
 import com.slvinterface.json.*;
 import com.slvinterface.utils.PropertiesReader;
+import com.vividsolutions.jts.geomgraph.Edge;
 import org.apache.log4j.Logger;
 
 import java.net.URLEncoder;
@@ -27,7 +28,8 @@ public class GenericSLVInterface extends  SLVInterfaceService {
         Edge2SLVData previousEdge2SLVData = null;
         for(FormData formData : formDataList){
             Edge2SLVData currentEdge2SLVData = new Edge2SLVData();
-            processFormData(formData,currentEdge2SLVData);
+
+            processFormData(formData,currentEdge2SLVData,edgeNote);
             logger.info("Current Edge2SLVData:"+currentEdge2SLVData.toString());
             if(previousEdge2SLVData == null){
                 previousEdge2SLVData = currentEdge2SLVData;
@@ -146,7 +148,138 @@ public class GenericSLVInterface extends  SLVInterfaceService {
         addStreetLightData("installStatus",previousEdge2SLVData.getInstallStatus(),paramsList);
 //        addStreetLightData("MacAddress",previousEdge2SLVData.getMacAddress(),paramsList);
         addStreetLightData("install.date",previousEdge2SLVData.getInstallDate(),paramsList);
+        /*if(!previousEdge2SLVData.getPremiseNodeLocation().equals(""))
+        {
+            addStreetLightData("device.premise",previousEdge2SLVData.getPremiseNodeLocation(),paramsList);
+        }*/
+        if(!previousEdge2SLVData.getPoleNo().equals(""))
+        {
+            addStreetLightData("pole.status",previousEdge2SLVData.getPoleNo(),paramsList);
+        }
+        if(!previousEdge2SLVData.getStreetAddress().equals(""))
+        {
+            addStreetLightData("address",previousEdge2SLVData.getStreetAddress(),paramsList);
+        }
+        if(!previousEdge2SLVData.getLLCGrid().equals(""))
+        {
+            addStreetLightData("location.mapnumber",previousEdge2SLVData.getLLCGrid(),paramsList);
+        }
+        if(!previousEdge2SLVData.getFixtureOwnerShipCode().equals(""))
+        {
+            addStreetLightData("luminaire.status",previousEdge2SLVData.getFixtureOwnerShipCode(),paramsList);
+        }
+        if(!previousEdge2SLVData.getFixturecompatibleUnit().equals(""))
+        {
+            addStreetLightData("luminaire.partdescription",previousEdge2SLVData.getFixturecompatibleUnit(),paramsList);
+        }
 
+        if(!previousEdge2SLVData.getArmCompatibleUnit().equals(""))
+        {
+            addStreetLightData("fixing.model",previousEdge2SLVData.getArmCompatibleUnit(),paramsList);
+        }
+        if(!previousEdge2SLVData.getSupplyType().equals(""))
+        {
+            addStreetLightData("network.type",previousEdge2SLVData.getSupplyType(),paramsList);
+        }
+        if(!previousEdge2SLVData.getFixtureStyle().equals(""))
+        {
+            addStreetLightData("luminaire.style",previousEdge2SLVData.getFixtureStyle(),paramsList);
+        }
+        if(!previousEdge2SLVData.getLightInstallationDate().equals(""))
+        {
+            addStreetLightData("luminaire.installdate",previousEdge2SLVData.getLightInstallationDate(),paramsList);
+        }
+        if(!previousEdge2SLVData.getArmSize().equals(""))
+        {
+            addStreetLightData("fixing.brand",previousEdge2SLVData.getArmSize(),paramsList);
+        }
+        if(!previousEdge2SLVData.getArmType().equals(""))
+        {
+            addStreetLightData("fixing.type",previousEdge2SLVData.getArmType(),paramsList);
+        }
+        if(!previousEdge2SLVData.getLightLocationType().equals(""))
+        {
+            addStreetLightData("device.premise",previousEdge2SLVData.getLightLocationType(),paramsList);
+        }
+        if(!previousEdge2SLVData.getLatitude().equals(""))
+        {
+            addStreetLightData("lat",previousEdge2SLVData.getLatitude(),paramsList);
+        }
+        if(!previousEdge2SLVData.getLongitude().equals(""))
+        {
+            addStreetLightData("lng",previousEdge2SLVData.getLongitude(),paramsList);
+        }
+        if(!previousEdge2SLVData.getAssociatedTransformer().equals(""))
+        {
+            addStreetLightData("network.transformer",previousEdge2SLVData.getAssociatedTransformer(),paramsList);
+        }
+        if(!previousEdge2SLVData.getLlcVoltage().equals(""))
+        {
+            addStreetLightData("network.supplyvoltage",previousEdge2SLVData.getLlcVoltage(),paramsList);
+        }
+        if(!previousEdge2SLVData.getShade().equals(""))
+        {
+            addStreetLightData("luminaire.lightsource",previousEdge2SLVData.getShade(),paramsList);
+        }
+        if(!previousEdge2SLVData.getHeight().equals(""))
+        {
+            addStreetLightData("pole.height",previousEdge2SLVData.getHeight(),paramsList);
+        }
+        if(!previousEdge2SLVData.getPoleInstallationDate().equals(""))
+        {
+            addStreetLightData("pole.installdate",previousEdge2SLVData.getPoleInstallationDate(),paramsList);
+        }
+        if(!previousEdge2SLVData.getPoleColor().equals(""))
+        {
+            addStreetLightData("pole.colorcode",previousEdge2SLVData.getPoleColor(),paramsList);
+        }
+        if(!previousEdge2SLVData.getMaterial().equals(""))
+        {
+            addStreetLightData("pole.material",previousEdge2SLVData.getMaterial(),paramsList);
+        }
+        if(!previousEdge2SLVData.getSlopShroud().equals(""))
+        {
+            addStreetLightData("pole.groundtype",previousEdge2SLVData.getSlopShroud(),paramsList);
+        }
+        if(!previousEdge2SLVData.getPoleOwnershipCode().equals(""))
+        {
+            addStreetLightData("pole.type",previousEdge2SLVData.getPoleOwnershipCode(),paramsList);
+        }
+        if(!previousEdge2SLVData.getFixtureWattage().equals(""))
+        {
+            addStreetLightData("luminaire.proposedwattage",previousEdge2SLVData.getFixtureWattage(),paramsList);
+        }
+        if(!previousEdge2SLVData.getLampType().equals(""))
+        {
+            addStreetLightData("brandId",previousEdge2SLVData.getLampType(),paramsList);
+        }
+        if(!previousEdge2SLVData.getFixtureType().equals(""))
+        {
+            addStreetLightData("luminaire.type",previousEdge2SLVData.getFixtureType(),paramsList);
+        }
+        if(!previousEdge2SLVData.getFixtureColor().equals(""))
+        {
+            addStreetLightData("luminaire.color",previousEdge2SLVData.getFixtureColor(),paramsList);
+        }
+        if(!previousEdge2SLVData.getInstallComments().equals(""))
+        {
+            addStreetLightData("comment",previousEdge2SLVData.getInstallComments(),paramsList);
+        }
+        addStreetLightData("DimmingGroupName",Edge2SLVData.CALENDAR,paramsList);
+        addStreetLightData("luminaire.cabinet.name",Edge2SLVData.CABINET_CONTROLLER,paramsList);
+        addStreetLightData("TimeZoneId",Edge2SLVData.TIMEZONE,paramsList);
+        addStreetLightData("network.highvoltagethreshold",Edge2SLVData.HIGH_VOLTAGE_THRESHOLD,paramsList);
+        addStreetLightData("network.lowvoltagethreshold",Edge2SLVData.LOW_VOLTAGE_THRESHOLD,paramsList);
+        addStreetLightData("PowerFactorThreshold",Edge2SLVData.POWER_FACTOR_THRESHOLD,paramsList);
+        addStreetLightData("device.nic.fallbackmode",Edge2SLVData.NIC_FALLBACK_MODE,paramsList);
+        addStreetLightData("device.nic.defaultLightState",Edge2SLVData.DEFAULT_LIGHT_LEVEL,paramsList);
+        addStreetLightData("device.nic.vlo",Edge2SLVData.VIRTUAL_POWER_OUTPUT,paramsList);
+        addStreetLightData("device.nic.initialClo",Edge2SLVData.CLO_INITIAL_VALUE,paramsList);
+        addStreetLightData("OnLuxLevel",Edge2SLVData.ON_LUX_LEVEL,paramsList);
+        addStreetLightData("OffLuxLevel", Edge2SLVData.OFF_LUX_LEVEL,paramsList);
+        addStreetLightData("device.photocell.pollInterval",Edge2SLVData.POLE_INTERVAL,paramsList);
+        addStreetLightData("device.photocell.pollIntervalSamples",Edge2SLVData.SAMPLES_INTERVAL,paramsList);
+        addStreetLightData("ballast.dimmingtype",Edge2SLVData.DIMMING_INTERFACE,paramsList);
         /*String slvCalender = PropertiesReader.getProperties().getProperty("streetlight.calendar");
         if(slvCalender != null && !slvCalender.trim().isEmpty()){
             try {
@@ -165,10 +298,10 @@ public class GenericSLVInterface extends  SLVInterfaceService {
                 e.printStackTrace();
             }
         }
-        /*if(previousEdge2SLVData.getFixtureQRScan() != null){
-            addStreetLightData("luminaire.installdate", previousEdge2SLVData.getInstallDate(), paramsList);
-            buildFixtureStreetLightData(previousEdge2SLVData.getFixtureQRScan(),paramsList);
-        }*/
+        if(previousEdge2SLVData.getFixtureQRScan() != null){
+            addStreetLightData("luminaire.serialnumber", previousEdge2SLVData.getFixtureQRScan(), paramsList);
+            //buildFixtureStreetLightData(previousEdge2SLVData.getFixtureQRScan(),paramsList);
+        }
 
         setDeviceValues(paramsList,slvTransactionLogs);
     }
