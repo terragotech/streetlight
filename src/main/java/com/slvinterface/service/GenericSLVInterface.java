@@ -148,10 +148,10 @@ public class GenericSLVInterface extends  SLVInterfaceService {
         addStreetLightData("installStatus",previousEdge2SLVData.getInstallStatus(),paramsList);
 //        addStreetLightData("MacAddress",previousEdge2SLVData.getMacAddress(),paramsList);
         addStreetLightData("install.date",previousEdge2SLVData.getInstallDate(),paramsList);
-        if(!previousEdge2SLVData.getPremiseNodeLocation().equals(""))
+        /*if(!previousEdge2SLVData.getPremiseNodeLocation().equals(""))
         {
             addStreetLightData("device.premise",previousEdge2SLVData.getPremiseNodeLocation(),paramsList);
-        }
+        }*/
         if(!previousEdge2SLVData.getPoleNo().equals(""))
         {
             addStreetLightData("pole.status",previousEdge2SLVData.getPoleNo(),paramsList);
@@ -164,10 +164,10 @@ public class GenericSLVInterface extends  SLVInterfaceService {
         {
             addStreetLightData("location.mapnumber",previousEdge2SLVData.getLLCGrid(),paramsList);
         }
-        /*if(!previousEdge2SLVData.getFixtureOwnerShipCode().equals(""))
+        if(!previousEdge2SLVData.getFixtureOwnerShipCode().equals(""))
         {
-            addStreetLightData("",previousEdge2SLVData.getFixtureOwnerShipCode(),paramsList);
-        }*/
+            addStreetLightData("luminaire.status",previousEdge2SLVData.getFixtureOwnerShipCode(),paramsList);
+        }
         if(!previousEdge2SLVData.getFixturecompatibleUnit().equals(""))
         {
             addStreetLightData("luminaire.partdescription",previousEdge2SLVData.getFixturecompatibleUnit(),paramsList);
@@ -251,15 +251,15 @@ public class GenericSLVInterface extends  SLVInterfaceService {
         }
         if(!previousEdge2SLVData.getLampType().equals(""))
         {
-            addStreetLightData("luminaire.type",previousEdge2SLVData.getLampType(),paramsList);
+            addStreetLightData("brandId",previousEdge2SLVData.getLampType(),paramsList);
         }
         if(!previousEdge2SLVData.getFixtureType().equals(""))
         {
-            addStreetLightData("fixing.type",previousEdge2SLVData.getFixtureType(),paramsList);
+            addStreetLightData("luminaire.type",previousEdge2SLVData.getFixtureType(),paramsList);
         }
         if(!previousEdge2SLVData.getFixtureColor().equals(""))
         {
-            addStreetLightData("fixing.color",previousEdge2SLVData.getFixtureColor(),paramsList);
+            addStreetLightData("luminaire.color",previousEdge2SLVData.getFixtureColor(),paramsList);
         }
         if(!previousEdge2SLVData.getInstallComments().equals(""))
         {
