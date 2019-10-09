@@ -20,13 +20,13 @@ public class OpenCsvUtils {
     }
     public static String getFormatedDateTime(long millisecs){
         Date date = new Date(millisecs);
-        DateFormat formatter = new SimpleDateFormat("yyyy-dd-mm HH:mm:ss");
+        DateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
         formatter.setTimeZone(TimeZone.getTimeZone("CST"));
         String dateFormatted = formatter.format(date);
         return dateFormatted;
     }
     public static String getCsvFileName(){
-        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy_dd_mm_HH_MM");
+        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy_MM_dd_HH_mm");
         return simpleDateFormat.format(new Date());
     }
 }
