@@ -548,7 +548,15 @@ public abstract class AbstractProcessor {
 
     protected void addFixtureQrScanData(String key, String value, List<Object> paramsList) {
         paramsList.add("attribute=" + key.trim());
-        paramsList.add("value=" + value.trim());
+        if(value != null){
+            try{
+                paramsList.add("value=" + URLEncoder.encode(value.trim(), "UTF-8"));
+            }catch (Exception e){
+                logger.error("Error in addFixtureQrScanData",e);
+            }
+        }else{
+            paramsList.add("value=" + value.trim());
+        }
     }
 
     protected void addStreetLightData(String key, String value, List<Object> paramsList) {

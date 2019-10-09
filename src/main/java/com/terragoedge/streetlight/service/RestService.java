@@ -39,7 +39,7 @@ public class RestService {
 				ResponseEntity<String> responseEntity = callSlvWithToken(true,url);
 				return responseEntity;
 			}catch (Exception e){
-				e.printStackTrace();
+				logger.error("Error",e);
 			}
 		}else{//edge rest call or slv rest call without token
 			HttpHeaders headers = getHeaders(accessToken);
@@ -187,7 +187,7 @@ public class RestService {
 		try{
 			SlvRestTemplate.INSTANCE.reConnect();
 		}catch (Exception e){
-			e.printStackTrace();
+			logger.error("Error",e);
 		}
 			HttpResponse response = SlvRestTemplate.INSTANCE.httpClient.execute(isGetRequest ? getSlvGetHeaders(url) : getSlvPostHeaders(url), SlvRestTemplate.INSTANCE.httpContext);
 			String responseBody = getResponseBody(response);

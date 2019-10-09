@@ -491,6 +491,9 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
                     logger.info("Fixture QR is present.");
                     loggingModel.setFixtureQRSame(true);
                 }
+            }else{
+                logger.error(response.getStatusCode().toString());
+                logger.error(response.getBody());
             }
 
 
