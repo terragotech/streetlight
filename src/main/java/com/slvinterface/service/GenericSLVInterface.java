@@ -247,7 +247,7 @@ public class GenericSLVInterface extends  SLVInterfaceService {
         }
         if(!previousEdge2SLVData.getFixtureWattage().equals(""))
         {
-            addStreetLightData("luminaire.proposedwattage",previousEdge2SLVData.getFixtureWattage(),paramsList);
+            addStreetLightData("power",previousEdge2SLVData.getFixtureWattage(),paramsList);
         }
         if(!previousEdge2SLVData.getLampType().equals(""))
         {
