@@ -7,6 +7,7 @@ import com.j256.ormlite.stmt.DeleteBuilder;
 import com.j256.ormlite.support.ConnectionSource;
 import com.j256.ormlite.table.TableUtils;
 import com.terragoedge.edgeserver.*;
+import com.terragoedge.streetlight.PropertiesReader;
 import com.terragoedge.streetlight.enumeration.DateType;
 import com.terragoedge.streetlight.json.model.*;
 import org.apache.log4j.Logger;
@@ -17,7 +18,7 @@ import java.util.List;
 public enum ConnectionDAO {
     INSTANCE;
 
-    private final static String DATABASE_URL = "jdbc:postgresql://127.0.0.1:5432/terragoedge?user=postgres&password=password";
+   // private final static String DATABASE_URL = "jdbc:postgresql://127.0.0.1:5432/terragoedge?user=postgres&password=password";
    //private final static String DATABASE_URL = "jdbc:postgresql://127.0.0.1:5432/terragoedge_staging?user=postgres&password=password";
 
     ConnectionSource connectionSource = null;
@@ -42,7 +43,8 @@ public enum ConnectionDAO {
 
     private void openConnection() {
         try {
-            connectionSource = new JdbcConnectionSource(DATABASE_URL);
+            String dbUrl = PropertiesReader.getProperties().getProperty("edge.db.url");
+            connectionSource = new JdbcConnectionSource(dbUrl);
             try {
                 TableUtils.createTableIfNotExists(connectionSource, DuplicateMacAddress.class);
 
@@ -77,23 +79,23 @@ public enum ConnectionDAO {
             try {
                 TableUtils.createTableIfNotExists(connectionSource, EdgeAllMacData.class);
             } catch (Exception e) {
-               // logger.error("Error in openConnection", e);
+                // logger.error("Error in openConnection", e);
             }
             try {
                 TableUtils.createTableIfNotExists(connectionSource, SlvInterfaceLogEntity.class);
             } catch (Exception e) {
-               // logger.error("Error in openConnection", e);
+                // logger.error("Error in openConnection", e);
             }
-            try{
-                TableUtils.createTableIfNotExists(connectionSource,ExistingMacValidationFailure.class);
-            }catch (Exception e){
+            try {
+                TableUtils.createTableIfNotExists(connectionSource, ExistingMacValidationFailure.class);
+            } catch (Exception e) {
                 //logger.error("Error in openConnection", e);
             }
 
 
-            try{
-                TableUtils.createTableIfNotExists(connectionSource,EdgeSLVDate.class);
-            }catch (Exception e){
+            try {
+                TableUtils.createTableIfNotExists(connectionSource, EdgeSLVDate.class);
+            } catch (Exception e) {
                 //logger.error("Error in openConnection", e);
             }
 
@@ -104,7 +106,7 @@ public enum ConnectionDAO {
             edgeAllMacDataDao = DaoManager.createDao(connectionSource, EdgeAllMacData.class);
             edgeAllFixtureDataDao = DaoManager.createDao(connectionSource, EdgeAllFixtureData.class);
             slvInterfaceLogDao = DaoManager.createDao(connectionSource, SlvInterfaceLogEntity.class);
-            existingMacValidationFailureDao = DaoManager.createDao(connectionSource,ExistingMacValidationFailure.class);
+            existingMacValidationFailureDao = DaoManager.createDao(connectionSource, ExistingMacValidationFailure.class);
 
             edgeNodeDates = DaoManager.createDao(connectionSource, EdgeSLVDate.class);
 

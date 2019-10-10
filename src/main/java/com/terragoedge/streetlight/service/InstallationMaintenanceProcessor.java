@@ -2,6 +2,7 @@ package com.terragoedge.streetlight.service;
 
 import com.terragoedge.edgeserver.*;
 import com.terragoedge.streetlight.PropertiesReader;
+import com.terragoedge.streetlight.Utils;
 import com.terragoedge.streetlight.enumeration.InstallStatus;
 import com.terragoedge.streetlight.enumeration.DateType;
 import com.terragoedge.streetlight.exception.*;
@@ -175,7 +176,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
             noteCreatedDateTime = String.valueOf(edgeNote.getCreatedDateTime());
             logger.info("Processing Form :" + formData.getFormTemplateGuid());
             if (formData.getFormTemplateGuid().equals(INSTATALLATION_AND_MAINTENANCE_GUID) || formData.getFormTemplateGuid().equals("fa47c708-fb82-4877-938c-992e870ae2a4") || formData.getFormTemplateGuid().equals("c8acc150-6228-4a27-bc7e-0fabea0e2b93")) {
-
+                installMaintenanceLogModel.setReplace(false);
                 isInstallForm = true;
 
                 logger.info("Install  Form  is present.");
@@ -206,6 +207,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
                                 break;
                             case "Repairs & Outages":
                                 installMaintenanceLogModel.setActionNew(false);
+                                installMaintenanceLogModel.setReplace(true);
                                 slvInterfaceLogEntity.setSelectedAction("Repairs & Outages");
                                 repairAndOutage(edgeFormDatas, edgeNote, installMaintenanceLogModel, utilLocId, nightRideKey, formatedValueNR, formatedValueNR, slvInterfaceLogEntity);
                                 installMaintenanceLogModel.setReplacedDate(edgeNote.getCreatedDateTime());
@@ -349,7 +351,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
         } else  if(installStatusValue != null && installStatusValue.equals("Could not complete")){
             DeviceAttributes deviceAttributes = getDeviceValues(loggingModel);
             String installStatus = properties.getProperty("could_note_complete_install_status");
-            if (deviceAttributes.getInstallStatus().equals(installStatus)) {
+            if (deviceAttributes != null && deviceAttributes.getInstallStatus() != null && deviceAttributes.getInstallStatus().equals(installStatus)) {
                 logger.info("Current edge and SLV Install Status is same (Could not be installed)");
                 loggingModel.setCouldNotComplete(true);
             }
@@ -367,7 +369,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
     }
 
 
-    private void validateValue(List<EdgeFormData> edgeFormDatas, String idOnController, LoggingModel loggingModel, EdgeNote edgeNote, int macAddressId, int qrScanId, SlvInterfaceLogEntity slvInterfaceLogEntity) throws AlreadyUsedException, NoValueException {
+    private void validateValue(List<EdgeFormData> edgeFormDatas, String idOnController, InstallMaintenanceLogModel loggingModel, EdgeNote edgeNote, int macAddressId, int qrScanId, SlvInterfaceLogEntity slvInterfaceLogEntity) throws AlreadyUsedException, NoValueException {
         //Replace Node and Fixture
         String newNodeMacAddress = null;
         try {
@@ -437,7 +439,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
     }
 
 
-    private void checkFixtureQrScan(String fixtureQrScan, EdgeNote edgeNote, LoggingModel loggingModel, SlvInterfaceLogEntity slvInterfaceLogEntity) throws InValidBarCodeException {
+    private void checkFixtureQrScan(String fixtureQrScan, EdgeNote edgeNote, InstallMaintenanceLogModel loggingModel, SlvInterfaceLogEntity slvInterfaceLogEntity) throws InValidBarCodeException {
         List<Object> paramsList = new ArrayList<>();
         SlvServerData slvServerData = new SlvServerData();
         try {
@@ -547,7 +549,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
         try {
 
             List<Object> paramsList = new ArrayList<>();
-
+            loggingModel.setPowerAdded(false);
             paramsList.add("idOnController=" + idOnController);
             paramsList.add("controllerStrId=" + controllerStrIdValue);
             SlvServerData slvServerData = new SlvServerData();
@@ -618,7 +620,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
                 } else {
                     if (!loggingModel.isMacAddressUsed()) {
                         slvTransactionLogs = getSLVTransactionLogs(loggingModel);
-                        replaceOLC(controllerStrIdValue, idOnController, macAddress, slvTransactionLogs, slvInterfaceLogEntity,loggingModel.getAtlasPhysicalPage());// insert mac address
+                        replaceOLC(controllerStrIdValue, idOnController, macAddress, slvTransactionLogs, slvInterfaceLogEntity,loggingModel.getAtlasPhysicalPage(),loggingModel,edgeNote);// insert mac address
                     }
 
                 }
@@ -794,7 +796,11 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
                         return;
                     }
                 }
+                logger.info("Before addUserToLuminaireSerialNumber nightRideValue:"+nightRideValue);
+                logger.info("Start of addUserToLuminaireSerialNumber");
                 nightRideValue = addUserToLuminaireSerialNumber(nightRideValue,edgeNote.getCreatedBy());
+                logger.info("End of addUserToLuminaireSerialNumber");
+                logger.info("After addUserToLuminaireSerialNumber nightRideValue:"+nightRideValue);
                 int errorCode = sync2SlvInstallStatus(loggingModel.getIdOnController(), loggingModel.getControllerSrtId(), loggingModel, nightRideKey, nightRideValue);
                 if (errorCode != 0) {
                     loggingModel.setErrorDetails("Error while updating Could not complete install status.Corresponding Error code :" + errorCode);
@@ -872,7 +878,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
                 if (nodeMacValue != null && !nodeMacValue.trim().isEmpty() && !loggingModel.isMacAddressUsed()) {
                     try {
                         SLVTransactionLogs slvTransactionLogs = getSLVTransactionLogs(loggingModel);
-                        replaceOLC(loggingModel.getControllerSrtId(), loggingModel.getIdOnController(), "", slvTransactionLogs, slvInterfaceLogEntity,loggingModel.getAtlasPhysicalPage());
+                        replaceOLC(loggingModel.getControllerSrtId(), loggingModel.getIdOnController(), "", slvTransactionLogs, slvInterfaceLogEntity,loggingModel.getAtlasPhysicalPage(),loggingModel,edgeNote);
                     } catch (Exception e) {
                         String message = e.getMessage();
                     }
@@ -1022,11 +1028,19 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
 
             String controllerStrIdValue = loggingModel.getControllerSrtId();
 
-            boolean isMatched = checkExistingMacAddressValid(edgeNote,loggingModel);
-            if(!isMatched){
-                return;
-            }
+
             if (newNodeMacAddress != null && !newNodeMacAddress.isEmpty()) {
+                // Check Existing MAC Address matches with SLV or not.
+                boolean isMatched = checkExistingMacAddressValid(edgeNote,loggingModel);
+                if(!isMatched){
+                    logger.info("Existing MAC Address not Matched with SLV.");
+                    // If not, set Account Number value as Unsuccessful.
+                    List<Object> paramsList = new ArrayList<>();
+                    syncAccountNumber(paramsList,loggingModel,edgeNote, Utils.UN_SUCCESSFUL,newNodeMacAddress);
+                    return;
+                }
+
+
                 try {
                     checkMacAddressExists(newNodeMacAddress, idOnController, nightRideKey, nightRideValue, loggingModel, slvInterfaceLogEntity);
                 } catch (QRCodeAlreadyUsedException e1) {
@@ -1042,7 +1056,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
             try {
                 if (!loggingModel.isMacAddressUsed()) {
                     SLVTransactionLogs slvTransactionLogs = getSLVTransactionLogs(loggingModel);
-                    replaceOLC(controllerStrIdValue, idOnController, "", slvTransactionLogs, slvInterfaceLogEntity,loggingModel.getAtlasPhysicalPage());
+                    replaceOLC(controllerStrIdValue, idOnController, "", slvTransactionLogs, slvInterfaceLogEntity,loggingModel.getAtlasPhysicalPage(),loggingModel,edgeNote);
                     statusDescription.append(MessageConstants.EMPTY_REPLACE_OLC_SUCCESS);
                 }
 
@@ -1104,6 +1118,14 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
             logger.info("Existing MAC Address match result:"+isMatched);
             if(!isMatched){
                 logger.info("Existing MAC Address not match with SLV. So Current note is skipped.");
+
+                if(!isMatched){
+                    logger.info("Existing MAC Address not Matched with SLV.");
+                    // If not, set Account Number value as Unsuccessful.
+                    List<Object> paramsList = new ArrayList<>();
+                    syncAccountNumber(paramsList,loggingModel,edgeNote, Utils.UN_SUCCESSFUL,newNodeMacAddress);
+                }
+
                 return;
             }
 
@@ -1128,7 +1150,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
             try {
                 if (!loggingModel.isMacAddressUsed()) {
                     SLVTransactionLogs slvTransactionLogs = getSLVTransactionLogs(loggingModel);
-                    replaceOLC(controllerStrIdValue, idOnController, "", slvTransactionLogs, slvInterfaceLogEntity,loggingModel.getAtlasPhysicalPage());
+                    replaceOLC(controllerStrIdValue, idOnController, "", slvTransactionLogs, slvInterfaceLogEntity,loggingModel.getAtlasPhysicalPage(),loggingModel,edgeNote);
                 }
 
             } catch (ReplaceOLCFailedException e) {
@@ -1178,7 +1200,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
 
                         try {
                             SLVTransactionLogs slvTransactionLogs = getSLVTransactionLogs(installMaintenanceLogModel);
-                            replaceOLC(installMaintenanceLogModel.getControllerSrtId(), installMaintenanceLogModel.getIdOnController(), "", slvTransactionLogs, slvInterfaceLogEntity,null);
+                            replaceOLC(installMaintenanceLogModel.getControllerSrtId(), installMaintenanceLogModel.getIdOnController(), "", slvTransactionLogs, slvInterfaceLogEntity,null,installMaintenanceLogModel,null);
                         } catch (Exception e) {
                             e.printStackTrace();
                             logger.error("error in replace OLC:" + e.getMessage());
@@ -1227,7 +1249,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
                         if(isInActive){
                             try {
                                 SLVTransactionLogs slvTransactionLogs = getSLVTransactionLogs(installMaintenanceLogModel);
-                                replaceOLC(installMaintenanceLogModel.getControllerSrtId(), installMaintenanceLogModel.getIdOnController(), "", slvTransactionLogs, slvInterfaceLogEntity,null);
+                                replaceOLC(installMaintenanceLogModel.getControllerSrtId(), installMaintenanceLogModel.getIdOnController(), "", slvTransactionLogs, slvInterfaceLogEntity,null,installMaintenanceLogModel,null);
                             } catch (Exception e) {
                                 e.printStackTrace();
                                 logger.error("error in replace OLC:" + e.getMessage());
@@ -1256,7 +1278,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
                         if(isInActive){
                             try {
                                 SLVTransactionLogs slvTransactionLogs = getSLVTransactionLogs(installMaintenanceLogModel);
-                                replaceOLC(installMaintenanceLogModel.getControllerSrtId(), installMaintenanceLogModel.getIdOnController(), "", slvTransactionLogs, slvInterfaceLogEntity,null);
+                                replaceOLC(installMaintenanceLogModel.getControllerSrtId(), installMaintenanceLogModel.getIdOnController(), "", slvTransactionLogs, slvInterfaceLogEntity,null,installMaintenanceLogModel,null);
                             } catch (Exception e) {
                                 e.printStackTrace();
                                 logger.error("error in replace OLC:" + e.getMessage());
@@ -1297,6 +1319,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
                 addStreetLightData("install.date", "", paramsList);
                 addStreetLightData("luminaire.type", "HPS", paramsList);
                 addStreetLightData("DimmingGroupName", "", paramsList);
+                addStreetLightData("client.name", "", paramsList);
                 addStreetLightData("installStatus", InstallStatus.To_be_installed.getValue(), paramsList);
 
                 String power = getLuminaireWattage(loggingModel);
@@ -1360,49 +1383,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
         addStreetLightData("ballast.dimmingtype", "", paramsList);
     }
 
-    public void reSync(String noteGuid, String accessToken, boolean isResync, String utilLocId, boolean isFromRemoveAction) throws Exception {
-        logger.info("resync method called ");
-        // Get Edge Server Url from properties
-        String url = PropertiesReader.getProperties().getProperty("streetlight.edge.url.main");
 
-        url = url + PropertiesReader.getProperties().getProperty("streetlight.edge.url.notes.get");
-
-        url = url + "/" + noteGuid;
-        logger.info("Given url is :" + url);
-        // Get NoteList from edgeserver
-        ResponseEntity<String> responseEntity = restService.getRequest(url, false, accessToken);
-
-        // Process only response code as success
-        if (responseEntity.getStatusCode().is2xxSuccessful()) {
-            // Get Response String
-            String notesData = responseEntity.getBody();
-            logger.info("rest service data:" + notesData);
-            EdgeNote edgeNote = gson.fromJson(notesData, EdgeNote.class);
-            //   if(!edgeNote.getCreatedBy().contains("admin")){
-            SlvInterfaceLogEntity slvInterfaceLogEntity = new SlvInterfaceLogEntity();
-            InstallMaintenanceLogModel installMaintenanceLogModel = new InstallMaintenanceLogModel();
-            slvInterfaceLogEntity.setCreateddatetime(System.currentTimeMillis());
-            slvInterfaceLogEntity.setResync(true);
-            installMaintenanceLogModel.setLastSyncTime(edgeNote.getSyncTime());
-            installMaintenanceLogModel.setProcessedNoteId(edgeNote.getNoteGuid());
-            installMaintenanceLogModel.setNoteName(edgeNote.getTitle());
-            installMaintenanceLogModel.setParentNoteId(edgeNote.getBaseParentNoteId());
-            installMaintenanceLogModel.setCreatedDatetime(String.valueOf(edgeNote.getCreatedDateTime()));
-            loadDefaultVal(edgeNote, installMaintenanceLogModel);
-            loadDeviceValues(installMaintenanceLogModel.getIdOnController(), installMaintenanceLogModel);
-            logger.info("going to call processnew action");
-            boolean isDroppedPinWorkFlow = isDroppedPinNote(edgeNote,droppedPinTag);
-            processNewAction(edgeNote, installMaintenanceLogModel, isResync, utilLocId, slvInterfaceLogEntity);
-
-            //updateSlvStatusToEdge(installMaintenanceLogModel, edgeNote);
-            LoggingModel loggingModel = installMaintenanceLogModel;
-            streetlightDao.insertProcessedNotes(loggingModel, installMaintenanceLogModel);
-            if (isFromRemoveAction) {
-                connectionDAO.deleteDuplicateMacAddress(noteGuid);
-            }
-            //  }
-        }
-    }
 
 
     private void loadDateValFromEdge(List<EdgeFormData> edgeFormDatas,InstallMaintenanceLogModel installMaintenanceLogModel){

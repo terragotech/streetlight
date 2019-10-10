@@ -51,6 +51,17 @@ public class LoggingModel {
 
     private boolean isNodeOnly;
 
+
+    private boolean isPowerAdded;
+
+    public boolean isPowerAdded() {
+        return isPowerAdded;
+    }
+
+    public void setPowerAdded(boolean powerAdded) {
+        isPowerAdded = powerAdded;
+    }
+
     public boolean isNodeOnly() {
         return isNodeOnly;
     }

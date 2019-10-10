@@ -489,7 +489,7 @@ public abstract class AbstractProcessor {
             logger.info("Fixture QR scan not empty and set cslp.lum.install.date" + dateFormat(edgeNote.getCreatedDateTime()));
             boolean isLumDate = isLumDatePresent(idOnContoller);
             boolean isButtonPhotoCelll = loggingModel.isButtonPhotoCell();
-           boolean isNodeOnly =  loggingModel.isNodeOnly();
+            boolean isNodeOnly =  loggingModel.isNodeOnly();
             if (!isLumDate && !isButtonPhotoCelll && !isNodeOnly) {
                 addStreetLightData("cslp.lum.install.date", dateFormat(edgeNote.getCreatedDateTime()), paramsList);
             }
@@ -544,6 +544,7 @@ public abstract class AbstractProcessor {
 
         addStreetLightData("DimmingGroupName", edgeNotebookName, paramsList);
         // addStreetLightData("DimmingGroupName", "Group Calendar 1", paramsList);
+        addPower(loggingModel,null,paramsList);
     }
 
     protected void addFixtureQrScanData(String key, String value, List<Object> paramsList) {
@@ -626,6 +627,43 @@ public abstract class AbstractProcessor {
         return false;
     }
 
+    private void addPower(LoggingModel loggingModel, String powerVal, List<Object> paramsList) {
+        logger.info("Start of addPower");
+        logger.info("Is Power Added:"+loggingModel.isPowerAdded());
+        logger.info("Is Dropped Pin Workflow:"+loggingModel.isDroppedPinWorkflow());
+        logger.info("Is Node Only:"+loggingModel.isNodeOnly());
+        logger.info("Is Button Photocell:"+loggingModel.isButtonPhotoCell());
+        if(!loggingModel.isPowerAdded()){
+            logger.info("Wattage not Yet Added.");
+            if (loggingModel.isDroppedPinWorkflow() && (loggingModel.isNodeOnly() || loggingModel.isButtonPhotoCell())){
+                logger.info("Current Fixture is Dropped Pin and Either Node only or Button PhotoCell.");
+                logger.info("Fixture Code: "+loggingModel.getLuminaireFixturecode());
+                logger.info("Is Node Only: "+loggingModel.getLuminaireFixturecode());
+                logger.info("Is Button PhotoCell: "+loggingModel.getLuminaireFixturecode());
+                if(loggingModel.getLuminaireFixturecode() != null){
+                    if(loggingModel.isNodeOnly() && !loggingModel.isButtonPhotoCell() && loggingModel.getLuminaireFixturecode().toUpperCase().contains("COBRAHEAD")){
+                        addStreetLightData("power", "125", paramsList);
+                        loggingModel.setPowerAdded(true);
+                        return;
+                    }else if(loggingModel.isButtonPhotoCell() && loggingModel.getLuminaireFixturecode().toUpperCase().contains("PIGGY")){
+                        addStreetLightData("power", "50", paramsList);
+                        loggingModel.setPowerAdded(true);
+                        return;
+                    }
+                }
+            }
+            if(powerVal != null){
+                logger.info("Default Power Value is added.");
+                logger.info("Power Val:"+powerVal);
+                addStreetLightData("power", powerVal, paramsList);
+                loggingModel.setPowerAdded(true);
+            }
+
+        }
+        logger.info("End of addPower");
+
+    }
+
     private void processFixtureQRScan(String data, List<Object> paramsList, EdgeNote edgeNote, SlvServerData slvServerData, LoggingModel loggingModel){
         addStreetLightData("luminaire.brand", "Acuity", paramsList);
         slvServerData.setLuminaireBrand("Acuity");
@@ -639,7 +677,7 @@ public abstract class AbstractProcessor {
         addStreetLightData("device.luminaire.manufacturedate", "01/28/2019", paramsList);
         slvServerData.setLuminaireManufacturedate("01/28/2019");
 
-        addStreetLightData("power", "119", paramsList);
+        addPower(loggingModel,"119",paramsList);
 
         addStreetLightData("luminaire.type", "LED", paramsList);
 
@@ -650,18 +688,18 @@ public abstract class AbstractProcessor {
     }
 
 
-    private void processExistingFixtureQRScan(String data,List<Object> paramsList,SlvServerData slvServerData){
+    private void processExistingFixtureQRScan(String data,List<Object> paramsList,SlvServerData slvServerData,InstallMaintenanceLogModel loggingModel){
         if(data != null && !data.trim().isEmpty()){
             String[] fixtureQrScan =  data.split(",");
-            String lumBrand =  addExistingFixtureQRScan(fixtureQrScan,paramsList,0,"Existing LED","luminaire.brand");
+            String lumBrand =  addExistingFixtureQRScan(fixtureQrScan,paramsList,0,"Existing LED","luminaire.brand",loggingModel);
             if(lumBrand != null){
                 slvServerData.setLuminaireBrand(lumBrand);
             }
-            String lumPartNum =  addExistingFixtureQRScan(fixtureQrScan,paramsList,1,"Node Only","device.luminaire.partnumber");
+            String lumPartNum =  addExistingFixtureQRScan(fixtureQrScan,paramsList,1,"Node Only","device.luminaire.partnumber",loggingModel);
             if(lumPartNum != null){
                 slvServerData.setLuminairePartNumber(lumPartNum);
             }
-            String lumModel =  addExistingFixtureQRScan(fixtureQrScan,paramsList,2,"Node Only","luminaire.model");
+            String lumModel =  addExistingFixtureQRScan(fixtureQrScan,paramsList,2,"Node Only","luminaire.model",loggingModel);
             if(lumModel != null){
                 slvServerData.setLuminaireModel(lumModel);
             }
@@ -672,35 +710,35 @@ public abstract class AbstractProcessor {
             if(lumManu != null){
                 slvServerData.setLuminaireManufacturedate(lumBrand);
             }*/
-             addExistingFixtureQRScan(fixtureQrScan,paramsList,4,"Unknown","power");
+             addExistingFixtureQRScan(fixtureQrScan,paramsList,4,"Unknown","power",loggingModel);
 
-             addExistingFixtureQRScan(fixtureQrScan,paramsList,5,"LED","luminaire.type");
+             addExistingFixtureQRScan(fixtureQrScan,paramsList,5,"LED","luminaire.type",loggingModel);
 
-            String lumColor =  addExistingFixtureQRScan(fixtureQrScan,paramsList,6,"Node Only","device.luminaire.colortemp");
+            String lumColor =  addExistingFixtureQRScan(fixtureQrScan,paramsList,6,"Node Only","device.luminaire.colortemp",loggingModel);
             if(lumColor != null){
                 slvServerData.setLuminaireColorTemp(lumColor);
             }
-            String lumLumen =  addExistingFixtureQRScan(fixtureQrScan,paramsList,7,"Node Only","device.luminaire.lumenoutput");
+            String lumLumen =  addExistingFixtureQRScan(fixtureQrScan,paramsList,7,"Node Only","device.luminaire.lumenoutput",loggingModel);
             if(lumLumen != null){
                 slvServerData.setLumenOutput(lumLumen);
             }
-            String lumDist =  addExistingFixtureQRScan(fixtureQrScan,paramsList,8,"Node Only","luminaire.DistributionType");
+            String lumDist =  addExistingFixtureQRScan(fixtureQrScan,paramsList,8,"Node Only","luminaire.DistributionType",loggingModel);
             if(lumDist != null){
                 slvServerData.setDistributionType(lumDist);
             }
-            String lumColorCode = addExistingFixtureQRScan(fixtureQrScan,paramsList,9,"","luminaire.colorcode");
+            String lumColorCode = addExistingFixtureQRScan(fixtureQrScan,paramsList,9,"","luminaire.colorcode",loggingModel);
             if(lumColorCode != null){
                 slvServerData.setColorCode(lumColorCode);
             }
-            String lumDriverManu = addExistingFixtureQRScan(fixtureQrScan,paramsList,10,"","device.luminaire.drivermanufacturer");
+            String lumDriverManu = addExistingFixtureQRScan(fixtureQrScan,paramsList,10,"","device.luminaire.drivermanufacturer",loggingModel);
             if(lumDriverManu != null){
                 slvServerData.setDriverManufacturer(lumDriverManu);
             }
-            String lumDriverPart =  addExistingFixtureQRScan(fixtureQrScan,paramsList,11,"","device.luminaire.driverpartnumber");
+            String lumDriverPart =  addExistingFixtureQRScan(fixtureQrScan,paramsList,11,"","device.luminaire.driverpartnumber",loggingModel);
             if(lumDriverPart != null){
                 slvServerData.setDriverPartNumber(lumDriverPart);
             }
-            String dimmingType =  addExistingFixtureQRScan(fixtureQrScan,paramsList,12,"","ballast.dimmingtype");
+            String dimmingType =  addExistingFixtureQRScan(fixtureQrScan,paramsList,12,"","ballast.dimmingtype",loggingModel);
             if(dimmingType != null){
                 slvServerData.setDimmingType(dimmingType);
             }
@@ -710,32 +748,45 @@ public abstract class AbstractProcessor {
     }
 
 
-
-    private String addExistingFixtureQRScan(String[] fixtureQrScan,List<Object> paramsList,int pos,String defaultVal,String key){
-        try{
-             String fixtureQrScanVal = fixtureQrScan[pos];
+    private String addExistingFixtureQRScan(String[] fixtureQrScan, List<Object> paramsList, int pos, String defaultVal, String key,InstallMaintenanceLogModel logModel) {
+        try {
+            String fixtureQrScanVal = fixtureQrScan[pos];
             fixtureQrScanVal = (fixtureQrScanVal == null || fixtureQrScanVal.trim().isEmpty()) ? defaultVal : fixtureQrScanVal;
-            addStreetLightData(key, fixtureQrScanVal, paramsList);
+            if(!key.equals("power")){
+                addStreetLightData(key, fixtureQrScanVal, paramsList);
+            }else{
+                addPower(logModel,fixtureQrScanVal,paramsList);
+            }
+
             return fixtureQrScanVal;
-        }catch (ArrayIndexOutOfBoundsException e ){
+        } catch (ArrayIndexOutOfBoundsException e) {
 
         }
-        addStreetLightData(key, defaultVal, paramsList);
+
+        if(!key.equals("power")){
+            addStreetLightData(key, defaultVal, paramsList);
+        }else{
+            addPower(logModel,defaultVal,paramsList);
+        }
         return null;
     }
 
 
 
 
-    public void buildFixtureStreetLightData(String data, List<Object> paramsList, EdgeNote edgeNote, SlvServerData slvServerData, LoggingModel loggingModel)
+    public void buildFixtureStreetLightData(String data, List<Object> paramsList, EdgeNote edgeNote, SlvServerData slvServerData, InstallMaintenanceLogModel loggingModel)
             throws InValidBarCodeException {
         if(data.startsWith("LB60") || data.startsWith("Luminaire Manufacturer")){
+            //ES-265
+            addCustomerNumber(edgeNote,loggingModel,paramsList);
             logger.info("Default Value Parser Starts");
             processFixtureQRScan(data,paramsList,edgeNote,slvServerData,loggingModel);
             return;
         }else if(data.startsWith("Existing")){
             logger.info("Existing Parser Starts");
-            processExistingFixtureQRScan(data,paramsList,slvServerData);
+            processExistingFixtureQRScan(data,paramsList,slvServerData,loggingModel);
+            //ES-265
+            addCustomerNumber(edgeNote,loggingModel,paramsList);
             logger.info("After Existing Parser current value in paramsList are: "+paramsList.toString());
             logger.info("Existing Parser Ends");
         }
@@ -779,7 +830,8 @@ public abstract class AbstractProcessor {
                 powerVal = powerVal.replaceAll("w", "");
             }
 
-            addStreetLightData("power", powerVal, paramsList);
+            addPower(loggingModel,powerVal,paramsList);
+            //addStreetLightData("power", powerVal, paramsList);
 
             String dimmingGroupName = contextListHashMap.get(loggingModel.getIdOnController());
             logger.info("dimming groupname :"+dimmingGroupName);
@@ -810,6 +862,8 @@ public abstract class AbstractProcessor {
             slvServerData.setDriverPartNumber(fixtureInfo[11]);
             addStreetLightData("ballast.dimmingtype", fixtureInfo[12], paramsList);
             slvServerData.setDimmingType(fixtureInfo[12]);
+            //ES-265
+            addCustomerNumber(edgeNote,loggingModel,paramsList);
 
         } else {
             /*throw new InValidBarCodeException(
@@ -1033,7 +1087,7 @@ public abstract class AbstractProcessor {
      *
      * @throws ReplaceOLCFailedException
      */
-    public void replaceOLC(String controllerStrIdValue, String idOnController, String macAddress, SLVTransactionLogs slvTransactionLogs, SlvInterfaceLogEntity slvInterfaceLogEntity,String atlasPhysicalPage)
+    public void replaceOLC(String controllerStrIdValue, String idOnController, String macAddress, SLVTransactionLogs slvTransactionLogs, SlvInterfaceLogEntity slvInterfaceLogEntity,String atlasPhysicalPage,InstallMaintenanceLogModel loggingModel,EdgeNote edgeNote)
             throws ReplaceOLCFailedException {
 
         try {
@@ -1067,6 +1121,9 @@ public abstract class AbstractProcessor {
                 if(macAddress != null && !macAddress.trim().isEmpty()){
                     createEdgeAllMac(idOnController, macAddress);
                     syncMacAddress2Edge(idOnController,macAddress,atlasPhysicalPage);
+                    paramsList = new ArrayList<>();
+                    syncAccountNumber(paramsList,loggingModel,edgeNote,Utils.SUCCESSFUL,macAddress);
+                    syncCustomerName(loggingModel);// TODO This for testing
                 }
                 throw new ReplaceOLCFailedException(value);
 
@@ -1076,8 +1133,9 @@ public abstract class AbstractProcessor {
                     slvInterfaceLogEntity.setStatus(MessageConstants.SUCCESS);
                     createEdgeAllMac(idOnController, macAddress);
                     syncMacAddress2Edge(idOnController,macAddress,atlasPhysicalPage);
-                    logger.info("Clear device process starts.");
-                    logger.info("Clear device process End.");
+                    paramsList = new ArrayList<>();
+                    syncAccountNumber(paramsList,loggingModel,edgeNote,Utils.SUCCESSFUL,macAddress);
+                    syncCustomerName(loggingModel);
                 }
 
             }
@@ -1107,12 +1165,13 @@ public abstract class AbstractProcessor {
     }
 
 
-    protected void loadDefaultVal(EdgeNote edgeNote, InstallMaintenanceLogModel loggingModel) {
+    protected void loadDefaultVal(EdgeNote edgeNote, InstallMaintenanceLogModel loggingModel,String accessToken) {
         loggingModel.setIdOnController(edgeNote.getTitle());
         String controllerStrId = properties.getProperty("streetlight.slv.controllerstrid");
         loggingModel.setControllerSrtId(controllerStrId);
         DatesHolder datesHolder = new DatesHolder();
         loggingModel.setDatesHolder(datesHolder);
+        checkAmerescoUser(accessToken,loggingModel,edgeNote.getCreatedBy());
     }
 
     private void sendNightRideToSLV(String idOnController, String nightRideKey, String nightRideValue, LoggingModel loggingModel) {
@@ -1462,6 +1521,113 @@ public boolean checkExistingMacAddressValid(EdgeNote edgeNote, InstallMaintenanc
 
             restService.slv2Edge("/rest/validation/updateSLVSyncedMAC", HttpMethod.GET,params);
         }
+    }
+
+
+    public void addAccountNumber(EdgeNote edgeNote,String status,String macAddress,List paramsList){
+        logger.info("Start of addAccountNumber");
+        StringBuilder stringBuilder = new StringBuilder();
+        stringBuilder.append("Last Modified By");
+        stringBuilder.append(" - ");
+        stringBuilder.append(edgeNote.getCreatedBy());
+        stringBuilder.append(" - ");
+        stringBuilder.append(dateFormat(edgeNote.getCreatedDateTime()));
+        stringBuilder.append(" - ");
+        stringBuilder.append(status);
+        stringBuilder.append(" - ");
+        stringBuilder.append(macAddress);
+        addStreetLightData("comed.componentffectivedate", stringBuilder.toString(), paramsList);
+        logger.info("End of addAccountNumber");
+    }
+
+    //ES-265
+    private void addCustomerNumber(EdgeNote edgeNote,InstallMaintenanceLogModel installMaintenanceLogModel,List paramsList){
+        logger.info("Start of addCustomerNumber Method.");
+        if(installMaintenanceLogModel.isReplace()){
+            StringBuilder stringBuilder = new StringBuilder();
+            stringBuilder.append("Last Modified By");
+            stringBuilder.append(" - ");
+            stringBuilder.append(edgeNote.getCreatedBy());
+            stringBuilder.append(" - ");
+            stringBuilder.append(dateFormat(edgeNote.getCreatedDateTime()));
+            addStreetLightData("comed.locationeffectivedate", stringBuilder.toString(), paramsList);
+            logger.info("Customer Number Added.");
+        }
+        logger.info("End of addCustomerNumber Method.");
+        addCustomerName(installMaintenanceLogModel,paramsList);
+
+    }
+
+
+    public void syncAccountNumber(List<Object> paramsList,InstallMaintenanceLogModel installMaintenanceLogModel,EdgeNote edgeNote,String status,String macAddress){
+        logger.info("Start of syncAccountNumber");
+        if(installMaintenanceLogModel.isReplace()){
+            logger.info("AccountNumber values going to sync with SLV.");
+            addAccountNumber(edgeNote,status,macAddress,paramsList);
+            String idOnController = installMaintenanceLogModel.getIdOnController();
+            paramsList.add("idOnController=" + idOnController);
+            paramsList.add("controllerStrId=" + installMaintenanceLogModel.getControllerSrtId());
+            SLVTransactionLogs slvTransactionLogs = getSLVTransactionLogs(installMaintenanceLogModel);
+            int errorCode = setDeviceValues(paramsList, slvTransactionLogs);
+            logger.info("Error Code:"+errorCode);
+        }else{
+            logger.info("syncAccountNumber Not Called.");
+        }
+        logger.info("End of syncAccountNumber");
+    }
+
+
+
+    public void syncCustomerName(InstallMaintenanceLogModel installMaintenanceLogModel){
+        logger.info("Start of syncCustomerName");
+        if(installMaintenanceLogModel.isActionNew() && installMaintenanceLogModel.isAmerescoUser()){
+            List<Object> paramsList = new ArrayList<>();
+            String idOnController = installMaintenanceLogModel.getIdOnController();
+            paramsList.add("idOnController=" + idOnController);
+            addCustomerName(installMaintenanceLogModel,paramsList);
+            paramsList.add("controllerStrId=" + installMaintenanceLogModel.getControllerSrtId());
+            SLVTransactionLogs slvTransactionLogs = getSLVTransactionLogs(installMaintenanceLogModel);
+            int errorCode = setDeviceValues(paramsList, slvTransactionLogs);
+            logger.info("Error Code:"+errorCode);
+        }else{
+            logger.info("syncCustomerName Not Called.");
+        }
+        logger.info("End of syncCustomerName");
+
+    }
+
+
+    public void addCustomerName(InstallMaintenanceLogModel installMaintenanceLogModel, List<Object> paramsList){
+        logger.info("Start of addCustomerName Method.");
+        if(installMaintenanceLogModel.isActionNew() && installMaintenanceLogModel.isAmerescoUser()){
+            addStreetLightData("client.name", "Ameresco Install", paramsList);
+            logger.info("Customer Name Added.");
+        }
+        logger.info("End of addCustomerName Method.");
+    }
+
+
+    public void checkAmerescoUser(String accessToken, InstallMaintenanceLogModel installMaintenanceLogModel, String userName) {
+        logger.info("Start of checkAmerescoUser");
+        String url = PropertiesReader.getProperties().getProperty("streetlight.edge.url.main");
+        url = url + PropertiesReader.getProperties().getProperty("com.edge.url.get.groupids");
+        url = url + "?userName=" + userName;
+        logger.info("Given url is :" + url);
+        ResponseEntity<String> responseEntity = restService.getRequest(url, true, accessToken);
+        logger.info("Response Code:"+responseEntity.getStatusCodeValue());
+        if (responseEntity.getStatusCodeValue() == HttpStatus.OK.value()) {
+            String reponseData = responseEntity.getBody();
+            JsonArray groupJsonArray = jsonParser.parse(reponseData).getAsJsonArray();
+            String amerescoGroups = PropertiesReader.getProperties().getProperty("com.edge.ameresco.groupids");
+            logger.info("Ameresco Groups:"+amerescoGroups);
+            for (JsonElement groupJsonElement : groupJsonArray) {
+                if (groupJsonElement.getAsString().equals(amerescoGroups)) {
+                    logger.info("Ameresco User added.");
+                    installMaintenanceLogModel.setAmerescoUser(true);
+                }
+            }
+        }
+        logger.info("End of checkAmerescoUser");
     }
 
 }
