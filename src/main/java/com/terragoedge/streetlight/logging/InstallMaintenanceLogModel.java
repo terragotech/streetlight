@@ -28,7 +28,7 @@ public class InstallMaintenanceLogModel extends LoggingModel {
     private String atlasGroup;
 
 
-    private boolean isBulkImport;
+    private boolean isBulkImport = false;
 
 
     public boolean isBulkImport() {
