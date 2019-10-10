@@ -35,4 +35,14 @@ insert into pro_context_lookup("proposed_context","lum_brand","lum_model","lum_p
 insert into pro_context_lookup("proposed_context","lum_brand","lum_model","lum_part_no") values ('Node Only','Existing LED','Node Only','Node Only');
 
 
-insert into pro_context_lookup("proposed_context","lum_brand","lum_wattage") values ('F - Flood','Acuity','62');
+insert into pro_context_lookup("proposed_context","lum_brand","lum_wattage") values ('F - Flood','Acuity','119');
+
+
+delete from pro_context_lookup where proposed_context = 'F - Flood';
+
+insert into pro_context_lookup("proposed_context","lum_brand","lum_model","lum_part_no","lum_wattage") values ('3 - Residential Modern (66ft ROW Staggered)','Philips Roadfocus','RFM','[RFM-077]-[108W32LED3K-001]-G2-R2M','108');
+insert into pro_context_lookup("proposed_context","lum_brand","lum_model","lum_part_no","lum_wattage") values ('3 - Residential Modern (66ft ROW Staggered)','Philips Roadfocus','RFM','[RFM-077]-[108W32LED3K-002]-G2-R3S','108');
+insert into pro_context_lookup("proposed_context","lum_brand","lum_model","lum_part_no","lum_wattage") values ('3 - Residential Modern (66ft ROW Staggered)','Philips Roadfocus','RFM','[RFM-077]-[108W32LED3K-002]-T-R3S','108');
+
+insert into pro_context_lookup("proposed_context","lum_brand","lum_model","lum_part_no","lum_wattage") values ('11 - Arterial (Medium) (80 Ft ROW Staggered)','Philips Roadfocus','RFL','[RFL-053]-[180W80LED3K-003]-G2-R2M','180');
+insert into pro_context_lookup("proposed_context","lum_brand","lum_model","lum_part_no","lum_wattage") values ('11 - Arterial (Medium) (80 Ft ROW Staggered)','Philips Roadfocus','RFL','[RFL-053]-[180W80LED3K-003]-T-R2M','180');

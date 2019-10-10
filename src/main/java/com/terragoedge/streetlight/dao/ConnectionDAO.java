@@ -35,6 +35,7 @@ public enum ConnectionDAO {
     public Dao<EdgeAllFixtureData, String> edgeAllFixtureDataDao = null;
     public Dao<SlvInterfaceLogEntity, String> slvInterfaceLogDao = null;
     public Dao<ExistingMacValidationFailure, String> existingMacValidationFailureDao = null;
+    public Dao<ClientAccountEntity, String> clientAccountEntityDao = null;
 
 
     public Dao<EdgeSLVDate, String> edgeNodeDates = null;
@@ -112,6 +113,7 @@ public enum ConnectionDAO {
             existingMacValidationFailureDao = DaoManager.createDao(connectionSource, ExistingMacValidationFailure.class);
 
             edgeNodeDates = DaoManager.createDao(connectionSource, EdgeSLVDate.class);
+            clientAccountEntityDao = DaoManager.createDao(connectionSource, ClientAccountEntity.class);
 
             proContextLookupDao = DaoManager.createDao(connectionSource,ProContextLookupData.class);
 
@@ -363,6 +365,16 @@ public enum ConnectionDAO {
            return queryBuilder.queryForFirst();
         } catch (Exception e) {
             logger.error("Error in getProContextLookupData");
+        }
+        return null;
+    }
+
+    public ClientAccountEntity getClientAccountName(String phsicalAtlasPage,int max,String area){
+        try{
+            //select * from client_account_name where key='L' and max<=12 and area='CN';
+            return clientAccountEntityDao.queryBuilder().where().eq("key",phsicalAtlasPage).and().ge("max",max).and().eq("area",area).queryForFirst();
+        }catch (Exception e){
+            logger.error("Error in getClientAccountName",e);
         }
         return null;
     }
