@@ -4,6 +4,8 @@ import com.j256.ormlite.dao.Dao;
 import com.j256.ormlite.dao.DaoManager;
 import com.j256.ormlite.jdbc.JdbcConnectionSource;
 import com.j256.ormlite.stmt.DeleteBuilder;
+import com.j256.ormlite.stmt.QueryBuilder;
+import com.j256.ormlite.stmt.Where;
 import com.j256.ormlite.support.ConnectionSource;
 import com.j256.ormlite.table.TableUtils;
 import com.terragoedge.edgeserver.*;
@@ -36,6 +38,7 @@ public enum ConnectionDAO {
 
 
     public Dao<EdgeSLVDate, String> edgeNodeDates = null;
+    public Dao<ProContextLookupData, String> proContextLookupDao = null;
 
     ConnectionDAO() {
         openConnection();
@@ -109,6 +112,8 @@ public enum ConnectionDAO {
             existingMacValidationFailureDao = DaoManager.createDao(connectionSource, ExistingMacValidationFailure.class);
 
             edgeNodeDates = DaoManager.createDao(connectionSource, EdgeSLVDate.class);
+
+            proContextLookupDao = DaoManager.createDao(connectionSource,ProContextLookupData.class);
 
             System.out.println("Connected.....");
         } catch (Exception e) {
@@ -324,6 +329,40 @@ public enum ConnectionDAO {
             return edgeNodeDates.queryBuilder().where().eq("title",title).and().eq("edge_date",edgeDate).and().eq("dates_type",type).queryForFirst();
         }catch (Exception e){
             logger.error("Error in getEdgeCSLPNodeDate",e);
+        }
+        return null;
+    }
+
+
+    public ProContextLookupData getProContextLookupData(ProContextLookupData proContextLookupData,boolean isLumModelExact,boolean isLumPartExact) {
+        try {
+            QueryBuilder<ProContextLookupData, String> queryBuilder = proContextLookupDao.queryBuilder();
+            Where<ProContextLookupData, String> where = queryBuilder.where();
+            where.eq(ProContextLookupData.LUM_BRAND, proContextLookupData.getLumBrand().trim());
+            if (proContextLookupData.getLumModel() != null) {
+                if(isLumModelExact){
+                    where.and().eq(ProContextLookupData.LUM_MODEL, proContextLookupData.getLumModel().trim());
+                }else{
+                    where.and().like(ProContextLookupData.LUM_MODEL, proContextLookupData.getLumModel().trim()+"%");
+                }
+
+            }
+            if (proContextLookupData.getLumPartNumber() != null) {
+                if(isLumPartExact){
+                    where.and().eq(ProContextLookupData.LUM_PART_NUM, proContextLookupData.getLumPartNumber().trim());
+                }else{
+                    where.and().like(ProContextLookupData.LUM_PART_NUM, proContextLookupData.getLumPartNumber().trim()+"%");
+                }
+
+            }
+            if (proContextLookupData.getLumWattage() != null) {
+                where.and().eq(ProContextLookupData.LUM_WATTAGE, proContextLookupData.getLumWattage().trim());
+            }
+            logger.info("------Raw Query--------------");
+            logger.info(queryBuilder.prepareStatementString());
+           return queryBuilder.queryForFirst();
+        } catch (Exception e) {
+            logger.error("Error in getProContextLookupData");
         }
         return null;
     }

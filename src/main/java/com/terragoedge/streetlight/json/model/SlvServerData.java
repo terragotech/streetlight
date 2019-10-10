@@ -57,6 +57,7 @@ public class SlvServerData {
     @DatabaseField(columnName = "process_type",dataType = DataType.ENUM_STRING)
     private ProcessType processType;
 
+
     public String getLuminaireBrand() {
         return luminaireBrand;
     }

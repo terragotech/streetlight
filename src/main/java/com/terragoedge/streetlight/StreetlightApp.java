@@ -12,6 +12,8 @@ import java.util.Date;
 public class StreetlightApp {
     private static final Logger logger = Logger.getLogger(StreetlightApp.class);
     private static boolean isReportProcessed = false;
+
+
 	public static void main(String[] args) {
         Calendar calendar = Calendar.getInstance();
 	    while (true){

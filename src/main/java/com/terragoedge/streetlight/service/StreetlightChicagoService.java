@@ -6,9 +6,7 @@ import java.io.FileReader;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
-import com.terragoedge.edgeserver.EdgeFormData;
-import com.terragoedge.edgeserver.EdgeNotebook;
-import com.terragoedge.edgeserver.FormData;
+import com.terragoedge.edgeserver.*;
 import com.terragoedge.streetlight.OpenCsvUtils;
 import com.terragoedge.streetlight.edgeinterface.SlvData;
 import com.terragoedge.streetlight.edgeinterface.SlvToEdgeService;
@@ -24,7 +22,6 @@ import org.springframework.http.*;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
-import com.terragoedge.edgeserver.EdgeNote;
 import com.terragoedge.streetlight.PropertiesReader;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
@@ -203,7 +200,13 @@ public class StreetlightChicagoService extends AbstractProcessor {
                     installMaintenanceLogModel.setLastSyncTime(edgeNote.getSyncTime());
                     installMaintenanceLogModel.setCreatedDatetime(String.valueOf(edgeNote.getCreatedDateTime()));
                     installMaintenanceLogModel.setParentNoteId(edgeNote.getBaseParentNoteId());
-                    loadDefaultVal(edgeNote, installMaintenanceLogModel,accessToken);
+                    //ES-274
+                    String droppedPinUser = null;
+                    if(isDroppedPinWorkFlow){
+                        droppedPinUser = getDroppedPinUser(edgeNote);
+                    }
+
+                    loadDefaultVal(edgeNote, installMaintenanceLogModel,accessToken,droppedPinUser);
 
 
                     slvInterfaceLogEntity.setIdOnController(edgeNote.getTitle());
@@ -449,11 +452,15 @@ public class StreetlightChicagoService extends AbstractProcessor {
         addStreetLightData("location.cdotlocationtype", "CDOLOCATION_TYPE_STREET", paramsList);
         addPoleHeightFixtureCodeComedLite(edgeNote,paramsList);
 
+        //ES-274
         if(installMaintenanceLogModel.isAmerescoUser()){
             addStreetLightData("comed.projectname","Ameresco dropped pin", paramsList);
         }
 
         installationMaintenanceProcessor.setDeviceValues(paramsList,slvTransactionLogs);
     }
+
+
+
     // http://192.168.1.9:8080/edgeServer/oauth/token?grant_type=password&username=admin&password=admin&client_id=edgerestapp
 }
