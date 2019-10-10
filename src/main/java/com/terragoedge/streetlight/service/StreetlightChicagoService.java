@@ -386,9 +386,11 @@ public class StreetlightChicagoService extends AbstractProcessor {
         List<FormData> lstFormData = edgeNote.getFormData();
         String poleHeight = null;
         String fixtureCode = null;
+        List<EdgeFormData> edgeFormDatas = new ArrayList<>();
         for(FormData cur:lstFormData){
             if(cur.getFormTemplateGuid().equals(installationFormTemplateGUID)){
-                List<EdgeFormData> edgeFormDatas = cur.getFormDef();
+                edgeFormDatas.clear();
+                edgeFormDatas.addAll(cur.getFormDef());
                 try{
                     String poleHeightTemp = valueById(edgeFormDatas, poleHeightID);
                     poleHeight = poleHeightTemp;
@@ -426,6 +428,8 @@ public class StreetlightChicagoService extends AbstractProcessor {
             }
             addStreetLightData("comed.litetype", comedLiteTypeData, paramsList);
         }
+
+        addotherParamsForDroppedPin(edgeFormDatas,paramsList);
 
     }
 
@@ -537,6 +541,46 @@ private String getFixtureCode(EdgeNote edgeNote){
         }
     }
     return fixtureCode;
+}
+
+private void addotherParamsForDroppedPin(List<EdgeFormData> edgeFormDatas,List<Object> paramsList){
+     int poleMaterialId = Integer.valueOf(properties.getProperty("com.edge.pole.material.id"));
+     int fixtureTypeId = Integer.valueOf(properties.getProperty("edge.formtemplate.fixturecode.id"));
+
+    String poleMaterial = null;
+    String fixtureType = null;
+    try{
+        poleMaterial = valueById(edgeFormDatas,poleMaterialId);
+    }catch (Exception e){
+        logger.error("Error while getting pole material from this id: "+poleMaterialId, e);
+    }
+
+    try{
+        fixtureType = valueById(edgeFormDatas,fixtureTypeId);
+    }catch (Exception e){
+        logger.error("Error while getting fixture type from this id: "+fixtureTypeId, e);
+    }
+    if(poleMaterial != null && !poleMaterial.equals("")){
+        // pole material
+        addStreetLightData("pole.material", poleMaterial, paramsList);
+    }
+
+    String comedLiteType = null;
+    if(poleMaterial.equals("Wood")){
+        comedLiteType = "Alley Light";
+    }else if(poleMaterial.equals("No Pole") && fixtureType.equals("Cobrahead Alley")){
+        comedLiteType = "Alley Light";
+    }else if(poleMaterial.equals("No Pole") && fixtureType.equals("Viaduct")){
+        comedLiteType = "Viaduct Light";
+    }else if(poleMaterial.equals("No Pole") && !fixtureType.equals("Cobrahead Alley") && !fixtureType.equals("Viaduct")){
+        comedLiteType = "Street Light";
+    }else if(!poleMaterial.equals("Wood") && !poleMaterial.equals("No Pole")){
+        comedLiteType = "Street Light";
+    }
+    if(comedLiteType != null && !comedLiteType.equals("")) {
+        // comed litetype
+        addStreetLightData("comed.litetype", comedLiteType, paramsList);
+    }
 }
 
     // http://192.168.1.9:8080/edgeServer/oauth/token?grant_type=password&username=admin&password=admin&client_id=edgerestapp
