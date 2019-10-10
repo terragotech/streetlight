@@ -111,7 +111,7 @@
                             <goal>single</goal>
                         </goals>
                         <configuration>
-                            <finalName>slv_test_4_6_21</finalName>
+                            <finalName>slv_test_4_6_21_04</finalName>
 
                             <archive>
                                 <manifest>

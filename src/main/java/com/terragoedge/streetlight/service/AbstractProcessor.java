@@ -149,11 +149,14 @@ public abstract class AbstractProcessor {
         String atlasPhysicalPage = null;
         String communicationSatus = null;
         String fixtureCode = null;
+        String proposedContextValue = null;
+        String atlasGroupValue = null;
         for (int i = 0; i < arr.size(); i++) {
             JsonObject jsonObject1 = arr.get(i).getAsJsonObject();
             String keyValue = jsonObject1.get("key").getAsString();
             if (keyValue != null && keyValue.equals(proposedContextKey)) {
                 String proposedContext = jsonObject1.get("value").getAsString();
+                proposedContextValue = proposedContext;
                 contextListHashMap.put(idOnController, proposedContext);
             } else if (keyValue != null && keyValue.equals(cslInstallDateKey)) {
                 cslpNodeInstall = jsonObject1.get("value").getAsString();
@@ -174,6 +177,8 @@ public abstract class AbstractProcessor {
                 communicationSatus = jsonObject1.get("value").getAsString();
             }else if(keyValue != null && keyValue.equals("userproperty.luminaire.fixturecode")){
                 fixtureCode = jsonObject1.get("value").getAsString();
+            }else if(keyValue != null && keyValue.equals("userProperty.network.atlasgroup")){
+                atlasGroupValue = jsonObject1.get("value").getAsString();
             }
             //userproperty.location.atlasphysicalpage
 
@@ -212,6 +217,14 @@ public abstract class AbstractProcessor {
 
         if(fixtureCode != null && !fixtureCode.trim().isEmpty()){
             installMaintenanceLogModel.setLuminaireFixturecode(fixtureCode);
+        }
+
+        if(proposedContextValue != null && !proposedContextValue.trim().isEmpty()){
+            installMaintenanceLogModel.setProposedContext(proposedContextValue);
+        }
+
+        if(atlasGroupValue != null && !atlasGroupValue.trim().isEmpty()){
+            installMaintenanceLogModel.setAtlasGroup(atlasGroupValue);
         }
 
         if(nodeInstallDate == null){
@@ -491,10 +504,18 @@ public abstract class AbstractProcessor {
             boolean isButtonPhotoCelll = loggingModel.isButtonPhotoCell();
             boolean isNodeOnly =  loggingModel.isNodeOnly();
             if (!isLumDate && !isButtonPhotoCelll && !isNodeOnly) {
-                addStreetLightData("cslp.lum.install.date", dateFormat(edgeNote.getCreatedDateTime()), paramsList);
+                // If its bulk import, then we need to send only Form Date value
+                if(!loggingModel.isBulkImport()){
+                    addStreetLightData("cslp.lum.install.date", dateFormat(edgeNote.getCreatedDateTime()), paramsList);
+                }
+
             }
             if (!isButtonPhotoCelll && !isNodeOnly) {
-                addStreetLightData("luminaire.installdate", dateFormat(edgeNote.getCreatedDateTime()), paramsList);
+                // If its bulk import, then we need to send only Form Date value
+                if(!loggingModel.isBulkImport()){
+                    addStreetLightData("luminaire.installdate", dateFormat(edgeNote.getCreatedDateTime()), paramsList);
+                }
+
             }
             // As per Mail Conversion - Re: New Release updated on Test Server (.175) - 4.6.18
             if(fixerQrScanValue.startsWith("Existing") && loggingModel.isActionNew()){
@@ -793,10 +814,12 @@ public abstract class AbstractProcessor {
     }
 
     private void addProContextLookupData(ProContextLookupData proContextLookupData,SlvServerData slvServerData,List<Object> paramsList,InstallMaintenanceLogModel installMaintenanceLogModel){
-        proContextLookupData.setLumBrand(slvServerData.getLuminaireBrand());
-        proContextLookupData.setLumModel(slvServerData.getLuminaireModel());
-        proContextLookupData.setLumPartNumber(slvServerData.getLuminairePartNumber());
-        addProposedContext(proContextLookupData,paramsList,installMaintenanceLogModel);
+        if(installMaintenanceLogModel.getProposedContext() == null || installMaintenanceLogModel.getProposedContext().isEmpty()){
+            proContextLookupData.setLumBrand(slvServerData.getLuminaireBrand());
+            proContextLookupData.setLumModel(slvServerData.getLuminaireModel());
+            proContextLookupData.setLumPartNumber(slvServerData.getLuminairePartNumber());
+            addProposedContext(proContextLookupData,paramsList,installMaintenanceLogModel);
+        }
     }
 
 
@@ -875,6 +898,12 @@ public abstract class AbstractProcessor {
                 fixtureInfo[5] = "LED";
                 logger.info("Entered if Statement Lum Type" +fixtureInfo[5]);
             }
+
+            //Re: SLV: Invalid Luminaire Type For Philips Fixture Scans (20190925) as per mail conversion
+            if(slvServerData.getLuminaireBrand() != null && slvServerData.getLuminaireBrand().toLowerCase().startsWith("philips")){
+                fixtureInfo[5] = "LED";
+            }
+
             logger.info("Final Lum Type" +fixtureInfo[5]);
             //luminaire.type
             addStreetLightData("luminaire.type", fixtureInfo[5], paramsList);
@@ -997,7 +1026,7 @@ public abstract class AbstractProcessor {
         return geozoneId;
     }
 
-    protected int createDevice(SLVTransactionLogs slvTransactionLogs,EdgeNote edgeNote,int geoZoneId){
+    protected int createDevice(SLVTransactionLogs slvTransactionLogs,EdgeNote edgeNote,int geoZoneId,String atlasGroup){
         int deviceId = -1;
         try {
             String mainUrl = properties.getProperty("streetlight.slv.url.main");
@@ -1012,25 +1041,12 @@ public abstract class AbstractProcessor {
             formData.setFormTemplateGuid(properties.getProperty("amerescousa.edge.formtemplateGuid"));
             int pos = formDatas.indexOf(formData);
             List<EdgeFormData> edgeFormDatas = formDatas.get(pos).getFormDef();
-//            String proposedContext = getFormValue(edgeFormDatas,"Proposed context");
-//            String formFixtureCode = getFormValue(edgeFormDatas,"Fixture Code");
-            String proposedContext = "";
-            String formFixtureCode = "";
-            try {
-                proposedContext = edgeNote.getLocationDescription().split("\\|")[0];
-            }catch (Exception e){
-                e.printStackTrace();
-            }
-            try {
-                formFixtureCode = edgeNote.getLocationDescription().split("\\|")[1];
-            }catch (Exception e){
-                e.printStackTrace();
-            }
+            String proposedContext = getFormValue(edgeFormDatas,16);
+            String formFixtureCode = getFormValue(edgeFormDatas,12);
+
             String atlasPage = Utils.getAtlasPage(edgeNotebook.getNotebookName());
 
-            String atlasGroup = Utils.getAtlasGroup(proposedContext);
-            String fixtureCode = Utils.getFixtureCode(formFixtureCode.startsWith(" ") ? formFixtureCode.substring(1) : formFixtureCode);
-            String fixtureName = atlasPage+"-"+atlasGroup+"-"+edgeNote.getTitle()+"-"+fixtureCode;
+            String fixtureName = getFixtureName(proposedContext,formFixtureCode,atlasPage,edgeNote.getTitle(),atlasGroup);
             String geoJson = edgeNote.getGeometry();
             JsonObject geojsonObject = jsonParser.parse(geoJson).getAsJsonObject();
             JsonObject geometryObject = geojsonObject.get("geometry").getAsJsonObject();
@@ -1501,7 +1517,14 @@ public boolean checkExistingMacAddressValid(EdgeNote edgeNote, InstallMaintenanc
         }
         return "";
     }
-
+    private String getFormValue(List<EdgeFormData> edgeFormDatas,int id){
+        for(EdgeFormData edgeFormData : edgeFormDatas){
+            if(edgeFormData.getId() == id){
+                return edgeFormData.getValue();
+            }
+        }
+        return "";
+    }
 
     protected boolean isDatePresent(String title,String date,String type){
         EdgeSLVDate edgeSLVDate = connectionDAO.getEdgeNodeDate(title,date,type);
@@ -1714,10 +1737,16 @@ public boolean checkExistingMacAddressValid(EdgeNote edgeNote, InstallMaintenanc
                 logger.info("DB ProContextLookupData"+dbProContextLookupData.toString());
                 if(dbProContextLookupData.getLumBrand() != null && dbProContextLookupData.getLumBrand().toLowerCase().startsWith("existing") && installMaintenanceLogModel.isButtonPhotoCell()){
                     addStreetLightData("location.proposedcontext", "Photocell Only", paramsList);
+                    String fixtureName = getFixtureName("Photocell Only",installMaintenanceLogModel.getLuminaireFixturecode(),installMaintenanceLogModel.getAtlasPhysicalPage(),installMaintenanceLogModel.getNoteName(),installMaintenanceLogModel.getAtlasGroup());
+                    addStreetLightData("userName", fixtureName, paramsList);
                 }else if(dbProContextLookupData.getLumBrand() != null && dbProContextLookupData.getLumBrand().toLowerCase().startsWith("existing") && installMaintenanceLogModel.isNodeOnly()){
                     addStreetLightData("location.proposedcontext", "Node Only", paramsList);
+                    String fixtureName = getFixtureName("Node Only",installMaintenanceLogModel.getLuminaireFixturecode(),installMaintenanceLogModel.getAtlasPhysicalPage(),installMaintenanceLogModel.getNoteName(),installMaintenanceLogModel.getAtlasGroup());
+                    addStreetLightData("userName", fixtureName, paramsList);
                 }else {
                     addStreetLightData("location.proposedcontext", dbProContextLookupData.getProposedContext(), paramsList);
+                    String fixtureName = getFixtureName(dbProContextLookupData.getProposedContext(),installMaintenanceLogModel.getLuminaireFixturecode(),installMaintenanceLogModel.getAtlasPhysicalPage(),installMaintenanceLogModel.getNoteName(),installMaintenanceLogModel.getAtlasGroup());
+                    addStreetLightData("userName", fixtureName, paramsList);
                 }
 
             }
@@ -1759,6 +1788,46 @@ public boolean checkExistingMacAddressValid(EdgeNote edgeNote, InstallMaintenanc
 
         }
         return flag;
+    }
+
+    private String getFixtureName(String proposedContext,String formFixtureCode,String atlasPage,String title,String atlasGroupValue){
+        String atlasGroup = null;
+        if(atlasGroupValue != null && !atlasGroupValue.equals("") && !atlasGroupValue.equals("0")){
+            int size = atlasGroupValue.length();
+            if(size == 2){
+                atlasGroup = atlasGroupValue;
+            }else if(size == 1){
+                atlasGroup = "0"+atlasGroupValue;
+            }
+        }
+        if(atlasGroup == null) {
+            atlasGroup = Utils.getAtlasGroup(proposedContext);
+        }
+        String fixtureCode = Utils.getFixtureCode(formFixtureCode.startsWith(" ") ? formFixtureCode.substring(1) : formFixtureCode);
+        String fixtureName = atlasPage+"-"+atlasGroup+"-"+title+"-"+fixtureCode;
+        return fixtureName;
+    }
+
+
+
+    public void isBulkImport(EdgeNote edgeNote,String accessToken,InstallMaintenanceLogModel loggingModel){
+        List<String> tags = edgeNote.getTags();
+        for(String tag: tags){
+            logger.info("Edge Note Tag:"+tag);
+            String bulkImportTag = PropertiesReader.getProperties().getProperty("com.edge.bulkimport.tag");
+            logger.info("Bulk Import Tag:"+tag);
+            if(bulkImportTag.equals(tag)){
+                String url = PropertiesReader.getProperties().getProperty("streetlight.edge.url.main");
+                url = url + PropertiesReader.getProperties().getProperty("com.edge.url.bulkimport.check");
+                url = url + "?noteGuid="+edgeNote.getNoteGuid();
+                 logger.info("Bulk Import Url:"+url);
+                ResponseEntity<String> responseEntity = restService.getRequest(url, false, accessToken);
+                if(responseEntity.getStatusCode().is2xxSuccessful()){
+                    logger.info("Current Note is created via Bulk Import.");
+                    loggingModel.setBulkImport(true);
+                }
+            }
+        }
     }
 
 }
