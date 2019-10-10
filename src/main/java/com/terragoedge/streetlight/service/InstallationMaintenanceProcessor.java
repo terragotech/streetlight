@@ -699,6 +699,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
 
         if (nightRideValue != null) {
             nightRideValue = nightRideValue + "," + cdotIssue;
+            nightRideValue = addUserToLuminaireSerialNumber(nightRideValue,edgeNote.getCreatedBy());
             addStreetLightData(nightRideKey, nightRideValue, paramsList);
         } else {
 
@@ -710,6 +711,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
             }
 
             String formatedValue = dateFormat(edgeNote.getCreatedDateTime()) + " :" + cdotIssue;
+            formatedValue = addUserToLuminaireSerialNumber(formatedValue,edgeNote.getCreatedBy());
             addStreetLightData(Key, formatedValue, paramsList);
         }
         SLVTransactionLogs slvTransactionLogs = getSLVTransactionLogs(loggingModel);
@@ -792,7 +794,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
                         return;
                     }
                 }
-
+                nightRideValue = addUserToLuminaireSerialNumber(nightRideValue,edgeNote.getCreatedBy());
                 int errorCode = sync2SlvInstallStatus(loggingModel.getIdOnController(), loggingModel.getControllerSrtId(), loggingModel, nightRideKey, nightRideValue);
                 if (errorCode != 0) {
                     loggingModel.setErrorDetails("Error while updating Could not complete install status.Corresponding Error code :" + errorCode);
@@ -1800,6 +1802,10 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
         MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
         params.add("slvIdOnController",idOnController);
         restService.slv2Edge("/rest/validation/removeSLVMacAddress", HttpMethod.GET,params);
+    }
+
+    private String addUserToLuminaireSerialNumber(String luminaireSerialNumber,String user){
+        return luminaireSerialNumber+":"+user;
     }
 
 }
