@@ -1,6 +1,8 @@
 package com.terragoedge.streetlight.service;
 
 import java.io.File;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.Properties;
 
 import javax.activation.DataHandler;
@@ -145,6 +147,8 @@ public class EdgeMailService {
 		}
 			
 	}
+
+
 	public void sendMail(String dupMacAddressFile,String dailyReportFile) {
 		logger.info("Mail Server Triggered");
 		Properties props = System.getProperties();
@@ -175,10 +179,14 @@ public class EdgeMailService {
 			for (int i = 0; i < toAddress.length; i++) {
 				message.addRecipient(Message.RecipientType.TO, toAddress[i]);
 			}
-			message.setSubject("Daily Installation Report - Automated");
+
+            SimpleDateFormat dateFormat = new SimpleDateFormat("dd MMMM yyyy");
+            String sub = "Daily Report - "+dateFormat.format(new Date());
+
+			message.setSubject(sub);
 
 			BodyPart messageBodyPart = new MimeBodyPart();
-			messageBodyPart.setText("Please find attached the csv with the today's data. \n \n");
+			messageBodyPart.setText("Please find the daily installation report attached. \n \n");
 
 			Multipart multipart = new MimeMultipart();
 			multipart.addBodyPart(messageBodyPart);
