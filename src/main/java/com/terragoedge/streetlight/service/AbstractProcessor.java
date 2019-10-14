@@ -1174,7 +1174,6 @@ public abstract class AbstractProcessor {
                     syncMacAddress2Edge(idOnController,macAddress,atlasPhysicalPage);
                     paramsList = new ArrayList<>();
                     syncAccountNumber(paramsList,loggingModel,edgeNote,Utils.SUCCESSFUL,macAddress);
-                    syncCustomerName(loggingModel);// TODO This for testing
                 }
                 throw new ReplaceOLCFailedException(value);
 
