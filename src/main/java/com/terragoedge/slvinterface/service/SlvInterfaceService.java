@@ -1,5 +1,8 @@
 package com.terragoedge.slvinterface.service;
 
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonParser;
 import com.terragoedge.slvinterface.dao.tables.SlvSyncDetail;
 import com.terragoedge.slvinterface.exception.*;
 import com.terragoedge.slvinterface.model.*;
@@ -25,9 +28,11 @@ public class SlvInterfaceService extends AbstractSlvService {
     private SlvService slvService;
     private String installFormtemplateGuid = null;
     private String newFixtureFormtemplateGuid = null;
+    private JsonParser jsonParser;
 
     public SlvInterfaceService() {
         super();
+        jsonParser = new JsonParser();
         slvService = new SlvService();
         this.properties = PropertiesReader.getProperties();
     }
@@ -57,6 +62,13 @@ public class SlvInterfaceService extends AbstractSlvService {
         // Get List of noteid
         long maxSyncTime = connectionDAO.getMaxSyncTime();
         logger.info("max SyncTime: "+maxSyncTime);
+
+        String edgeToken = getEdgeToken();
+        if (edgeToken == null) {
+            logger.error("Edge Invalid UserName and Password.");
+            return;
+        }
+
 //        List<String> noteGuidsList = new ArrayList<>();
         String resync = properties.getProperty("com.slv.resync");
         List<String> noteGuidsList = new ArrayList<>();
@@ -69,7 +81,8 @@ public class SlvInterfaceService extends AbstractSlvService {
                 noteGuidsList = Arrays.asList(resyncItems);
             }
         }else {
-            noteGuidsList = connectionDAO.getEdgeNoteGuid(installFormtemplateGuid, newFixtureFormtemplateGuid, maxSyncTime);
+            noteGuidsList = getNoteGuids(maxSyncTime,edgeToken);
+//            noteGuidsList = connectionDAO.getEdgeNoteGuid(installFormtemplateGuid, newFixtureFormtemplateGuid, maxSyncTime);
         }
         /*List<String> noteGuidsList = new ArrayList<>();
         noteGuidsList.clear();
@@ -356,5 +369,43 @@ public class SlvInterfaceService extends AbstractSlvService {
             }
         }
         return formTemplateGuids;
+    }
+
+    private List<String> getNoteGuids(long lastSyncTime,String accessToken){
+        List<String> noteguids = new ArrayList<>();
+        String edgeSlvUrl =  PropertiesReader.getProperties().getProperty("streetlight.edge.slvserver.url");
+        edgeSlvUrl = edgeSlvUrl+"/notesGuid?lastSyncTime=";
+
+        if(lastSyncTime > 0){
+            edgeSlvUrl = edgeSlvUrl + lastSyncTime;
+
+        }else{
+            lastSyncTime = System.currentTimeMillis() - (10 * 60000);
+            edgeSlvUrl = edgeSlvUrl + lastSyncTime;
+        }
+
+
+
+        // Get NoteList from edgeserver
+        ResponseEntity<String> edgeSlvServerResponse = slvRestService.getRequest(edgeSlvUrl, false, accessToken);
+
+        if (edgeSlvServerResponse.getStatusCode().is2xxSuccessful()) {
+
+            // Get Response String
+            String notesGuids = edgeSlvServerResponse.getBody();
+            System.out.println(notesGuids);
+
+            JsonArray noteGuidsJsonArray = (JsonArray) jsonParser.parse(notesGuids);
+            if(noteGuidsJsonArray != null &&  !noteGuidsJsonArray.isJsonNull()){
+                for(JsonElement noteGuidJson : noteGuidsJsonArray){
+                    String noteGuid = noteGuidJson.getAsString();
+                    noteguids.add(noteGuid);
+                }
+            }
+
+        } else {
+            logger.error("Unable to get message from EdgeServer. Response Code is :" + edgeSlvServerResponse.getStatusCode());
+        }
+        return noteguids;
     }
 }

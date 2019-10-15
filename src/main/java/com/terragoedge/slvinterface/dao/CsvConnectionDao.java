@@ -1,5 +1,6 @@
 package com.terragoedge.slvinterface.dao;
 
+import com.terragoedge.slvinterface.utils.PropertiesReader;
 import org.apache.log4j.Logger;
 
 import java.sql.*;
@@ -12,9 +13,9 @@ public class CsvConnectionDao {
         ResultSet resultSet = null;
         if (connection == null) {
             try {
-                String host = "jdbc:postgresql://localhost:5432/terragoedge";
-                String username = "postgres";
-                String password = "password";
+                String host = PropertiesReader.getProperties().getProperty("com.slv.database.base.url");
+                String username = PropertiesReader.getProperties().getProperty("com.slv.database.username");
+                String password = PropertiesReader.getProperties().getProperty("com.slv.database.password");
                 connection = DriverManager.getConnection(host, username, password);
             } catch (SQLException ex) {
                 ex.printStackTrace();

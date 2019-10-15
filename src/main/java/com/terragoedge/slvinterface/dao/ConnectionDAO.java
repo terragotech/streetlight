@@ -11,6 +11,7 @@ import com.terragoedge.slvinterface.dao.tables.GeozoneEntity;
 import com.terragoedge.slvinterface.dao.tables.SlvDevice;
 import com.terragoedge.slvinterface.dao.tables.SlvSyncDetail;
 import com.terragoedge.slvinterface.model.JPSWorkflowModel;
+import com.terragoedge.slvinterface.utils.PropertiesReader;
 import org.apache.log4j.Logger;
 
 import java.sql.ResultSet;
@@ -23,8 +24,6 @@ public enum ConnectionDAO {
 
     INSTANCE;
 
-    private final static String DATABASE_URL = "jdbc:postgresql://127.0.0.1:5432/terragoedge?user=postgres&password=password";
-
     ConnectionSource connectionSource = null;
     private Dao<SlvSyncDetail, String> slvSyncDetailsDao;
     public Dao<SlvDevice, String> slvDeviceDao = null;
@@ -35,6 +34,7 @@ public enum ConnectionDAO {
     ConnectionDAO() {
 
         try {
+            String DATABASE_URL = PropertiesReader.getProperties().getProperty("com.slv.database.url");
             connectionSource = new JdbcConnectionSource(DATABASE_URL);
             try {
                 TableUtils.createTable(connectionSource, SlvSyncDetail.class);
