@@ -547,8 +547,8 @@ private void addotherParamsForDroppedPin(List<EdgeFormData> edgeFormDatas,List<O
      int poleMaterialId = Integer.valueOf(properties.getProperty("com.edge.pole.material.id"));
      int fixtureTypeId = Integer.valueOf(properties.getProperty("edge.formtemplate.fixturecode.id"));
 
-    String poleMaterial = null;
-    String fixtureType = null;
+    String poleMaterial = "";
+    String fixtureType = "";
     try{
         poleMaterial = valueById(edgeFormDatas,poleMaterialId);
     }catch (Exception e){
