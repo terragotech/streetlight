@@ -10,6 +10,9 @@ import com.slvinterface.entity.SLVSyncTable;
 import com.slvinterface.entity.SLVTransactionLogs;
 import org.apache.log4j.Logger;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class QueryExecutor {
 
     ConnectionSource connectionSource = null;
@@ -80,15 +83,17 @@ public class QueryExecutor {
     }
 
 
-    public EdgeAllMac getEdgeAllMac(String title, String macAddress) throws Exception {
-        return edgeAllMacsDao.queryBuilder().where().eq(EdgeAllMac.TITLE, title).and().eq(EdgeAllMac.MAC_ADDRESS, macAddress).queryForFirst();
+    public List<EdgeAllMac> getEdgeAllCalendar(String title,String calendar){
+        try {
+           return edgeAllMacsDao.queryBuilder().where().eq(EdgeAllMac.TITLE,title).and().eq(EdgeAllMac.EDGER_CALENDAR,calendar).query();
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+        return new ArrayList<>();
     }
 
 
-    public boolean isExistMacAddress(String idOncontroller, String macaddress) throws Exception {
-        EdgeAllMac edgeAllMac = getEdgeAllMac(idOncontroller, macaddress.toUpperCase());
-        return edgeAllMac != null;
-    }
+
 
 
     public void saveSLVTransactionLogs(SLVTransactionLogs slvTransactionLogs) {

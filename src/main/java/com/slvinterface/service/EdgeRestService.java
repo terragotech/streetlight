@@ -9,9 +9,12 @@ import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.StringHttpMessageConverter;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
+
+import java.nio.charset.Charset;
 
 public class EdgeRestService {
 
@@ -58,6 +61,8 @@ public class EdgeRestService {
         logger.info("------------ Request End ------------------");
         HttpHeaders headers = getHeaders(accessToken);
         RestTemplate restTemplate = new RestTemplate();
+        restTemplate.getMessageConverters()
+                .add(0, new StringHttpMessageConverter(Charset.forName("UTF-8")));
         HttpEntity request = new HttpEntity<>(headers);
         ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.GET, request, String.class);
         logger.info("------------ Response ------------------");

@@ -7,7 +7,8 @@ import com.j256.ormlite.table.DatabaseTable;
 public class EdgeAllMac {
 
     public static String TITLE = "title";
-    public static String MAC_ADDRESS = "macaddress";
+    public static String EDGER_CALENDAR = "edge_calendar";
+
 
     @DatabaseField(generatedId = true)
     private int id;
@@ -15,8 +16,8 @@ public class EdgeAllMac {
     @DatabaseField(columnName = "title")
     private String noteTitle;
 
-    @DatabaseField(columnName = "macaddress")
-    private String macAddress;
+    @DatabaseField(columnName = "edge_calendar")
+   private String edgeCalendar;
 
     public int getId() {
         return id;
@@ -34,12 +35,12 @@ public class EdgeAllMac {
         this.noteTitle = noteTitle;
     }
 
-    public String getMacAddress() {
-        return macAddress;
+    public String getEdgeCalendar() {
+        return edgeCalendar;
     }
 
-    public void setMacAddress(String macAddress) {
-        this.macAddress = macAddress;
+    public void setEdgeCalendar(String edgeCalendar) {
+        this.edgeCalendar = edgeCalendar;
     }
 
     @Override
@@ -47,7 +48,7 @@ public class EdgeAllMac {
         return "EdgeAllMac{" +
                 "id=" + id +
                 ", noteTitle='" + noteTitle + '\'' +
-                ", macAddress='" + macAddress + '\'' +
+                ", edgeCalendar='" + edgeCalendar + '\'' +
                 '}';
     }
 }

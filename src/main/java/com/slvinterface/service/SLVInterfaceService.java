@@ -8,6 +8,7 @@ import com.slvinterface.entity.EdgeAllMac;
 import com.slvinterface.entity.SLVSyncTable;
 import com.slvinterface.entity.SLVTransactionLogs;
 import com.slvinterface.enumeration.CallType;
+import com.slvinterface.enumeration.SLVProcess;
 import com.slvinterface.exception.*;
 import com.slvinterface.json.*;
 import com.slvinterface.utils.PropertiesReader;
@@ -31,7 +32,7 @@ import java.net.URLEncoder;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
-public abstract class SLVInterfaceService {
+public class SLVInterfaceService {
 
     private static final Logger logger = Logger.getLogger(SLVInterfaceService.class);
 
@@ -46,7 +47,7 @@ public abstract class SLVInterfaceService {
     public static int retryCount = 0;
 
 
-    SLVInterfaceService() throws Exception {
+    public SLVInterfaceService() throws Exception {
         edgeRestService = new EdgeRestService();
         jsonParser = new JsonParser();
         queryExecutor = new QueryExecutor();
@@ -59,14 +60,6 @@ public abstract class SLVInterfaceService {
         String accessToken = edgeRestService.getEdgeToken();
         if (accessToken == null) {
             logger.error("Edge Invalid UserName and Password.");
-            return;
-        }
-
-
-        try {
-            conditionsJson = getConditionsJson();
-        } catch (Exception e) {
-            logger.error("Unable to load Configuration file.", e);
             return;
         }
 
@@ -179,6 +172,9 @@ public abstract class SLVInterfaceService {
             if (responseEntity.getStatusCode().is2xxSuccessful()) {
                 logger.info("Response from edge.");
                 String notesData = responseEntity.getBody();
+                logger.info("----------------Edge Note Data--------------");
+                logger.info(notesData);
+                logger.info("----------------Edge Note Data End--------------");
                 processNoteData(notesData,slvSyncTable);
             } else {
                 logger.error("Unable to Get Note Details from Edge Server and status code is:"+responseEntity.getStatusCode());
@@ -246,8 +242,9 @@ public abstract class SLVInterfaceService {
                 logger.info("Form Template is not present.");
                 return;
             }
-
-            processFormData(formDataList,slvSyncTable);
+            DeviceEntity deviceEntity = new DeviceEntity();
+            loadDeviceValues(edgeNote.getTitle(),deviceEntity);
+            processFormData(formDataList,slvSyncTable,deviceEntity);
         }catch (SLVConnectionException e){
             throw new SLVConnectionException(e);
         }catch (Exception e) {
@@ -265,6 +262,7 @@ public abstract class SLVInterfaceService {
      */
     private void populateSLVSyncTable(EdgeNote edgeNote, SLVSyncTable slvSyncTable) {
         slvSyncTable.setNoteName(edgeNote.getTitle());
+        slvSyncTable.setIdOnController(edgeNote.getTitle());
         slvSyncTable.setNoteCreatedBy(edgeNote.getCreatedBy());
         slvSyncTable.setNoteCreatedDateTime(edgeNote.getCreatedDateTime());
         slvSyncTable.setSyncTime(edgeNote.getSyncTime());
@@ -326,55 +324,7 @@ public abstract class SLVInterfaceService {
         }
     }
 
-    public boolean checkMacAddressExists(String macAddress, String idOnController)
-            throws QRCodeAlreadyUsedException, Exception {
-
-        boolean isExistMacAddress = queryExecutor.isExistMacAddress(idOnController, macAddress);
-        if (isExistMacAddress) {
-            logger.info("Given MAC Address Already Present in Local DB.");
-            throw new QRCodeAlreadyUsedException("QR code [" + macAddress + "] is already processed.", macAddress);
-        }
-        logger.info("Getting Mac Address from SLV.");
-        String mainUrl = properties.getProperty("streetlight.slv.base.url");
-        String updateDeviceValues = properties.getProperty("streetlight.slv.url.search.device");
-        String url = mainUrl + updateDeviceValues;
-        List<String> paramsList = new ArrayList<String>();
-        paramsList.add("attributeName=MacAddress");
-        paramsList.add("attributeValue=" + macAddress);
-        paramsList.add("attributeOperator=eq-i");
-        String geoZoneId = PropertiesReader.getProperties().getProperty("streetlight.root.geozone");
-        paramsList.add("geoZoneId="+geoZoneId);
-        paramsList.add("recurse=true");
-        paramsList.add("returnedInfo=devicesList");
-        paramsList.add("ser=json");
-        String params = StringUtils.join(paramsList, "&");
-        url = url + "?" + params;
-        System.out.println("Url :" + url);
-        HttpResponse response = slvRestService.callGetMethod(url);
-        if (response.getStatusLine().getStatusCode() == 200) {
-            String responseString = slvRestService.getResponseBody(response);
-            DeviceMacAddress deviceMacAddress = gson.fromJson(responseString, DeviceMacAddress.class);
-            List<Value> values = deviceMacAddress.getValue();
-            StringBuilder stringBuilder = new StringBuilder();
-            if (values == null || values.size() == 0) {
-                return false;
-            } else {
-                for (Value value : values) {
-                    if (value.getIdOnController().equals(idOnController)) {
-                        // return false;
-                    }
-                    stringBuilder.append(value.getIdOnController());
-                    stringBuilder.append("\n");
-                }
-            }
-            throw new QRCodeAlreadyUsedException("QR code [" + macAddress + "] is already Used in following devices [" + stringBuilder.toString() + "]", macAddress);
-        } else {
-            throw new QRCodeAlreadyUsedException("Error while getting data from SLV.", macAddress);
-        }
-
-    }
-
-    public void loadDeviceValues(String idOnController, DeviceEntity deviceEntity) throws NoValueException,SLVUnAuthorizeException, IOException, ClientProtocolException {
+    public void loadDeviceValues(String idOnController, DeviceEntity deviceEntity) throws NoValueException,SLVUnAuthorizeException, IOException, ClientProtocolException,Exception {
         logger.info("loadDeviceValues called.");
         String mainUrl = properties.getProperty("streetlight.slv.base.url");
         String deviceUrl = properties.getProperty("streetlight.slv.url.search.device");
@@ -396,21 +346,14 @@ public abstract class SLVInterfaceService {
             logger.info("LoadDevice Respose :" + responseString);
             if(responseString != null){
                 int id = processDeviceJson(responseString);
+                deviceEntity.setDeviceId(id);
                 logger.info("LoadDevice Id :" + id);
 
                 if (id == 0) {
-                    logger.info("csl and context hashmap are cleared");
                     throw new NoValueException("Device id:[" + idOnController + "] does not exists in SLV server");
                 } else {
-                    String subDeviceUrl = getDeviceUrl(id);
-                    logger.info("subDevice url:" + subDeviceUrl);
-                    HttpResponse httpResponse = slvRestService.callGetMethod(subDeviceUrl);
-                    if (httpResponse.getStatusLine().getStatusCode() == 200) {
-                        String deviceResponse = slvRestService.getResponseBody(httpResponse);
-                        if(deviceResponse != null){
-                           // processDeviceValuesJson(deviceResponse, idOnController, deviceEntity);
-                        }
-                    }
+                    String dimmingGroupName = getSLVDimmingGroupName(id);
+                    deviceEntity.setDimmingGroup(dimmingGroupName);
                 }
             }
 
@@ -434,25 +377,7 @@ public abstract class SLVInterfaceService {
         return deviceMainUrl;
     }
 
-    public void processDeviceValuesJson(String deviceValuesjson, String idOnController, DeviceEntity deviceEntity) {
-        logger.info("processDeviceValuesJson called start");
-        JsonObject jsonObject = new JsonParser().parse(deviceValuesjson).getAsJsonObject();
-        logger.info("Device request json:" + gson.toJson(jsonObject));
 
-        logger.info("processDeviceValuesJson End");
-    }
-
-    public void createEdgeAllMac(String title, String macAddress) {
-        EdgeAllMac edgeAllMacData = new EdgeAllMac();
-        edgeAllMacData.setMacAddress(macAddress.toUpperCase());
-        edgeAllMacData.setNoteTitle(title);
-        queryExecutor.saveEdgeAllMac(edgeAllMacData);
-    }
-
-
-    public void removeEdgeAllMac(String title){
-
-    }
 
     private void setSLVTransactionLogs(SLVTransactionLogs slvTransactionLogs, String request, CallType callType) {
         slvTransactionLogs.setRequestDetails(request);
@@ -490,63 +415,7 @@ public abstract class SLVInterfaceService {
         return errorCode;
     }
 
-    /**
-     * Calls ReplaceOLCs
-     *
-     * @throws ReplaceOLCFailedException
-     */
-    public void replaceOLC(String controllerStrIdValue, String idOnController, String macAddress,SLVSyncTable slvSyncTable)
-            throws ReplaceOLCFailedException {
-        SLVTransactionLogs slvTransactionLogs = getSLVTransVal(slvSyncTable);
-        try {
-            String newNetworkId = macAddress;
 
-            // Get Url detail from properties
-            String mainUrl = properties.getProperty("streetlight.slv.base.url");
-            String dataUrl = properties.getProperty("streetlight.url.replaceolc");
-            String replaceOlc = properties.getProperty("streetlight.url.replaceolc.method");
-            String url = mainUrl + dataUrl;
-            String controllerStrId = controllerStrIdValue;
-            List<Object> paramsList = new ArrayList<Object>();
-            paramsList.add("methodName=" + replaceOlc);
-            paramsList.add("controllerStrId=" + controllerStrId);
-            paramsList.add("idOnController=" + idOnController);
-            paramsList.add("newNetworkId=" + newNetworkId);
-            paramsList.add("ser=json");
-            String params = StringUtils.join(paramsList, "&");
-            url = url + "?" + params;
-            setSLVTransactionLogs(slvTransactionLogs, url, CallType.REPLACE_OLC);
-            HttpResponse response = slvRestService.callGetMethod(url);
-            String responseString =  slvRestService.getResponseBody(response);
-            setResponseDetails(slvTransactionLogs, responseString);
-            JsonObject replaceOlcResponse = (JsonObject) jsonParser.parse(responseString);
-            String errorStatus = replaceOlcResponse.get("status").getAsString();
-            logger.info("Replace OLC Process End.");
-            // As per doc, errorcode is 0 for success. Otherwise, its not success.
-            if (errorStatus.equals("ERROR")) {
-                String value = replaceOlcResponse.get("value").getAsString();
-                throw new ReplaceOLCFailedException(value);
-            } else {
-
-
-            }
-            // -- For Production We Need to move this in else part.
-            if (macAddress != null && !macAddress.trim().isEmpty()) {
-                logger.info("Adding MAC Address to the Local DB.");
-                //createEdgeAllMac(slvSyncTable.getIdOnController(), macAddress);
-                syncMacAddress2Edge(slvSyncTable.getIdOnController(),macAddress,null);
-            }else{
-                removeEdgeSLVMacAddress(slvSyncTable.getIdOnController());
-            }
-
-        } catch (Exception e) {
-            logger.error("Error in replaceOLC", e);
-            throw new ReplaceOLCFailedException(e.getMessage());
-        } finally {
-            queryExecutor.saveSLVTransactionLogs(slvTransactionLogs);
-        }
-
-    }
 
     public SLVTransactionLogs getSLVTransVal(SLVSyncTable slvSyncTable){
         SLVTransactionLogs slvTransactionLogs = new SLVTransactionLogs();
@@ -571,7 +440,45 @@ public abstract class SLVInterfaceService {
     }
 
 
-    public void processFormData(List<FormData> formDataList, SLVSyncTable slvSyncTable)throws SLVConnectionException{
+    public void processFormData(List<FormData> formDataList, SLVSyncTable slvSyncTable,DeviceEntity deviceEntity)throws SLVConnectionException{
+        logger.info("Processing form value.");
+        Edge2SLVData previousEdge2SLVData = null;
+        for(FormData formData : formDataList){
+            Edge2SLVData currentEdge2SLVData = new Edge2SLVData();
+            processFormData(formData,currentEdge2SLVData);
+            logger.info("Current Edge2SLVData:"+currentEdge2SLVData.toString());
+
+            if(currentEdge2SLVData.getCalendar() != null){
+                if(previousEdge2SLVData == null){
+                    previousEdge2SLVData = currentEdge2SLVData;
+                }else{
+                    logger.info("Current Edge2SLVData:"+currentEdge2SLVData.toString());
+                    logger.info("Previous Edge2SLVData:"+currentEdge2SLVData.toString());
+                    if(currentEdge2SLVData.getCalendar().equals(previousEdge2SLVData.getCalendar())){
+                        previousEdge2SLVData = currentEdge2SLVData;
+                    }
+                }
+            }
+        }
+
+        if(previousEdge2SLVData.getCalendar() == null){
+            slvSyncTable.setStatus("Failure");
+            slvSyncTable.setErrorDetails("Calendar Value is not present for this note.");
+            return;
+        }else{
+            if(deviceEntity.getDimmingGroup() == null || !previousEdge2SLVData.getCalendar().equals(deviceEntity.getDimmingGroup())){
+                List<EdgeAllMac> edgeAllMacList =  queryExecutor.getEdgeAllCalendar(previousEdge2SLVData.getTitle(),previousEdge2SLVData.getCalendar());
+                if(edgeAllMacList.size() > 0){
+                    slvSyncTable.setStatus("Failure");
+                    slvSyncTable.setErrorDetails("Calendar value already present in our local table.");
+                }else{
+                    slvSync(slvSyncTable,previousEdge2SLVData);
+                }
+            }else{
+                slvSyncTable.setStatus("Failure");
+                slvSyncTable.setErrorDetails("SLV Calendar matches with Edge.");
+            }
+        }
 
     }
 
@@ -593,13 +500,6 @@ public abstract class SLVInterfaceService {
     }
 
 
-    protected String dateFormat(Long dateTime) {
-        Date date = new Date(Long.valueOf(dateTime));
-        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
-        dateFormat.setTimeZone(TimeZone.getTimeZone("GMT"));
-        String dff = dateFormat.format(date);
-        return dff;
-    }
 
 
     /**
@@ -608,103 +508,82 @@ public abstract class SLVInterfaceService {
      * @param edge2SLVData
      */
     public void processFormData(FormData formData,Edge2SLVData edge2SLVData){
-        List<FormValues> formValuesList = formData.getFormDef();
-        List<Priority> priorities = conditionsJson.getPriority();
-        List<Config> configList = conditionsJson.getConfigList();
-        for(Priority priority : priorities){
-            logger.info("Current Priority is "+ priority.toString());
-            Config temp = new Config();
-            temp.setType(priority.getType());
+        try{
+            List<FormValues> formValuesList = formData.getFormDef();
+            String calendarFormID = properties.getProperty("edge.calendar.form.id");
+            String calendar = valueById(formValuesList,Integer.valueOf(calendarFormID));
+            edge2SLVData.setCalendar(calendar);
+        }catch (Exception e){
+            logger.error("Error in processFormData",e);
+        }
 
-            int pos = configList.indexOf(temp);
+    }
 
-            if(pos != -1){
-                Config config =  configList.get(pos);
-                List<Id> idList = config.getIds();
-                for(Id id : idList){
-                    switch (id.getType()){
-                        case MAC:
-                            try{
-                                String macAddress = valueById(formValuesList,id.getId()).toUpperCase();
-                                logger.info("MAC Address:"+macAddress);
-                                edge2SLVData.setMacAddress(macAddress);
-                                edge2SLVData.setPriority(priority);
-                            }catch (NoValueException e){
-                                logger.error("Error in processFormData",e);
+
+
+
+    public String getSLVDimmingGroupName(int deviceId)throws Exception{
+        try{
+            if (deviceId > 0) {
+                String mainUrl = properties.getProperty("streetlight.slv.url.main");
+                String commentUrl = properties.getProperty("streetlight.slv.url.comment.get");
+                String url = mainUrl + commentUrl;
+                List<String> paramsList = new ArrayList<>();
+                paramsList.add("returnTimeAges=false");
+                paramsList.add("param0=" + deviceId);
+                paramsList.add("valueName=DimmingGroupName");
+                paramsList.add("ser=json");
+                String params = StringUtils.join(paramsList, "&");
+                url = url + "?" + params;
+                logger.info("Get Install Date url :" + url);
+                HttpResponse response = slvRestService.callGetMethod(url);
+                if (response.getStatusLine().getStatusCode() == 200) {
+                    String responseString =  slvRestService.getResponseBody(response);
+                    JsonArray jsonArray = (JsonArray) jsonParser.parse(responseString);
+                    for (JsonElement installDateJsonArray : jsonArray) {
+                        JsonObject installDateJson = installDateJsonArray.getAsJsonObject();
+                        if (installDateJson.get("name") != null) {
+                            String paramName = installDateJson.get("name").getAsString();
+                            if (paramName.equals("DimmingGroupName")) {
+                                if (installDateJson.get("value") != null) {
+                                    return installDateJson.get("value").getAsString();
+
+                                }
                             }
-
-
-                            break;
-                        case DATE:
-                            try{
-                                String installDate = valueById(formValuesList,id.getId());
-                                logger.info("Date Value:"+installDate);
-                                installDate =  dateFormat(Long.valueOf(installDate));
-                                logger.info("After Format:"+installDate);
-                                edge2SLVData.setInstallDate(installDate);
-                            }catch (NoValueException e){
-                                logger.error("Error in processFormData",e);
-                            }
-
-                            break;
-
-                        case IDONCONTROLLER:
-                            try{
-                                String idOnController = valueById(formValuesList,id.getId());
-                                logger.info("IdOnController:"+idOnController);
-                                edge2SLVData.setIdOnController(idOnController);
-                            }catch (NoValueException e){
-                                logger.error("Error in processFormData",e);
-                            }
-                            break;
-
-                        case EXISTING_MAC:
-                            try{
-                                String existingMACAddress = valueById(formValuesList,id.getId());
-                                logger.info("Existing MAC Address:"+existingMACAddress);
-                                edge2SLVData.setExistingMACAddress(existingMACAddress);
-                            }catch (NoValueException e){
-                                logger.error("Error in processFormData",e);
-                            }
-                            break;
+                        }
 
                     }
+                }else{
+                    throw  new Exception("Not able to get Data.");
                 }
 
-                if(edge2SLVData.getPriority() != null){
-                    logger.info("Values are Present:"+edge2SLVData.getPriority());
-                    return;
-                }
+
             }
+        }catch (Exception e){
+            throw  new Exception("Not able to get Data.");
         }
+        return null;
     }
+
 
 
     /**
-     * Remove MAC Address from the Duplicate list
-     * @param idOnController
+     * Send Value to SLV.
+     * @param slvSyncTable
+     * @param previousEdge2SLVData
      */
-    public void removeEdgeSLVMacAddress(String idOnController){
-        MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
-        params.add("slvIdOnController",idOnController);
-        edgeRestService.slv2Edge("/rest/validation/removeSLVMacAddress", HttpMethod.GET,params);
-    }
-
-    /**
-     * Add MAC Adderss to the Duplicate Validation list
-     * @param idOnController
-     * @param macAddress
-     * @param atlasPhysicalPage
-     */
-    public void syncMacAddress2Edge(String idOnController,String macAddress,String atlasPhysicalPage){
-        if(macAddress != null && !macAddress.trim().isEmpty()){
-            MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
-            params.add("slvMacAddress",macAddress);
-            params.add("slvIdOnController",idOnController);
-            if(atlasPhysicalPage != null){
-                params.add("atlasPhysicalPage",atlasPhysicalPage);
-            }
-            edgeRestService.slv2Edge("/rest/validation/updateSLVSyncedMAC", HttpMethod.GET,params);
+    private void slvSync(SLVSyncTable slvSyncTable,Edge2SLVData previousEdge2SLVData) {
+        SLVTransactionLogs slvTransactionLogs = getSLVTransVal(slvSyncTable);
+        List<Object> paramsList = new ArrayList<>();
+        loadVal(paramsList,previousEdge2SLVData);
+        addStreetLightData("DimmingGroupName",previousEdge2SLVData.getCalendar(),paramsList);
+        int errorCode = setDeviceValues(paramsList,slvTransactionLogs);
+        if(errorCode != 0){
+            slvSyncTable.setStatus("Failure");
+            slvSyncTable.setErrorDetails("Check Response Log");
+        }else{
+            slvSyncTable.setStatus("Success");
         }
     }
+
 }

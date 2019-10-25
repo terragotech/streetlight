@@ -26,28 +26,16 @@ public class SLVSyncTable {
     private long syncTime;
     @DatabaseField(columnName = "status")
     private String status;
-    @DatabaseField(columnName = "selectedaction")
-    private String selectedAction;
+
     @DatabaseField(columnName = "errordetails")
     private String errorDetails;
-    @DatabaseField(columnName = "macaddress")
-    private String macAddress;
-    @DatabaseField(columnName = "devicecreationstatus")
-    private String deviceCreationStatus;
+
 
     @DatabaseField(columnName = "parentnoteid")
     private String parentNoteId;
 
     @DatabaseField(columnName = "idoncontroller")
     private String idOnController;
-
-    public String getIdOnController() {
-        return idOnController;
-    }
-
-    public void setIdOnController(String idOnController) {
-        this.idOnController = idOnController;
-    }
 
     public int getId() {
         return id;
@@ -97,20 +85,20 @@ public class SLVSyncTable {
         this.processedDateTime = processedDateTime;
     }
 
+    public long getSyncTime() {
+        return syncTime;
+    }
+
+    public void setSyncTime(long syncTime) {
+        this.syncTime = syncTime;
+    }
+
     public String getStatus() {
         return status;
     }
 
     public void setStatus(String status) {
         this.status = status;
-    }
-
-    public String getSelectedAction() {
-        return selectedAction;
-    }
-
-    public void setSelectedAction(String selectedAction) {
-        this.selectedAction = selectedAction;
     }
 
     public String getErrorDetails() {
@@ -121,36 +109,20 @@ public class SLVSyncTable {
         this.errorDetails = errorDetails;
     }
 
-    public String getMacAddress() {
-        return macAddress;
-    }
-
-    public void setMacAddress(String macAddress) {
-        this.macAddress = macAddress;
-    }
-
-    public String getDeviceCreationStatus() {
-        return deviceCreationStatus;
-    }
-
-    public void setDeviceCreationStatus(String deviceCreationStatus) {
-        this.deviceCreationStatus = deviceCreationStatus;
-    }
-
-    public long getSyncTime() {
-        return syncTime;
-    }
-
-    public void setSyncTime(long syncTime) {
-        this.syncTime = syncTime;
-    }
-
     public String getParentNoteId() {
         return parentNoteId;
     }
 
     public void setParentNoteId(String parentNoteId) {
         this.parentNoteId = parentNoteId;
+    }
+
+    public String getIdOnController() {
+        return idOnController;
+    }
+
+    public void setIdOnController(String idOnController) {
+        this.idOnController = idOnController;
     }
 
     @Override
@@ -164,10 +136,7 @@ public class SLVSyncTable {
                 ", processedDateTime=" + processedDateTime +
                 ", syncTime=" + syncTime +
                 ", status='" + status + '\'' +
-                ", selectedAction='" + selectedAction + '\'' +
                 ", errorDetails='" + errorDetails + '\'' +
-                ", macAddress='" + macAddress + '\'' +
-                ", deviceCreationStatus='" + deviceCreationStatus + '\'' +
                 ", parentNoteId='" + parentNoteId + '\'' +
                 ", idOnController='" + idOnController + '\'' +
                 '}';
