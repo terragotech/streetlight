@@ -12,7 +12,7 @@ public class ResourceDetails {
     //public static final String INBOUND_FILE_STORE = "./src/main/resources/brent/inbound_data";
 
     //public static final String PROPS_PATH = "./src/main/resources/glasgow/main.properties";
-    public static final String INBOUND_CONFIG_JSON = "./src/main/resources/london/inboundconfig.json";
-    public static final String INBOUND_FILE_STORE = "./src/main/resources/london/inbound_data";
-    public static final String PROPS_PATH = "./src/main/resources/london/main.properties";
+    public static final String INBOUND_CONFIG_JSON = "./src/main/resources/prism/inboundconfig.json";
+    public static final String INBOUND_FILE_STORE = "./src/main/resources/prism/inbound_data";
+    public static final String PROPS_PATH = "./src/main/resources/prism/main.properties";
 }

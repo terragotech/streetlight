@@ -22,14 +22,13 @@ import java.util.Calendar;
 import java.util.List;
 
 public class Test {
-public static void main(String []args) throws Exception
-{
-   /* InBoundInterface  inBoundInterface = new LondonInBoundInterface();
+public static void main(String []args) throws Exception {
+    InBoundInterface inBoundInterface = new PrismInboundInterface();
+    //inBoundInterface.startProcessing();
     //inBoundInterface.startProcessing();
     inBoundInterface.updateNotes(
-            "D:\\wc\\terrago\\uc_slv_interface\\streetlight\\src\\main\\resources\\london\\inbound_data\\2019_10_24\\install_sample.csv");
-            */
-}
+            "D:\\wc\\terrago\\uc_slv_interface\\streetlight\\src\\main\\resources\\prism\\inbound_data\\2019_10_25\\updates_05_39_51.csv");
 
+}
 
 }

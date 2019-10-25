@@ -100,6 +100,34 @@ public class SLVDataQueryExecutor {
 
         return results;
     }
+    public List<String[]> getUpdatedDeviceListForPrism(InBoundConfig inBoundConfig){
+        List<String[]> results = null;
+
+        try {
+            String slvDataFields = inBoundConfig.getSlvquery();
+            String queryString1 = "select slvdata.idOnController,slvdata_y.idOnController,slvdata.name,slvdata_y.name,slvdata.controllerStrId,slvdata_y.controllerStrId,slvdata.CommunicationStatus,slvdata_y.CommunicationStatus,slvdata.location_locationtype,"+
+                    "slvdata_y.location_locationtype,slvdata.macAddress,slvdata_y.macAddress,slvdata.TalqAddress,slvdata_y.TalqAddress,slvdata.device_node_serialnumber,"+
+                    "slvdata_y.device_node_serialnumber,slvdata.device_node_hwversion,slvdata_y.device_node_hwversion,slvdata.device_node_hwType,slvdata_y.device_node_hwType,"+
+                    "slvdata.device_nic_serialnumber,slvdata_y.device_nic_serialnumber,slvdata.device_nic_swversion,slvdata_y.device_nic_swversion,"+
+                    "slvdata.device_nic_hwversion,slvdata_y.device_nic_hwversion,slvdata.device_nic_hwModel,slvdata_y.device_nic_hwModel,"+
+                    "slvdata.device_uiqid,slvdata_y.device_uiqid,slvdata.device_meter_programid,slvdata_y.device_meter_programid,slvdata.location_utillocationid,"+
+                    "slvdata_y.location_utillocationid,slvdata.device_nic_catalog,slvdata_y.device_nic_catalog,slvdata.dimmingGroupName,slvdata_y.dimmingGroupName,"+
+                    "slvdata.lat,slvdata_y.lat,slvdata.lng,slvdata_y.lng from slvdata,slvdata_y where slvdata.idOnController=slvdata_y.idOnController";
+
+            String []fields = slvDataFields.split(",");
+
+
+            GenericRawResults<String[]> rawResults = inBoundSLVDataDao.queryRaw(queryString1);
+            results = rawResults.getResults();
+
+        }
+        catch (SQLException e)
+        {
+            e.printStackTrace();
+        }
+
+        return results;
+    }
     public String getNoteBookGuid(String notebookName)
     {
         String result = "";
