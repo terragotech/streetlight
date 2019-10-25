@@ -1,35 +1,26 @@
 package com.slvinterface.service;
 
 import com.google.gson.*;
-import com.google.gson.reflect.TypeToken;
 import com.slvinterface.dao.QueryExecutor;
 import com.slvinterface.entity.DeviceEntity;
-import com.slvinterface.entity.EdgeAllMac;
+import com.slvinterface.entity.EdgeAllCalendar;
 import com.slvinterface.entity.SLVSyncTable;
 import com.slvinterface.entity.SLVTransactionLogs;
 import com.slvinterface.enumeration.CallType;
-import com.slvinterface.enumeration.SLVProcess;
 import com.slvinterface.exception.*;
 import com.slvinterface.json.*;
 import com.slvinterface.utils.PropertiesReader;
 import com.slvinterface.utils.ResourceDetails;
-import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.log4j.Logger;
-import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
-import org.springframework.util.LinkedMultiValueMap;
-import org.springframework.util.MultiValueMap;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.lang.reflect.Type;
 import java.net.URLEncoder;
-import java.text.SimpleDateFormat;
 import java.util.*;
 
 public class SLVInterfaceService {
@@ -352,7 +343,9 @@ public class SLVInterfaceService {
                 if (id == 0) {
                     throw new NoValueException("Device id:[" + idOnController + "] does not exists in SLV server");
                 } else {
+                    logger.info("Get SLV Calendar Value.");
                     String dimmingGroupName = getSLVDimmingGroupName(id);
+                    logger.info("SLV Calendar Value:"+dimmingGroupName);
                     deviceEntity.setDimmingGroup(dimmingGroupName);
                 }
             }
@@ -461,20 +454,27 @@ public class SLVInterfaceService {
             }
         }
 
+        logger.info(previousEdge2SLVData.toString());
         if(previousEdge2SLVData.getCalendar() == null){
             slvSyncTable.setStatus("Failure");
             slvSyncTable.setErrorDetails("Calendar Value is not present for this note.");
+            logger.info("No Calendar value is not present.");
             return;
         }else{
+            logger.info(deviceEntity.toString());
             if(deviceEntity.getDimmingGroup() == null || !previousEdge2SLVData.getCalendar().equals(deviceEntity.getDimmingGroup())){
-                List<EdgeAllMac> edgeAllMacList =  queryExecutor.getEdgeAllCalendar(previousEdge2SLVData.getTitle(),previousEdge2SLVData.getCalendar());
-                if(edgeAllMacList.size() > 0){
+                List<EdgeAllCalendar> edgeAllCalendarList =  queryExecutor.getEdgeAllCalendar(previousEdge2SLVData.getTitle(),previousEdge2SLVData.getCalendar());
+                if(edgeAllCalendarList.size() > 0){
+                    logger.info("Given Calendar value is already present in our local table.");
                     slvSyncTable.setStatus("Failure");
                     slvSyncTable.setErrorDetails("Calendar value already present in our local table.");
                 }else{
+                    logger.info("Syncing data to SLV.");
                     slvSync(slvSyncTable,previousEdge2SLVData);
+                    logger.info("SLV Synced.");
                 }
             }else{
+                logger.info("SLV Calendar matches with Edge data.");
                 slvSyncTable.setStatus("Failure");
                 slvSyncTable.setErrorDetails("SLV Calendar matches with Edge.");
             }

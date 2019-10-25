@@ -3,8 +3,8 @@ package com.slvinterface.entity;
 import com.j256.ormlite.field.DatabaseField;
 import com.j256.ormlite.table.DatabaseTable;
 
-@DatabaseTable(tableName = "edge_all_mac")
-public class EdgeAllMac {
+@DatabaseTable(tableName = "edge_all_calendar")
+public class EdgeAllCalendar {
 
     public static String TITLE = "title";
     public static String EDGER_CALENDAR = "edge_calendar";
@@ -45,7 +45,7 @@ public class EdgeAllMac {
 
     @Override
     public String toString() {
-        return "EdgeAllMac{" +
+        return "EdgeAllCalendar{" +
                 "id=" + id +
                 ", noteTitle='" + noteTitle + '\'' +
                 ", edgeCalendar='" + edgeCalendar + '\'' +
