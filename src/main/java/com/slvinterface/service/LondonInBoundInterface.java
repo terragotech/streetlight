@@ -11,187 +11,66 @@ import com.slvinterface.json.SLVFields;
 import com.slvinterface.model.HistoryModel;
 import com.slvinterface.model.SLVDataInfo;
 import com.slvinterface.utils.*;
-import org.springframework.http.*;
-import org.springframework.util.LinkedMultiValueMap;
-import org.springframework.util.MultiValueMap;
-import org.springframework.core.io.FileSystemResource;
-import org.springframework.web.client.RestTemplate;
 
 import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-public class BrentInBoundInterface extends InBoundInterface {
+public class LondonInBoundInterface extends InBoundInterface{
     private EdgeRestService edgeRestService;
-
-    public BrentInBoundInterface() throws Exception{
+    public LondonInBoundInterface() throws Exception
+    {
         edgeRestService = new EdgeRestService();
     }
-    private List<String> generateHeaders(String []fields,List<SLVFields> lstSLVFields){
-        List<String> headers = new ArrayList<>();
-        for(SLVFields cur:lstSLVFields)
-        {
-             headers.add(cur.getId());
-        }
-        headers.add("title");
-        headers.add("lat");
-        headers.add("lng");
-        headers.add("layerguid");
-        headers.add("formtemplateguid");
-        headers.add("notebookguid");
-        headers.add("description");
-        headers.add("location");
-
-
-        return headers;
-    }
-
-    private List<List<String>> generateValues(String []fields,List<SLVFields> lstSLVFields,List<String[]> results ){
-
-        List<List<String>> lstValues = new ArrayList<List<String>>();
-        int rowDataSize =results.size();
-        for(int jdx=0;jdx<rowDataSize;jdx++)
-        {
-            String []rowData = results.get(jdx);
-            List<String> values = new ArrayList<>();
-            boolean macAddressFound = false;
-            for (SLVFields cur : lstSLVFields) {
-                if (cur.getSlvfield().startsWith("CONST.VALUE.INSTALL_STATUS")) {
-                    String macAddressField = inBoundConfig.getSlvnmacaddressfield();
-                    int idx = DataOperations.getIndex(fields, macAddressField);
-                    if (idx != -1) {
-                        String optionValues = cur.getValue();
-                        String[] option = optionValues.split(",");
-
-                        if (!rowData[idx].equals("")) {
-                            macAddressFound = true;
-                            values.add(option[0]);
-                        } else {
-                            if(option.length > 1)
-                            {
-                                values.add(option[1]);
-                            }
-                            else
-                            {
-                                values.add("");
-                            }
-                        }
-                    }
-                } else if (cur.getSlvfield().startsWith("CONST.VALUE")) {
-                    values.add(cur.getValue());
-                }
-                else if(cur.getSlvfield().startsWith("CUSTOM.VALUE.1"))
-                {
-                    int idx = DataOperations.getIndex(fields, "idoncontroller");
-                    String idoncontroller = rowData[idx];
-                    String []splitValues = idoncontroller.split(" ");
-                    if(splitValues.length > 1) {
-                        values.add(splitValues[1]);
-                    }
-                    else
-                    {
-                        values.add("");
-                    }
-
-                } else {
-                    int idx = DataOperations.getIndex(fields, cur.getSlvfield());
-                    System.out.println(cur.getSlvfield());
-                    if (idx != -1) {
-                        if(rowData[idx] == null)
-                        {
-                            rowData[idx] = "";
-                        }
-                        values.add(rowData[idx]);
-                    }
-                }
-            }
-            values.add(DataOperations.getValue(fields,"name",rowData));
-            values.add(DataOperations.getValue(fields,"lat",rowData));
-            values.add(DataOperations.getValue(fields,"lng",rowData));
-            if(macAddressFound)
-            {
-                values.add(inBoundConfig.getCompletenotelayerguid());
-            }
-            else
-            {
-                values.add(inBoundConfig.getNotcompletenotelayerguid());
-            }
-            values.add(inBoundConfig.getFormtemplateguid());
-            String geoZone = DataOperations.getValue(fields,"geozonepath",rowData);
-            String geoZoneValues[] = geoZone.split("/");
-            String noteBookName = "";
-            String noteBookGUID = "";
-            if(geoZoneValues.length > 2)
-            {
-                 noteBookName = geoZoneValues[2];
-                noteBookGUID = slvDataQueryExecutor.getNoteBookGuid(noteBookName);
-            }
-            values.add(noteBookGUID);
-            values.add(DataOperations.getValue(fields,"luminaire_brand",rowData) + " | " +  DataOperations.getValue(fields,"power",rowData));
-            values.add(DataOperations.getValue(fields,"address",rowData));
-
-            lstValues.add(values);
-        }
-        return lstValues;
-
-
-    }
-
-
-    public  void addNewDevices()
-    {
+    @Override
+    public void addNewDevices() {
         List<String[]> results = slvDataQueryExecutor.getNewDeviceList(inBoundConfig);
         String slvDataFields = inBoundConfig.getSlvquery();
         String []fields = slvDataFields.split(",");
 
-        List<SLVFields> lstSLVFields = inBoundConfig.getSlvfields();
-        List<String> headers = generateHeaders(fields,lstSLVFields);
-        List<List<String>> lstvalues = generateValues(fields,lstSLVFields,results);
+    }
+    @Override
+    public void deleteDevices() {
+        String folderPath = ResourceDetails.INBOUND_FILE_STORE+ File.separator+ FileOperationUtils.getCurrentDate();
+        if(!FileOperationUtils.doesFolderExists(folderPath))
+        {
+            FileOperationUtils.createFolder(folderPath);
+        }
+        String fileName = folderPath + File.separator + "deleted_" + FileOperationUtils.getTime() + ".csv";
+        List<String[]> results = slvDataQueryExecutor.getDelDeviceList(inBoundConfig);
+        int tc = results.size();
         try {
-            InBoundFileUtils.createFolderIfNotExisits(ResourceDetails.INBOUND_FILE_STORE+ File.separator+InBoundFileUtils.generateTodayFolderName());
-
-            String fileName = ResourceDetails.INBOUND_FILE_STORE+ File.separator+InBoundFileUtils.generateTodayFolderName() + File.separator + "new_devices.csv";
-
             FileWriter outputfile = new FileWriter(fileName);
             CSVWriter writer = new CSVWriter(outputfile, ',',
                     CSVWriter.NO_QUOTE_CHARACTER,
                     CSVWriter.DEFAULT_ESCAPE_CHARACTER,
                     CSVWriter.DEFAULT_LINE_END);
+            List<String> headers = new ArrayList<>();
+            headers.add("idoncontroller");
+            headers.add("name");
+
             String []csvheader = DataOperations.convertListToArray(headers);
 
             writer.writeNext(csvheader);
-            for(List<String> cur: lstvalues)
+
+            for(int jdx=0;jdx<tc;jdx++)
             {
-                String []csvvalues = DataOperations.convertListToArray(cur);
-                writer.writeNext(csvvalues);
+                String []rowData = results.get(jdx);
+                writer.writeNext(rowData);
             }
+
             writer.close();
-            if(lstvalues.size() > 0)
-            {
-                //addDeviceToServer(fileName);
-            }
-
         }
-        catch (Exception e)
+        catch (IOException ie)
         {
-            e.printStackTrace();
+            ie.printStackTrace();
         }
 
-
-
-
-    }
-    public  void deleteDevices()
-    {
-
-
-
     }
 
-
-    public  void updateDevices()
-    {
+    @Override
+    public void updateDevices() {
         String folderPath = ResourceDetails.INBOUND_FILE_STORE+ File.separator+ FileOperationUtils.getCurrentDate();
         if(!FileOperationUtils.doesFolderExists(folderPath))
         {
@@ -229,10 +108,11 @@ public class BrentInBoundInterface extends InBoundInterface {
         {
             ie.printStackTrace();
         }
-
     }
-
-    public void updateNotes(String pathToCsv){
+    public void startProcessing() throws Exception{
+        super.startProcessing();
+    }
+    public void updateNotes(String pathToCsv) {
         BufferedReader csvReader = null;
 
         try {
@@ -240,21 +120,19 @@ public class BrentInBoundInterface extends InBoundInterface {
             String row = null;
             boolean headerProcessed = false;
             while ((row = csvReader.readLine()) != null) {
-                if(headerProcessed)
-                {
+                if (headerProcessed) {
                     File f = new File("./stop.txt");
-                    if(f.exists())
-                    {
+                    if (f.exists()) {
                         break;
                     }
-                    String []rowData = row.split(",");
+                    String[] rowData = row.split(",");
                     String idoncontroller = rowData[0];
                     String name = rowData[1];
                     String name_y = rowData[2];
                     String macAddress = rowData[3];
                     String macAddress_y = rowData[4];
                     String macAddressUpdateStatus = rowData[5];
-                    String noteGUID = slvDataQueryExecutor.getCurrentNoteGUIDFromIDOnController(idoncontroller, "UtilLocationID", "99f5300b-c1e4-4734-94f0-1ec70a35d6ae");
+                    String noteGUID = slvDataQueryExecutor.getCurrentNoteGUIDFromIDOnController(idoncontroller, "UC Reference", inBoundConfig.getFormtemplateguid());
                     String noteJson = getNoteDetails(noteGUID);
                     boolean mustUpdate = false;
                     if (!noteJson.equals("")) {
@@ -273,14 +151,38 @@ public class BrentInBoundInterface extends InBoundInterface {
                             if (formTemplate.equals(inBoundConfig.getFormtemplateguid())) {
 
                                 /* Update here */
-                                /*if(!name.equals(name_y))
-                                {
+                                if (!name.equals(name_y)) {
                                     String title = edgenoteJson.get("title").getAsString();
-                                    edgenoteJson.addProperty("title",name);
+                                    edgenoteJson.addProperty("title", name);
                                     mustUpdate = true;
-                                }*/
-                                if(macAddressUpdateStatus.equals("true"))
-                                {
+                                }
+                                if (macAddressUpdateStatus.equals("true")) {
+                                    if(macAddress_y.equals("") && !macAddress.equals(""))
+                                    {
+                                        //Install
+                                        System.out.println("Install Section");
+                                        int id = Integer.parseInt(inBoundConfig.getInstallmacaddress_id());
+                                        String existingMacAddress = FormValueUtil.getValue(formComponents,id);
+                                        if(existingMacAddress.equals(""))
+                                        {
+                                            FormValueUtil.updateEdgeForm(formComponents,id,macAddress);
+                                        }
+                                        else
+                                        {
+                                            //Do Replace work flow
+                                        }
+
+                                    }
+                                    else if(!macAddress_y.equals("") && macAddress.equals(""))
+                                    {
+                                        //Remove
+                                        System.out.println("Remove");
+                                    }
+                                    else
+                                    {
+                                        //Replace
+                                        System.out.println("Replace");
+                                    }
                                     mustUpdate = true;
 
                                     List<SLVFields> lstSLVChange = inBoundConfig.getSlvchangefields();
@@ -313,17 +215,13 @@ public class BrentInBoundInterface extends InBoundInterface {
                     } else {
 
                     }
-                }
-                else
-                {
+                } else {
                     headerProcessed = true;
                 }
             }
 
             csvReader.close();
-        }
-        catch (IOException e)
-        {
+        } catch (IOException e) {
             e.printStackTrace();
         }
     }

@@ -27,8 +27,8 @@ public class InBoundService implements Runnable{
                 try {
                     InBoundFileUtils.createFile(mutexFile);
                     InBoundInterface inBoundInterface = new GlasGlowInBoundInterface();
-                    inBoundInterface.addNewDevices();
-                    inBoundInterface.updateDevices();
+                    inBoundInterface.startProcessing();
+
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
