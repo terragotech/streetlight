@@ -140,7 +140,7 @@
                             <goal>single</goal>
                         </goals>
                         <configuration>
-                            <finalName>uc_slvinterface_v1</finalName>
+                            <finalName>prism_slvinterface_v1</finalName>
                             <archive>
                                 <manifest>
                                     <mainClass>

@@ -5,7 +5,7 @@ import com.j256.ormlite.dao.DaoManager;
 import com.j256.ormlite.stmt.DeleteBuilder;
 import com.j256.ormlite.support.ConnectionSource;
 import com.j256.ormlite.table.TableUtils;
-import com.slvinterface.entity.EdgeAllMac;
+import com.slvinterface.entity.EdgeAllCalendar;
 import com.slvinterface.entity.SLVSyncTable;
 import com.slvinterface.entity.SLVTransactionLogs;
 import org.apache.log4j.Logger;
@@ -19,7 +19,7 @@ public class QueryExecutor {
 
     private static final Logger logger = Logger.getLogger(QueryExecutor.class);
 
-    private Dao<EdgeAllMac, String> edgeAllMacsDao;
+    private Dao<EdgeAllCalendar, String> edgeAllMacsDao;
     public Dao<SLVSyncTable, String> slvSyncTablesDao = null;
     public Dao<SLVTransactionLogs, String> slvTransactionLogsDao = null;
 
@@ -32,7 +32,7 @@ public class QueryExecutor {
 
 
     private void initDao() throws Exception {
-        edgeAllMacsDao = DaoManager.createDao(connectionSource, EdgeAllMac.class);
+        edgeAllMacsDao = DaoManager.createDao(connectionSource, EdgeAllCalendar.class);
         slvSyncTablesDao = DaoManager.createDao(connectionSource, SLVSyncTable.class);
         slvTransactionLogsDao = DaoManager.createDao(connectionSource, SLVTransactionLogs.class);
     }
@@ -40,10 +40,10 @@ public class QueryExecutor {
 
     private void initTable() {
         try {
-            TableUtils.createTableIfNotExists(connectionSource, EdgeAllMac.class);
+            TableUtils.createTableIfNotExists(connectionSource, EdgeAllCalendar.class);
         } catch (Exception e) {
               e.printStackTrace();
-              logger.error("Error in EdgeAllMac",e);
+              logger.error("Error in EdgeAllCalendar",e);
         }
 
         try {
@@ -63,9 +63,9 @@ public class QueryExecutor {
     }
 
 
-    public void saveEdgeAllMac(EdgeAllMac edgeAllMac) {
+    public void saveEdgeAllMac(EdgeAllCalendar edgeAllCalendar) {
         try {
-            edgeAllMacsDao.create(edgeAllMac);
+            edgeAllMacsDao.create(edgeAllCalendar);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -75,7 +75,7 @@ public class QueryExecutor {
     public void removeEdgeAllMac(String title){
         try{
             DeleteBuilder deleteBuilder =  edgeAllMacsDao.deleteBuilder();
-            deleteBuilder.where().eq(EdgeAllMac.TITLE,title);
+            deleteBuilder.where().eq(EdgeAllCalendar.TITLE,title);
             deleteBuilder.delete();
         }catch (Exception e){
             e.printStackTrace();
@@ -83,9 +83,9 @@ public class QueryExecutor {
     }
 
 
-    public List<EdgeAllMac> getEdgeAllCalendar(String title,String calendar){
+    public List<EdgeAllCalendar> getEdgeAllCalendar(String title, String calendar){
         try {
-           return edgeAllMacsDao.queryBuilder().where().eq(EdgeAllMac.TITLE,title).and().eq(EdgeAllMac.EDGER_CALENDAR,calendar).query();
+           return edgeAllMacsDao.queryBuilder().where().eq(EdgeAllCalendar.TITLE,title).and().eq(EdgeAllCalendar.EDGER_CALENDAR,calendar).query();
         }catch (Exception e){
             e.printStackTrace();
         }

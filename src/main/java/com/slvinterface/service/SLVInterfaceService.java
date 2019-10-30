@@ -322,7 +322,7 @@ public class SLVInterfaceService {
         String url = mainUrl + deviceUrl;
         List<String> paramsList = new ArrayList<>();
         paramsList.add("attributeName=idOnController");
-        paramsList.add("attributeValue=" + idOnController);
+        paramsList.add("attributeValue=" + urlEncode(idOnController));
         paramsList.add("recurse=true");
         paramsList.add("returnedInfo=lightDevicesList");
         paramsList.add("attributeOperator=eq-i");
@@ -433,11 +433,13 @@ public class SLVInterfaceService {
     }
 
 
-    public void processFormData(List<FormData> formDataList, SLVSyncTable slvSyncTable,DeviceEntity deviceEntity)throws SLVConnectionException{
+    public void processFormData(List<FormData> formDataList, SLVSyncTable slvSyncTable,DeviceEntity deviceEntity)throws SLVConnectionException,Exception{
         logger.info("Processing form value.");
         Edge2SLVData previousEdge2SLVData = null;
         for(FormData formData : formDataList){
             Edge2SLVData currentEdge2SLVData = new Edge2SLVData();
+            currentEdge2SLVData.setTitle(slvSyncTable.getNoteName());
+            currentEdge2SLVData.setIdOnController(slvSyncTable.getNoteName());
             processFormData(formData,currentEdge2SLVData);
             logger.info("Current Edge2SLVData:"+currentEdge2SLVData.toString());
 
@@ -454,13 +456,13 @@ public class SLVInterfaceService {
             }
         }
 
-        logger.info(previousEdge2SLVData.toString());
-        if(previousEdge2SLVData.getCalendar() == null){
+        if(previousEdge2SLVData == null || previousEdge2SLVData.getCalendar() == null){
             slvSyncTable.setStatus("Failure");
             slvSyncTable.setErrorDetails("Calendar Value is not present for this note.");
             logger.info("No Calendar value is not present.");
             return;
         }else{
+            logger.info(previousEdge2SLVData.toString());
             logger.info(deviceEntity.toString());
             if(deviceEntity.getDimmingGroup() == null || !previousEdge2SLVData.getCalendar().equals(deviceEntity.getDimmingGroup())){
                 List<EdgeAllCalendar> edgeAllCalendarList =  queryExecutor.getEdgeAllCalendar(previousEdge2SLVData.getTitle(),previousEdge2SLVData.getCalendar());
@@ -469,6 +471,9 @@ public class SLVInterfaceService {
                     slvSyncTable.setStatus("Failure");
                     slvSyncTable.setErrorDetails("Calendar value already present in our local table.");
                 }else{
+                    //TalqBridge@TB739971401
+                   String controllerStrId =   properties.getProperty("streetlight.controller.str.id");
+                    previousEdge2SLVData.setControllerStrId(controllerStrId);
                     logger.info("Syncing data to SLV.");
                     slvSync(slvSyncTable,previousEdge2SLVData);
                     logger.info("SLV Synced.");
@@ -483,10 +488,15 @@ public class SLVInterfaceService {
     }
 
 
+    private String urlEncode(String value)throws  Exception{
+       return URLEncoder.encode(value,"UTF-8");
+    }
+
+
     protected void addStreetLightData(String key, String value, List<Object> paramsList) {
         paramsList.add("valueName=" + key.trim());
         try {
-            value =  URLEncoder.encode(value,"UTF-8");
+            value =  urlEncode(value);
             paramsList.add("value=" + value.trim());
         }catch (Exception e){
             e.printStackTrace();
@@ -494,8 +504,8 @@ public class SLVInterfaceService {
     }
 
 
-    public void loadVal( List<Object> paramsList,Edge2SLVData previousEdge2SLVData){
-        paramsList.add("idOnController=" + previousEdge2SLVData.getIdOnController());
+    public void loadVal( List<Object> paramsList,Edge2SLVData previousEdge2SLVData)throws  Exception{
+        paramsList.add("idOnController=" + urlEncode(previousEdge2SLVData.getIdOnController()));
         paramsList.add("controllerStrId="+previousEdge2SLVData.getControllerStrId());
     }
 
@@ -525,7 +535,7 @@ public class SLVInterfaceService {
     public String getSLVDimmingGroupName(int deviceId)throws Exception{
         try{
             if (deviceId > 0) {
-                String mainUrl = properties.getProperty("streetlight.slv.url.main");
+                String mainUrl = properties.getProperty("streetlight.slv.base.url");
                 String commentUrl = properties.getProperty("streetlight.slv.url.comment.get");
                 String url = mainUrl + commentUrl;
                 List<String> paramsList = new ArrayList<>();
@@ -572,7 +582,7 @@ public class SLVInterfaceService {
      * @param slvSyncTable
      * @param previousEdge2SLVData
      */
-    private void slvSync(SLVSyncTable slvSyncTable,Edge2SLVData previousEdge2SLVData) {
+    private void slvSync(SLVSyncTable slvSyncTable,Edge2SLVData previousEdge2SLVData) throws Exception{
         SLVTransactionLogs slvTransactionLogs = getSLVTransVal(slvSyncTable);
         List<Object> paramsList = new ArrayList<>();
         loadVal(paramsList,previousEdge2SLVData);
