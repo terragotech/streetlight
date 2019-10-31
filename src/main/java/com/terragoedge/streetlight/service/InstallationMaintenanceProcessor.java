@@ -1344,7 +1344,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
                 addStreetLightData("luminaire.installdate", "", paramsList);
                 addStreetLightData("installStatus", InstallStatus.Removed.getValue(), paramsList);
                 addStreetLightData("DimmingGroupName", "", paramsList);
-
+                addStreetLightData("power", "", paramsList);
                 break;
             case "Pole Knocked-Down":
                // clearFixtureValues(paramsList);
@@ -1352,6 +1352,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
                 addStreetLightData("luminaire.installdate", "", paramsList);
                 addStreetLightData("DimmingGroupName", "", paramsList);
                 addStreetLightData("installStatus", InstallStatus.Pole_Knocked_Down.getValue(), paramsList);
+                addStreetLightData("power", "", paramsList);
                 break;
         }
         SLVTransactionLogs slvTransactionLogs = getSLVTransactionLogs(loggingModel);
@@ -1385,7 +1386,6 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
         addStreetLightData("device.luminaire.partnumber", "", paramsList);
         addStreetLightData("luminaire.model", "", paramsList);
         addStreetLightData("device.luminaire.manufacturedate", "", paramsList);
-        addStreetLightData("power", "", paramsList);
         addStreetLightData("device.luminaire.colortemp", "", paramsList);
         addStreetLightData("device.luminaire.lumenoutput", "", paramsList);
         addStreetLightData("luminaire.DistributionType", "", paramsList);
