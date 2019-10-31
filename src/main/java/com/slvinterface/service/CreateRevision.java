@@ -16,7 +16,7 @@ import org.springframework.http.ResponseEntity;
 import java.util.List;
 import java.util.UUID;
 
-abstract public class CreateRevision {
+public class CreateRevision {
     private EdgeRestService edgeRestService;
     protected Gson gson;
     public void updateLogic(JsonObject edgenoteJson,JsonArray serverForms,Object obj){

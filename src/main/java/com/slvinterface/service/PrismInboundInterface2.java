@@ -21,9 +21,9 @@ import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 
-public class PrismInboundInterface extends InBoundInterface {
+public class PrismInboundInterface2 extends InBoundInterface {
     private static final Logger logger = Logger.getLogger(PrismInboundInterface.class);
-    public PrismInboundInterface() throws Exception {
+    public PrismInboundInterface2() throws Exception {
 
     }
 
@@ -139,10 +139,9 @@ public class PrismInboundInterface extends InBoundInterface {
                     String idoncontroller_y = rowData[1];
                     String name = rowData[2];
                     String name_y = rowData[3];
-                    //boolean mustProcess = false;
-                    boolean mustProcess = true;
+                    boolean mustProcess = false;
                     List<SLVFields> lstSLVFields = inBoundConfig.getSlvchangefields();
-                    /*for (SLVFields cur : lstSLVFields) {
+                    for (SLVFields cur : lstSLVFields) {
                         int idx = DataOperations.getIndex(headers, cur.getSlvfield());
                         if (idx != -1) {
                             if (idx + 1 < rowData.length) {
@@ -159,7 +158,7 @@ public class PrismInboundInterface extends InBoundInterface {
                                 }
                             }
                         }
-                    }*/
+                    }
                     if (mustProcess) {
                         String noteGUID = slvDataQueryExecutor.getCurrentNoteGUID(name);
                         String noteJson = "";
@@ -201,11 +200,11 @@ public class PrismInboundInterface extends InBoundInterface {
                                                 if (rowData[idx + 1] == null) {
                                                     rowData[idx + 1] = "";
                                                 }
-                                                //if (!rowData[idx].equals(rowData[idx + 1])) {
-                                                    int formID = Integer.parseInt(cur.getId());
-                                                    FormValueUtil.updateEdgeForm(formComponents, formID, rowData[idx]);
-                                                    mustUpdate = true;
-                                                //}
+                                                if (!rowData[idx].equals(rowData[idx + 1])) {
+                                                int formID = Integer.parseInt(cur.getId());
+                                                FormValueUtil.updateEdgeForm(formComponents, formID, rowData[idx]);
+                                                mustUpdate = true;
+                                                }
                                             }
                                         }
                                     }
@@ -239,6 +238,7 @@ public class PrismInboundInterface extends InBoundInterface {
                             fr.close();
                         }
                     }
+                    ///
                 } else {
                     headerProcessed = true;
                     headers = row.split(",");
@@ -258,3 +258,4 @@ public class PrismInboundInterface extends InBoundInterface {
         return "";
     }
 }
+

@@ -19,15 +19,16 @@ import org.springframework.http.ResponseEntity;
 import java.io.*;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
 
 public class Test {
-public static void main(String []args) throws Exception {
-    InBoundInterface inBoundInterface = new PrismInboundInterface();
+public static void main1(String []args) throws Exception {
+
+   //InBoundInterface inBoundInterface = new BrentInBoundInterface();
+   //inBoundInterface.startProcessing();
     //inBoundInterface.startProcessing();
-    //inBoundInterface.startProcessing();
-    inBoundInterface.updateNotes(
-            "D:\\wc\\terrago\\uc_slv_interface\\streetlight\\src\\main\\resources\\prism\\inbound_data\\2019_10_25\\updates_05_39_51.csv");
+   //inBoundInterface.updateNotes("D:\\wc\\terrago\\uc_slv_interface\\streetlight\\src\\main\\resources\\london\\inbound_data\\2019_10_29\\updates_07_23_33.csv");
 
 }
 

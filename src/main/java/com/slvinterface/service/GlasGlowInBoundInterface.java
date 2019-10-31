@@ -342,9 +342,31 @@ public class GlasGlowInBoundInterface extends InBoundInterface {
         }
     }
 
-    public void startProcessing() throws Exception{
+    @Override
+    public boolean applyChanges(JsonObject edgenoteJson, List<FormValues> formComponents, String[] rowData) {
+        boolean mustUpdate = false;
+        String name = rowData[1];
+        String name_y = rowData[2];
+        String macAddress = rowData[3];
+        String macAddress_y = rowData[4];
+        String installStatus = rowData[5];
+        String macAddressUpdateStatus = rowData[6];
 
+        mustUpdate = doTitleUpdate(edgenoteJson,name,name_y);
+        if(macAddressUpdateStatus.equals("true")) {
+            doMacAddressUpdate(macAddressUpdateStatus, macAddress, macAddress_y, formComponents,installStatus);
+            if(!mustUpdate)
+            {
+                mustUpdate = true;
+            }
+        }
+        return  mustUpdate;
+    }
 
+    public String getNoteGUID(String idoncontroller, String title,String formfield)
+    {
+        String noteGUID = slvDataQueryExecutor.getCurrentNoteGUIDFromIDOnController(idoncontroller, formfield, inBoundConfig.getFormtemplateguid());
+        return noteGUID;
     }
 }
 

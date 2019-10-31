@@ -4,6 +4,7 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.reflect.TypeToken;
+import com.j256.ormlite.stmt.query.In;
 import com.opencsv.CSVWriter;
 import com.slvinterface.json.EdgeNote;
 import com.slvinterface.json.FormValues;
@@ -23,12 +24,151 @@ public class LondonInBoundInterface extends InBoundInterface{
     {
         edgeRestService = new EdgeRestService();
     }
+    private List<String> generateHeaders(String []fields,List<SLVFields> lstSLVFields){
+        List<String> headers = new ArrayList<>();
+        for(SLVFields cur:lstSLVFields)
+        {
+            headers.add(cur.getId());
+        }
+        headers.add("title");
+        headers.add("lat");
+        headers.add("lng");
+        headers.add("layerguid");
+        headers.add("formtemplateguid");
+        headers.add("notebookguid");
+        headers.add("description");
+        headers.add("location");
+
+
+        return headers;
+    }
+    private List<List<String>> generateValues(String []fields,List<SLVFields> lstSLVFields,List<String[]> results ){
+
+        List<List<String>> lstValues = new ArrayList<List<String>>();
+        int rowDataSize =results.size();
+        for(int jdx=0;jdx<rowDataSize;jdx++)
+        {
+            String []rowData = results.get(jdx);
+            List<String> values = new ArrayList<>();
+            boolean macAddressFound = false;
+            for (SLVFields cur : lstSLVFields) {
+
+                    int idx = DataOperations.getIndex(fields, cur.getSlvfield());
+                    System.out.println(cur.getSlvfield());
+                    if (idx != -1) {
+                        if(rowData[idx] == null)
+                        {
+                            rowData[idx] = "";
+                        }
+                        values.add(rowData[idx]);
+                    }
+
+            }
+            values.add(DataOperations.getValue(fields,"name",rowData));
+            values.add(DataOperations.getValue(fields,"lat",rowData));
+            values.add(DataOperations.getValue(fields,"lng",rowData));
+
+            int zdx = DataOperations.getIndex(fields, "macaddress");
+            if(zdx != -1)
+            {
+                String macaddress = rowData[zdx];
+                macaddress = FormValueUtil.checkNullValues(macaddress);
+                if(!macaddress.equals(""))
+                {
+                    macAddressFound = true;
+                }
+                /*zdx = DataOperations.getIndex(fields, "installStatus");
+                if(zdx != -1)
+                {
+                    String installStatus = rowData[zdx];
+                    installStatus = FormValueUtil.checkNullValues(installStatus);
+                    if(installStatus.equals("Installed") || installStatus.equals("Verified"))
+                    {
+                        values.add(inBoundConfig.getCompletenotelayerguid());
+                    }
+                    else if(installStatus.equals("Removed"))
+                    {
+                        values.add(inBoundConfig.getRemovednotelayerguid());
+                    }
+                    else
+                    {
+                        values.add(inBoundConfig.getNotcompletenotelayerguid());
+                    }
+                }*/
+
+
+            }
+            if(macAddressFound)
+            {
+                values.add(inBoundConfig.getCompletenotelayerguid());
+            }
+            else
+            {
+                values.add(inBoundConfig.getNotcompletenotelayerguid());
+            }
+            values.add(inBoundConfig.getFormtemplateguid());
+            String geoZone = DataOperations.getValue(fields,"geozone_namespath",rowData);
+            String geoZoneValues[] = geoZone.split("/");
+            String noteBookName = "";
+            String noteBookGUID = "";
+            if(geoZoneValues.length > 2)
+            {
+                noteBookName = geoZoneValues[2].trim();
+                noteBookGUID = slvDataQueryExecutor.getNoteBookGuid(noteBookName);
+            }
+            else
+            {
+                noteBookName = "City of London";
+                noteBookGUID = slvDataQueryExecutor.getNoteBookGuid(noteBookName);
+            }
+            values.add(noteBookGUID);
+            values.add("");
+            values.add("");
+
+            lstValues.add(values);
+        }
+        return lstValues;
+
+
+    }
     @Override
     public void addNewDevices() {
         List<String[]> results = slvDataQueryExecutor.getNewDeviceList(inBoundConfig);
         String slvDataFields = inBoundConfig.getSlvquery();
         String []fields = slvDataFields.split(",");
 
+        List<SLVFields> lstSLVFields = inBoundConfig.getSlvfields();
+        List<String> headers = generateHeaders(fields,lstSLVFields);
+        List<List<String>> lstvalues = generateValues(fields,lstSLVFields,results);
+        try {
+            InBoundFileUtils.createFolderIfNotExisits(ResourceDetails.INBOUND_FILE_STORE+ File.separator+InBoundFileUtils.generateTodayFolderName());
+
+            String fileName = ResourceDetails.INBOUND_FILE_STORE+ File.separator+InBoundFileUtils.generateTodayFolderName() + File.separator + "new_devices.csv";
+
+            FileWriter outputfile = new FileWriter(fileName);
+            CSVWriter writer = new CSVWriter(outputfile, ',',
+                    CSVWriter.NO_QUOTE_CHARACTER,
+                    CSVWriter.DEFAULT_ESCAPE_CHARACTER,
+                    CSVWriter.DEFAULT_LINE_END);
+            String []csvheader = DataOperations.convertListToArray(headers);
+
+            writer.writeNext(csvheader);
+            for(List<String> cur: lstvalues)
+            {
+                String []csvvalues = DataOperations.convertListToArray(cur);
+                writer.writeNext(csvvalues);
+            }
+            writer.close();
+            if(lstvalues.size() > 0)
+            {
+                //addDeviceToServer(fileName);
+            }
+
+        }
+        catch (Exception e)
+        {
+            e.printStackTrace();
+        }
     }
     @Override
     public void deleteDevices() {
@@ -91,6 +231,7 @@ public class LondonInBoundInterface extends InBoundInterface{
             headers.add("name_y");
             headers.add("macaddress");
             headers.add("macaddress_y");
+            headers.add("installStatus");
             headers.add("mustUpdateMac");
             String []csvheader = DataOperations.convertListToArray(headers);
 
@@ -109,120 +250,29 @@ public class LondonInBoundInterface extends InBoundInterface{
             ie.printStackTrace();
         }
     }
-    public void startProcessing() throws Exception{
-        super.startProcessing();
-    }
-    public void updateNotes(String pathToCsv) {
-        BufferedReader csvReader = null;
 
-        try {
-            csvReader = new BufferedReader(new FileReader(pathToCsv));
-            String row = null;
-            boolean headerProcessed = false;
-            while ((row = csvReader.readLine()) != null) {
-                if (headerProcessed) {
-                    File f = new File("./stop.txt");
-                    if (f.exists()) {
-                        break;
-                    }
-                    String[] rowData = row.split(",");
-                    String idoncontroller = rowData[0];
-                    String name = rowData[1];
-                    String name_y = rowData[2];
-                    String macAddress = rowData[3];
-                    String macAddress_y = rowData[4];
-                    String macAddressUpdateStatus = rowData[5];
-                    String noteGUID = slvDataQueryExecutor.getCurrentNoteGUIDFromIDOnController(idoncontroller, "UC Reference", inBoundConfig.getFormtemplateguid());
-                    String noteJson = getNoteDetails(noteGUID);
-                    boolean mustUpdate = false;
-                    if (!noteJson.equals("")) {
-                        EdgeNote restEdgeNote = gson.fromJson(noteJson, EdgeNote.class);
-                        JsonObject edgenoteJson = new JsonParser().parse(noteJson).getAsJsonObject();
-                        JsonArray serverForms = edgenoteJson.get("formData").getAsJsonArray();
-                        int size = serverForms.size();
-                        for (int i = 0; i < size; i++) {
-                            JsonObject serverEdgeForm = serverForms.get(i).getAsJsonObject();
-                            String formDefJson = serverEdgeForm.get("formDef").getAsString();
-                            String formTemplate = serverEdgeForm.get("formTemplateGuid").getAsString();
-                            formDefJson = formDefJson.replaceAll("\\\\", "");
-                            formDefJson = formDefJson.replace("u0026", "\\u0026");
-                            List<FormValues> formComponents = gson.fromJson(formDefJson, new TypeToken<List<FormValues>>() {
-                            }.getType());
-                            if (formTemplate.equals(inBoundConfig.getFormtemplateguid())) {
+    public boolean applyChanges(JsonObject edgenoteJson,List<FormValues> formComponents,String[] rowData){
+        boolean mustUpdate = false;
+        String name = rowData[1];
+        String name_y = rowData[2];
+        String macAddress = rowData[3];
+        String macAddress_y = rowData[4];
+        String installStatus = rowData[5];
+        String macAddressUpdateStatus = rowData[6];
 
-                                /* Update here */
-                                if (!name.equals(name_y)) {
-                                    String title = edgenoteJson.get("title").getAsString();
-                                    edgenoteJson.addProperty("title", name);
-                                    mustUpdate = true;
-                                }
-                                if (macAddressUpdateStatus.equals("true")) {
-                                    if(macAddress_y.equals("") && !macAddress.equals(""))
-                                    {
-                                        //Install
-                                        System.out.println("Install Section");
-                                        int id = Integer.parseInt(inBoundConfig.getInstallmacaddress_id());
-                                        String existingMacAddress = FormValueUtil.getValue(formComponents,id);
-                                        if(existingMacAddress.equals(""))
-                                        {
-                                            FormValueUtil.updateEdgeForm(formComponents,id,macAddress);
-                                        }
-                                        else
-                                        {
-                                            //Do Replace work flow
-                                        }
-
-                                    }
-                                    else if(!macAddress_y.equals("") && macAddress.equals(""))
-                                    {
-                                        //Remove
-                                        System.out.println("Remove");
-                                    }
-                                    else
-                                    {
-                                        //Replace
-                                        System.out.println("Replace");
-                                    }
-                                    mustUpdate = true;
-
-                                    List<SLVFields> lstSLVChange = inBoundConfig.getSlvchangefields();
-                                    for (SLVFields cur : lstSLVChange) {
-
-                                        if (cur.getSlvfield().equals("macaddress")) {
-                                            int id = Integer.parseInt(cur.getId());
-                                            FormValueUtil.updateEdgeForm(formComponents, id, macAddress);
-                                        }
-                                    }
-
-                                }
-
-                            }
-
-
-                            serverEdgeForm.add("formDef", gson.toJsonTree(formComponents));
-                            serverEdgeForm.addProperty("formGuid", UUID.randomUUID().toString());
-                        }
-                        edgenoteJson.add("formData", serverForms);
-                        edgenoteJson.addProperty("createdBy", "admin");
-                        long ntime = System.currentTimeMillis();
-
-                        edgenoteJson.addProperty("createdDateTime", ntime);
-                        if (mustUpdate) {
-                            //Call Rest CAll to Update
-                            updateNoteDetails(edgenoteJson.toString(), noteGUID, restEdgeNote.getEdgeNotebook().getNotebookGuid());
-                        }
-
-                    } else {
-
-                    }
-                } else {
-                    headerProcessed = true;
-                }
+        mustUpdate = doTitleUpdate(edgenoteJson,name,name_y);
+        if(macAddressUpdateStatus.equals("true")) {
+            doMacAddressUpdate(macAddressUpdateStatus, macAddress, macAddress_y, formComponents,installStatus);
+            if(!mustUpdate)
+            {
+                mustUpdate = true;
             }
-
-            csvReader.close();
-        } catch (IOException e) {
-            e.printStackTrace();
         }
+        return  mustUpdate;
+    }
+    public String getNoteGUID(String idoncontroller, String title,String formfield)
+    {
+        String noteGUID = slvDataQueryExecutor.getCurrentNoteGUIDFromIDOnController(idoncontroller, formfield, inBoundConfig.getFormtemplateguid());
+        return noteGUID;
     }
 }

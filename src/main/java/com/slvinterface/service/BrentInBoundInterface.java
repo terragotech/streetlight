@@ -184,7 +184,40 @@ public class BrentInBoundInterface extends InBoundInterface {
     }
     public  void deleteDevices()
     {
+        String folderPath = ResourceDetails.INBOUND_FILE_STORE+ File.separator+ FileOperationUtils.getCurrentDate();
+        if(!FileOperationUtils.doesFolderExists(folderPath))
+        {
+            FileOperationUtils.createFolder(folderPath);
+        }
+        String fileName = folderPath + File.separator + "deleted_" + FileOperationUtils.getTime() + ".csv";
+        List<String[]> results = slvDataQueryExecutor.getDelDeviceList(inBoundConfig);
+        int tc = results.size();
+        try {
+            FileWriter outputfile = new FileWriter(fileName);
+            CSVWriter writer = new CSVWriter(outputfile, ',',
+                    CSVWriter.NO_QUOTE_CHARACTER,
+                    CSVWriter.DEFAULT_ESCAPE_CHARACTER,
+                    CSVWriter.DEFAULT_LINE_END);
+            List<String> headers = new ArrayList<>();
+            headers.add("idoncontroller");
+            headers.add("name");
 
+            String []csvheader = DataOperations.convertListToArray(headers);
+
+            writer.writeNext(csvheader);
+
+            for(int jdx=0;jdx<tc;jdx++)
+            {
+                String []rowData = results.get(jdx);
+                writer.writeNext(rowData);
+            }
+
+            writer.close();
+        }
+        catch (IOException ie)
+        {
+            ie.printStackTrace();
+        }
 
 
     }
@@ -232,99 +265,30 @@ public class BrentInBoundInterface extends InBoundInterface {
 
     }
 
-    public void updateNotes(String pathToCsv){
-        BufferedReader csvReader = null;
+    @Override
+    public boolean applyChanges(JsonObject edgenoteJson,List<FormValues> formComponents,String[] rowData){
+        boolean mustUpdate = false;
+        String name = rowData[1];
+        String name_y = rowData[2];
+        String macAddress = rowData[3];
+        String macAddress_y = rowData[4];
+        String installStatus = rowData[5];
+        String macAddressUpdateStatus = rowData[6];
 
-        try {
-            csvReader = new BufferedReader(new FileReader(pathToCsv));
-            String row = null;
-            boolean headerProcessed = false;
-            while ((row = csvReader.readLine()) != null) {
-                if(headerProcessed)
-                {
-                    File f = new File("./stop.txt");
-                    if(f.exists())
-                    {
-                        break;
-                    }
-                    String []rowData = row.split(",");
-                    String idoncontroller = rowData[0];
-                    String name = rowData[1];
-                    String name_y = rowData[2];
-                    String macAddress = rowData[3];
-                    String macAddress_y = rowData[4];
-                    String macAddressUpdateStatus = rowData[5];
-                    String noteGUID = slvDataQueryExecutor.getCurrentNoteGUIDFromIDOnController(idoncontroller, "UtilLocationID", "99f5300b-c1e4-4734-94f0-1ec70a35d6ae");
-                    String noteJson = getNoteDetails(noteGUID);
-                    boolean mustUpdate = false;
-                    if (!noteJson.equals("")) {
-                        EdgeNote restEdgeNote = gson.fromJson(noteJson, EdgeNote.class);
-                        JsonObject edgenoteJson = new JsonParser().parse(noteJson).getAsJsonObject();
-                        JsonArray serverForms = edgenoteJson.get("formData").getAsJsonArray();
-                        int size = serverForms.size();
-                        for (int i = 0; i < size; i++) {
-                            JsonObject serverEdgeForm = serverForms.get(i).getAsJsonObject();
-                            String formDefJson = serverEdgeForm.get("formDef").getAsString();
-                            String formTemplate = serverEdgeForm.get("formTemplateGuid").getAsString();
-                            formDefJson = formDefJson.replaceAll("\\\\", "");
-                            formDefJson = formDefJson.replace("u0026", "\\u0026");
-                            List<FormValues> formComponents = gson.fromJson(formDefJson, new TypeToken<List<FormValues>>() {
-                            }.getType());
-                            if (formTemplate.equals(inBoundConfig.getFormtemplateguid())) {
-
-                                /* Update here */
-                                /*if(!name.equals(name_y))
-                                {
-                                    String title = edgenoteJson.get("title").getAsString();
-                                    edgenoteJson.addProperty("title",name);
-                                    mustUpdate = true;
-                                }*/
-                                if(macAddressUpdateStatus.equals("true"))
-                                {
-                                    mustUpdate = true;
-
-                                    List<SLVFields> lstSLVChange = inBoundConfig.getSlvchangefields();
-                                    for (SLVFields cur : lstSLVChange) {
-
-                                        if (cur.getSlvfield().equals("macaddress")) {
-                                            int id = Integer.parseInt(cur.getId());
-                                            FormValueUtil.updateEdgeForm(formComponents, id, macAddress);
-                                        }
-                                    }
-
-                                }
-
-                            }
-
-
-                            serverEdgeForm.add("formDef", gson.toJsonTree(formComponents));
-                            serverEdgeForm.addProperty("formGuid", UUID.randomUUID().toString());
-                        }
-                        edgenoteJson.add("formData", serverForms);
-                        edgenoteJson.addProperty("createdBy", "admin");
-                        long ntime = System.currentTimeMillis();
-
-                        edgenoteJson.addProperty("createdDateTime", ntime);
-                        if (mustUpdate) {
-                            //Call Rest CAll to Update
-                            updateNoteDetails(edgenoteJson.toString(), noteGUID, restEdgeNote.getEdgeNotebook().getNotebookGuid());
-                        }
-
-                    } else {
-
-                    }
-                }
-                else
-                {
-                    headerProcessed = true;
-                }
+        mustUpdate = doTitleUpdate(edgenoteJson,name,name_y);
+        if(macAddressUpdateStatus.equals("true")) {
+            doMacAddressUpdate(macAddressUpdateStatus, macAddress, macAddress_y, formComponents,installStatus);
+            if(!mustUpdate)
+            {
+                mustUpdate = true;
             }
-
-            csvReader.close();
         }
-        catch (IOException e)
-        {
-            e.printStackTrace();
-        }
+        return  mustUpdate;
     }
+    public String getNoteGUID(String idoncontroller, String title,String formfield)
+    {
+        String noteGUID = slvDataQueryExecutor.getCurrentNoteGUIDFromIDOnController(idoncontroller, formfield, inBoundConfig.getFormtemplateguid());
+        return noteGUID;
+    }
+
 }

@@ -60,7 +60,7 @@ public class SLVDataQueryExecutor {
             inBoundSLVDataDao.executeRaw("create table tmp_deldevices as select * from slvdata_y");
             inBoundSLVDataDao.executeRaw("delete from tmp_deldevices where tmp_deldevices.idoncontroller  in (select idoncontroller from slvdata)");
             System.out.println("select idoncontroller,name from tmp_deldevices");
-            GenericRawResults<String[]> rawResults = inBoundSLVDataDao.queryRaw("select idoncontroller,name from tmp_newdevices");
+            GenericRawResults<String[]> rawResults = inBoundSLVDataDao.queryRaw("select idoncontroller,name from tmp_deldevices");
             results = rawResults.getResults();
         }
         catch (SQLException e)
@@ -74,9 +74,9 @@ public class SLVDataQueryExecutor {
         List<String[]> results = null;
         try {
 
-            String queryString3 = "select slvdata.idoncontroller,slvdata.name as name,slvdata_y.name as name_y,upper(slvdata.macaddress) as macaddress,upper(slvdata_y.macaddress) as macaddress_y from slvdata,slvdata_y where ( (slvdata.name != slvdata_y.name) or (upper(slvdata.macaddress) != upper(slvdata_y.macaddress))) and slvdata.idoncontroller=slvdata_y.idoncontroller";
-            String queryString4 = "select slvdata.idoncontroller,slvdata.name as name,slvdata_y.name as name_y,upper(slvdata.macaddress) as macaddress,upper(slvdata_y.macaddress) as macaddress_y from slvdata,slvdata_y where (  (upper(slvdata.macaddress) is  not null and  upper(slvdata_y.macaddress) is  null)) and slvdata.idoncontroller=slvdata_y.idoncontroller";
-            String queryString5 = "select slvdata.idoncontroller,slvdata.name as name,slvdata_y.name as name_y,upper(slvdata.macaddress) as macaddress,upper(slvdata_y.macaddress) as macaddress_y from slvdata,slvdata_y where (  (upper(slvdata.macaddress) is  null and  upper(slvdata_y.macaddress) is  not null)) and slvdata.idoncontroller=slvdata_y.idoncontroller";
+            String queryString3 = "select slvdata.idoncontroller,slvdata.name as name,slvdata_y.name as name_y,upper(slvdata.macaddress) as macaddress,upper(slvdata_y.macaddress) as macaddress_y,slvdata.installStatus as installStatus from slvdata,slvdata_y where ( (slvdata.name != slvdata_y.name) or (upper(slvdata.macaddress) != upper(slvdata_y.macaddress))) and slvdata.idoncontroller=slvdata_y.idoncontroller";
+            String queryString4 = "select slvdata.idoncontroller,slvdata.name as name,slvdata_y.name as name_y,upper(slvdata.macaddress) as macaddress,upper(slvdata_y.macaddress) as macaddress_y,slvdata.installStatus as installStatus from slvdata,slvdata_y where (  (upper(slvdata.macaddress) is  not null and  upper(slvdata_y.macaddress) is  null)) and slvdata.idoncontroller=slvdata_y.idoncontroller";
+            String queryString5 = "select slvdata.idoncontroller,slvdata.name as name,slvdata_y.name as name_y,upper(slvdata.macaddress) as macaddress,upper(slvdata_y.macaddress) as macaddress_y,slvdata.installStatus as installStatus from slvdata,slvdata_y where (  (upper(slvdata.macaddress) is  null and  upper(slvdata_y.macaddress) is  not null)) and slvdata.idoncontroller=slvdata_y.idoncontroller";
 
 
 

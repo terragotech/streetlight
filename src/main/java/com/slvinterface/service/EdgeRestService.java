@@ -27,7 +27,7 @@ public class EdgeRestService {
         String url = PropertiesReader.getProperties().getProperty("streetlight.edge.url.main");
         String userName = PropertiesReader.getProperties().getProperty("streetlight.edge.username");
         String password = PropertiesReader.getProperties().getProperty("streetlight.edge.password");
-        url = url + "/oauth/token?grant_type=password&username=" + userName + "&password=" + password
+        url = url + "oauth/token?grant_type=password&username=" + userName + "&password=" + password
                 + "&client_id=edgerestapp";
         ResponseEntity<String> responseEntity = getRequest(url);
         if (responseEntity.getStatusCode().is2xxSuccessful()) {
