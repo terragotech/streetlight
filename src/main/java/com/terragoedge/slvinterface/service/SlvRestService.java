@@ -1,6 +1,7 @@
 package com.terragoedge.slvinterface.service;
 
 import com.terragoedge.slvinterface.utils.PropertiesReader;
+import com.terragoedge.slvinterface.utils.Utils;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -52,7 +53,7 @@ public class SlvRestService {
             }
         }else{
             HttpHeaders headers = getHeaders();
-            RestTemplate restTemplate = new RestTemplate();
+            RestTemplate restTemplate = Utils.getRestTemplate();
             HttpEntity request = new HttpEntity<>(headers);
             ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.GET, request, String.class);
             logger.info("------------ Response ------------------");
@@ -81,7 +82,7 @@ public class SlvRestService {
             }
         }else{
             HttpHeaders headers = getHeaders(accessToken);
-            RestTemplate restTemplate = new RestTemplate();
+            RestTemplate restTemplate = Utils.getRestTemplate();
             HttpEntity request = new HttpEntity<>(headers);
             ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.GET, request, String.class);
             logger.info("------------ Response ------------------");
@@ -110,7 +111,7 @@ public class SlvRestService {
             }
         }else{
             HttpHeaders headers = getHeaders(accessToken);
-            RestTemplate restTemplate = new RestTemplate();
+            RestTemplate restTemplate = Utils.getRestTemplate();
             HttpEntity request = new HttpEntity<>(headers);
             ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.GET, request, String.class);
             logger.info("------------ Response ------------------");
@@ -146,7 +147,7 @@ public class SlvRestService {
         logger.info("------------ Request ------------------");
         logger.info(url);
         logger.info("------------ Request End ------------------");
-        RestTemplate restTemplate = new RestTemplate();
+        RestTemplate restTemplate = Utils.getRestTemplate();
         ResponseEntity<String> response = restTemplate.postForEntity(url, null, String.class);
         logger.info("------------ Response ------------------");
         logger.info("Response Code:" + response.getStatusCode().toString());

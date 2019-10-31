@@ -1,7 +1,10 @@
 package com.terragoedge.slvinterface.utils;
 
 import com.terragoedge.slvinterface.model.EdgeFormData;
+import org.springframework.http.converter.StringHttpMessageConverter;
+import org.springframework.web.client.RestTemplate;
 
+import java.nio.charset.Charset;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
@@ -35,5 +38,12 @@ public class Utils {
         dateFormat.setTimeZone(TimeZone.getTimeZone("EST"));
         String dff = dateFormat.format(date);
         return dff;
+    }
+
+    public static RestTemplate getRestTemplate(){
+        RestTemplate restTemplate = new RestTemplate();
+        restTemplate.getMessageConverters()
+                .add(0, new StringHttpMessageConverter(Charset.forName("UTF-8")));
+        return restTemplate;
     }
 }

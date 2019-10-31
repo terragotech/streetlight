@@ -6,6 +6,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.reflect.TypeToken;
 import com.terragoedge.slvinterface.model.EdgeFormData;
+import com.terragoedge.slvinterface.utils.Utils;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.log4j.Logger;
 import org.springframework.http.*;
@@ -23,7 +24,7 @@ public class EdgeService {
         logger.info("Request Url:" + url);
         logger.info("------------ input data ------------------");
         logger.info("Request Data:" + body);
-        RestTemplate restTemplate = new RestTemplate();
+        RestTemplate restTemplate = Utils.getRestTemplate();
         HttpHeaders headers = getHeaders(null);
 
         HttpEntity request = null;
