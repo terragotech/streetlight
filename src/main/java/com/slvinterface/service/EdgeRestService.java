@@ -115,5 +115,29 @@ public class EdgeRestService {
         headers.add("Authorization", "Basic " + base64Creds);
         return headers;
     }
+    public ResponseEntity<String> putRequest(String urlNew,String body,boolean mustLog,String accessToken){
+        HttpHeaders headers = getHeaders(accessToken);
+        RestTemplate restTemplate = new RestTemplate();
+        HttpEntity request = null;
+        if (body != null) {
+            request = new HttpEntity<String>(body, headers);
+        }
+        else
+        {
+            request = new HttpEntity<>(headers);
+        }
 
+        ResponseEntity<String> response = restTemplate.exchange(urlNew, HttpMethod.PUT, request, String.class);
+        logger.info("------------ Response ------------------");
+        logger.info("Response Code:" + response.getStatusCode().toString());
+        String responseBody = response.getBody();
+        if(mustLog){
+            logger.info(responseBody);
+        }
+
+        logger.info("------------ Response End ------------------");
+        // return responseBody;
+        return response;
+
+    }
 }
