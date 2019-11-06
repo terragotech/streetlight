@@ -51,55 +51,54 @@ public class CreateRevision {
                     String strnodeid = PropertiesReader.getProperties().getProperty("netsense.installid");
                     int nodeid = Integer.parseInt(strnodeid);
                     String nodeID = FormValueUtil.getValue(formComponents,nodeid);
+                    if(!nodeID.equals("")) {
+                        String strid = PropertiesReader.getProperties().getProperty("netsense.qrcode");
+                        int id = Integer.parseInt(strid);
 
-                    String strid = PropertiesReader.getProperties().getProperty("netsense.qrcode");
-                    int id = Integer.parseInt(strid);
+                        String qrscanCode = FormValueUtil.getValue(formComponents, id);
 
-                    String qrscanCode = FormValueUtil.getValue(formComponents,id);
+                        strid = PropertiesReader.getProperties().getProperty("netsense.lumtype");
+                        id = Integer.parseInt(strid);
+                        String lumType = FormValueUtil.getValue(formComponents, id);
 
-                    strid = PropertiesReader.getProperties().getProperty("netsense.lumtype");
-                    id = Integer.parseInt(strid);
-                    String lumType = FormValueUtil.getValue(formComponents,id);
+                        strid = PropertiesReader.getProperties().getProperty("netsense.nema");
+                        id = Integer.parseInt(strid);
+                        String nema = FormValueUtil.getValue(formComponents, id);
 
-                    strid = PropertiesReader.getProperties().getProperty("netsense.nema");
-                    id = Integer.parseInt(strid);
-                    String nema = FormValueUtil.getValue(formComponents,id);
-
-                    String responseString = NetSenseInterface.createFixture(qrscanCode,lumType,nema);
-                    if(responseString != null)
-                    {
-                        JsonParser jsonParser = new JsonParser();
-                        JsonElement jsonElement = jsonParser.parse(responseString);
-                        JsonObject jsonObject = jsonElement.getAsJsonObject();
-                        String fixtureID = jsonObject.get("fixtureid").getAsString();
-
-
-                        NetSenseInterface.assignNode(fixtureID, nodeID);
-                        JsonObject jsonObject1 = NetSenseInterface.getNodeDetails(nodeID);
-
-                        if(jsonObject1 != null)
-                        {
-                            String fixtureID1 = jsonObject1.get("fixtureid").getAsString();
-                            String siteID = PropertiesReader.getProperties().getProperty("netsense.site.id");
-                            JsonObject jsonObject2 = NetSenseInterface.getFixtureDetails(fixtureID);
-                            FormValueUtil.updateEdgeForm(formComponents,34,siteID);
-                            String lat = jsonObject1.get("latitude").getAsString();
-                            String lng = jsonObject1.get("longitude").getAsString();
-                            String manufacture = jsonObject2.get("manufacturer").getAsString();
-                            String fixtureType = jsonObject2.get("fixtureType").getAsString();
-                            String description = jsonObject2.get("description").getAsString();
-                            String sw = jsonObject1.get("softwareVersion").getAsString();
+                        String responseString = NetSenseInterface.createFixture(qrscanCode, lumType, nema);
+                        if (responseString != null) {
+                            JsonParser jsonParser = new JsonParser();
+                            JsonElement jsonElement = jsonParser.parse(responseString);
+                            JsonObject jsonObject = jsonElement.getAsJsonObject();
+                            String fixtureID = jsonObject.get("fixtureid").getAsString();
 
 
-                            FormValueUtil.updateEdgeForm(formComponents,6,lat);
-                            FormValueUtil.updateEdgeForm(formComponents,7,lng);
-                            FormValueUtil.updateEdgeForm(formComponents,8,fixtureID1);
-                            FormValueUtil.updateEdgeForm(formComponents,10,manufacture);
-                            FormValueUtil.updateEdgeForm(formComponents,11,description);
-                            FormValueUtil.updateEdgeForm(formComponents,12,fixtureType);
-                            FormValueUtil.updateEdgeForm(formComponents,19,sw);
+                            NetSenseInterface.assignNode(fixtureID, nodeID);
+                            JsonObject jsonObject1 = NetSenseInterface.getNodeDetails(nodeID);
+
+                            if (jsonObject1 != null) {
+                                String fixtureID1 = jsonObject1.get("fixtureid").getAsString();
+                                String siteID = PropertiesReader.getProperties().getProperty("netsense.site.id");
+                                JsonObject jsonObject2 = NetSenseInterface.getFixtureDetails(fixtureID);
+                                FormValueUtil.updateEdgeForm(formComponents, 34, siteID);
+                                String lat = jsonObject1.get("latitude").getAsString();
+                                String lng = jsonObject1.get("longitude").getAsString();
+                                String manufacture = jsonObject2.get("manufacturer").getAsString();
+                                String fixtureType = jsonObject2.get("fixtureType").getAsString();
+                                String description = jsonObject2.get("description").getAsString();
+                                String sw = jsonObject1.get("softwareVersion").getAsString();
+
+
+                                FormValueUtil.updateEdgeForm(formComponents, 6, lat);
+                                FormValueUtil.updateEdgeForm(formComponents, 7, lng);
+                                FormValueUtil.updateEdgeForm(formComponents, 8, fixtureID1);
+                                FormValueUtil.updateEdgeForm(formComponents, 10, manufacture);
+                                FormValueUtil.updateEdgeForm(formComponents, 11, description);
+                                FormValueUtil.updateEdgeForm(formComponents, 12, fixtureType);
+                                FormValueUtil.updateEdgeForm(formComponents, 19, sw);
+                            }
+                            mustUpdate = true;
                         }
-                        mustUpdate = true;
                     }
 
                 }
@@ -136,6 +135,7 @@ public class CreateRevision {
         }
         return response;
     }
+
     private String updateNoteDetails(String noteJson,String noteGuid,String notebookGuid)
     {
         String response = "";
