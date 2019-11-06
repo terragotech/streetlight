@@ -111,12 +111,12 @@
                             <goal>single</goal>
                         </goals>
                         <configuration>
-                            <finalName>slv_server_status</finalName>
+                            <finalName>log_watcher</finalName>
 
                             <archive>
                                 <manifest>
                                     <mainClass>
-                                        com.terragoedge.streetlight.StreetlightApp
+                                        com.terragoedge.streetlight.LogWatcher
                                     </mainClass>
                                 </manifest>
                             </archive>
