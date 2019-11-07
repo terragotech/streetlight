@@ -150,6 +150,7 @@ public class StreetlightChicagoService extends AbstractProcessor {
         // Process only response code as success
         if (edgeSlvServerResponse.getStatusCode().is2xxSuccessful()) {
 
+            streetlightDao.updateSLVInterfaceStatus();
             // Get Response String
             String notesGuids = edgeSlvServerResponse.getBody();
             System.out.println(notesGuids);
@@ -158,6 +159,7 @@ public class StreetlightChicagoService extends AbstractProcessor {
            if(noteGuidsJsonArray != null &&  !noteGuidsJsonArray.isJsonNull()){
                for(JsonElement noteGuidJson : noteGuidsJsonArray){
                    String noteGuid = noteGuidJson.getAsString();
+                   streetlightDao.updateSLVInterfaceStatus();
                    if(!noteGuids.contains(noteGuid)){
                         doProcess(noteGuid,accessToken,false);
                    }
@@ -582,6 +584,8 @@ private void addotherParamsForDroppedPin(List<EdgeFormData> edgeFormDatas,List<O
         addStreetLightData("comed.litetype", comedLiteType, paramsList);
     }
 }
+
+
 
     // http://192.168.1.9:8080/edgeServer/oauth/token?grant_type=password&username=admin&password=admin&client_id=edgerestapp
 }

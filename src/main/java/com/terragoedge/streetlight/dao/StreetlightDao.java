@@ -95,6 +95,7 @@ public class StreetlightDao extends UtilDao {
     }
 
 
+
     private void createSLVTransactionTable(){
         String sql = "CREATE TABLE IF NOT EXISTS slvtransactionlogs(id SERIAL PRIMARY KEY,noteguid text,parentnoteid text,title text,requestdata text,responsebody text,eventtime bigint,createddatetime bigint,calltype text)";
         executeStatement(sql);
@@ -674,6 +675,25 @@ public class StreetlightDao extends UtilDao {
             preparedStatement.execute();
         } catch (Exception e) {
             logger.error("Error in insertTransactionLogs", e);
+        } finally {
+            closeStatement(preparedStatement);
+        }
+    }
+
+
+    public void updateSLVInterfaceStatus(){
+        PreparedStatement preparedStatement = null;
+        Connection connection = null;
+        try{
+            connection = StreetlightDaoConnection.getInstance().getConnection();
+            preparedStatement = connection.prepareStatement(
+                    "update slvinterfacestatus set eventtime = ? where slvinterfacestatusid = ?;");
+            preparedStatement.setInt(1, 1);
+            preparedStatement.setLong(2, System.currentTimeMillis());
+            preparedStatement.execute();
+
+        }catch (Exception e) {
+            logger.error("Error in updateSLVInterfaceStatus", e);
         } finally {
             closeStatement(preparedStatement);
         }
