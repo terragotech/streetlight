@@ -21,11 +21,25 @@ public class CreateRevision {
         String netSenseformTemplateGUID = PropertiesReader.getProperties().getProperty("netsense.formtemp");
         String netSenseDeviceControl = PropertiesReader.getProperties().getProperty("netsense.dc");
         String netSenseActionID = PropertiesReader.getProperties().getProperty("netsense.actionid");
+        String deviceControlFormTemplateGUID = PropertiesReader.getProperties().getProperty("dc_form_template");
+        String dc_nodeid_id = PropertiesReader.getProperties().getProperty("dc_nodeid_id");
+
         for (int i = 0; i < size; i++) {
             JsonObject serverEdgeForm = serverForms.get(i).getAsJsonObject();
             String formDefJson = serverEdgeForm.get("formDef").getAsString();
             String formTemplate = serverEdgeForm.get("formTemplateGuid").getAsString();
-            if (formTemplate.equals(netSenseformTemplateGUID))
+            if (formTemplate.equals(deviceControlFormTemplateGUID))
+            {
+                formDefJson = formDefJson.replaceAll("\\\\", "");
+                formDefJson = formDefJson.replace("u0026", "\\u0026");
+                List<FormValues> formComponents = gson.fromJson(formDefJson, new TypeToken<List<FormValues>>() {
+                }.getType());
+                int ndc_nodeid_id  = Integer.parseInt(dc_nodeid_id);
+                String nodeID = FormValueUtil.getValue(formComponents,ndc_nodeid_id);
+                new DeviceControl(nodeID);
+                mustUpdate = false;
+            }
+            else if (formTemplate.equals(netSenseformTemplateGUID))
             {
 
 
