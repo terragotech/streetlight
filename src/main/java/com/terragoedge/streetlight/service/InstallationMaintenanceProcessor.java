@@ -1722,19 +1722,23 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
                 promotedFormData.setIdonController(idOnController);
                 if(slvDates.getCslpLumDate() != null){
                     hasData = true;
-                    promotedFormData.setCslpLumInstallDate(slvDateFormat(slvDates.getCslpLumDate(),"Promote"));
+                   // promotedFormData.setCslpLumInstallDate(slvDateFormat(slvDates.getCslpLumDate(),"Promote"));
+                    promotedFormData.setCslpLumInstallDate(slvDates.getCslpLumDate());
                 }
                 if(slvDates.getCslpNodeDate() != null){
                     hasData = true;
-                    promotedFormData.setCslpNodeInstallDate(slvDateFormat(slvDates.getCslpNodeDate(),"Promote"));
+                   // promotedFormData.setCslpNodeInstallDate(slvDateFormat(slvDates.getCslpNodeDate(),"Promote"));
+                    promotedFormData.setCslpNodeInstallDate(slvDates.getCslpNodeDate());
                 }
                 if(slvDates.getNodeInstallDate() != null){
                     hasData = true;
-                    promotedFormData.setInstallDate(slvDateFormat(slvDates.getNodeInstallDate(),"Promote"));
+                   // promotedFormData.setInstallDate(slvDateFormat(slvDates.getNodeInstallDate(),"Promote"));
+                    promotedFormData.setInstallDate(slvDates.getNodeInstallDate());
                 }
                 if(slvDates.getLumInstallDate() != null){
                     hasData = true;
-                    promotedFormData.setLumInstallDate(slvDateFormat(slvDates.getLumInstallDate(),"Promote"));
+                   // promotedFormData.setLumInstallDate(slvDateFormat(slvDates.getLumInstallDate(),"Promote"));
+                    promotedFormData.setLumInstallDate(slvDates.getLumInstallDate());
                 }
 
                 if(hasData){
