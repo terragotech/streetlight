@@ -711,6 +711,17 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
         paramsList.add("idOnController=" + idOnController);
         paramsList.add("controllerStrId=" + controllerStarId);
 
+
+        try{
+            checkLuminaireSerialNumberSync(cdotIssue,edgeNote.getTitle(),loggingModel);
+        }catch (SerialNumberSyncedException e){
+            logger.info("SLV Install Status is already Could not Complete and Skipped Fixture Reason Value also already Synced");
+            slvInterfaceLogEntity.setErrordetails("SLV Install Status is already Could not Complete and nightRideValue Value is Empty");
+            slvInterfaceLogEntity.setStatus(MessageConstants.ERROR);
+            return;
+        }
+
+
         if (nightRideValue != null) {
             nightRideValue = nightRideValue + "," + cdotIssue;
             nightRideValue = addUserToLuminaireSerialNumber(nightRideValue,edgeNote.getCreatedBy());
@@ -727,6 +738,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
             String formatedValue = dateFormat(edgeNote.getCreatedDateTime()) + " :" + cdotIssue;
             formatedValue = addUserToLuminaireSerialNumber(formatedValue,edgeNote.getCreatedBy());
             addStreetLightData(Key, formatedValue, paramsList);
+            addEdgeAllSerialNumber(formatedValue,idOnController);
         }
         SLVTransactionLogs slvTransactionLogs = getSLVTransactionLogs(loggingModel);
         int errorCode = setDeviceValues(paramsList, slvTransactionLogs);
@@ -785,6 +797,17 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
                     skippedFixtureReasonVal = getSkippedReason(skippedFixtureReasonVal,edgeFormDatas);
                     logger.info("Skipped Fixture Reason Val" + skippedFixtureReasonVal);
 
+
+                    try{
+                        checkLuminaireSerialNumberSync(skippedFixtureReasonVal,edgeNote.getTitle(),loggingModel);
+                    }catch (SerialNumberSyncedException e){
+                        logger.info("SLV Install Status is already Could not Complete and Skipped Fixture Reason Value also already Synced");
+                        slvInterfaceLogEntity.setErrordetails("SLV Install Status is already Could not Complete and nightRideValue Value is Empty");
+                        slvInterfaceLogEntity.setStatus(MessageConstants.ERROR);
+                        return;
+                    }
+
+
                     if (nightRideValue != null && !nightRideValue.trim().isEmpty()) {
                         nightRideValue = nightRideValue + "," + skippedFixtureReasonVal;
                     } else {
@@ -811,6 +834,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
                 logger.info("Before addUserToLuminaireSerialNumber nightRideValue:"+nightRideValue);
                 logger.info("Start of addUserToLuminaireSerialNumber");
                 nightRideValue = addUserToLuminaireSerialNumber(nightRideValue,edgeNote.getCreatedBy());
+                addEdgeAllSerialNumber(nightRideValue,loggingModel.getIdOnController());
                 logger.info("End of addUserToLuminaireSerialNumber");
                 logger.info("After addUserToLuminaireSerialNumber nightRideValue:"+nightRideValue);
                 int errorCode = sync2SlvInstallStatus(loggingModel.getIdOnController(), loggingModel.getControllerSrtId(), loggingModel, nightRideKey, nightRideValue);
@@ -1803,6 +1827,62 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
 
     private String addUserToLuminaireSerialNumber(String luminaireSerialNumber,String user){
         return luminaireSerialNumber+":"+user;
+    }
+
+
+
+    private EdgeAllSerialNumber checkLuminaireSerialNumberSync(String serialNumber,String idOnController,InstallMaintenanceLogModel installMaintenanceLogModel)throws  SerialNumberSyncedException{
+        EdgeAllSerialNumber edgeAllSerialNumber = null;
+        try{
+            // Get Serial Number from DB
+            edgeAllSerialNumber = connectionDAO.getEdgeAllSerialNumber(idOnController);
+            // If its, present then check current value matches with DB
+            if(edgeAllSerialNumber != null){
+                if(edgeAllSerialNumber.getSerialNumber().trim().toLowerCase().contains(serialNumber.trim().toLowerCase())){
+                    logger.info("Serial Number already Synced with SLV.");
+                    throw  new SerialNumberSyncedException("Given Serial Number already Synced with SLV");
+                }else{
+                    // Check given value present in SLV.
+                    checkSLVSerialNumber(serialNumber,idOnController,installMaintenanceLogModel);
+                }
+            }else{
+                checkSLVSerialNumber(serialNumber,idOnController,installMaintenanceLogModel);
+            }
+        }catch (SerialNumberSyncedException e){
+            throw  new SerialNumberSyncedException("Given Serial Number already Synced with SLV");
+        }catch (Exception e){
+            logger.error("Error in checkLuminaireSerialNumber",e);
+        }
+        return  edgeAllSerialNumber;
+    }
+
+
+    private void checkSLVSerialNumber(String serialNumber,String idOnController,InstallMaintenanceLogModel installMaintenanceLogModel)throws  SerialNumberSyncedException{
+        String slvLuminaireSerialNumber =  getSLVValues(installMaintenanceLogModel,"luminaire.serialnumber");
+        if(slvLuminaireSerialNumber != null && !slvLuminaireSerialNumber.trim().isEmpty()){
+            if(slvLuminaireSerialNumber.trim().toLowerCase().contains(serialNumber.trim().toLowerCase())){
+                logger.info("Serial Number already Synced with SLV.");
+                throw  new SerialNumberSyncedException("Given Serial Number already Synced with SLV");
+            }
+        }
+    }
+
+
+    private void addEdgeAllSerialNumber(String serialNumber,String idOnController){
+        if(serialNumber != null && !serialNumber.trim().isEmpty()){
+            EdgeAllSerialNumber edgeAllSerialNumber = connectionDAO.getEdgeAllSerialNumber(idOnController);
+            if(edgeAllSerialNumber != null){
+                edgeAllSerialNumber.setSerialNumber(serialNumber);
+                connectionDAO.updateEdgeAllSerialNumber(edgeAllSerialNumber);
+            }else{
+                edgeAllSerialNumber = new EdgeAllSerialNumber();
+                edgeAllSerialNumber.setSerialNumber(serialNumber);
+                edgeAllSerialNumber.setTitle(idOnController);
+                connectionDAO.createEdgeAllSerialNumber(edgeAllSerialNumber);
+
+            }
+        }
+
     }
 
 }

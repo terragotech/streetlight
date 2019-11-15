@@ -1401,6 +1401,49 @@ public abstract class AbstractProcessor {
     }
 
 
+
+    public String getSLVValues(InstallMaintenanceLogModel installMaintenanceLogModel,String key){
+        try{
+            if (installMaintenanceLogModel.getDeviceId() > 0 && key != null && !key.trim().isEmpty()) {
+                String mainUrl = properties.getProperty("streetlight.slv.url.main");
+                String commentUrl = properties.getProperty("streetlight.slv.url.comment.get");
+                String url = mainUrl + commentUrl;
+                List<String> paramsList = new ArrayList<>();
+                paramsList.add("returnTimeAges=false");
+                paramsList.add("valueName="+key);
+                paramsList.add("param0=" + installMaintenanceLogModel.getDeviceId());
+                paramsList.add("ser=json");
+                String params = StringUtils.join(paramsList, "&");
+                url = url + "?" + params;
+                logger.info("Get Install Date url :" + url);
+                ResponseEntity<String> response = restService.getRequest(url, true, null);
+                if (response.getStatusCodeValue() == 200) {
+                    logger.info("Get Install Date url :" + response.getBody());
+                    String responseString = response.getBody();
+                    JsonArray jsonArray = (JsonArray) jsonParser.parse(responseString);
+                    for (JsonElement installDateJsonArray : jsonArray) {
+                        JsonObject installDateJson = installDateJsonArray.getAsJsonObject();
+                        if (installDateJson.get("name") != null) {
+                            String paramName = installDateJson.get("name").getAsString();
+                            if (paramName.equals(key)) {
+                                if (installDateJson.get("value") != null) {
+                                    return installDateJson.get("value").getAsString();
+
+                                }
+                            }
+                        }
+
+                    }
+                }
+
+            }
+        }catch (Exception e){
+            logger.error("Error in getSLVValues",e);
+        }
+        return null;
+    }
+
+
     public DeviceAttributes getDeviceValues(InstallMaintenanceLogModel installMaintenanceLogModel) {
         try {
             if (installMaintenanceLogModel.getDeviceId() > 0) {

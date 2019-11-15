@@ -37,6 +37,8 @@ public enum ConnectionDAO {
     public Dao<ExistingMacValidationFailure, String> existingMacValidationFailureDao = null;
     public Dao<ClientAccountEntity, String> clientAccountEntityDao = null;
 
+    public Dao<EdgeAllSerialNumber, String> edgeAllSerialNumbersDao = null;
+
 
     public Dao<EdgeSLVDate, String> edgeNodeDates = null;
     public Dao<ProContextLookupData, String> proContextLookupDao = null;
@@ -103,6 +105,13 @@ public enum ConnectionDAO {
                 //logger.error("Error in openConnection", e);
             }
 
+
+            try {
+                TableUtils.createTableIfNotExists(connectionSource, EdgeAllSerialNumber.class);
+            } catch (Exception e) {
+                //logger.error("Error in openConnection", e);
+            }
+
             slvDeviceDao = DaoManager.createDao(connectionSource, SlvServerData.class);
             duplicateMacAddressDao = DaoManager.createDao(connectionSource, DuplicateMacAddress.class);
             deviceAttributeDao = DaoManager.createDao(connectionSource, DeviceAttributes.class);
@@ -116,6 +125,8 @@ public enum ConnectionDAO {
             clientAccountEntityDao = DaoManager.createDao(connectionSource, ClientAccountEntity.class);
 
             proContextLookupDao = DaoManager.createDao(connectionSource,ProContextLookupData.class);
+
+            edgeAllSerialNumbersDao = DaoManager.createDao(connectionSource,EdgeAllSerialNumber.class);
 
             System.out.println("Connected.....");
         } catch (Exception e) {
@@ -375,6 +386,34 @@ public enum ConnectionDAO {
             return clientAccountEntityDao.queryBuilder().where().eq("key",phsicalAtlasPage).and().ge("max",max).and().eq("area",area).queryForFirst();
         }catch (Exception e){
             logger.error("Error in getClientAccountName",e);
+        }
+        return null;
+    }
+
+
+    public void createEdgeAllSerialNumber(EdgeAllSerialNumber edgeAllSerialNumber){
+        try {
+            edgeAllSerialNumbersDao.create(edgeAllSerialNumber);
+        }catch (Exception e){
+            logger.error("Error in createEdgeAllSerialNumber",e);
+        }
+    }
+
+
+    public void updateEdgeAllSerialNumber(EdgeAllSerialNumber edgeAllSerialNumber){
+        try {
+            edgeAllSerialNumbersDao.update(edgeAllSerialNumber);
+        }catch (Exception e){
+            logger.error("Error in updateEdgeAllSerialNumber",e);
+        }
+    }
+
+
+    public EdgeAllSerialNumber getEdgeAllSerialNumber(String title){
+        try {
+          return   edgeAllSerialNumbersDao.queryBuilder().where().eq(EdgeAllSerialNumber.TITLE,title).queryForFirst();
+        }catch (Exception e){
+            e.printStackTrace();
         }
         return null;
     }
