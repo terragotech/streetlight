@@ -36,7 +36,7 @@ public class CreateRevision {
                 }.getType());
                 int ndc_nodeid_id  = Integer.parseInt(dc_nodeid_id);
                 String nodeID = FormValueUtil.getValue(formComponents,ndc_nodeid_id);
-                new DeviceControl(nodeID);
+                new DeviceControl(nodeID,"80","1");
                 mustUpdate = false;
             }
             else if (formTemplate.equals(netSenseformTemplateGUID))
@@ -57,7 +57,21 @@ public class CreateRevision {
                     String nodeID = FormValueUtil.getValue(formComponents,nodeid);
                     FormValueUtil.updateEdgeForm(formComponents,deviceControlID,"");
                     mustUpdate = true;
-                    new DeviceControl(nodeID);
+                    String dimvalue_id = PropertiesReader.getProperties().getProperty("dimming_value_id");
+                    String turnon_id = PropertiesReader.getProperties().getProperty("turn_on_duration_id");
+                    int dimvalueid = Integer.parseInt(dimvalue_id);
+                    int turnonid = Integer.parseInt(turnon_id);
+                    String strLightLevel = FormValueUtil.getValue(formComponents,dimvalueid);
+                    String strTurnON = FormValueUtil.getValue(formComponents,turnonid);
+                    if(strLightLevel.equals(""))
+                    {
+                        strLightLevel = "80";
+                    }
+                    if(strTurnON.equals(""))
+                    {
+                        strTurnON = "1";
+                    }
+                    new DeviceControl(nodeID,strLightLevel,strTurnON);
                 }
                 if(FormValueUtil.getValue(formComponents,actionID).equals("Install"))
                 {

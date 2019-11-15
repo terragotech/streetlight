@@ -94,7 +94,7 @@ public class NetSenseInterface {
 
     }
 
-    public static void setLight(String nodeID,boolean status)
+    public static void setLight(String nodeID,String lightLevel, String turnOnDuration, boolean status)
     {
         String baseURL = PropertiesReader.getProperties().getProperty("netsense.base.url");
         String customerID = PropertiesReader.getProperties().getProperty("netsense.customer.id");
@@ -107,12 +107,13 @@ public class NetSenseInterface {
         String requestJsonString = "";
         if(status)
         {
-            requestJsonString = "{\"level\":100,\"timeout\":100}";
+            requestJsonString = "{\"level\":"+ lightLevel+",\"timeout\":" + turnOnDuration + "}";
         }
         else
         {
-            requestJsonString = "{\"level\":1,\"timeout\":100}";
+            requestJsonString = "{\"level\":1,\"timeout\":" + turnOnDuration+"}";
         }
+        logger.info("DC request String = " + requestJsonString);
         RestTemplate restTemplate = new RestTemplate();
         HttpEntity request = new HttpEntity<>(requestJsonString,headers);
         try {
