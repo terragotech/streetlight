@@ -593,6 +593,7 @@ public abstract class AbstractProcessor {
                 {
                     value = value.replaceAll (";",".");
                     value = value.replaceAll("'","");
+                    value = value.replaceAll("[^\\p{ASCII}]", "");
                 }
             }
             paramsList.add("value=" + URLEncoder.encode(value.trim(), "UTF-8"));
