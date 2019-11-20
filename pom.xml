@@ -139,11 +139,11 @@
                             <goal>single</goal>
                         </goals>
                         <configuration>
-                            <finalName>canada_slvinterface_parking_v26</finalName>
+                            <finalName>CanadaSLVInterface</finalName>
                             <archive>
                                 <manifest>
                                     <mainClass>
-                                        com.terragoedge.slvinterface.SlvInterfaceApp
+                                        com.slvinterface.main.SLVInterfaceApp
                                     </mainClass>
                                 </manifest>
                             </archive>
