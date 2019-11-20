@@ -2,6 +2,7 @@ package com.slvinterface.dao;
 
 import com.j256.ormlite.dao.Dao;
 import com.j256.ormlite.dao.DaoManager;
+import com.j256.ormlite.dao.GenericRawResults;
 import com.j256.ormlite.dao.RawRowMapper;
 import com.j256.ormlite.jdbc.JdbcConnectionSource;
 import com.j256.ormlite.stmt.DeleteBuilder;
@@ -192,6 +193,35 @@ public enum ConnectionDAO {
 
     public ConnectionSource getConnection() {
         return connectionSource;
+    }
+    public long getLastSyncTime(){
+        long lastSyncTime = 0;
+        try {
+            String queryString = "select max(processeddatetime) from slvsyncinfo";
+            GenericRawResults<String[]> rawResults = slvSyncDetailsDao.queryRaw(queryString);
+            List<String[]> results = rawResults.getResults();
+            if(results.size() > 0 )
+            {
+                String []resultValues = results.get(0);
+                if(resultValues[0] != null)
+                {
+                    lastSyncTime = Long.parseLong(resultValues[0]);
+                }
+                else
+                {
+                    lastSyncTime = 0;
+                }
+            }
+            else
+            {
+                lastSyncTime = 0;
+            }
+        }
+        catch (SQLException e)
+        {
+            e.printStackTrace();
+        }
+        return lastSyncTime;
     }
 }
 

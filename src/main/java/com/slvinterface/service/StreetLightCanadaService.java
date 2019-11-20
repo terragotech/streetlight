@@ -5,6 +5,7 @@ import com.google.gson.reflect.TypeToken;
 import com.j256.ormlite.stmt.query.In;
 import com.slvinterface.dao.tables.SlvDevice;
 import com.slvinterface.dao.tables.SlvSyncDetails;
+import com.slvinterface.enumeration.Status;
 import com.slvinterface.exception.*;
 import com.slvinterface.json.EdgeNote;
 import com.slvinterface.json.FormValues;
@@ -82,12 +83,13 @@ public class StreetLightCanadaService {
                         if(strActionString.equals(strNewInstall))
                         {
                             //New Install MAC Address
+                            SlvSyncDetails slvSyncDetails = new SlvSyncDetails();
                             String macAddress = FormValueUtil.getValue(formComponents,newMacid);
                             if(DataTools.checkForValidMacAddress(macAddress))
                             {
                                 try{
-                                    SlvDevice slvDevice = connectionDAO.getSlvDevices(edgeNote.getTitle());
-                                    SlvSyncDetails slvSyncDetails = new SlvSyncDetails();
+                                    SlvDevice slvDevice = new SlvDevice();
+
                                     slvTools.checkMacAddressExists(macAddress,edgeNote.getTitle());
                                     boolean isDeviceExist = slvTools.deviceAlreadyExists (edgeNote.getTitle());
                                     if (!isDeviceExist) {
@@ -110,7 +112,16 @@ public class StreetLightCanadaService {
                                         }
                                     }
                                     List<Object> paramsList = new ArrayList<>();
+                                    slvSyncDetails.setNoteName(edgeNote.getTitle());
+                                    slvSyncDetails.setNoteGuid(edgeNote.getNoteGuid());
+                                    slvSyncDetails.setProcessedDateTime(System.currentTimeMillis());
+                                    slvSyncDetails.setNoteCreatedBy(edgeNote.getCreatedBy());
+                                    slvSyncDetails.setMacAddress(macAddress);
 
+
+                                    slvDevice.setDeviceName(edgeNote.getTitle());
+                                    slvDevice.setMacAddress(macAddress);
+                                    slvDevice.setProcessedDateTime(System.currentTimeMillis());
 
                                     paramsList.add("idOnController="+DataTools.URLEncoder(edgeNote.getTitle()));
                                     paramsList.add("controllerStrId="+controllerStrId);
@@ -120,30 +131,49 @@ public class StreetLightCanadaService {
                                     slvTools.setDeviceValues(paramsList,slvSyncDetails);
                                     slvTools.replaceOLC(controllerStrId,edgeNote.getTitle(),macAddress);
 
+                                    slvSyncDetails.setStatus(Status.Success.toString());
+
+                                    connectionDAO.saveSlvDevices(slvDevice);
+
                                 }
                                 catch (QRCodeAlreadyUsedException e)
                                 {
                                     e.printStackTrace();
+                                    slvSyncDetails.setStatus(Status.Failure.toString());
+                                    slvSyncDetails.setErrorDetails("Mac Address Already in use");
                                 }
                                 catch (IOException e)
                                 {
                                     e.printStackTrace();
+                                    slvSyncDetails.setStatus(Status.Failure.toString());
+                                    slvSyncDetails.setErrorDetails(e.getMessage());
                                 }
                                 catch (DeviceCreationFailedException e)
                                 {
                                     e.printStackTrace();
+                                    slvSyncDetails.setStatus(Status.Failure.toString());
+                                    slvSyncDetails.setErrorDetails("Set Device Values failed");
                                 }
                                 catch (ReplaceOLCFailedException e)
                                 {
                                     e.printStackTrace();
+                                    slvSyncDetails.setStatus(Status.Failure.toString());
+                                    slvSyncDetails.setErrorDetails("Replace OLC Call failed");
                                 }
                                 catch (DeviceUpdationFailedException e)
                                 {
                                     e.printStackTrace();
+                                    slvSyncDetails.setStatus(Status.Failure.toString());
+                                    slvSyncDetails.setErrorDetails("Set device values failed");
                                 }
                                 catch (Exception e)
                                 {
                                     e.printStackTrace();
+                                    slvSyncDetails.setStatus(Status.Failure.toString());
+                                    slvSyncDetails.setErrorDetails(e.getMessage());
+                                }
+                                finally {
+                                    connectionDAO.saveSlvSyncDetails(slvSyncDetails);
                                 }
                             }
                             else
@@ -183,7 +213,7 @@ public class StreetLightCanadaService {
             //Normal SLV Process
             edgeSlvUrl = edgeSlvUrl+"/notesGuid?lastSyncTime=";
 
-            long lastSynctime = 1574254528978L; // TODO: streetlightDao.getLastSyncTime();
+            long lastSynctime = connectionDAO.getLastSyncTime();
             if(lastSynctime > 0){
                 edgeSlvUrl = edgeSlvUrl + lastSynctime;
 
