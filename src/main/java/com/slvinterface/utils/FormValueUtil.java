@@ -16,19 +16,23 @@ public class FormValueUtil {
             tmp1.setValue(tmp1.getLabel() + "#" + value);
         }
     }
+
     public static String getValue(List<FormValues> formComponents, int id)
     {
         String result = "";
-        FormValues cur = new FormValues();
-        cur.setId(id);
-        int pos = formComponents.indexOf(cur);
-        if(pos != -1)
+        if(id != -1)
         {
-            FormValues tmp1 = formComponents.get(pos);
-            result = checkNullValues(tmp1.getValue());
+            FormValues cur = new FormValues();
+            cur.setId(id);
+            int pos = formComponents.indexOf(cur);
+            if (pos != -1) {
+                FormValues tmp1 = formComponents.get(pos);
+                result = checkNullValues(tmp1.getValue());
+            }
         }
         return result;
     }
+
     public static String checkNullValues(String input)
     {
         String result = "";

@@ -37,11 +37,11 @@ public class SLVTools {
         slvRestService = new SLVRestService();
         gson = new Gson();
     }
-    private void setConnectionDAO(ConnectionDAO connectionDAO)
+    public void setConnectionDAO(ConnectionDAO connectionDAO)
     {
         this.connectionDAO = connectionDAO;
     }
-    private void setSLVDao(SLVInterfaceDAO slvInterfaceDAO)
+    public void setSLVDao(SLVInterfaceDAO slvInterfaceDAO)
     {
         this.slvInterfaceDAO = slvInterfaceDAO;
     }
@@ -94,14 +94,24 @@ public class SLVTools {
     public boolean checkMacAddressExists(String macAddress, String idOnController)
             throws QRCodeAlreadyUsedException, IOException {
         Properties properties = PropertiesReader.getProperties();
-        /*boolean isExistMacAddress = false;
-        boolean isExistMacAddress = connectionDAO.get
-
-
+        boolean isExistMacAddress = false;
+        SlvDevice slvDevice = connectionDAO.getSlvDevices(idOnController);
+        if(slvDevice != null) {
+            String strLocalMacAddress = slvDevice.getMacAddress();
+            if (strLocalMacAddress != null) {
+                if (strLocalMacAddress.toUpperCase().equals(macAddress.toUpperCase())) {
+                    isExistMacAddress = true;
+                }
+            }
+        }
+        else
+        {
+            isExistMacAddress = false;
+        }
         if (isExistMacAddress) {
             logger.info("Given MAC Address Already Present in Local DB.");
              throw new QRCodeAlreadyUsedException("QR code [" + macAddress + "] is already processed.", macAddress);
-        }*/
+        }
         logger.info("Getting Mac Address from SLV.");
         String mainUrl = properties.getProperty("streetlight.slv.base.url");
         String updateDeviceValues = properties.getProperty("streetlight.slv.url.search.device");

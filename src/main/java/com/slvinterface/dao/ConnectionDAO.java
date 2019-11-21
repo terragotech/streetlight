@@ -29,6 +29,7 @@ public enum ConnectionDAO {
     ConnectionSource connectionSource = null;
     private Dao<SlvSyncDetails, String> slvSyncDetailsDao;
     public Dao<SlvDevice, String> slvDeviceDao = null;
+
     private static final Logger logger = Logger.getLogger(ConnectionDAO.class);
 
     ConnectionDAO() {
@@ -38,11 +39,13 @@ public enum ConnectionDAO {
             try {
                 TableUtils.createTable(connectionSource, SlvSyncDetails.class);
                 TableUtils.createTable(connectionSource, SlvDevice.class);
+
             }catch (Exception e){
                 //  logger.error("Error",e)
             }
             slvSyncDetailsDao = DaoManager.createDao(connectionSource, SlvSyncDetails.class);
             slvDeviceDao = DaoManager.createDao(connectionSource, SlvDevice.class);
+
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -82,7 +85,7 @@ public enum ConnectionDAO {
 
     public void saveSlvSyncDetails(SlvSyncDetails slvSyncDetails) {
         try {
-            slvSyncDetailsDao.createOrUpdate(slvSyncDetails);
+            slvSyncDetailsDao.create(slvSyncDetails);
         } catch (Exception e) {
             logger.error("Error",e);
         }
@@ -223,5 +226,28 @@ public enum ConnectionDAO {
         }
         return lastSyncTime;
     }
+
+    public boolean checkNoteProcessed(String noteguid){
+        boolean result = false;
+        try {
+            String queryString = "select noteguid from slvsyncinfo where noteguid='" + noteguid + "'";
+            GenericRawResults<String[]> rawResults = slvSyncDetailsDao.queryRaw(queryString);
+            List<String[]> results = rawResults.getResults();
+            if(results.size() > 0 )
+            {
+                result = true;
+            }
+            else
+            {
+                result = false;
+            }
+        }
+        catch (SQLException e)
+        {
+            e.printStackTrace();
+        }
+        return result;
+    }
+
 }
 
