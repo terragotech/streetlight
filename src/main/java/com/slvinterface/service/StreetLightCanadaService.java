@@ -284,7 +284,15 @@ public class StreetLightCanadaService {
                                         e.printStackTrace();
                                     }
                                     slvDevice.setMacAddress(macAddress);
-                                    connectionDAO.saveSlvDevices(slvDevice);
+                                    SlvDevice slvDevice1 = connectionDAO.getSlvDevices(edgeNote.getTitle());
+                                    if(slvDevice1 != null)
+                                    {
+                                        connectionDAO.updateSlvDevice(edgeNote.getTitle(),macAddress);
+                                    }
+                                    else {
+                                        connectionDAO.saveSlvDevices(slvDevice);
+                                    }
+
                                 }
                             }
                             else if (strActionString.equals(strReplace))
@@ -303,7 +311,14 @@ public class StreetLightCanadaService {
                                         e.printStackTrace();
                                     }
                                     slvDevice.setMacAddress(strFormReplaceMac);
-                                    connectionDAO.updateSlvDevice(edgeNote.getTitle(),strFormReplaceMac);
+                                    SlvDevice slvDevice1 = connectionDAO.getSlvDevices(edgeNote.getTitle());
+                                    if(slvDevice1 != null)
+                                    {
+                                        connectionDAO.updateSlvDevice(edgeNote.getTitle(),strFormReplaceMac);
+                                    }
+                                    else {
+                                        connectionDAO.saveSlvDevices(slvDevice);
+                                    }
                                 }
                             }
                             else if (strActionString.equals(strRemove))
@@ -318,7 +333,15 @@ public class StreetLightCanadaService {
                                     {
                                         e.printStackTrace();
                                     }
-                                    connectionDAO.updateSlvDevice(edgeNote.getTitle(),"");
+                                    slvDevice.setMacAddress("");
+                                    SlvDevice slvDevice1 = connectionDAO.getSlvDevices(edgeNote.getTitle());
+                                    if(slvDevice1 != null)
+                                    {
+                                        connectionDAO.updateSlvDevice(edgeNote.getTitle(),"");
+                                    }
+                                    else {
+                                        connectionDAO.saveSlvDevices(slvDevice);
+                                    }
 
 
                             }
