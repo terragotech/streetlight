@@ -10,9 +10,18 @@ import com.slvinterface.exception.*;
 import com.slvinterface.dao.tables.*;
 
 import com.vividsolutions.jts.geom.Geometry;
+import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.HttpResponse;
 import org.apache.log4j.Logger;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.ResponseEntity;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
+import org.springframework.web.client.RestTemplate;
+import org.springframework.web.util.UriComponentsBuilder;
 import org.wololo.geojson.Feature;
 import org.wololo.geojson.GeoJSONFactory;
 import org.wololo.jts2geojson.GeoJSONReader;
@@ -20,7 +29,11 @@ import org.wololo.jts2geojson.GeoJSONReader;
 import java.io.IOException;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+import java.util.Properties;
+
 
 public class SLVTools {
     private SLVRestService slvRestService;
@@ -574,5 +587,61 @@ public class SLVTools {
         }
 
         return geozoneId;
+    }
+    public void syncMacAddress2Edge(String idOnController,String macAddress,String blockName){
+        Properties properties = PropertiesReader.getProperties();
+        String serverHostName = properties.getProperty("streetlight.edge.url.main");
+
+        if(macAddress != null && !macAddress.trim().isEmpty()){
+            MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
+            params.add("slvMacAddress",macAddress);
+            params.add("slvIdOnController",idOnController);
+            if(blockName != null){
+                params.add("atlasPhysicalPage",blockName);
+            }
+            slv2Edge(serverHostName + "rest/validation/updateSLVSyncedMAC", HttpMethod.GET,params);
+        }
+    }
+    public void removeEdgeSLVMacAddress(String idOnController){
+        Properties properties = PropertiesReader.getProperties();
+        String serverHostName = properties.getProperty("streetlight.edge.url.main");
+        MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
+        params.add("slvIdOnController",idOnController);
+        slv2Edge(serverHostName+"rest/validation/removeSLVMacAddress", HttpMethod.GET,params);
+    }
+    private HttpHeaders getEdgeHeaders() {
+        Properties properties = PropertiesReader.getProperties();
+        String userName = properties.getProperty("streetlight.edge.username");
+        String password = properties.getProperty("streetlight.edge.password");
+        HttpHeaders headers = new HttpHeaders();
+        String plainCreds = userName + ":" + password;
+
+        byte[] plainCredsBytes = plainCreds.getBytes();
+
+        byte[] base64CredsBytes = Base64.encodeBase64(plainCredsBytes);
+        String base64Creds = new String(base64CredsBytes);
+
+        headers.add("Authorization", "Basic " + base64Creds);
+        return headers;
+    }
+    public ResponseEntity<String> slv2Edge(String httpUrl,  HttpMethod httpMethod, MultiValueMap<String, String> params){
+        HttpHeaders headers = getEdgeHeaders();
+        RestTemplate restTemplate = new RestTemplate();
+        HttpEntity request = new HttpEntity<>(headers);
+
+        String url = PropertiesReader.getProperties().getProperty("streetlight.edge.url.main");
+        url = url + httpUrl;
+
+        UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromHttpUrl(url);
+
+        uriBuilder.queryParams(params);
+
+        ResponseEntity<String> response = restTemplate.exchange(uriBuilder.toUriString(), httpMethod, request, String.class);
+        logger.info("------------ Response ------------------");
+        logger.info("Response Code:" + response.getStatusCode().toString());
+        String responseBody = response.getBody();
+        logger.info(responseBody);
+        logger.info("------------ Response End ------------------");
+        return response;
     }
 }

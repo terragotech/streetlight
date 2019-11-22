@@ -443,7 +443,7 @@ public class StreetLightCanadaService {
                                 {
                                     slvDevice1.setMacAddress("");
                                 }
-                                if (slvDevice1.getMacAddress() != null || !slvDevice1.getMacAddress().equals("")) {
+                                //if (slvDevice1.getMacAddress() != null || !slvDevice1.getMacAddress().equals("")) {
 
                                     if (strActionString.equals(strNewInstall)) {
                                         errorMacAddress = macAddress;
@@ -480,6 +480,7 @@ public class StreetLightCanadaService {
                                                 try {
                                                     slvTools.replaceOLC(controllerStrId, edgeNote.getTitle(), "", edgeNote);
                                                     slvTools.replaceOLC(controllerStrId, edgeNote.getTitle(), macAddress, edgeNote);
+                                                    slvTools.syncMacAddress2Edge(edgeNote.getTitle(),macAddress,edgeNote.getEdgeNotebook().getNotebookName());
                                                 } catch (ReplaceOLCFailedException e) {
                                                     e.printStackTrace();
                                                 }
@@ -488,6 +489,7 @@ public class StreetLightCanadaService {
                                             {
                                                 slvTools.replaceOLC(controllerStrId, edgeNote.getTitle(), "", edgeNote);
                                                 slvTools.replaceOLC(controllerStrId, edgeNote.getTitle(), macAddress, edgeNote);
+                                                slvTools.syncMacAddress2Edge(edgeNote.getTitle(),macAddress,edgeNote.getEdgeNotebook().getNotebookName());
                                             }
                                             slvDevice.setMacAddress(macAddress);
                                             String gsonValues = gson.toJson(lightDataCompareResult.getJsonArray());
@@ -544,6 +546,7 @@ public class StreetLightCanadaService {
                                                 try {
                                                     slvTools.replaceOLC(controllerStrId, edgeNote.getTitle(), "", edgeNote);
                                                     slvTools.replaceOLC(controllerStrId, edgeNote.getTitle(), strFormReplaceMac, edgeNote);
+                                                    slvTools.syncMacAddress2Edge(edgeNote.getTitle(),strFormReplaceMac,edgeNote.getEdgeNotebook().getNotebookName());
                                                 } catch (ReplaceOLCFailedException e) {
                                                     e.printStackTrace();
                                                 }
@@ -552,6 +555,7 @@ public class StreetLightCanadaService {
                                             {
                                                 slvTools.replaceOLC(controllerStrId, edgeNote.getTitle(), "", edgeNote);
                                                 slvTools.replaceOLC(controllerStrId, edgeNote.getTitle(), strFormReplaceMac, edgeNote);
+                                                slvTools.syncMacAddress2Edge(edgeNote.getTitle(),strFormReplaceMac,edgeNote.getEdgeNotebook().getNotebookName());
                                             }
                                             String gsonValues = gson.toJson(lightDataCompareResult.getJsonArray());
                                             connectionDAO.updateSlvDevice(edgeNote.getTitle(),strFormReplaceMac,gsonValues);
@@ -599,11 +603,13 @@ public class StreetLightCanadaService {
                                             if (isForTesting) {
                                                 try {
                                                     slvTools.replaceOLC(controllerStrId, edgeNote.getTitle(), "", edgeNote);
+                                                    slvTools.removeEdgeSLVMacAddress(edgeNote.getTitle());
                                                 } catch (Exception e) {
                                                     e.printStackTrace();
                                                 }
                                             } else {
                                                 slvTools.replaceOLC(controllerStrId, edgeNote.getTitle(), "", edgeNote);
+                                                slvTools.removeEdgeSLVMacAddress(edgeNote.getTitle());
                                             }
 
                                             connectionDAO.updateSlvDevice(edgeNote.getTitle(), "", "[]");
@@ -611,7 +617,7 @@ public class StreetLightCanadaService {
                                             slvSyncDetails.setMacAddress("");
                                         }
                                     }
-                                }
+                                //}
                             }
 
                             ////////////////////////////////////////////////////////////////////////
