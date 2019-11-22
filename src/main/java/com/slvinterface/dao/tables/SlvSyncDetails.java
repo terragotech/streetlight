@@ -27,10 +27,6 @@ public class SlvSyncDetails {
     private String selectedAction;
     @DatabaseField(columnName = "errordetails")
     private String errorDetails;
-    @DatabaseField(columnName = "talcaddress")
-    private String talcAddress;
-    @DatabaseField(columnName = "talcaddressdatetime")
-    private long talcAddressDateTime;
     @DatabaseField(columnName = "macaddress")
     private String macAddress;
     @DatabaseField(columnName = "devicecreationstatus")
@@ -97,24 +93,22 @@ public class SlvSyncDetails {
     }
 
     public void setErrorDetails(String errorDetails) {
-        this.errorDetails = this.errorDetails +".\n"+errorDetails;
+        if(this.errorDetails == null)
+        {
+            this.errorDetails =  errorDetails;
+        }
+        else {
+            this.errorDetails = this.errorDetails + ".\n" + errorDetails;
+        }
     }
 
-    public String getTalcAddress() {
-        return talcAddress;
-    }
 
-    public void setTalcAddress(String talcAddress) {
-        this.talcAddress = talcAddress;
-    }
 
-    public long getTalcAddressDateTime() {
-        return talcAddressDateTime;
-    }
 
-    public void setTalcAddressDateTime(long talcAddressDateTime) {
-        this.talcAddressDateTime = talcAddressDateTime;
-    }
+
+
+
+
 
     public String getMacAddress() {
         return macAddress;
@@ -152,8 +146,6 @@ public class SlvSyncDetails {
                 ", status='" + status + '\'' +
                 ", selectedAction='" + selectedAction + '\'' +
                 ", errorDetails='" + errorDetails + '\'' +
-                ", talcAddress='" + talcAddress + '\'' +
-                ", talcAddressDateTime=" + talcAddressDateTime +
                 ", macAddress='" + macAddress + '\'' +
                 ", deviceCreationStatus='" + deviceCreationStatus + '\'' +
                 '}';

@@ -9,6 +9,7 @@ import com.j256.ormlite.stmt.DeleteBuilder;
 import com.j256.ormlite.stmt.UpdateBuilder;
 import com.j256.ormlite.support.ConnectionSource;
 import com.j256.ormlite.table.TableUtils;
+import com.slvinterface.dao.tables.SLVTransactionLogs;
 import com.slvinterface.dao.tables.SlvDevice;
 import com.slvinterface.dao.tables.SlvSyncDetails;
 import com.slvinterface.enumeration.Status;
@@ -29,6 +30,7 @@ public enum ConnectionDAO {
     ConnectionSource connectionSource = null;
     private Dao<SlvSyncDetails, String> slvSyncDetailsDao;
     public Dao<SlvDevice, String> slvDeviceDao = null;
+    public Dao<SLVTransactionLogs, String> slvTransactionLogDao = null;
 
     private static final Logger logger = Logger.getLogger(ConnectionDAO.class);
 
@@ -37,14 +39,29 @@ public enum ConnectionDAO {
         try {
             connectionSource = new JdbcConnectionSource(DATABASE_URL);
             try {
-                TableUtils.createTable(connectionSource, SlvSyncDetails.class);
-                TableUtils.createTable(connectionSource, SlvDevice.class);
-
+                TableUtils.createTableIfNotExists(connectionSource, SlvSyncDetails.class);
             }catch (Exception e){
                 //  logger.error("Error",e)
             }
+            try {
+                TableUtils.createTableIfNotExists(connectionSource, SlvDevice.class);
+            }catch (Exception e){
+                //  logger.error("Error",e)
+                e.printStackTrace();
+            }
+            try {
+                TableUtils.createTableIfNotExists(connectionSource, SLVTransactionLogs.class);
+            }catch (Exception e){
+                //  logger.error("Error",e)
+            }
+
+
+
+
+
             slvSyncDetailsDao = DaoManager.createDao(connectionSource, SlvSyncDetails.class);
             slvDeviceDao = DaoManager.createDao(connectionSource, SlvDevice.class);
+            slvTransactionLogDao = DaoManager.createDao(connectionSource, SLVTransactionLogs.class);
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -55,7 +72,16 @@ public enum ConnectionDAO {
     public void setupDatabase() {
 
     }
-
+    public void saveSLVTransactionLog(SLVTransactionLogs slvTransactionLogs)
+    {
+        try {
+            slvTransactionLogDao.create(slvTransactionLogs);
+        }
+        catch (Exception e)
+        {
+            e.printStackTrace();
+        }
+    }
     public void saveSlvDevices(SlvDevice slvDevice) {
         try {
             slvDevice.setProcessedDateTime(System.currentTimeMillis());
@@ -173,12 +199,13 @@ public enum ConnectionDAO {
         }
     }
 
-    public void updateSlvDevice(String idOnController, String macAddress) {
+    public void updateSlvDevice(String idOnController, String macAddress,String deviceValues) {
         try {
             UpdateBuilder<SlvDevice, String> updateBuilder = slvDeviceDao.updateBuilder();
             updateBuilder.where().eq(SlvDevice.SLV_DEVICE_ID, idOnController);
             updateBuilder.updateColumnValue(SlvDevice.MACADDRESS, macAddress);
             updateBuilder.updateColumnValue(SlvDevice.PROCESSED_DATE_TIME,System.currentTimeMillis());
+            updateBuilder.updateColumnValue(SlvDevice.DEVICE_VALUES,deviceValues);
             updateBuilder.update();
         } catch (Exception e) {
             logger.error("Error",e);
@@ -248,6 +275,7 @@ public enum ConnectionDAO {
         }
         return result;
     }
+
 
 }
 
