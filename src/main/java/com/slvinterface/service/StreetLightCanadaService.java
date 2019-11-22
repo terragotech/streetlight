@@ -19,6 +19,9 @@ import org.apache.log4j.Logger;
 import org.springframework.http.ResponseEntity;
 
 import javax.xml.crypto.Data;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
 import java.io.IOException;
 import java.net.ResponseCache;
 import java.util.ArrayList;
@@ -314,7 +317,7 @@ public class StreetLightCanadaService {
 
         slvTools.addStreetLightData("lamp.installdate","",paramsList);
     }
-    private void doProcess(String noteGuid,String accessToken,boolean resync) throws InvalidMacAddressException
+    private void doProcess(String noteGuid,String accessToken,boolean resync)
     {
         boolean isForTesting = true;
         String controllerStrId = PropertiesReader.getProperties().getProperty("streetlight.controller.str.id");
@@ -463,6 +466,10 @@ public class StreetLightCanadaService {
                                             }
                                             slvTools.addStreetLightData("install.date", Utils.dateFormat(installDateTime), paramsList);
                                             slvTools.addStreetLightData("lamp.installdate", Utils.dateFormat(installDateTime), paramsList);
+                                            if(!DataTools.checkForValidMacAddress(macAddress))
+                                            {
+                                                throw new InvalidMacAddressException("Bad macaddress " + macAddress);
+                                            }
                                             slvTools.checkMacAddressExists(macAddress, edgeNote.getTitle(),edgeNote);
                                             if(isForTesting)
                                             {
@@ -529,6 +536,10 @@ public class StreetLightCanadaService {
                                             }
                                             slvTools.addStreetLightData("install.date", Utils.dateFormat(replaceDateTime), paramsList);
                                             slvTools.addStreetLightData("lamp.installdate", Utils.dateFormat(replaceDateTime), paramsList);
+                                            if(!DataTools.checkForValidMacAddress(strFormReplaceMac))
+                                            {
+                                                throw new InvalidMacAddressException("Bad macaddress " + strFormReplaceMac);
+                                            }
                                             slvTools.checkMacAddressExists(strFormReplaceMac, edgeNote.getTitle(),edgeNote);
                                             if(isForTesting)
                                             {
@@ -668,6 +679,11 @@ public class StreetLightCanadaService {
                             slvSyncDetails.setErrorDetails("Error clearing Light attributes  data");
                             slvSyncDetails.setMacAddress(errorMacAddress);
                         }
+                        catch (InvalidMacAddressException e) {
+                            slvSyncDetails.setStatus(Status.Failure.toString());
+                            slvSyncDetails.setErrorDetails("Error in macaddress format");
+                            slvSyncDetails.setMacAddress(errorMacAddress);
+                        }
                         catch (Exception e)
                         {
                             e.printStackTrace();
@@ -692,7 +708,43 @@ public class StreetLightCanadaService {
         {
             if(actionResync.equals("true"))
             {
-                //TODO: Resync Process
+                BufferedReader bufferedReader = null;
+                try {
+
+                    File f = new File("./resync.txt");
+
+                    bufferedReader = new BufferedReader(new FileReader(f));
+
+                    String readLine = "";
+
+                    System.out.println("Reading file using Buffered Reader");
+
+                    while ((readLine = bufferedReader.readLine()) != null) {
+                        System.out.println(readLine);
+                        if(!readLine.equals(""))
+                        {
+                            System.out.println("Processing " + readLine);
+                            String terragoAccessToken = edgeRestService.getEdgeToken();
+                            doProcess(readLine, terragoAccessToken, false);
+                        }
+                    }
+
+
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                finally {
+                    if(bufferedReader != null)
+                    {
+                        try{
+                            bufferedReader.close();
+                        }
+                        catch (Exception e)
+                        {
+
+                        }
+                    }
+                }
             }
         }
         else
@@ -723,6 +775,7 @@ public class StreetLightCanadaService {
                             for (JsonElement noteGuidJson : noteGuidsJsonArray) {
                                 String noteGuid = noteGuidJson.getAsString();
                                 if (!connectionDAO.checkNoteProcessed(noteGuid)) {
+                                    terragoAccessToken = edgeRestService.getEdgeToken();
                                     doProcess(noteGuid, terragoAccessToken, false);
                                 }
                             }
