@@ -30,18 +30,5 @@ public class SLVInterfaceDAO {
 
 
 
-    public List<String> getNoteGuids(){
-        try {
-            List<String> noteGuids = slvSyncDetailsDao.queryRaw("select noteguid from slvsyncdetails;", new RawRowMapper<String>() {
-                @Override
-                public String mapRow(String[] columnNames, String[] resultColumns) throws SQLException {
-                    return resultColumns[0];
-                }
-            }).getResults();
-            return noteGuids;
-        }catch (Exception e){
-            logger.error("Error in getNoteGuids",e);
-        }
-       return new ArrayList<>();
-    }
+
 }

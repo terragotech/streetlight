@@ -64,14 +64,12 @@ public enum ConnectionDAO {
             slvTransactionLogDao = DaoManager.createDao(connectionSource, SLVTransactionLogs.class);
 
         } catch (Exception e) {
-            e.printStackTrace();
+            //e.printStackTrace();
         }
 
     }
 
-    public void setupDatabase() {
 
-    }
     public void saveSLVTransactionLog(SLVTransactionLogs slvTransactionLogs)
     {
         try {
@@ -100,14 +98,7 @@ public enum ConnectionDAO {
         return null;
     }
 
-    public SlvSyncDetails getSlvSyncDetailWithoutTalq(String deviceId) {
-        try {
-            return slvSyncDetailsDao.queryBuilder().where().eq(SlvSyncDetails.NOTE_GUID, deviceId).and().isNull(SlvSyncDetails.TALQ_ADDRESS).queryForFirst();
-        } catch (Exception e) {
-            logger.error("Error",e);
-        }
-        return null;
-    }
+
 
     public void saveSlvSyncDetails(SlvSyncDetails slvSyncDetails) {
         try {
@@ -117,87 +108,12 @@ public enum ConnectionDAO {
         }
     }
 
-    public List<String> getEdgeNoteGuid(String formTemplateGuid) {
-        try {
-            List<String> noteGuids = slvSyncDetailsDao.queryRaw("select noteguid from edgenote, edgeform where edgenote.isdeleted = false  and edgenote.iscurrent = true  and  edgenote.noteid =  edgeform.edgenoteentity_noteid and edgenote.createddatetime > 1569906000000 and edgeform.formtemplateguid = '" + formTemplateGuid + "' order by edgenote.synctime asc;", new RawRowMapper<String>() {
-                @Override
-                public String mapRow(String[] columnNames, String[] resultColumns) throws SQLException {
-                    return resultColumns[0];
-                }
-            }).getResults();
-            return noteGuids;
-        } catch (Exception e) {
-            logger.error("Error in getNoteGuids",e);
-        }
-        return  new ArrayList<>();
 
-    }
 
-    /**
-     * Get List of NoteIds which is assigned to given formtemplate
-     *
-     * @param
-     * @return
-     */
-    public List<String> getNoteIds() {
-        Statement queryStatement = null;
-        ResultSet queryResponse = null;
-        List<String> noteIds = new ArrayList<>();
-        try {
-            //     queryStatement = connection.createStatement();
-            queryResponse = queryStatement.executeQuery("Select processednoteid from notesyncdetails;");
 
-            while (queryResponse.next()) {
-                noteIds.add(queryResponse.getString("processednoteid"));
-            }
 
-        } catch (Exception e) {
-            //   logger.error("Error in getNoteIds", e);
-        } finally {
-            //   closeResultSet(queryResponse);
-            //  closeStatement(queryStatement);
-        }
-        return noteIds;
-    }
 
-    public List<SlvSyncDetails> getUnSyncedTalqaddress() {
-        try {
-            return slvSyncDetailsDao.queryBuilder().where().isNull(SlvSyncDetails.TALQ_ADDRESS).and().eq(SlvSyncDetails.STATUS, Status
-                    .Success.toString()).query();
-        } catch (Exception e) {
-            logger.error("Error",e);
-        }
-        return new ArrayList<>();
 
-    }
-
-    public List<SlvSyncDetails> getSyncEntityList() {
-        try {
-            return slvSyncDetailsDao.queryBuilder().query();
-        } catch (Exception e) {
-            logger.error("Error",e);
-        }
-        return new ArrayList<>();
-
-    }
-
-    public void deleteProcessedNotes(String noteGuid) {
-        try {
-            DeleteBuilder<SlvSyncDetails, String> deleteBuilder = slvSyncDetailsDao.deleteBuilder();
-            deleteBuilder.where().eq(SlvSyncDetails.NOTE_GUID, noteGuid);
-            slvSyncDetailsDao.delete(deleteBuilder.prepare());
-        } catch (Exception e) {
-            logger.error("Error",e);
-        }
-    }
-
-    public void updateSlvSyncdetails(SlvSyncDetails slvSyncDetails) {
-        try {
-            slvSyncDetailsDao.update(slvSyncDetails);
-        } catch (Exception e) {
-            logger.error("Error",e);
-        }
-    }
 
     public void updateSlvDevice(String idOnController, String macAddress,String deviceValues) {
         try {
@@ -212,14 +128,7 @@ public enum ConnectionDAO {
         }
     }
 
-    public SlvSyncDetails getFixtureSyncDetails(String fixtureId) {
-        try {
-            return slvSyncDetailsDao.queryBuilder().where().eq(SlvSyncDetails.NOTENAME, fixtureId).and().isNull(SlvSyncDetails.TALQ_ADDRESS).queryForFirst();
-        } catch (Exception e) {
-            logger.error("Error",e);
-        }
-        return null;
-    }
+
 
     public ConnectionSource getConnection() {
         return connectionSource;
