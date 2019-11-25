@@ -792,8 +792,11 @@ public class StreetLightCanadaService {
 
         String actionResync =  PropertiesReader.getProperties().getProperty("streetlight.edge.data.resync");
 
-        if(actionResync != null)
+        if(actionResync == null)
         {
+            actionResync = "false";
+        }
+
             if(actionResync.equals("true"))
             {
                 BufferedReader bufferedReader = null;
@@ -834,7 +837,7 @@ public class StreetLightCanadaService {
                     }
                 }
             }
-        }
+
         else
         {
             //##############################################################################################

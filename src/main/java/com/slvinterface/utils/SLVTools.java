@@ -591,7 +591,7 @@ public class SLVTools {
     }
     public void syncMacAddress2Edge(String idOnController,String macAddress,String blockName){
         Properties properties = PropertiesReader.getProperties();
-        String serverHostName = properties.getProperty("streetlight.edge.url.main");
+
 
         if(macAddress != null && !macAddress.trim().isEmpty()){
             MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
@@ -600,15 +600,14 @@ public class SLVTools {
             if(blockName != null){
                 params.add("atlasPhysicalPage",blockName);
             }
-            slv2Edge(serverHostName + "rest/validation/updateSLVSyncedMAC", HttpMethod.GET,params);
+            slv2Edge( "rest/validation/updateSLVSyncedMAC", HttpMethod.GET,params);
         }
     }
     public void removeEdgeSLVMacAddress(String idOnController){
         Properties properties = PropertiesReader.getProperties();
-        String serverHostName = properties.getProperty("streetlight.edge.url.main");
         MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
         params.add("slvIdOnController",idOnController);
-        slv2Edge(serverHostName+"rest/validation/removeSLVMacAddress", HttpMethod.GET,params);
+        slv2Edge("rest/validation/removeSLVMacAddress", HttpMethod.GET,params);
     }
     private HttpHeaders getEdgeHeaders() {
         Properties properties = PropertiesReader.getProperties();
