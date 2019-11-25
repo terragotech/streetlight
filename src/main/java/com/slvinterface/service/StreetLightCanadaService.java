@@ -19,10 +19,7 @@ import org.apache.log4j.Logger;
 import org.springframework.http.ResponseEntity;
 
 import javax.xml.crypto.Data;
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
-import java.io.IOException;
+import java.io.*;
 import java.net.ResponseCache;
 import java.util.ArrayList;
 import java.util.List;
@@ -48,7 +45,7 @@ public class StreetLightCanadaService {
     }
     private LightDataCompareResult populateAndCheckWithOldValues(List<FormValues> formComponents,
                                                EdgeNote edgeNote,String controllerStrId,
-                                               List<Object> paramsList,String currentValue) throws Exception {
+                                               List<Object> paramsList,String currentValue,String dimmingValue) throws Exception {
 
         LightDataCompareResult lightDataCompareResult = new LightDataCompareResult();
         String strBlock = PropertiesReader.getProperties().getProperty("streetlight.form.blockid");
@@ -218,7 +215,10 @@ public class StreetLightCanadaService {
             paramsList.add("controllerStrId=" + controllerStrId);
 
             slvTools.addStreetLightData("location.utillocationid", edgeNote.getTitle() + ".Lamp", paramsList);
+            String modelFunctionName = PropertiesReader.getProperties().getProperty("streetlight.slv.equipment.type");
+            slvTools.addStreetLightData("modelFunctionId", modelFunctionName, paramsList);
 
+            slvTools.addStreetLightData("DimmingGroupName",dimmingValue,paramsList);
 
             slvTools.addStreetLightData("location.mapnumber", strFormBlock, paramsList);
             jsonArray.add(DataTools.createJsonObject("block",strFormBlock));
@@ -319,7 +319,7 @@ public class StreetLightCanadaService {
     }
     private void doProcess(String noteGuid,String accessToken,boolean resync)
     {
-        boolean isForTesting = true;
+        boolean isForTesting = false;
         String controllerStrId = PropertiesReader.getProperties().getProperty("streetlight.controller.str.id");
 
         //String geoZoneId = PropertiesReader.getProperties().getProperty("streetlight.geozoneid");
@@ -356,6 +356,7 @@ public class StreetLightCanadaService {
                 JsonArray serverForms = edgenoteJson.get("formData").getAsJsonArray();
                 int size = serverForms.size();
                 String errorMacAddress = "";
+                boolean foundFormTemplate = false;
                 for (int i = 0; i < size; i++) {
                     JsonObject serverEdgeForm = serverForms.get(i).getAsJsonObject();
                     String formDefJson = serverEdgeForm.get("formDef").getAsString();
@@ -366,12 +367,13 @@ public class StreetLightCanadaService {
                     }.getType());
                     if (formTemplate.equals(installationFormTempGuid)) {
                         ////////////////////////////////////////////////////////////////////////
+                        foundFormTemplate = true;
                         List<Object> paramsList = new ArrayList<>();
                         String strActionString = FormValueUtil.getValue(formComponents, actionid);
                         String strFormExistingMac = FormValueUtil.getValue(formComponents, DataTools.convertFormIDToInt(existingMacAddress));
                         String strFormReplaceMac = FormValueUtil.getValue(formComponents, DataTools.convertFormIDToInt(replaceMacAddress));
                         String macAddress = FormValueUtil.getValue(formComponents, newMacid);
-                        boolean isDeviceExist = slvTools.deviceAlreadyExists(edgeNote.getTitle(),edgeNote);
+
 
                         long currentTime = System.currentTimeMillis();
                         SlvSyncDetails slvSyncDetails = new SlvSyncDetails();
@@ -386,8 +388,9 @@ public class StreetLightCanadaService {
                         slvDevice.setDeviceName(edgeNote.getTitle());
                         slvDevice.setDeviceId(edgeNote.getTitle());
                         slvDevice.setProcessedDateTime(currentTime);
-
                         try {
+                            boolean isDeviceExist = slvTools.deviceAlreadyExists(edgeNote.getTitle(),edgeNote);
+
                             if (!isDeviceExist) {
                                 String strGeoZone = FormValueUtil.getValue(formComponents, formGeoZoneId);
                                 if(strGeoZone.equals(""))
@@ -403,20 +406,26 @@ public class StreetLightCanadaService {
                                         slvSyncDetails.setErrorDetails("Creating GeoZone [FAILED]");
                                         slvSyncDetails.setStatus(Status.Failure.toString());
                                         //connectionDAO.saveSlvSyncDetails(slvSyncDetails);
-                                        continue;
+                                        throw new GeoZoneCreationFailedException("Failed to Create GeoZone");
                                     }
                                 } else {
                                     //Bad GeoZone
                                     slvSyncDetails.setErrorDetails("Bad GeoZone content");
                                     slvSyncDetails.setStatus(Status.Failure.toString());
                                     //connectionDAO.saveSlvSyncDetails(slvSyncDetails);
-                                    continue;
+                                    throw new GeoZoneCreationFailedException("Bad GeoZone");
                                 }
                                 slvSyncDetails.setDeviceCreationStatus("Device Created");
                             } else {
                                 slvSyncDetails.setDeviceCreationStatus("Device Exists");
                             }
                             //At this Point Geozone and Device are ready
+                            String dimmingValue = connectionDAO.getDimmingValue(edgeNote.getTitle());
+                            if(dimmingValue==null)
+                            {
+                                System.out.println("Dimming value not found");
+                                throw new DimmingValueException("No dimming value not found");
+                            }
                             ///////////////////////////////////////////////////////////////////////////////////////////
                             SlvDevice slvDevice1 = connectionDAO.getSlvDevices(edgeNote.getTitle());
                             if(slvDevice1 == null)
@@ -436,7 +445,7 @@ public class StreetLightCanadaService {
                                 LightDataCompareResult lightDataCompareResult = null;
                                 try {
                                     lightDataCompareResult = populateAndCheckWithOldValues(formComponents, edgeNote, controllerStrId,
-                                            paramsList, currentDeviceValue);
+                                            paramsList, currentDeviceValue,dimmingValue);
                                 }
                                 catch (Exception e)
                                 {
@@ -635,58 +644,126 @@ public class StreetLightCanadaService {
 
                             //End Template match
                         } catch (GeoZoneCreationFailedException e) {
+                            StringWriter sw = new StringWriter();
+                            PrintWriter pw = new PrintWriter(sw);
+                            e.printStackTrace(pw);
+                            logger.error(sw.toString());
                             slvSyncDetails.setStatus(Status.Failure.toString());
                             slvSyncDetails.setErrorDetails("Error creating GeoZone");
                             slvSyncDetails.setMacAddress(errorMacAddress);
                         }
                         catch (SearchGeoZoneException e) {
+                            StringWriter sw = new StringWriter();
+                            PrintWriter pw = new PrintWriter(sw);
+                            e.printStackTrace(pw);
+                            logger.error(sw.toString());
                             slvSyncDetails.setStatus(Status.Failure.toString());
                             slvSyncDetails.setErrorDetails("Error searching GeoZone");
                             slvSyncDetails.setMacAddress(errorMacAddress);
                         }
                         catch (DeviceCreationFailedException e) {
+                            StringWriter sw = new StringWriter();
+                            PrintWriter pw = new PrintWriter(sw);
+                            e.printStackTrace(pw);
+                            logger.error(sw.toString());
                             slvSyncDetails.setStatus(Status.Failure.toString());
                             slvSyncDetails.setErrorDetails("Error creating Device");
                             slvSyncDetails.setMacAddress(errorMacAddress);
                         }
                         catch (QRCodeAlreadyUsedException e) {
+                            StringWriter sw = new StringWriter();
+                            PrintWriter pw = new PrintWriter(sw);
+                            e.printStackTrace(pw);
+                            logger.error(sw.toString());
                             slvSyncDetails.setStatus(Status.Failure.toString());
                             slvSyncDetails.setErrorDetails("Error using MacAddress " + e.getMessage());
                             slvSyncDetails.setMacAddress(errorMacAddress);
                         }
                         catch (DeviceUpdationFailedException e) {
+                            StringWriter sw = new StringWriter();
+                            PrintWriter pw = new PrintWriter(sw);
+                            e.printStackTrace(pw);
+                            logger.error(sw.toString());
                             slvSyncDetails.setStatus(Status.Failure.toString());
                             slvSyncDetails.setErrorDetails("Error creating updating Device attributes");
                             slvSyncDetails.setMacAddress(errorMacAddress);
                         }
                         catch (ReplaceOLCFailedException e) {
+                            StringWriter sw = new StringWriter();
+                            PrintWriter pw = new PrintWriter(sw);
+                            e.printStackTrace(pw);
+                            logger.error(sw.toString());
                             slvSyncDetails.setStatus(Status.Failure.toString());
                             slvSyncDetails.setErrorDetails("Error calling Replace OLC");
                             slvSyncDetails.setMacAddress(errorMacAddress);
                         }
                         catch (IOException e) {
+                            StringWriter sw = new StringWriter();
+                            PrintWriter pw = new PrintWriter(sw);
+                            e.printStackTrace(pw);
+                            logger.error(sw.toString());
                             slvSyncDetails.setStatus(Status.Failure.toString());
                             slvSyncDetails.setErrorDetails("Error during connection " + e.getMessage());
                             slvSyncDetails.setMacAddress(errorMacAddress);
                         }
                         catch (ValueCheckException e) {
+                            StringWriter sw = new StringWriter();
+                            PrintWriter pw = new PrintWriter(sw);
+                            e.printStackTrace(pw);
+                            logger.error(sw.toString());
                             slvSyncDetails.setStatus(Status.Failure.toString());
                             slvSyncDetails.setErrorDetails("Error Comparing Light attributes data");
                             slvSyncDetails.setMacAddress(errorMacAddress);
                         }
                         catch (ValueClearException e) {
+                            StringWriter sw = new StringWriter();
+                            PrintWriter pw = new PrintWriter(sw);
+                            e.printStackTrace(pw);
+                            logger.error(sw.toString());
                             slvSyncDetails.setStatus(Status.Failure.toString());
                             slvSyncDetails.setErrorDetails("Error clearing Light attributes  data");
                             slvSyncDetails.setMacAddress(errorMacAddress);
                         }
                         catch (InvalidMacAddressException e) {
+                            StringWriter sw = new StringWriter();
+                            PrintWriter pw = new PrintWriter(sw);
+                            e.printStackTrace(pw);
+                            logger.error(sw.toString());
                             slvSyncDetails.setStatus(Status.Failure.toString());
                             slvSyncDetails.setErrorDetails("Error in macaddress format");
                             slvSyncDetails.setMacAddress(errorMacAddress);
                         }
+                        catch (ErrorCheckDeviceExists e)
+                        {
+                            StringWriter sw = new StringWriter();
+                            PrintWriter pw = new PrintWriter(sw);
+                            e.printStackTrace(pw);
+                            logger.error(sw.toString());
+                            slvSyncDetails.setStatus(Status.Failure.toString());
+                            slvSyncDetails.setErrorDetails(e.getMessage());
+                            slvSyncDetails.setMacAddress(errorMacAddress);
+                        }
+                        catch (DimmingValueException e)
+                        {
+                            StringWriter sw = new StringWriter();
+                            PrintWriter pw = new PrintWriter(sw);
+                            e.printStackTrace(pw);
+                            logger.error(sw.toString());
+                            slvSyncDetails.setErrorDetails("Not Dimming value found");
+                            slvSyncDetails.setErrorDetails(sw.toString());
+                            slvSyncDetails.setStatus(Status.Failure.toString());
+                            slvSyncDetails.setMacAddress(errorMacAddress);
+                        }
                         catch (Exception e)
                         {
-                            e.printStackTrace();
+                            StringWriter sw = new StringWriter();
+                            PrintWriter pw = new PrintWriter(sw);
+                            e.printStackTrace(pw);
+                            logger.error(sw.toString());
+                            slvSyncDetails.setErrorDetails(sw.toString());
+                            slvSyncDetails.setStatus(Status.Failure.toString());
+                            slvSyncDetails.setMacAddress(errorMacAddress);
+
                         }
                         finally {
                             connectionDAO.saveSlvSyncDetails(slvSyncDetails);
@@ -694,7 +771,18 @@ public class StreetLightCanadaService {
                         //End Form Loop
                     }
 
-
+                }
+                if(!foundFormTemplate)
+                {
+                    SlvSyncDetails slvSyncDetails = new SlvSyncDetails();
+                    slvSyncDetails.setNoteName(edgeNote.getTitle());
+                    slvSyncDetails.setNoteGuid(edgeNote.getNoteGuid());
+                    slvSyncDetails.setProcessedDateTime(System.currentTimeMillis());
+                    slvSyncDetails.setNoteCreatedBy(edgeNote.getCreatedBy());
+                    slvSyncDetails.setNoteCreatedDateTime(edgeNote.getCreatedDateTime());
+                    slvSyncDetails.setStatus(Status.Failure.toString());
+                    slvSyncDetails.setErrorDetails("No matching formtemplate");
+                    connectionDAO.saveSlvSyncDetails(slvSyncDetails);
                 }
             }
         }

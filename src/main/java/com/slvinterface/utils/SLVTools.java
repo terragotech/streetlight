@@ -66,7 +66,7 @@ public class SLVTools {
         }
         return 0;
     }
-    public boolean deviceAlreadyExists(String idOnController,EdgeNote edgeNote) {
+    public boolean deviceAlreadyExists(String idOnController,EdgeNote edgeNote) throws ErrorCheckDeviceExists {
         try {
             Properties properties = PropertiesReader.getProperties();
             String mainUrl = properties.getProperty("streetlight.slv.base.url");
@@ -107,7 +107,7 @@ public class SLVTools {
             }
 
         } catch (Exception e) {
-            logger.error("Error",e);
+            throw new ErrorCheckDeviceExists(e.getMessage());
         }
         return false;
     }
@@ -291,12 +291,13 @@ public class SLVTools {
 
         paramsList.add("ser=json");
         paramsList.add("userName="+DataTools.URLEncoder(edgenote.getTitle()));
-        paramsList.add("categoryStrId="+categoryStrId);
+        paramsList.add("categoryStrId="+DataTools.URLEncoder(categoryStrId));
         paramsList.add("geozoneId="+geoZoneId);
-        paramsList.add("controllerStrId="+controllerStrId);
+        paramsList.add("controllerStrId="+DataTools.URLEncoder(controllerStrId));
         paramsList.add("idOnController="+DataTools.URLEncoder(edgenote.getTitle()));
         paramsList.add("lat="+String.valueOf(geom.getCoordinate().y));
         paramsList.add("lng="+String.valueOf(geom.getCoordinate().x));
+        paramsList.add("nodeTypeStrId="+DataTools.URLEncoder(nodeTypeStrId));
 
         String params = StringUtils.join(paramsList, "&");
         url = url + "?" + params;

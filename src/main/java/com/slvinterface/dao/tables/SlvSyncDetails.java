@@ -1,5 +1,6 @@
 package com.slvinterface.dao.tables;
 
+import com.j256.ormlite.field.DataType;
 import com.j256.ormlite.field.DatabaseField;
 import com.j256.ormlite.table.DatabaseTable;
 
@@ -25,7 +26,7 @@ public class SlvSyncDetails {
     private String status;
     @DatabaseField(columnName = "selectedaction")
     private String selectedAction;
-    @DatabaseField(columnName = "errordetails")
+    @DatabaseField(columnName = "errordetails",dataType = DataType.LONG_STRING)
     private String errorDetails;
     @DatabaseField(columnName = "macaddress")
     private String macAddress;

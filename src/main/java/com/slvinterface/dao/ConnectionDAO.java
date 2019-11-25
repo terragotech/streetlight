@@ -63,6 +63,8 @@ public enum ConnectionDAO {
             slvDeviceDao = DaoManager.createDao(connectionSource, SlvDevice.class);
             slvTransactionLogDao = DaoManager.createDao(connectionSource, SLVTransactionLogs.class);
 
+            slvTransactionLogDao.executeRaw("create table if not exists dimmingdata(idoncontroller text,dimmingvalue text)");
+
         } catch (Exception e) {
             //e.printStackTrace();
         }
@@ -185,6 +187,23 @@ public enum ConnectionDAO {
         return result;
     }
 
-
+    public String getDimmingValue(String idoncontroller)
+    {
+        String result = null;
+        try {
+            String queryString = "select dimmingvalue from dimmingdata where idoncontroller='" + idoncontroller + "'";
+            GenericRawResults<String[]> rawResults = slvSyncDetailsDao.queryRaw(queryString);
+            List<String[]> results = rawResults.getResults();
+            if (results.size() > 0) {
+                String []arrResults = results.get(0);
+                result = arrResults[0];
+            }
+        }
+        catch (SQLException e)
+        {
+            e.printStackTrace();
+        }
+        return result;
+    }
 }
 
