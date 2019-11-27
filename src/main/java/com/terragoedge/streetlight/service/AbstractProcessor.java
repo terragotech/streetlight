@@ -26,6 +26,7 @@ import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 
 import java.net.URLEncoder;
+import java.sql.SQLException;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.Properties;
@@ -1216,14 +1217,23 @@ public abstract class AbstractProcessor {
     }
 
 
-    protected void loadDefaultVal(EdgeNote edgeNote, InstallMaintenanceLogModel loggingModel,String accessToken,String droppedPinUser) {
+    protected void loadDefaultVal(EdgeNote edgeNote, InstallMaintenanceLogModel loggingModel,String accessToken,String droppedPinUser) throws SQLException {
         loggingModel.setIdOnController(edgeNote.getTitle());
         String controllerStrId = properties.getProperty("streetlight.slv.controllerstrid");
         loggingModel.setControllerSrtId(controllerStrId);
         DatesHolder datesHolder = new DatesHolder();
         loggingModel.setDatesHolder(datesHolder);
-        if(loggingModel.isDroppedPinWorkflow() && droppedPinUser != null){
-            checkAmerescoUser(accessToken,loggingModel,droppedPinUser);
+        if(loggingModel.isDroppedPinWorkflow() && droppedPinUser != null)
+        {
+            DroppedPinRemoveEvent result = connectionDAO.getDroppedPinRemovedEntryFor(loggingModel.getIdOnController());
+            if(result != null)
+            {
+                checkAmerescoUser(accessToken,loggingModel,edgeNote.getCreatedBy());
+            }
+            else
+            {
+                checkAmerescoUser(accessToken,loggingModel,droppedPinUser);
+            }
         }else {
             checkAmerescoUser(accessToken,loggingModel,edgeNote.getCreatedBy());
         }

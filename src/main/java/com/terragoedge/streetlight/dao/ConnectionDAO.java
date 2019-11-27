@@ -147,6 +147,22 @@ public enum ConnectionDAO {
         }
     }
 
+    public DroppedPinRemoveEvent getDroppedPinRemovedEntryFor(String idoncontroller) throws  SQLException,InvalidParameterException
+    {
+        DroppedPinRemoveEvent result = null;
+        if(idoncontroller == null)
+        {
+            throw new InvalidParameterException("Input param null");
+        }
+        try {
+            result = droppedPinRemoveEventDao.queryBuilder().where().eq(DroppedPinRemoveEvent.IDONCONTROLLER, idoncontroller).queryForFirst();
+        }
+        catch (SQLException e)
+        {
+            throw e;
+        }
+        return result;
+    }
     public void createOrUpdateDroppedPinRemoveEvent(DroppedPinRemoveEvent droppedPinRemoveEvent) throws SQLException,InvalidParameterException
     {
         if(droppedPinRemoveEvent != null)
