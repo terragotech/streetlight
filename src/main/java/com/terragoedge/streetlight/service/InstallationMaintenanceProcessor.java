@@ -215,48 +215,12 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
                             case "Remove":
                                 slvInterfaceLogEntity.setSelectedAction("Remove");
                                 logger.info("entered remove action");
-
-                                String removeReason = null;
-                                try {
-                                    removeReason = valueById(edgeFormDatas, 35);
-                                } catch (Exception e) {
-                                    e.printStackTrace();
-                                }
-                                logger.info("Removal Reason:"+removeReason);
-                                if (removeReason != null) {
-                                    if(removeReason.equals("Installation Removed")){
-                                        logger.info("MAC Address in SLV:"+installMaintenanceLogModel.getSlvMacaddress());
-                                        if(installMaintenanceLogModel.getSlvMacaddress() == null || installMaintenanceLogModel.getSlvMacaddress().trim().isEmpty()){
-                                            value = "New";
-                                            installMaintenanceLogModel.setActionNew(true);
-                                            slvInterfaceLogEntity.setSelectedAction("New");
-                                            processInstallationRemoved(edgeFormDatas, edgeNote, installMaintenanceLogModel, isReSync, utilLocId, nightRideKey, formatedValueNR, slvInterfaceLogEntity);
-                                            installMaintenanceLogModel.setInstalledDate(edgeNote.getCreatedDateTime());
-                                        }else{
-                                            logger.info("MAC Address already Present in SLV. So current Note Not Synced with SLV.");
-                                            logInstallationRemovedFailureLog(
-                                                    "MAC Address already Present in SLV.",
-                                                    edgeNote,
-                                                    installMaintenanceLogModel.getSlvMacaddress()
-                                                    );
-                                            slvInterfaceLogEntity.setSelectedAction("Installation Removed");
-                                            slvInterfaceLogEntity.setStatus("Failure");
-                                            slvInterfaceLogEntity.setErrordetails("SLV has MAC Address.");
-
-                                        }
-                                    }else{
-                                        processRemoveAction(edgeFormDatas, utilLocId, installMaintenanceLogModel, slvInterfaceLogEntity);
-                                    }
-
-                                }
-
+                                processRemoveAction(edgeFormDatas, utilLocId, installMaintenanceLogModel, slvInterfaceLogEntity);
                                 break;
                             case "Other Task":
                                 slvInterfaceLogEntity.setSelectedAction("Other Task");
                                 // processOtherTask(edgeFormDatas, edgeNote, installMaintenanceLogModel, nightRideKey, formatedValueNR);
                                 break;
-
-
                         }
                     }
 
@@ -896,6 +860,9 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
                 logger.info("Node MAC Val" + nodeMacValue);
             } catch (NoValueException e) {
                 logger.error("Error in while getting MAC Address", e);
+                // loggingModel.setErrorDetails(MessageConstants.NODE_MAC_ADDRESS_NOT_AVAILABLE);
+                // loggingModel.setStatus(MessageConstants.ERROR);
+                // return;
             }
 
             // Get Fixer QR Scan value
@@ -911,7 +878,10 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
 
                 logger.info("Fixture QR Scan Val" + fixerQrScanValue);
                 logger.error("Error in while getting MAC Fixture QR Scan", e);
-
+                /*loggingModel.setErrorDetails(MessageConstants.FIXTURE_CODE_NOT_AVAILABLE);
+                loggingModel.setStatus(MessageConstants.ERROR);*/
+                // loggingModel.setProcessOtherForm(true);
+                // return;
             }
             if ((nodeMacValue == null && fixerQrScanValue == null) || ((nodeMacValue != null && nodeMacValue.isEmpty()) && (fixerQrScanValue != null && fixerQrScanValue.isEmpty()))) {
                 loggingModel.setStatus(MessageConstants.ERROR);
@@ -1359,8 +1329,6 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
                         logger.error("Error in processRemoveAction", e);
                     }
                     break;
-
-
             }
         }
     }
@@ -1917,129 +1885,5 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
         }
 
     }
-
-
-
-
-    private void processInstallationRemoved(List<EdgeFormData> edgeFormDatas, EdgeNote edgeNote, InstallMaintenanceLogModel loggingModel, boolean isResync, String utilLocId, String nightRideKey, String nightRideValue, SlvInterfaceLogEntity slvInterfaceLogEntity) {
-        try {
-
-            // Get MAC Address
-            String nodeMacValue = null;
-            try {
-                nodeMacValue = valueById(edgeFormDatas, 175);
-                logger.info("Node MAC Val" + nodeMacValue);
-            } catch (NoValueException e) {
-                logger.error("Error in while getting MAC Address", e);
-            }
-
-            // Get Fixer QR Scan value
-            String fixerQrScanValue = null;
-            try {
-                fixerQrScanValue = valueById(edgeFormDatas, 176);
-                logger.info("Fixture QR Scan Val" + nodeMacValue);
-            } catch (NoValueException e) {
-
-                logger.info("Fixture QR Scan Val" + fixerQrScanValue);
-                logger.error("Error in while getting MAC Fixture QR Scan", e);
-
-            }
-            if ((nodeMacValue == null && fixerQrScanValue == null) || ((nodeMacValue != null && nodeMacValue.isEmpty()) && (fixerQrScanValue != null && fixerQrScanValue.isEmpty()))) {
-                loggingModel.setStatus(MessageConstants.ERROR);
-                loggingModel.setErrorDetails("No MacAddress and FixtureQrScan");
-                slvInterfaceLogEntity.setErrorcategory(MessageConstants.EDGE_VALIDATION_ERROR);
-                slvInterfaceLogEntity.setStatus(MessageConstants.ERROR);
-                slvInterfaceLogEntity.setErrordetails(MessageConstants.NO_MACADDRESS_NO_FIXTURE);
-
-                logInstallationRemovedFailureLog(
-                        "MAC Address and Fixture QR Scan are Empty",
-                        edgeNote,
-                        null
-                );
-                return;
-            }
-            if (nodeMacValue != null && !nodeMacValue.startsWith("00") && (fixerQrScanValue != null && fixerQrScanValue.startsWith("00"))) {
-                String temp = nodeMacValue;
-                nodeMacValue = fixerQrScanValue;
-                fixerQrScanValue = temp;
-            }
-
-            //Suppose fixtureqrscan value has mac address but MAC Address is empty
-            if (nodeMacValue == null && (fixerQrScanValue != null && fixerQrScanValue.startsWith("00"))) {
-                nodeMacValue = fixerQrScanValue;
-                fixerQrScanValue = null;
-                loggingModel.setFixtureQRSame(true);
-            }
-
-            if ((nodeMacValue == null || nodeMacValue.isEmpty()) && fixerQrScanValue != null) {
-                loggingModel.setFixtureOnly(true);
-            } else {
-                loggingModel.setFixtureOnly(false);
-            }
-
-            if (isResync) {
-                if (nodeMacValue != null && !nodeMacValue.trim().isEmpty() && !loggingModel.isMacAddressUsed()) {
-                    try {
-                        SLVTransactionLogs slvTransactionLogs = getSLVTransactionLogs(loggingModel);
-                        replaceOLC(loggingModel.getControllerSrtId(), loggingModel.getIdOnController(), "", slvTransactionLogs, slvInterfaceLogEntity,loggingModel.getAtlasPhysicalPage(),loggingModel,edgeNote);
-                    } catch (Exception e) {
-                        String message = e.getMessage();
-                    }
-                }
-
-
-            }
-
-            // Check Whether MAC Address is already assigned to other fixtures or not.
-            try {
-                if (nodeMacValue != null) {
-                    checkMacAddressExists(nodeMacValue, loggingModel.getIdOnController(), nightRideKey, nightRideValue, loggingModel, slvInterfaceLogEntity);
-                }
-            } catch (QRCodeAlreadyUsedException e1) {
-                logger.error("MacAddress (" + e1.getMacAddress()
-                        + ")  - Already in use. So this pole is not synced with SLV. Note Title :[" + edgeNote.getTitle()
-                        + " ]");
-            }
-            loggingModel.setMacAddress(nodeMacValue);
-            slvInterfaceLogEntity.setMacAddress(nodeMacValue);
-            slvInterfaceLogEntity.setFixtureqrscan(fixerQrScanValue);
-            sync2Slv(nodeMacValue, fixerQrScanValue, edgeNote, loggingModel, loggingModel.getIdOnController(), loggingModel.getControllerSrtId(), utilLocId, true, nightRideKey, nightRideValue, slvInterfaceLogEntity);
-        } catch (NoValueException e) {
-            logger.error("Error no value", e);
-            loggingModel.setErrorDetails(e.getMessage());
-            loggingModel.setStatus(MessageConstants.ERROR);
-
-            logInstallationRemovedFailureLog(
-                    e.getMessage(),
-                    edgeNote,
-                    null
-            );
-            return;
-        } catch (Exception e) {
-            loggingModel.setErrorDetails(MessageConstants.ERROR + "" + e.getMessage());
-            loggingModel.setStatus(MessageConstants.ERROR);
-            logger.error("Error ", e);
-
-            logInstallationRemovedFailureLog(
-                    e.getMessage(),
-                    edgeNote,
-                    null
-            );
-        }
-
-    }
-
-
-    private void logInstallationRemovedFailureLog(String reason,EdgeNote edgeNote,String slvMac){
-        InstallationRemovedFailureLog installationRemovedFailureLog = new InstallationRemovedFailureLog();
-        installationRemovedFailureLog.setCreateDateTime(edgeNote.getCreatedDateTime());
-        installationRemovedFailureLog.setEvenTime(System.currentTimeMillis());
-        installationRemovedFailureLog.setNoteGuid(edgeNote.getNoteGuid());
-        installationRemovedFailureLog.setReason(reason);
-        installationRemovedFailureLog.setSlvMAC(slvMac);
-        installationRemovedFailureLog.setTitle(edgeNote.getTitle());
-        connectionDAO.saveInstallationRemovedFailureLog(installationRemovedFailureLog);
-    }
-
 
 }
