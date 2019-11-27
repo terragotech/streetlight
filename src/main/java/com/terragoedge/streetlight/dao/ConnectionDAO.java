@@ -5,6 +5,7 @@ import com.j256.ormlite.dao.DaoManager;
 import com.j256.ormlite.jdbc.JdbcConnectionSource;
 import com.j256.ormlite.stmt.DeleteBuilder;
 import com.j256.ormlite.stmt.QueryBuilder;
+import com.j256.ormlite.stmt.UpdateBuilder;
 import com.j256.ormlite.stmt.Where;
 import com.j256.ormlite.support.ConnectionSource;
 import com.j256.ormlite.table.TableUtils;
@@ -14,6 +15,8 @@ import com.terragoedge.streetlight.enumeration.DateType;
 import com.terragoedge.streetlight.json.model.*;
 import org.apache.log4j.Logger;
 
+import java.security.InvalidParameterException;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -44,6 +47,8 @@ public enum ConnectionDAO {
     public Dao<ProContextLookupData, String> proContextLookupDao = null;
 
     public Dao<InstallationRemovedFailureLog, String> installationRemovedFailureLogsDao = null;
+
+    public Dao<DroppedPinRemoveEvent, String> droppedPinRemoveEventDao = null;
 
     ConnectionDAO() {
         openConnection();
@@ -120,6 +125,14 @@ public enum ConnectionDAO {
 
             }
 
+            try {
+                TableUtils.createTableIfNotExists(connectionSource, DroppedPinRemoveEvent.class);
+            }
+            catch (Exception e)
+            {
+
+            }
+
             slvDeviceDao = DaoManager.createDao(connectionSource, SlvServerData.class);
             duplicateMacAddressDao = DaoManager.createDao(connectionSource, DuplicateMacAddress.class);
             deviceAttributeDao = DaoManager.createDao(connectionSource, DeviceAttributes.class);
@@ -138,13 +151,41 @@ public enum ConnectionDAO {
 
             installationRemovedFailureLogsDao = DaoManager.createDao(connectionSource,InstallationRemovedFailureLog.class);
 
+            droppedPinRemoveEventDao = DaoManager.createDao(connectionSource,DroppedPinRemoveEvent.class);
+
             System.out.println("Connected.....");
         } catch (Exception e) {
             logger.error("Error in openConnection", e);
         }
     }
 
-
+    public void createOrUpdateDroppedPinRemoveEvent(DroppedPinRemoveEvent droppedPinRemoveEvent) throws SQLException,InvalidParameterException
+    {
+        if(droppedPinRemoveEvent != null)
+        {
+           try {
+                DroppedPinRemoveEvent result = droppedPinRemoveEventDao.queryBuilder().where().eq(DroppedPinRemoveEvent.IDONCONTROLLER, droppedPinRemoveEvent.getIdoncontroller()).queryForFirst();
+                if(result == null)
+                {
+                    droppedPinRemoveEventDao.create(droppedPinRemoveEvent);
+                }
+                else
+                {
+                    UpdateBuilder<DroppedPinRemoveEvent,String> updateBuilder = droppedPinRemoveEventDao.updateBuilder();
+                    updateBuilder.updateColumnValue(DroppedPinRemoveEvent.EVENTTIME,System.currentTimeMillis());
+                    updateBuilder.updateColumnValue(DroppedPinRemoveEvent.NOTEGUID,droppedPinRemoveEvent.getNoteguid());
+                    updateBuilder.where().eq(DroppedPinRemoveEvent.IDONCONTROLLER,droppedPinRemoveEvent.getIdoncontroller());
+                    updateBuilder.update();
+                }
+            } catch (SQLException e) {
+                throw e;
+            }
+        }
+        else
+        {
+            throw new InvalidParameterException("Input param null");
+        }
+    }
 
     public Dao<SlvServerData, String> getSlvDeviceDao() {
         return slvDeviceDao;
