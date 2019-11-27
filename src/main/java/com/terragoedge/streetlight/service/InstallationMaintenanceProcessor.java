@@ -1220,6 +1220,14 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
             switch (removeReason) {
                 case "Installed on Wrong Fixture":
                     try {
+                        if(installMaintenanceLogModel.isDroppedPinWorkflow())
+                        {
+                            DroppedPinRemoveEvent droppedPinRemoveEvent = new DroppedPinRemoveEvent();
+                            droppedPinRemoveEvent.setEventTime(System.currentTimeMillis());
+                            droppedPinRemoveEvent.setNoteguid(installMaintenanceLogModel.getProcessedNoteId());
+                            droppedPinRemoveEvent.setIdoncontroller(installMaintenanceLogModel.getNoteName());
+                            connectionDAO.createOrUpdateDroppedPinRemoveEvent(droppedPinRemoveEvent);
+                        }
                         if (deviceAttributes != null && deviceAttributes.getInstallStatus().equals(InstallStatus.To_be_installed.getValue())) {
                             installMaintenanceLogModel.setStatus(MessageConstants.ERROR);
                             installMaintenanceLogModel.setErrorDetails("Already Processed.Install Status: To be installed");
