@@ -45,7 +45,7 @@ public enum ConnectionDAO {
 
     public Dao<EdgeSLVDate, String> edgeNodeDates = null;
     public Dao<ProContextLookupData, String> proContextLookupDao = null;
-
+    public Dao<DroppedPinRemoveEvent, String> droppedPinRemoveEventDao = null;
     ConnectionDAO() {
         openConnection();
     }
@@ -115,6 +115,14 @@ public enum ConnectionDAO {
                 //logger.error("Error in openConnection", e);
             }
 
+            try {
+                TableUtils.createTableIfNotExists(connectionSource, DroppedPinRemoveEvent.class);
+            }
+            catch (Exception e)
+            {
+
+            }
+
             slvDeviceDao = DaoManager.createDao(connectionSource, SlvServerData.class);
             duplicateMacAddressDao = DaoManager.createDao(connectionSource, DuplicateMacAddress.class);
             deviceAttributeDao = DaoManager.createDao(connectionSource, DeviceAttributes.class);
@@ -130,6 +138,8 @@ public enum ConnectionDAO {
             proContextLookupDao = DaoManager.createDao(connectionSource,ProContextLookupData.class);
 
             edgeAllSerialNumbersDao = DaoManager.createDao(connectionSource,EdgeAllSerialNumber.class);
+
+            droppedPinRemoveEventDao = DaoManager.createDao(connectionSource,DroppedPinRemoveEvent.class);
 
             System.out.println("Connected.....");
         } catch (Exception e) {
