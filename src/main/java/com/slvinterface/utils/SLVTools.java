@@ -604,12 +604,9 @@ public class SLVTools {
         }
     }
     public void removeEdgeSLVMacAddress(String idOnController){
-        Properties properties = PropertiesReader.getProperties();
-        MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
-        params.add("slvIdOnController",idOnController);
-        slv2Edge("rest/validation/removeSLVMacAddress", HttpMethod.GET,params);
+        removeSLVMAC("rest/validation/removeSLVMacAddress?slvIdOnController="+idOnController, HttpMethod.GET);
     }
-    private HttpHeaders getEdgeHeaders() {
+    private  HttpHeaders getEdgeHeaders() {
         Properties properties = PropertiesReader.getProperties();
         String userName = properties.getProperty("streetlight.edge.username");
         String password = properties.getProperty("streetlight.edge.password");
@@ -644,4 +641,25 @@ public class SLVTools {
         logger.info("------------ Response End ------------------");
         return response;
     }
+
+
+    public ResponseEntity<String> removeSLVMAC(String httpUrl,  HttpMethod httpMethod){
+        HttpHeaders headers = getEdgeHeaders();
+        RestTemplate restTemplate = new RestTemplate();
+        HttpEntity request = new HttpEntity<>(headers);
+
+        String url = PropertiesReader.getProperties().getProperty("streetlight.edge.url.main");
+        url = url + httpUrl;
+
+
+        ResponseEntity<String> response = restTemplate.exchange(httpUrl, httpMethod, request, String.class);
+        logger.info("------------ Response ------------------");
+        logger.info("Response Code:" + response.getStatusCode().toString());
+        String responseBody = response.getBody();
+        logger.info(responseBody);
+        logger.info("------------ Response End ------------------");
+        return response;
+    }
+
+
 }
