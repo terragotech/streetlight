@@ -605,12 +605,14 @@ public class StreetLightCanadaService {
                                         String strPoleDown = PropertiesReader.getProperties().getProperty("streetlight.form.rreason.poledown");
                                         if(!strFormReasonRemove.equals(strPoleRemove) && !strFormReasonRemove.equals(strPoleDown))
                                         {
+                                            List<Object> paramsListClear = new ArrayList<>();
                                             try {
-                                                clearDeviceValues(formComponents, edgeNote, controllerStrId, paramsList);
+
+                                                clearDeviceValues(formComponents, edgeNote, controllerStrId, paramsListClear);
                                             } catch (Exception e) {
                                                 throw new ValueClearException(e.getMessage());
                                             }
-                                            slvTools.setDeviceValues(paramsList, slvSyncDetails, edgeNote);
+                                            slvTools.setDeviceValues(paramsListClear, slvSyncDetails, edgeNote);
                                             if (isForTesting) {
                                                 //Send MacAddress for Testing
                                                 List<Object> paramsList1 = new ArrayList<>();
