@@ -74,8 +74,14 @@ public class QueryExecutor {
 
 
     public boolean isExistMacAddress(String idOncontroller, String macaddress) throws Exception {
-        EdgeAllMac edgeAllMac = getEdgeAllMac(idOncontroller, macaddress.toUpperCase());
-        return edgeAllMac != null;
+       try {
+           EdgeAllMac edgeAllMac = getEdgeAllMac(idOncontroller, macaddress.toUpperCase());
+           return edgeAllMac != null;
+       }catch (Exception e){
+           e.printStackTrace();
+       }
+       return false;
+
     }
 
 

@@ -2,6 +2,7 @@ package com.slvinterface.service;
 
 import com.slvinterface.entity.SLVSyncTable;
 import com.slvinterface.entity.SLVTransactionLogs;
+import com.slvinterface.exception.ErrorCheckDeviceExists;
 import com.slvinterface.exception.QRCodeAlreadyUsedException;
 import com.slvinterface.exception.ReplaceOLCFailedException;
 import com.slvinterface.exception.SLVConnectionException;
@@ -22,7 +23,7 @@ public class GenericSLVInterface extends  SLVInterfaceService {
 
 
     // 118 - Controller ID, Node Installation Date -  155,Scan Node QR Code - 85,New Node QR Code-132,Replacement Date-159,
-    public void processFormData(List<FormData> formDataList, SLVSyncTable slvSyncTable)throws SLVConnectionException{
+    public void processFormData(List<FormData> formDataList, SLVSyncTable slvSyncTable,EdgeNote edgeNote)throws SLVConnectionException{
         Edge2SLVData previousEdge2SLVData = null;
         for(FormData formData : formDataList){
             Edge2SLVData currentEdge2SLVData = new Edge2SLVData();
@@ -48,12 +49,15 @@ public class GenericSLVInterface extends  SLVInterfaceService {
                 previousEdge2SLVData.setControllerStrId(controllerStrId);
 
                 // Id On Controller
-                if(previousEdge2SLVData.getIdOnController() == null){
-                    previousEdge2SLVData.setIdOnController(slvSyncTable.getNoteName());
-                }
+                previousEdge2SLVData.setIdOnController(edgeNote.getTitle());
+                previousEdge2SLVData.setTitle(edgeNote.getTitle());
+
+
                 slvSyncTable.setIdOnController(previousEdge2SLVData.getIdOnController());
 
                 previousEdge2SLVData.setIdOnController(URLEncoder.encode(previousEdge2SLVData.getIdOnController(),"UTF-8"));
+                previousEdge2SLVData.setTitle(URLEncoder.encode(previousEdge2SLVData.getTitle(),"UTF-8"));
+
                 retryCount = 0;
                 checkTokenValidity(previousEdge2SLVData);
 
@@ -65,6 +69,8 @@ public class GenericSLVInterface extends  SLVInterfaceService {
                 //Install Date
                 String installDate  = dateFormat(slvSyncTable.getNoteCreatedDateTime());
                 previousEdge2SLVData.setInstallDate(installDate);
+
+                previousEdge2SLVData.setGeometry(edgeNote.getGeometry());
 
                 slvSync(slvSyncTable,previousEdge2SLVData);
             }catch (SLVConnectionException e){
@@ -121,10 +127,22 @@ public class GenericSLVInterface extends  SLVInterfaceService {
                 break;
 
             case NEW_DEVICE:
-                slvSyncTable.setSelectedAction("Install WorkFlow");
-                setDeviceVal(slvSyncTable,previousEdge2SLVData);
-                replaceOLC(previousEdge2SLVData.getControllerStrId(),previousEdge2SLVData.getIdOnController(),previousEdge2SLVData.getMacAddress(),slvSyncTable);
-                slvSyncTable.setStatus("Success");
+                try{
+                    boolean result =  slvTools.deviceAlreadyExists(previousEdge2SLVData.getIdOnController());
+                    if(!result){
+                        SLVTransactionLogs slvTransactionLogs = new SLVTransactionLogs();
+                        slvTools.createNewDevice(previousEdge2SLVData,slvSyncTable,"274");
+                    }
+                    slvSyncTable.setSelectedAction("Install WorkFlow");
+                    setDeviceVal(slvSyncTable,previousEdge2SLVData);
+                    replaceOLC(previousEdge2SLVData.getControllerStrId(),previousEdge2SLVData.getIdOnController(),previousEdge2SLVData.getMacAddress(),slvSyncTable);
+                    slvSyncTable.setStatus("Success");
+                }catch (ErrorCheckDeviceExists e){
+                    logger.error("Error",e);
+                }catch (Exception e){
+                    logger.error("Error",e);
+                }
+
                 break;
 
 

@@ -11,6 +11,16 @@ public class Edge2SLVData {
     private Priority priority;
     private String existingMACAddress;
     private String fixtureQRScan;
+    private String geometry = null;
+
+
+    public String getGeometry() {
+        return geometry;
+    }
+
+    public void setGeometry(String geometry) {
+        this.geometry = geometry;
+    }
 
     public String getFixtureQRScan() {
         return fixtureQRScan;

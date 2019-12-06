@@ -42,6 +42,21 @@ private static final Logger logger = Logger.getLogger(SLVRestService.class);
     }
 
 
+    public HttpResponse callPostMethod(String url)throws Exception {
+        HttpPost httpPost = new HttpPost();
+        RestTemplate.INSTANCE.reConnect();
+        httpPost.setHeader("x-csrf-token",RestTemplate.INSTANCE.token);
+        httpPost.setHeader("x-requested-with","XMLHttpRequest");
+        String baseUrl = PropertiesReader.getProperties().getProperty("streetlight.slv.base.url");
+        httpPost.setURI(URI.create(url));
+        System.out.println(url);
+        logger.info(url);
+        HttpResponse response = RestTemplate.INSTANCE.httpClient.execute(httpPost, RestTemplate.INSTANCE.httpContext);
+        return response;
+
+    }
+
+
     private HttpResponse callPostMethod()throws IOException, ClientProtocolException {
         HttpPost httpGet = new HttpPost();
         httpGet.setHeader("x-csrf-token",RestTemplate.INSTANCE.token);

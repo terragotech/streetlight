@@ -27,7 +27,7 @@ public class SLVTransactionLogs {
     @DatabaseField(columnName = "createddatetime")
     private long createdDateTime;
     @DatabaseField(columnName = "typeofcall")
-    private CallType typeOfCall;
+    private String typeOfCall;
 
 
     public String getParentNoteGuid() {
@@ -86,11 +86,11 @@ public class SLVTransactionLogs {
         this.createdDateTime = createdDateTime;
     }
 
-    public CallType getTypeOfCall() {
+    public String getTypeOfCall() {
         return typeOfCall;
     }
 
-    public void setTypeOfCall(CallType typeOfCall) {
+    public void setTypeOfCall(String typeOfCall) {
         this.typeOfCall = typeOfCall;
     }
 

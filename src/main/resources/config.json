@@ -5,12 +5,12 @@
       "type": "NEW_DEVICE",
       "ids": [
         {
-          "id": 121,
+          "id": 10037,
           "type": "MAC",
-          "isRequired": false
+          "isRequired": true
         },
         {
-          "id": 1028,
+          "id": 10076,
           "type": "FIXTURE",
           "isRequired": true
         }
@@ -20,7 +20,7 @@
       "type": "UPDATE_DEVICE",
       "ids": [
         {
-          "id": 27,
+          "id": 10039,
           "type": "MAC",
           "isRequired": true
         }
@@ -30,7 +30,7 @@
       "type": "REMOVE",
       "ids": [
         {
-          "id": 99,
+          "id": 10105,
           "type": "MAC",
           "isRequired": true
         }

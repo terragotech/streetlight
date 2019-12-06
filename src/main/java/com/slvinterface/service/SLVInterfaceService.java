@@ -42,12 +42,15 @@ public abstract class SLVInterfaceService {
 
     public static int retryCount = 0;
 
+    SLVTools slvTools;
+
 
     SLVInterfaceService() throws Exception {
         edgeRestService = new EdgeRestService();
         jsonParser = new JsonParser();
         queryExecutor = new QueryExecutor();
         gson = new Gson();
+        slvTools = new SLVTools();
         slvRestService = new SLVRestService();
         this.properties = PropertiesReader.getProperties();
     }
@@ -152,7 +155,7 @@ public abstract class SLVInterfaceService {
                 return;
             }
         } catch (Exception e) {
-            throw new DatabaseException(e);
+            //throw new DatabaseException(e);
         }
 
         SLVSyncTable slvSyncTable = new SLVSyncTable();
@@ -240,7 +243,7 @@ public abstract class SLVInterfaceService {
                 return;
             }
 
-            processFormData(formDataList,slvSyncTable);
+            processFormData(formDataList,slvSyncTable,edgeNote);
         }catch (SLVConnectionException e){
             throw new SLVConnectionException(e);
         }catch (Exception e) {
@@ -443,7 +446,7 @@ public abstract class SLVInterfaceService {
 
     private void setSLVTransactionLogs(SLVTransactionLogs slvTransactionLogs, String request, CallType callType) {
         slvTransactionLogs.setRequestDetails(request);
-        slvTransactionLogs.setTypeOfCall(callType);
+        //slvTransactionLogs.setTypeOfCall(callType);
     }
 
     private void setResponseDetails(SLVTransactionLogs slvTransactionLogs, String responseString) {
@@ -552,7 +555,7 @@ public abstract class SLVInterfaceService {
     }
 
 
-    public void processFormData(List<FormData> formDataList, SLVSyncTable slvSyncTable)throws SLVConnectionException{
+    public void processFormData(List<FormData> formDataList, SLVSyncTable slvSyncTable,EdgeNote edgeNote)throws SLVConnectionException{
 
     }
 
