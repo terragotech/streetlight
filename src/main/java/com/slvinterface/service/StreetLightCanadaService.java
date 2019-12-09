@@ -423,8 +423,12 @@ public class StreetLightCanadaService {
                             String dimmingValue = connectionDAO.getDimmingValue(edgeNote.getTitle());
                             if(dimmingValue==null)
                             {
-                                System.out.println("Dimming value not found");
-                                throw new DimmingValueException("No dimming value not found");
+                                //System.out.println("Dimming value not found");
+                                //throw new DimmingValueException("No dimming value not found");
+
+                                //This setting implemented based on the customer request for
+                                //lights with no dimming value to be set 100% as default
+                                dimmingValue = "100% Output Design Setting";
                             }
                             ///////////////////////////////////////////////////////////////////////////////////////////
                             SlvDevice slvDevice1 = connectionDAO.getSlvDevices(edgeNote.getTitle());
