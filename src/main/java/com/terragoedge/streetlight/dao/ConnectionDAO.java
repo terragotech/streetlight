@@ -23,8 +23,8 @@ import java.util.List;
 public enum ConnectionDAO {
     INSTANCE;
 
-   // private final static String DATABASE_URL = "jdbc:postgresql://127.0.0.1:5432/terragoedge?user=postgres&password=password";
-   //private final static String DATABASE_URL = "jdbc:postgresql://127.0.0.1:5432/terragoedge_staging?user=postgres&password=password";
+    // private final static String DATABASE_URL = "jdbc:postgresql://127.0.0.1:5432/terragoedge?user=postgres&password=password";
+    //private final static String DATABASE_URL = "jdbc:postgresql://127.0.0.1:5432/terragoedge_staging?user=postgres&password=password";
 
     ConnectionSource connectionSource = null;
     final Logger logger = org.apache.log4j.Logger.getLogger(ConnectionDAO.class);
@@ -46,6 +46,7 @@ public enum ConnectionDAO {
     public Dao<EdgeSLVDate, String> edgeNodeDates = null;
     public Dao<ProContextLookupData, String> proContextLookupDao = null;
     public Dao<DroppedPinRemoveEvent, String> droppedPinRemoveEventDao = null;
+
     ConnectionDAO() {
         openConnection();
     }
@@ -117,9 +118,7 @@ public enum ConnectionDAO {
 
             try {
                 TableUtils.createTableIfNotExists(connectionSource, DroppedPinRemoveEvent.class);
-            }
-            catch (Exception e)
-            {
+            } catch (Exception e) {
 
             }
 
@@ -135,11 +134,11 @@ public enum ConnectionDAO {
             edgeNodeDates = DaoManager.createDao(connectionSource, EdgeSLVDate.class);
             clientAccountEntityDao = DaoManager.createDao(connectionSource, ClientAccountEntity.class);
 
-            proContextLookupDao = DaoManager.createDao(connectionSource,ProContextLookupData.class);
+            proContextLookupDao = DaoManager.createDao(connectionSource, ProContextLookupData.class);
 
-            edgeAllSerialNumbersDao = DaoManager.createDao(connectionSource,EdgeAllSerialNumber.class);
+            edgeAllSerialNumbersDao = DaoManager.createDao(connectionSource, EdgeAllSerialNumber.class);
 
-            droppedPinRemoveEventDao = DaoManager.createDao(connectionSource,DroppedPinRemoveEvent.class);
+            droppedPinRemoveEventDao = DaoManager.createDao(connectionSource, DroppedPinRemoveEvent.class);
 
             System.out.println("Connected.....");
         } catch (Exception e) {
@@ -147,46 +146,36 @@ public enum ConnectionDAO {
         }
     }
 
-    public DroppedPinRemoveEvent getDroppedPinRemovedEntryFor(String idoncontroller) throws  SQLException,InvalidParameterException
-    {
+    public DroppedPinRemoveEvent getDroppedPinRemovedEntryFor(String idoncontroller) throws SQLException, InvalidParameterException {
         DroppedPinRemoveEvent result = null;
-        if(idoncontroller == null)
-        {
+        if (idoncontroller == null) {
             throw new InvalidParameterException("Input param null");
         }
         try {
             result = droppedPinRemoveEventDao.queryBuilder().where().eq(DroppedPinRemoveEvent.IDONCONTROLLER, idoncontroller).queryForFirst();
-        }
-        catch (SQLException e)
-        {
+        } catch (SQLException e) {
             throw e;
         }
         return result;
     }
-    public void createOrUpdateDroppedPinRemoveEvent(DroppedPinRemoveEvent droppedPinRemoveEvent) throws SQLException,InvalidParameterException
-    {
-        if(droppedPinRemoveEvent != null)
-        {
-           try {
+
+    public void createOrUpdateDroppedPinRemoveEvent(DroppedPinRemoveEvent droppedPinRemoveEvent) throws SQLException, InvalidParameterException {
+        if (droppedPinRemoveEvent != null) {
+            try {
                 DroppedPinRemoveEvent result = droppedPinRemoveEventDao.queryBuilder().where().eq(DroppedPinRemoveEvent.IDONCONTROLLER, droppedPinRemoveEvent.getIdoncontroller()).queryForFirst();
-                if(result == null)
-                {
+                if (result == null) {
                     droppedPinRemoveEventDao.create(droppedPinRemoveEvent);
-                }
-                else
-                {
-                    UpdateBuilder<DroppedPinRemoveEvent,String> updateBuilder = droppedPinRemoveEventDao.updateBuilder();
-                    updateBuilder.updateColumnValue(DroppedPinRemoveEvent.EVENTTIME,System.currentTimeMillis());
-                    updateBuilder.updateColumnValue(DroppedPinRemoveEvent.NOTEGUID,droppedPinRemoveEvent.getNoteguid());
-                    updateBuilder.where().eq(DroppedPinRemoveEvent.IDONCONTROLLER,droppedPinRemoveEvent.getIdoncontroller());
+                } else {
+                    UpdateBuilder<DroppedPinRemoveEvent, String> updateBuilder = droppedPinRemoveEventDao.updateBuilder();
+                    updateBuilder.updateColumnValue(DroppedPinRemoveEvent.EVENTTIME, System.currentTimeMillis());
+                    updateBuilder.updateColumnValue(DroppedPinRemoveEvent.NOTEGUID, droppedPinRemoveEvent.getNoteguid());
+                    updateBuilder.where().eq(DroppedPinRemoveEvent.IDONCONTROLLER, droppedPinRemoveEvent.getIdoncontroller());
                     updateBuilder.update();
                 }
             } catch (SQLException e) {
                 throw e;
             }
-        }
-        else
-        {
+        } else {
             throw new InvalidParameterException("Input param null");
         }
     }
@@ -205,7 +194,7 @@ public enum ConnectionDAO {
         try {
             duplicateMacAddressDao.create(duplicateMacAddress);
         } catch (Exception e) {
-            logger.error("Error in saveDuplicateMacAddress",e);
+            logger.error("Error in saveDuplicateMacAddress", e);
         }
     }
 
@@ -213,7 +202,7 @@ public enum ConnectionDAO {
         try {
             deviceAttributeDao.create(deviceAttributes);
         } catch (Exception e) {
-            logger.error("Error in saveDeviceAttributes",e);
+            logger.error("Error in saveDeviceAttributes", e);
         }
     }
 
@@ -221,7 +210,7 @@ public enum ConnectionDAO {
         try {
             macAddressEventLogsDao.create(duplicateMACAddressEventLog);
         } catch (Exception e) {
-            logger.error("Error in saveMacAddressEventLog",e);
+            logger.error("Error in saveMacAddressEventLog", e);
         }
     }
 
@@ -229,7 +218,7 @@ public enum ConnectionDAO {
         try {
             return duplicateMacAddressDao.queryBuilder().where().eq("macaddress", macaddress).queryForFirst();
         } catch (Exception e) {
-            logger.error("Error in getDuplicateMacAddress",e);
+            logger.error("Error in getDuplicateMacAddress", e);
         }
         return null;
     }
@@ -240,7 +229,7 @@ public enum ConnectionDAO {
             deleteBuilder.where().eq("noteguid", noteguid);
             deleteBuilder.delete();
         } catch (Exception e) {
-            logger.error("Error in deleteDuplicateMacAddress",e);
+            logger.error("Error in deleteDuplicateMacAddress", e);
         }
     }
 
@@ -249,7 +238,7 @@ public enum ConnectionDAO {
         try {
             edgeAllMacData = edgeAllMacDataDao.queryBuilder().where().eq("title", idOncontroller).and().eq("macaddress", macaddress).queryForFirst();
         } catch (Exception e) {
-            logger.error("Error in isExistMacAddress",e);
+            logger.error("Error in isExistMacAddress", e);
         }
         return (edgeAllMacData != null) ? true : false;
     }
@@ -258,28 +247,28 @@ public enum ConnectionDAO {
         try {
             edgeAllMacDataDao.create(edgeAllMacData);
         } catch (Exception e) {
-            logger.error("Error in saveEdgeAllMac",e);
+            logger.error("Error in saveEdgeAllMac", e);
         }
     }
 
 
-    public void removeEdgeAllMAC(String idOnController,String macAddress){
+    public void removeEdgeAllMAC(String idOnController, String macAddress) {
         try {
             DeleteBuilder<EdgeAllMacData, String> deleteBuilder = edgeAllMacDataDao.deleteBuilder();
-            deleteBuilder.where().eq("title",idOnController).and().eq("macaddress",macAddress);
+            deleteBuilder.where().eq("title", idOnController).and().eq("macaddress", macAddress);
             deleteBuilder.delete();
-        }catch (Exception e){
-            logger.error("Error in removeEdgeAllMAC",e);
+        } catch (Exception e) {
+            logger.error("Error in removeEdgeAllMAC", e);
         }
     }
 
-    public void removeEdgeAllFixture(String idOnController){
+    public void removeEdgeAllFixture(String idOnController) {
         try {
             DeleteBuilder<EdgeAllFixtureData, String> deleteBuilderEdgeAllFix = edgeAllFixtureDataDao.deleteBuilder();
-            deleteBuilderEdgeAllFix.where().eq("title",idOnController);
+            deleteBuilderEdgeAllFix.where().eq("title", idOnController);
             deleteBuilderEdgeAllFix.delete();
-        }catch (Exception e){
-            logger.error("Error in removeEdgeAllFixture",e);
+        } catch (Exception e) {
+            logger.error("Error in removeEdgeAllFixture", e);
         }
     }
 
@@ -287,7 +276,7 @@ public enum ConnectionDAO {
         try {
             edgeAllFixtureDataDao.create(edgeAllFixtureData);
         } catch (Exception e) {
-            logger.error("Error in saveEdgeAllFixture",e);
+            logger.error("Error in saveEdgeAllFixture", e);
         }
     }
 
@@ -296,7 +285,7 @@ public enum ConnectionDAO {
         try {
             edgeAllFixtureData = edgeAllFixtureDataDao.queryBuilder().where().eq("title", idOncontroller).and().eq("fixtureqrscan", fixtureQrScan).queryForFirst();
         } catch (Exception e) {
-            logger.error("Error in isExistFixture",e);
+            logger.error("Error in isExistFixture", e);
         }
         return (edgeAllFixtureData != null) ? true : false;
     }
@@ -305,7 +294,7 @@ public enum ConnectionDAO {
         try {
             slvInterfaceLogDao.create(slvInterfaceLogEntity);
         } catch (Exception e) {
-            logger.error("Error in saveSlvInterfaceLog",e);
+            logger.error("Error in saveSlvInterfaceLog", e);
         }
     }
 
@@ -321,105 +310,104 @@ public enum ConnectionDAO {
         }
     }
 
-    public void saveExistingMacFailure(ExistingMacValidationFailure existingMacValidationFailure){
-        try{
-            existingMacValidationFailureDao.create(existingMacValidationFailure);
-        }catch (Exception e){
-            logger.error("Error in saveExistingMacFailure",e);
-        }
-    }
-
-    public List<ExistingMacValidationFailure> getAllExistingMacVaildationFailures(long time){
+    public void saveExistingMacFailure(ExistingMacValidationFailure existingMacValidationFailure) {
         try {
-            return existingMacValidationFailureDao.queryBuilder().where().ge("processed_date_time",time).query();
-        }catch (Exception e){
-            logger.error("Error in getAllExistingMacVaildationFailures",e);
+            existingMacValidationFailureDao.create(existingMacValidationFailure);
+        } catch (Exception e) {
+            logger.error("Error in saveExistingMacFailure", e);
+        }
+    }
+
+    public List<ExistingMacValidationFailure> getAllExistingMacVaildationFailures(long time) {
+        try {
+            return existingMacValidationFailureDao.queryBuilder().where().ge("processed_date_time", time).query();
+        } catch (Exception e) {
+            logger.error("Error in getAllExistingMacVaildationFailures", e);
         }
         return new ArrayList<>();
     }
 
-    public void deleteExistingMacVaildationFailure(ExistingMacValidationFailure existingMacValidationFailure){
-        try{
+    public void deleteExistingMacVaildationFailure(ExistingMacValidationFailure existingMacValidationFailure) {
+        try {
             existingMacValidationFailureDao.delete(existingMacValidationFailure);
-        }catch (Exception e){
-            logger.error("Error in deleteExistingMacVaildationFailure",e);
+        } catch (Exception e) {
+            logger.error("Error in deleteExistingMacVaildationFailure", e);
         }
     }
 
-    public List<ExistingMacValidationFailure> getExistingMacValidationFailure(String idoncontroller,String existingMac){
-        try{
-            return existingMacValidationFailureDao.queryBuilder().where().eq("idoncontroller",idoncontroller).and().eq("slvmacaddress",existingMac).query();
-        }catch (Exception e){
-            logger.error("Error in getExistingMacValidationFailure",e);
+    public List<ExistingMacValidationFailure> getExistingMacValidationFailure(String idoncontroller, String existingMac) {
+        try {
+            return existingMacValidationFailureDao.queryBuilder().where().eq("idoncontroller", idoncontroller).and().eq("slvmacaddress", existingMac).query();
+        } catch (Exception e) {
+            logger.error("Error in getExistingMacValidationFailure", e);
         }
         return new ArrayList<>();
     }
 
 
-
-    public void saveEdgeNodeDate(EdgeSLVDate edgeSLVDate){
-        try{
+    public void saveEdgeNodeDate(EdgeSLVDate edgeSLVDate) {
+        try {
             edgeNodeDates.create(edgeSLVDate);
-        }catch (Exception e){
-            logger.error("Error in saveEdgeNodeDate",e);
+        } catch (Exception e) {
+            logger.error("Error in saveEdgeNodeDate", e);
         }
     }
 
-    public void removeAllEdgeFormDates(String idOnController){
+    public void removeAllEdgeFormDates(String idOnController) {
         try {
             DeleteBuilder<EdgeSLVDate, String> deleteBuilder = edgeNodeDates.deleteBuilder();
-            deleteBuilder.where().eq("title",idOnController);
+            deleteBuilder.where().eq("title", idOnController);
             deleteBuilder.delete();
-        }catch (Exception e){
-            logger.error("Error in removeAllEdgeFormDates",e);
+        } catch (Exception e) {
+            logger.error("Error in removeAllEdgeFormDates", e);
         }
     }
 
-    public void removeCurrentEdgeFormDates(String idOnController){
+    public void removeCurrentEdgeFormDates(String idOnController) {
         deleteEdgeNoteFormDate(idOnController, DateType.LUM.toString());
         deleteEdgeNoteFormDate(idOnController, DateType.NODE.toString());
     }
 
 
-    public void deleteEdgeNoteFormDate(String idOnController,String type){
+    public void deleteEdgeNoteFormDate(String idOnController, String type) {
         try {
-           DeleteBuilder<EdgeSLVDate, String> deleteBuilder = edgeNodeDates.deleteBuilder();
-           deleteBuilder.where().eq("title",idOnController).and().eq("dates_type",type);
-           deleteBuilder.delete();
-        }catch (Exception e){
-            logger.error("Error in deleteEdgeNoteFormDate",e);
+            DeleteBuilder<EdgeSLVDate, String> deleteBuilder = edgeNodeDates.deleteBuilder();
+            deleteBuilder.where().eq("title", idOnController).and().eq("dates_type", type);
+            deleteBuilder.delete();
+        } catch (Exception e) {
+            logger.error("Error in deleteEdgeNoteFormDate", e);
         }
     }
 
 
-    public EdgeSLVDate getEdgeNodeDate(String title, String edgeDate,String type){
+    public EdgeSLVDate getEdgeNodeDate(String title, String edgeDate, String type) {
         try {
-            return edgeNodeDates.queryBuilder().where().eq("title",title).and().eq("edge_date",edgeDate).and().eq("dates_type",type).queryForFirst();
-        }catch (Exception e){
-            logger.error("Error in getEdgeCSLPNodeDate",e);
+            return edgeNodeDates.queryBuilder().where().eq("title", title).and().eq("edge_date", edgeDate).and().eq("dates_type", type).queryForFirst();
+        } catch (Exception e) {
+            logger.error("Error in getEdgeCSLPNodeDate", e);
         }
         return null;
     }
 
 
-    public ProContextLookupData getProContextLookupData(ProContextLookupData proContextLookupData,boolean isLumModelExact,boolean isLumPartExact) {
+    public ProContextLookupData getProContextLookupData(ProContextLookupData proContextLookupData, boolean isLumModelExact, boolean isLumPartExact) {
         try {
             QueryBuilder<ProContextLookupData, String> queryBuilder = proContextLookupDao.queryBuilder();
             Where<ProContextLookupData, String> where = queryBuilder.where();
             where.eq(ProContextLookupData.LUM_BRAND, proContextLookupData.getLumBrand().trim());
             if (proContextLookupData.getLumModel() != null) {
-                if(isLumModelExact){
+                if (isLumModelExact) {
                     where.and().eq(ProContextLookupData.LUM_MODEL, proContextLookupData.getLumModel().trim());
-                }else{
-                    where.and().like(ProContextLookupData.LUM_MODEL, proContextLookupData.getLumModel().trim()+"%");
+                } else {
+                    where.and().like(ProContextLookupData.LUM_MODEL, proContextLookupData.getLumModel().trim() + "%");
                 }
 
             }
             if (proContextLookupData.getLumPartNumber() != null) {
-                if(isLumPartExact){
+                if (isLumPartExact) {
                     where.and().eq(ProContextLookupData.LUM_PART_NUM, proContextLookupData.getLumPartNumber().trim());
-                }else{
-                    where.and().like(ProContextLookupData.LUM_PART_NUM, proContextLookupData.getLumPartNumber().trim()+"%");
+                } else {
+                    where.and().like(ProContextLookupData.LUM_PART_NUM, proContextLookupData.getLumPartNumber().trim() + "%");
                 }
 
             }
@@ -428,49 +416,59 @@ public enum ConnectionDAO {
             }
             logger.info("------Raw Query--------------");
             logger.info(queryBuilder.prepareStatementString());
-           return queryBuilder.queryForFirst();
+            return queryBuilder.queryForFirst();
         } catch (Exception e) {
             logger.error("Error in getProContextLookupData");
         }
         return null;
     }
 
-    public ClientAccountEntity getClientAccountName(String phsicalAtlasPage,int max,String area){
-        try{
+    public ClientAccountEntity getClientAccountName(String phsicalAtlasPage, int max, String area) {
+        try {
             //select * from client_account_name where key='L' and max<=12 and area='CN';
-            return clientAccountEntityDao.queryBuilder().where().eq("key",phsicalAtlasPage).and().ge("max",max).and().eq("area",area).queryForFirst();
-        }catch (Exception e){
-            logger.error("Error in getClientAccountName",e);
+            return clientAccountEntityDao.queryBuilder().where().eq("key", phsicalAtlasPage).and().ge("max", max).and().eq("area", area).queryForFirst();
+        } catch (Exception e) {
+            logger.error("Error in getClientAccountName", e);
         }
         return null;
     }
 
 
-    public void createEdgeAllSerialNumber(EdgeAllSerialNumber edgeAllSerialNumber){
+    public void createEdgeAllSerialNumber(EdgeAllSerialNumber edgeAllSerialNumber) {
         try {
             edgeAllSerialNumbersDao.create(edgeAllSerialNumber);
-        }catch (Exception e){
-            logger.error("Error in createEdgeAllSerialNumber",e);
+        } catch (Exception e) {
+            logger.error("Error in createEdgeAllSerialNumber", e);
         }
     }
 
 
-    public void updateEdgeAllSerialNumber(EdgeAllSerialNumber edgeAllSerialNumber){
+    public void updateEdgeAllSerialNumber(EdgeAllSerialNumber edgeAllSerialNumber) {
         try {
             edgeAllSerialNumbersDao.update(edgeAllSerialNumber);
-        }catch (Exception e){
-            logger.error("Error in updateEdgeAllSerialNumber",e);
+        } catch (Exception e) {
+            logger.error("Error in updateEdgeAllSerialNumber", e);
         }
     }
 
 
-    public EdgeAllSerialNumber getEdgeAllSerialNumber(String title){
+    public EdgeAllSerialNumber getEdgeAllSerialNumber(String title) {
         try {
-          return   edgeAllSerialNumbersDao.queryBuilder().where().eq(EdgeAllSerialNumber.TITLE,title).queryForFirst();
-        }catch (Exception e){
+            return edgeAllSerialNumbersDao.queryBuilder().where().eq(EdgeAllSerialNumber.TITLE, title).queryForFirst();
+        } catch (Exception e) {
             e.printStackTrace();
         }
         return null;
+    }
+
+    public void removeEdgeAllSerialNumber(String title) {
+        try {
+            DeleteBuilder deleteBuilder = edgeAllSerialNumbersDao.deleteBuilder();
+            deleteBuilder.where().eq(EdgeAllSerialNumber.TITLE, title);
+            deleteBuilder.delete();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
 

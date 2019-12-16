@@ -1275,6 +1275,10 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
                         installMaintenanceLogModel.setInstallOnWrongFix(true);
                         removeEdgeSLVMacAddress(installMaintenanceLogModel.getIdOnController());
                         connectionDAO.removeAllEdgeFormDates(installMaintenanceLogModel.getIdOnController());
+
+                        logger.info("Luminaire Serial Number going to clear.");
+                        connectionDAO.removeEdgeAllSerialNumber(installMaintenanceLogModel.getIdOnController());
+                        logger.info("Luminaire Serial Number value cleared.");
                     } catch (Exception e) {
                         logger.error("Error in processRemoveAction", e);
                     }
