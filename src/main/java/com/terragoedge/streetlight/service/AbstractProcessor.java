@@ -14,6 +14,7 @@ import com.terragoedge.streetlight.json.model.*;
 import com.terragoedge.streetlight.logging.InstallMaintenanceLogModel;
 import com.terragoedge.streetlight.logging.LoggingModel;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.math.NumberUtils;
 import org.apache.log4j.Logger;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
@@ -582,9 +583,20 @@ public abstract class AbstractProcessor {
         }
     }
 
+    public String isNumber(String value){
+        if(value != null){
+            value = value.trim();
+            if(NumberUtils.isParsable(value)){
+                logger.info("Is Number:true");
+                return value;
+            }
+        }
+        logger.info("Is Number:false");
+        return null;
+    }
+
     protected void addStreetLightData(String key, String value, List<Object> paramsList) {
         logger.info(key);
-        paramsList.add("valueName=" + key.trim());
        // paramsList.add("value=" + value.trim());
         try{
             /* The following code for changing ";" to "."  based on the request of the customer */
@@ -597,6 +609,15 @@ public abstract class AbstractProcessor {
                     value = value.replaceAll("[^\\p{ASCII}]", "");
                 }
             }
+            if(key.equals("power")){
+                logger.info("Value:"+value);
+                value = isNumber(value);
+                if(value == null){
+                    logger.info("Power value is not Present.");
+                    return;
+                }
+            }
+            paramsList.add("valueName=" + key.trim());
             paramsList.add("value=" + URLEncoder.encode(value.trim(), "UTF-8"));
         }catch (Exception e){
             logger.error("Error in addStreetLightData",e);
