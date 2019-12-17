@@ -706,6 +706,28 @@ public class StreetlightDao extends UtilDao {
     }
 
 
+    public boolean isNoteProcessed(String noteGuid){
+        PreparedStatement preparedStatement = null;
+        Connection connection = null;
+        ResultSet resultSet = null;
+        try{
+            connection = StreetlightDaoConnection.getInstance().getConnection();
+            preparedStatement = connection.prepareStatement(
+                    "select processednoteid from notesyncdetails where processednoteid = ?;");
+            preparedStatement.setString(1,noteGuid);
+            resultSet = preparedStatement.executeQuery();
+            return resultSet.next();
+
+        }catch (Exception e){
+            logger.error("Error in isNoteProcessed",e);
+        }finally {
+            closeResultSet(resultSet);
+            closeStatement(preparedStatement);
+        }
+        return false;
+    }
+
+
     public void closeConnection(){
         connectionDAO.closeConnection();
     }

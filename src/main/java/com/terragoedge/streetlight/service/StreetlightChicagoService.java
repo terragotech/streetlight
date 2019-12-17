@@ -110,7 +110,7 @@ public class StreetlightChicagoService extends AbstractProcessor {
 
     public void  run() {
         // Get Already synced noteguids from Database
-        List<String> noteGuids = streetlightDao.getNoteIds();
+        //List<String> noteGuids = streetlightDao.getNoteIds();
         String accessToken = getEdgeToken();
         if (accessToken == null) {
             logger.error("Edge Invalid UserName and Password.");
@@ -131,7 +131,7 @@ public class StreetlightChicagoService extends AbstractProcessor {
 
 
         String edgeSlvUrl =  PropertiesReader.getProperties().getProperty("streetlight.edge.slvserver.url");
-        edgeSlvUrl = edgeSlvUrl+"/notesGuid?lastSyncTime=";
+        edgeSlvUrl = edgeSlvUrl+"/notesGuid?isBulkImport=true&lastSyncTime=";
 
         long lastSynctime = streetlightDao.getLastSyncTime();
         if(lastSynctime > 0){
@@ -160,10 +160,9 @@ public class StreetlightChicagoService extends AbstractProcessor {
                for(JsonElement noteGuidJson : noteGuidsJsonArray){
                    String noteGuid = noteGuidJson.getAsString();
                    streetlightDao.updateSLVInterfaceStatus();
-                   if(!noteGuids.contains(noteGuid)){
-                        doProcess(noteGuid,accessToken,false);
+                   if(!streetlightDao.isNoteProcessed(noteGuid)){
+                       doProcess(noteGuid,accessToken,false);
                    }
-
                }
            }
 
