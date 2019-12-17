@@ -233,6 +233,8 @@ public class StreetlightChicagoService extends AbstractProcessor {
                     }
                     if(!isDroppedPinWorkFlow || (isDroppedPinWorkFlow && isDeviceCreated)) {
                         loadDeviceValues(edgeNote.getTitle(),installMaintenanceLogModel);
+                        // Check whether the current note
+                        isBulkImport(edgeNote,accessToken,installMaintenanceLogModel);
 
                         installationMaintenanceProcessor.processNewAction(edgeNote, installMaintenanceLogModel, false, utilLocId, slvInterfaceLogEntity);
                        // updateSlvStatusToEdge(installMaintenanceLogModel, edgeNote);
