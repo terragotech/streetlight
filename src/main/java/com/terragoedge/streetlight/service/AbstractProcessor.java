@@ -1885,15 +1885,20 @@ public boolean checkExistingMacAddressValid(EdgeNote edgeNote, InstallMaintenanc
 
 
     public void isBulkImport(EdgeNote edgeNote,String accessToken,InstallMaintenanceLogModel loggingModel){
-        String url = PropertiesReader.getProperties().getProperty("streetlight.edge.url.main");
-        url = url + PropertiesReader.getProperties().getProperty("com.edge.url.bulkimport.check");
-        url = url + "?noteGuid="+edgeNote.getNoteGuid();
-        logger.info("Bulk Import Url:"+url);
-        ResponseEntity<String> responseEntity = restService.getRequest(url, false, accessToken);
-        if(responseEntity.getStatusCode().is2xxSuccessful()){
-            logger.info("Current Note is created via Bulk Import.");
-            loggingModel.setBulkImport(true);
-        }
+       try{
+           String url = PropertiesReader.getProperties().getProperty("streetlight.edge.url.main");
+           url = url + PropertiesReader.getProperties().getProperty("com.edge.url.bulkimport.check");
+           url = url + "?noteGuid="+edgeNote.getNoteGuid();
+           logger.info("Bulk Import Url:"+url);
+           ResponseEntity<String> responseEntity = restService.getRequest(url, false, accessToken);
+           if(responseEntity.getStatusCode().is2xxSuccessful()){
+               logger.info("Current Note is created via Bulk Import.");
+               loggingModel.setBulkImport(true);
+           }
+       }catch (Exception e){
+           logger.error("Error in isBulkImport",e);
+       }
+
     }
 
 }
