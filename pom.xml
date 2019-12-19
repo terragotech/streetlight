@@ -139,7 +139,7 @@
                             <goal>single</goal>
                         </goals>
                         <configuration>
-                            <finalName>CanadaSLVInterface</finalName>
+                            <finalName>CanadaSLVInterface_v3</finalName>
                             <archive>
                                 <manifest>
                                     <mainClass>

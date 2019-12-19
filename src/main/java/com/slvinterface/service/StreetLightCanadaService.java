@@ -31,9 +31,9 @@ public class StreetLightCanadaService {
     private Gson gson;
     private SLVTools slvTools;
     private ConnectionDAO connectionDAO;
+
     //private SLVInterfaceDAO slvInterfaceDAO;
-    public StreetLightCanadaService()
-    {
+    public StreetLightCanadaService() {
         edgeRestService = new EdgeRestService();
         slvTools = new SLVTools();
         jsonParser = new JsonParser();
@@ -43,9 +43,10 @@ public class StreetLightCanadaService {
         //slvInterfaceDAO = new SLVInterfaceDAO();
 
     }
+
     private LightDataCompareResult populateAndCheckWithOldValues(List<FormValues> formComponents,
-                                               EdgeNote edgeNote,String controllerStrId,
-                                               List<Object> paramsList,String currentValue,String dimmingValue) throws Exception {
+                                                                 EdgeNote edgeNote, String controllerStrId,
+                                                                 List<Object> paramsList, String currentValue, String dimmingValue) throws Exception {
 
         LightDataCompareResult lightDataCompareResult = new LightDataCompareResult();
         String strBlock = PropertiesReader.getProperties().getProperty("streetlight.form.blockid");
@@ -97,228 +98,200 @@ public class StreetLightCanadaService {
 
 
         boolean mustUpdate = false;
-        if(currentValue != null)
-        {
+        if (currentValue != null) {
             JsonParser jsonParser = new JsonParser();
             JsonArray jsonArray = jsonParser.parse(currentValue).getAsJsonArray();
             int tc = jsonArray.size();
-            if(tc == 0)
-            {
+            if (tc == 0) {
                 mustUpdate = true;
             }
-            for(int idx=0;idx<tc;idx++)
-            {
+            for (int idx = 0; idx < tc; idx++) {
                 JsonObject jsonObject = jsonArray.get(idx).getAsJsonObject();
-                String strName = DataTools.checkDataNull(jsonObject,"name");
-                String strValue = DataTools.checkDataNull(jsonObject,"value");
-                switch(strName)
-                {
+                String strName = DataTools.checkDataNull(jsonObject, "name");
+                String strValue = DataTools.checkDataNull(jsonObject, "value");
+                switch (strName) {
                     case "block":
-                        if(!strFormBlock.equals(strValue))
-                        {
+                        if (!strFormBlock.equals(strValue)) {
                             mustUpdate = true;
                         }
                         break;
                     case "facility":
-                        if(!strFormFacility.equals(strValue))
-                        {
+                        if (!strFormFacility.equals(strValue)) {
                             mustUpdate = true;
                         }
                         break;
                     case "poletype":
-                        if(!strFormPoleType.equals(strValue))
-                        {
+                        if (!strFormPoleType.equals(strValue)) {
                             mustUpdate = true;
                         }
                         break;
                     case "polecolor":
-                        if(!strFormPoleColor.equals(strValue))
-                        {
+                        if (!strFormPoleColor.equals(strValue)) {
                             mustUpdate = true;
                         }
                         break;
                     case "comment":
-                        if(!strMergedComment.equals(strValue))
-                        {
+                        if (!strMergedComment.equals(strValue)) {
                             mustUpdate = true;
                         }
                         break;
                     case "armtype":
-                        if(!strFormArmType.equals(strValue))
-                        {
+                        if (!strFormArmType.equals(strValue)) {
                             mustUpdate = true;
                         }
                         break;
                     case "lummodel":
-                        if(!strFormLumCode.equals(strValue))
-                        {
+                        if (!strFormLumCode.equals(strValue)) {
                             mustUpdate = true;
                         }
                         break;
                     case "polelen":
-                        if(!strFormPoleLen.equals(strValue))
-                        {
+                        if (!strFormPoleLen.equals(strValue)) {
                             mustUpdate = true;
                         }
                         break;
                     case "polecon":
-                        if(!strFormPoleCondition.equals(strValue))
-                        {
+                        if (!strFormPoleCondition.equals(strValue)) {
                             mustUpdate = true;
                         }
                         break;
                     case "polemanu":
-                        if(!strFormPoleManfu.equals(strValue))
-                        {
+                        if (!strFormPoleManfu.equals(strValue)) {
                             mustUpdate = true;
                         }
                         break;
                     case "fuse":
-                        if(!strFormFuse.equals(strValue))
-                        {
+                        if (!strFormFuse.equals(strValue)) {
                             mustUpdate = true;
                         }
                         break;
                     case "power":
-                        if(strFormPower.equals("OTHER"))
-                        {
-                            if(!strFormPowerOther.equals(strValue))
-                            {
+                        if (strFormPower.equals("OTHER")) {
+                            if (!strFormPowerOther.equals(strValue)) {
                                 mustUpdate = true;
                             }
-                        }
-                        else
-                        {
-                            if(!strFormPower.equals(strValue))
-                            {
+                        } else {
+                            if (!strFormPower.equals(strValue)) {
                                 mustUpdate = true;
                             }
                         }
                         break;
 
                 }
-                if(mustUpdate)
-                {
+                if (mustUpdate) {
                     break;
                 }
             }
 
-        }
-        else
-        {
+        } else {
             mustUpdate = true;
         }
         lightDataCompareResult.setMustUpdate(mustUpdate);
 
-            JsonArray jsonArray = new JsonArray();
-            paramsList.add("idOnController=" + DataTools.URLEncoder(edgeNote.getTitle()));
-            paramsList.add("controllerStrId=" + controllerStrId);
+        JsonArray jsonArray = new JsonArray();
+        paramsList.add("idOnController=" + DataTools.URLEncoder(edgeNote.getTitle()));
+        paramsList.add("controllerStrId=" + controllerStrId);
 
-            slvTools.addStreetLightData("location.utillocationid", edgeNote.getTitle() + ".Lamp", paramsList);
-            String modelFunctionName = PropertiesReader.getProperties().getProperty("streetlight.slv.equipment.type");
-            slvTools.addStreetLightData("modelFunctionId", modelFunctionName, paramsList);
+        slvTools.addStreetLightData("location.utillocationid", edgeNote.getTitle() + ".Lamp", paramsList);
+        String modelFunctionName = PropertiesReader.getProperties().getProperty("streetlight.slv.equipment.type");
+        slvTools.addStreetLightData("modelFunctionId", modelFunctionName, paramsList);
 
-            slvTools.addStreetLightData("DimmingGroupName",dimmingValue,paramsList);
+        slvTools.addStreetLightData("DimmingGroupName", dimmingValue, paramsList);
 
-            slvTools.addStreetLightData("location.mapnumber", strFormBlock, paramsList);
-            jsonArray.add(DataTools.createJsonObject("block",strFormBlock));
+        slvTools.addStreetLightData("location.mapnumber", strFormBlock, paramsList);
+        jsonArray.add(DataTools.createJsonObject("block", strFormBlock));
 
-            slvTools.addStreetLightData("address", strFormFacility, paramsList);
-            jsonArray.add(DataTools.createJsonObject("facility",strFormFacility));
+        slvTools.addStreetLightData("address", strFormFacility, paramsList);
+        jsonArray.add(DataTools.createJsonObject("facility", strFormFacility));
 
-            slvTools.addStreetLightData("pole.material", strFormPoleType, paramsList);
-            jsonArray.add(DataTools.createJsonObject("poletype",strFormPoleType));
+        slvTools.addStreetLightData("pole.material", strFormPoleType, paramsList);
+        jsonArray.add(DataTools.createJsonObject("poletype", strFormPoleType));
 
-            slvTools.addStreetLightData("pole.colorcode", strFormPoleColor, paramsList);
-            jsonArray.add(DataTools.createJsonObject("polecolor",strFormPoleColor));
+        slvTools.addStreetLightData("pole.colorcode", strFormPoleColor, paramsList);
+        jsonArray.add(DataTools.createJsonObject("polecolor", strFormPoleColor));
 
-            slvTools.addStreetLightData("comment", strMergedComment, paramsList);
-            jsonArray.add(DataTools.createJsonObject("comment",strMergedComment));
+        slvTools.addStreetLightData("comment", strMergedComment, paramsList);
+        jsonArray.add(DataTools.createJsonObject("comment", strMergedComment));
 
-            slvTools.addStreetLightData("fixing.model", strFormArmType, paramsList);
-            jsonArray.add(DataTools.createJsonObject("armtype",strFormArmType));
+        slvTools.addStreetLightData("fixing.model", strFormArmType, paramsList);
+        jsonArray.add(DataTools.createJsonObject("armtype", strFormArmType));
 
-            slvTools.addStreetLightData("luminaire.model", strFormLumCode, paramsList);
-            jsonArray.add(DataTools.createJsonObject("lummodel",strFormLumCode));
+        slvTools.addStreetLightData("luminaire.model", strFormLumCode, paramsList);
+        jsonArray.add(DataTools.createJsonObject("lummodel", strFormLumCode));
 
-            slvTools.addStreetLightData("pole.height", strFormPoleLen, paramsList);
-            jsonArray.add(DataTools.createJsonObject("polelen",strFormPoleLen));
+        slvTools.addStreetLightData("pole.height", strFormPoleLen, paramsList);
+        jsonArray.add(DataTools.createJsonObject("polelen", strFormPoleLen));
 
-            slvTools.addStreetLightData("pole.status", strFormPoleCondition, paramsList);
-            jsonArray.add(DataTools.createJsonObject("polecon",strFormPoleCondition));
+        slvTools.addStreetLightData("pole.status", strFormPoleCondition, paramsList);
+        jsonArray.add(DataTools.createJsonObject("polecon", strFormPoleCondition));
 
-            slvTools.addStreetLightData("pole.type", strFormPoleManfu, paramsList);
-            jsonArray.add(DataTools.createJsonObject("polemanu",strFormPoleManfu));
+        slvTools.addStreetLightData("pole.type", strFormPoleManfu, paramsList);
+        jsonArray.add(DataTools.createJsonObject("polemanu", strFormPoleManfu));
 
-            slvTools.addStreetLightData("pole.groundtype", strFormFuse, paramsList);
-            jsonArray.add(DataTools.createJsonObject("fuse",strFormFuse));
+        slvTools.addStreetLightData("pole.groundtype", strFormFuse, paramsList);
+        jsonArray.add(DataTools.createJsonObject("fuse", strFormFuse));
 
-            if (strFormPower.equals("OTHER")) {
-                slvTools.addStreetLightData("power", strFormPowerOther, paramsList);
-                jsonArray.add(DataTools.createJsonObject("power",strFormPowerOther));
-            } else {
-                slvTools.addStreetLightData("power", strFormPower, paramsList);
-                jsonArray.add(DataTools.createJsonObject("power",strFormPower));
-            }
-            slvTools.addStreetLightData("location.locationtype", "LOCATION_TYPE_PREMISE", paramsList);
-            lightDataCompareResult.setJsonArray(jsonArray);
+        if (strFormPower.equals("OTHER")) {
+            slvTools.addStreetLightData("power", strFormPowerOther, paramsList);
+            jsonArray.add(DataTools.createJsonObject("power", strFormPowerOther));
+        } else {
+            slvTools.addStreetLightData("power", strFormPower, paramsList);
+            jsonArray.add(DataTools.createJsonObject("power", strFormPower));
+        }
+        slvTools.addStreetLightData("location.locationtype", "LOCATION_TYPE_PREMISE", paramsList);
+        lightDataCompareResult.setJsonArray(jsonArray);
 
         return lightDataCompareResult;
 
     }
-    private void clearDeviceValues(List<FormValues> formComponents,EdgeNote edgeNote,String controllerStrId,List<Object> paramsList) throws Exception {
+
+    private void clearDeviceValues(List<FormValues> formComponents, EdgeNote edgeNote, String controllerStrId, List<Object> paramsList) throws Exception {
 
         String strComment = PropertiesReader.getProperties().getProperty("streetlight.form.removecommentid");
-        String strFormComment = FormValueUtil.getValue(formComponents,DataTools.convertFormIDToInt(strComment));
-        String strReasonRemove =  PropertiesReader.getProperties().getProperty("streetlight.form.removereason");
-        String strFormReasonRemove = FormValueUtil.getValue(formComponents,DataTools.convertFormIDToInt(strReasonRemove));
+        String strFormComment = FormValueUtil.getValue(formComponents, DataTools.convertFormIDToInt(strComment));
+        String strReasonRemove = PropertiesReader.getProperties().getProperty("streetlight.form.removereason");
+        String strFormReasonRemove = FormValueUtil.getValue(formComponents, DataTools.convertFormIDToInt(strReasonRemove));
 
         String strRemove = PropertiesReader.getProperties().getProperty("streetlight.form.rreason.remove");
         String strPoleDown = PropertiesReader.getProperties().getProperty("streetlight.form.rreason.poledown");
 
-        paramsList.add("idOnController="+DataTools.URLEncoder(edgeNote.getTitle()));
-        paramsList.add("controllerStrId="+controllerStrId);
+        paramsList.add("idOnController=" + DataTools.URLEncoder(edgeNote.getTitle()));
+        paramsList.add("controllerStrId=" + controllerStrId);
 
-        if(strFormReasonRemove.equals(strRemove))
-        {
+        if (strFormReasonRemove.equals(strRemove)) {
             slvTools.addStreetLightData("installStatus", "Removed", paramsList);
-        }
-        else if(strFormReasonRemove.equals(strPoleDown))
-        {
+        } else if (strFormReasonRemove.equals(strPoleDown)) {
             slvTools.addStreetLightData("installStatus", "Pole Knocked Down", paramsList);
-        }
-        else
-        {
+        } else {
             slvTools.addStreetLightData("installStatus", "Removed", paramsList);
         }
 
         slvTools.addStreetLightData("install.date", "", paramsList);
 
 
+        slvTools.addStreetLightData("location.mapnumber", "", paramsList);
+        slvTools.addStreetLightData("address", "", paramsList);
+        slvTools.addStreetLightData("pole.material", "", paramsList);
 
-        slvTools.addStreetLightData("location.mapnumber","",paramsList);
-        slvTools.addStreetLightData("address","",paramsList);
-        slvTools.addStreetLightData("pole.material","",paramsList);
+        slvTools.addStreetLightData("pole.colorcode", "", paramsList);
+        slvTools.addStreetLightData("comment", strFormComment, paramsList);
+        slvTools.addStreetLightData("fixing.model", "", paramsList);
+        slvTools.addStreetLightData("luminaire.model", "", paramsList);
 
-        slvTools.addStreetLightData("pole.colorcode","",paramsList);
-        slvTools.addStreetLightData("comment",strFormComment,paramsList);
-        slvTools.addStreetLightData("fixing.model","",paramsList);
-        slvTools.addStreetLightData("luminaire.model","",paramsList);
+        slvTools.addStreetLightData("pole.height", "", paramsList);
+        slvTools.addStreetLightData("pole.status", "", paramsList);
 
-        slvTools.addStreetLightData("pole.height","",paramsList);
-        slvTools.addStreetLightData("pole.status","",paramsList);
+        slvTools.addStreetLightData("pole.type", "", paramsList);
 
-        slvTools.addStreetLightData("pole.type","",paramsList);
+        slvTools.addStreetLightData("pole.groundtype", "", paramsList);
 
-        slvTools.addStreetLightData("pole.groundtype","",paramsList);
-
-        slvTools.addStreetLightData("power","",paramsList);
+        slvTools.addStreetLightData("power", "", paramsList);
 
 
-        slvTools.addStreetLightData("lamp.installdate","",paramsList);
+        slvTools.addStreetLightData("lamp.installdate", "", paramsList);
     }
-    private void doProcess(String noteGuid,String accessToken,boolean resync)
-    {
+
+    private void doProcess(String noteGuid, String accessToken, boolean resync) {
         boolean isForTesting = false;
         String controllerStrId = PropertiesReader.getProperties().getProperty("streetlight.controller.str.id");
 
@@ -334,14 +307,11 @@ public class StreetLightCanadaService {
         String replaceMacAddress = PropertiesReader.getProperties().getProperty("streetlight.form.repmac");
 
 
-
-
-
         int actionid = Integer.parseInt(actionID);
         int newMacid = Integer.parseInt(newInstallMacAddress);
         int formGeoZoneId = Integer.parseInt(geoZoneID);
         url = url + PropertiesReader.getProperties().getProperty("streetlight.edge.url.notes.get");
-        url = url + "/" +noteGuid;
+        url = url + "/" + noteGuid;
         String installationFormTempGuid = PropertiesReader.getProperties().getProperty("streetlight.installation.formtempguid");
         logger.info("Given url is :" + url);
 
@@ -389,12 +359,11 @@ public class StreetLightCanadaService {
                         slvDevice.setDeviceId(edgeNote.getTitle());
                         slvDevice.setProcessedDateTime(currentTime);
                         try {
-                            boolean isDeviceExist = slvTools.deviceAlreadyExists(edgeNote.getTitle(),edgeNote);
+                            boolean isDeviceExist = slvTools.deviceAlreadyExists(edgeNote.getTitle(), edgeNote);
 
                             if (!isDeviceExist) {
                                 String strGeoZone = FormValueUtil.getValue(formComponents, formGeoZoneId);
-                                if(strGeoZone.equals(""))
-                                {
+                                if (strGeoZone.equals("")) {
                                     strGeoZone = edgeNote.getEdgeNotebook().getNotebookName();
                                 }
                                 if (!strGeoZone.equals("")) {
@@ -421,8 +390,7 @@ public class StreetLightCanadaService {
                             }
                             //At this Point Geozone and Device are ready
                             String dimmingValue = connectionDAO.getDimmingValue(edgeNote.getTitle());
-                            if(dimmingValue==null)
-                            {
+                            if (dimmingValue == null) {
                                 //System.out.println("Dimming value not found");
                                 //throw new DimmingValueException("No dimming value not found");
 
@@ -432,8 +400,7 @@ public class StreetLightCanadaService {
                             }
                             ///////////////////////////////////////////////////////////////////////////////////////////
                             SlvDevice slvDevice1 = connectionDAO.getSlvDevices(edgeNote.getTitle());
-                            if(slvDevice1 == null)
-                            {
+                            if (slvDevice1 == null) {
                                 slvDevice1 = new SlvDevice();
                                 slvDevice1.setDevicevalues("[]");
                                 slvDevice1.setMacAddress("");
@@ -449,200 +416,176 @@ public class StreetLightCanadaService {
                                 LightDataCompareResult lightDataCompareResult = null;
                                 try {
                                     lightDataCompareResult = populateAndCheckWithOldValues(formComponents, edgeNote, controllerStrId,
-                                            paramsList, currentDeviceValue,dimmingValue);
-                                }
-                                catch (Exception e)
-                                {
+                                            paramsList, currentDeviceValue, dimmingValue);
+                                } catch (Exception e) {
                                     throw new ValueCheckException(e.getMessage());
                                 }
-                                if(slvDevice1.getMacAddress() == null)
-                                {
+                                if (slvDevice1.getMacAddress() == null) {
                                     slvDevice1.setMacAddress("");
                                 }
                                 //if (slvDevice1.getMacAddress() != null || !slvDevice1.getMacAddress().equals("")) {
 
-                                    if (strActionString.equals(strNewInstall)) {
-                                        errorMacAddress = macAddress;
-                                        if (!slvDevice1.getMacAddress().toUpperCase().equals(macAddress.toUpperCase())) {
-                                            slvSyncDetails.setSelectedAction("Install");
-                                            slvTools.addStreetLightData("installStatus", "Installed", paramsList);
-                                            String strInstallDateId = PropertiesReader.getProperties().getProperty("streetlight.form.installdateid");
-                                            String strFormInstallDate = FormValueUtil.getValue(formComponents,DataTools.convertFormIDToInt(strInstallDateId));
-                                            long installDateTime = 0;
-                                            if(!strFormInstallDate.equals("") && !strFormInstallDate.equals("NaN"))
-                                            {
-                                                installDateTime = Long.parseLong(strFormInstallDate);
-                                            }
-                                            else
-                                            {
-                                                installDateTime = edgeNote.getCreatedDateTime();
-                                            }
-                                            slvTools.addStreetLightData("install.date", Utils.dateFormat(installDateTime), paramsList);
-                                            slvTools.addStreetLightData("lamp.installdate", Utils.dateFormat(installDateTime), paramsList);
-                                            if(!DataTools.checkForValidMacAddress(macAddress))
-                                            {
-                                                throw new InvalidMacAddressException("Bad macaddress " + macAddress);
-                                            }
-                                            slvTools.checkMacAddressExists(macAddress, edgeNote.getTitle(),edgeNote);
-                                            if(isForTesting)
-                                            {
-                                                //Send MacAddress for Testing
-                                                List<Object> paramsList1 = new ArrayList<>();
-                                                paramsList1.add("idOnController=" + DataTools.URLEncoder(edgeNote.getTitle()));
-                                                paramsList1.add("controllerStrId=" + controllerStrId);
+                                if (strActionString.equals(strNewInstall)) {
+                                    errorMacAddress = macAddress;
+                                    if (!slvDevice1.getMacAddress().toUpperCase().equals(macAddress.toUpperCase())) {
+                                        slvSyncDetails.setSelectedAction("Install");
+                                        slvTools.addStreetLightData("installStatus", "Installed", paramsList);
+                                        String strInstallDateId = PropertiesReader.getProperties().getProperty("streetlight.form.installdateid");
+                                        String strFormInstallDate = FormValueUtil.getValue(formComponents, DataTools.convertFormIDToInt(strInstallDateId));
+                                        long installDateTime = 0;
+                                        if (!strFormInstallDate.equals("") && !strFormInstallDate.equals("NaN")) {
+                                            installDateTime = Long.parseLong(strFormInstallDate);
+                                        } else {
+                                            installDateTime = edgeNote.getCreatedDateTime();
+                                        }
+                                        slvTools.addStreetLightData("install.date", Utils.dateFormat(installDateTime), paramsList);
+                                        slvTools.addStreetLightData("lamp.installdate", Utils.dateFormat(installDateTime), paramsList);
+                                        if (!DataTools.checkForValidMacAddress(macAddress)) {
+                                            throw new InvalidMacAddressException("Bad macaddress " + macAddress);
+                                        }
+                                        slvTools.checkMacAddressExists(macAddress, edgeNote.getTitle(), edgeNote);
+                                        if (isForTesting) {
+                                            //Send MacAddress for Testing
+                                            List<Object> paramsList1 = new ArrayList<>();
+                                            paramsList1.add("idOnController=" + DataTools.URLEncoder(edgeNote.getTitle()));
+                                            paramsList1.add("controllerStrId=" + controllerStrId);
 
-                                                slvTools.addStreetLightData("MacAddress", macAddress, paramsList1);
-                                                slvTools.setDeviceMacValues(paramsList1,slvSyncDetails,edgeNote);
-                                            }
-                                            slvTools.setDeviceValues(paramsList, slvSyncDetails,edgeNote);
-                                            if(isForTesting)
-                                            {
-                                                try {
-                                                    slvTools.replaceOLC(controllerStrId, edgeNote.getTitle(), "", edgeNote);
-                                                    slvTools.replaceOLC(controllerStrId, edgeNote.getTitle(), macAddress, edgeNote);
-                                                    slvTools.syncMacAddress2Edge(edgeNote.getTitle(),macAddress,edgeNote.getEdgeNotebook().getNotebookName());
-                                                } catch (ReplaceOLCFailedException e) {
-                                                    e.printStackTrace();
-                                                }
-                                            }
-                                            else
-                                            {
+                                            slvTools.addStreetLightData("MacAddress", macAddress, paramsList1);
+                                            slvTools.setDeviceMacValues(paramsList1, slvSyncDetails, edgeNote);
+                                        }
+                                        slvTools.setDeviceValues(paramsList, slvSyncDetails, edgeNote);
+                                        if (isForTesting) {
+                                            try {
                                                 slvTools.replaceOLC(controllerStrId, edgeNote.getTitle(), "", edgeNote);
                                                 slvTools.replaceOLC(controllerStrId, edgeNote.getTitle(), macAddress, edgeNote);
-                                                slvTools.syncMacAddress2Edge(edgeNote.getTitle(),macAddress,edgeNote.getEdgeNotebook().getNotebookName());
+                                                slvTools.syncMacAddress2Edge(edgeNote.getTitle(), macAddress, edgeNote.getEdgeNotebook().getNotebookName());
+                                            } catch (ReplaceOLCFailedException e) {
+                                                logger.error("Error",e);
                                             }
-                                            slvDevice.setMacAddress(macAddress);
+                                        } else {
+                                            slvTools.replaceOLC(controllerStrId, edgeNote.getTitle(), "", edgeNote);
+                                            slvTools.replaceOLC(controllerStrId, edgeNote.getTitle(), macAddress, edgeNote);
+                                            slvTools.syncMacAddress2Edge(edgeNote.getTitle(), macAddress, edgeNote.getEdgeNotebook().getNotebookName());
+                                        }
+                                        slvDevice.setMacAddress(macAddress);
+                                        String gsonValues = gson.toJson(lightDataCompareResult.getJsonArray());
+                                        connectionDAO.updateSlvDevice(edgeNote.getTitle(), macAddress, gsonValues);
+                                        slvSyncDetails.setStatus(Status.Success.toString());
+                                        slvSyncDetails.setMacAddress(macAddress);
+                                    } else {
+                                        if (lightDataCompareResult.isMustUpdate()) {
+                                            slvSyncDetails.setSelectedAction("Install-Update Light data Only");
+                                            slvTools.setDeviceValues(paramsList, slvSyncDetails, edgeNote);
                                             String gsonValues = gson.toJson(lightDataCompareResult.getJsonArray());
-                                            connectionDAO.updateSlvDevice(edgeNote.getTitle(),macAddress,gsonValues);
-                                            slvSyncDetails.setStatus(Status.Success.toString());
+                                            connectionDAO.updateSlvDevice(edgeNote.getTitle(), macAddress, gsonValues);
                                             slvSyncDetails.setMacAddress(macAddress);
                                         } else {
-                                            if (lightDataCompareResult.isMustUpdate()) {
-                                                slvSyncDetails.setSelectedAction("Install-Update Light data Only");
-                                                slvTools.setDeviceValues(paramsList, slvSyncDetails,edgeNote);
-                                                String gsonValues = gson.toJson(lightDataCompareResult.getJsonArray());
-                                                connectionDAO.updateSlvDevice(edgeNote.getTitle(),macAddress,gsonValues);
-                                                slvSyncDetails.setMacAddress(macAddress);
-                                            }
-                                            else
-                                            {
-                                                slvSyncDetails.setSelectedAction("Install-No Change");
-                                                slvSyncDetails.setMacAddress(macAddress);
-                                            }
-                                            slvSyncDetails.setStatus(Status.Success.toString());
+                                            slvSyncDetails.setSelectedAction("Install-No Change");
+                                            slvSyncDetails.setMacAddress(macAddress);
                                         }
-                                    } else if (strActionString.equals(strReplace)) {
-                                        errorMacAddress = strFormReplaceMac;
-                                        if (!slvDevice1.getMacAddress().toUpperCase().equals(strFormReplaceMac.toUpperCase())) {
-                                            slvSyncDetails.setSelectedAction("Replace");
-                                            slvTools.addStreetLightData("installStatus", "Installed", paramsList);
-                                            String strReplaceDateId = PropertiesReader.getProperties().getProperty("streetlight.form.replacedateid");
-                                            String strFormReplaceDate = FormValueUtil.getValue(formComponents,DataTools.convertFormIDToInt(strReplaceDateId));
-                                            long replaceDateTime = 0;
-                                            if(!strFormReplaceDate.equals("") && !strFormReplaceDate.equals("NaN"))
-                                            {
-                                                replaceDateTime = Long.parseLong(strFormReplaceDate);
-                                            }
-                                            else
-                                            {
-                                                replaceDateTime = edgeNote.getCreatedDateTime();
-                                            }
-                                            slvTools.addStreetLightData("install.date", Utils.dateFormat(replaceDateTime), paramsList);
-                                            slvTools.addStreetLightData("lamp.installdate", Utils.dateFormat(replaceDateTime), paramsList);
-                                            if(!DataTools.checkForValidMacAddress(strFormReplaceMac))
-                                            {
-                                                throw new InvalidMacAddressException("Bad macaddress " + strFormReplaceMac);
-                                            }
-                                            slvTools.checkMacAddressExists(strFormReplaceMac, edgeNote.getTitle(),edgeNote);
-                                            if(isForTesting)
-                                            {
-                                                //Send MacAddress for Testing
-                                                List<Object> paramsList1 = new ArrayList<>();
-                                                paramsList1.add("idOnController=" + DataTools.URLEncoder(edgeNote.getTitle()));
-                                                paramsList1.add("controllerStrId=" + controllerStrId);
+                                        slvSyncDetails.setStatus(Status.Success.toString());
+                                    }
+                                } else if (strActionString.equals(strReplace)) {
+                                    errorMacAddress = strFormReplaceMac;
+                                    if (!slvDevice1.getMacAddress().toUpperCase().equals(strFormReplaceMac.toUpperCase())) {
+                                        slvSyncDetails.setSelectedAction("Replace");
+                                        slvTools.addStreetLightData("installStatus", "Installed", paramsList);
+                                        String strReplaceDateId = PropertiesReader.getProperties().getProperty("streetlight.form.replacedateid");
+                                        String strFormReplaceDate = FormValueUtil.getValue(formComponents, DataTools.convertFormIDToInt(strReplaceDateId));
+                                        long replaceDateTime = 0;
+                                        if (!strFormReplaceDate.equals("") && !strFormReplaceDate.equals("NaN")) {
+                                            replaceDateTime = Long.parseLong(strFormReplaceDate);
+                                        } else {
+                                            replaceDateTime = edgeNote.getCreatedDateTime();
+                                        }
+                                        slvTools.addStreetLightData("install.date", Utils.dateFormat(replaceDateTime), paramsList);
+                                        slvTools.addStreetLightData("lamp.installdate", Utils.dateFormat(replaceDateTime), paramsList);
+                                        if (!DataTools.checkForValidMacAddress(strFormReplaceMac)) {
+                                            throw new InvalidMacAddressException("Bad macaddress " + strFormReplaceMac);
+                                        }
+                                        slvTools.checkMacAddressExists(strFormReplaceMac, edgeNote.getTitle(), edgeNote);
+                                        if (isForTesting) {
+                                            //Send MacAddress for Testing
+                                            List<Object> paramsList1 = new ArrayList<>();
+                                            paramsList1.add("idOnController=" + DataTools.URLEncoder(edgeNote.getTitle()));
+                                            paramsList1.add("controllerStrId=" + controllerStrId);
 
-                                                slvTools.addStreetLightData("MacAddress", strFormReplaceMac, paramsList1);
-                                                slvTools.setDeviceMacValues(paramsList1,slvSyncDetails,edgeNote);
-                                            }
-                                            slvTools.setDeviceValues(paramsList, slvSyncDetails,edgeNote);
-                                            if(isForTesting)
-                                            {
-                                                try {
-                                                    slvTools.replaceOLC(controllerStrId, edgeNote.getTitle(), "", edgeNote);
-                                                    slvTools.replaceOLC(controllerStrId, edgeNote.getTitle(), strFormReplaceMac, edgeNote);
-                                                    slvTools.syncMacAddress2Edge(edgeNote.getTitle(),strFormReplaceMac,edgeNote.getEdgeNotebook().getNotebookName());
-                                                } catch (ReplaceOLCFailedException e) {
-                                                    e.printStackTrace();
-                                                }
-                                            }
-                                            else
-                                            {
+                                            slvTools.addStreetLightData("MacAddress", strFormReplaceMac, paramsList1);
+                                            slvTools.setDeviceMacValues(paramsList1, slvSyncDetails, edgeNote);
+                                        }
+                                        slvTools.setDeviceValues(paramsList, slvSyncDetails, edgeNote);
+                                        if (isForTesting) {
+                                            try {
                                                 slvTools.replaceOLC(controllerStrId, edgeNote.getTitle(), "", edgeNote);
                                                 slvTools.replaceOLC(controllerStrId, edgeNote.getTitle(), strFormReplaceMac, edgeNote);
-                                                slvTools.syncMacAddress2Edge(edgeNote.getTitle(),strFormReplaceMac,edgeNote.getEdgeNotebook().getNotebookName());
+                                                slvTools.syncMacAddress2Edge(edgeNote.getTitle(), strFormReplaceMac, edgeNote.getEdgeNotebook().getNotebookName());
+                                            } catch (ReplaceOLCFailedException e) {
+                                                logger.error("Error",e);
                                             }
-                                            String gsonValues = gson.toJson(lightDataCompareResult.getJsonArray());
-                                            connectionDAO.updateSlvDevice(edgeNote.getTitle(),strFormReplaceMac,gsonValues);
-                                            slvSyncDetails.setStatus(Status.Success.toString());
-                                            slvSyncDetails.setMacAddress(strFormReplaceMac);
                                         } else {
-                                            if (lightDataCompareResult.isMustUpdate()) {
-                                                slvSyncDetails.setSelectedAction("Replace-Light Data Only");
-                                                slvTools.setDeviceValues(paramsList, slvSyncDetails,edgeNote);
-                                                String gsonValues = gson.toJson(lightDataCompareResult.getJsonArray());
-                                                connectionDAO.updateSlvDevice(edgeNote.getTitle(),strFormReplaceMac,gsonValues);
-
-                                            }
-                                            else
-                                            {
-                                                slvSyncDetails.setSelectedAction("Replace-No Changes");
-                                            }
-                                            slvSyncDetails.setStatus(Status.Success.toString());
-                                            slvSyncDetails.setMacAddress(strFormReplaceMac);
+                                            slvTools.replaceOLC(controllerStrId, edgeNote.getTitle(), "", edgeNote);
+                                            slvTools.replaceOLC(controllerStrId, edgeNote.getTitle(), strFormReplaceMac, edgeNote);
+                                            slvTools.syncMacAddress2Edge(edgeNote.getTitle(), strFormReplaceMac, edgeNote.getEdgeNotebook().getNotebookName());
                                         }
-                                    } else if (strActionString.equals(strRemove)) {
-                                        errorMacAddress = "";
-                                        slvSyncDetails.setSelectedAction("Remove");
-                                        String strReasonRemove =  PropertiesReader.getProperties().getProperty("streetlight.form.removereason");
-                                        String strFormReasonRemove = FormValueUtil.getValue(formComponents,DataTools.convertFormIDToInt(strReasonRemove));
-                                        String strPoleRemove = PropertiesReader.getProperties().getProperty("streetlight.form.rreason.remove");
-                                        String strPoleDown = PropertiesReader.getProperties().getProperty("streetlight.form.rreason.poledown");
-                                        if(!strFormReasonRemove.equals(strPoleRemove) && !strFormReasonRemove.equals(strPoleDown))
-                                        {
-                                            List<Object> paramsListClear = new ArrayList<>();
+                                        String gsonValues = gson.toJson(lightDataCompareResult.getJsonArray());
+                                        connectionDAO.updateSlvDevice(edgeNote.getTitle(), strFormReplaceMac, gsonValues);
+                                        slvSyncDetails.setStatus(Status.Success.toString());
+                                        slvSyncDetails.setMacAddress(strFormReplaceMac);
+                                    } else {
+                                        if (lightDataCompareResult.isMustUpdate()) {
+                                            slvSyncDetails.setSelectedAction("Replace-Light Data Only");
+                                            slvTools.setDeviceValues(paramsList, slvSyncDetails, edgeNote);
+                                            String gsonValues = gson.toJson(lightDataCompareResult.getJsonArray());
+                                            connectionDAO.updateSlvDevice(edgeNote.getTitle(), strFormReplaceMac, gsonValues);
+
+                                        } else {
+                                            slvSyncDetails.setSelectedAction("Replace-No Changes");
+                                        }
+                                        slvSyncDetails.setStatus(Status.Success.toString());
+                                        slvSyncDetails.setMacAddress(strFormReplaceMac);
+                                    }
+                                } else if (strActionString.equals(strRemove)) {
+                                    errorMacAddress = "";
+                                    slvSyncDetails.setSelectedAction("Remove");
+                                    String strReasonRemove = PropertiesReader.getProperties().getProperty("streetlight.form.removereason");
+                                    String strFormReasonRemove = FormValueUtil.getValue(formComponents, DataTools.convertFormIDToInt(strReasonRemove));
+                                    String strPoleRemove = PropertiesReader.getProperties().getProperty("streetlight.form.rreason.remove");
+                                    String strPoleDown = PropertiesReader.getProperties().getProperty("streetlight.form.rreason.poledown");
+                                    if (!strFormReasonRemove.equals(strPoleRemove) && !strFormReasonRemove.equals(strPoleDown)) {
+                                        List<Object> paramsListClear = new ArrayList<>();
+                                        try {
+
+                                            clearDeviceValues(formComponents, edgeNote, controllerStrId, paramsListClear);
+                                        } catch (Exception e) {
+                                            throw new ValueClearException(e.getMessage());
+                                        }
+                                        slvTools.setDeviceValues(paramsListClear, slvSyncDetails, edgeNote);
+                                        if (isForTesting) {
+                                            //Send MacAddress for Testing
+                                            List<Object> paramsList1 = new ArrayList<>();
+                                            paramsList1.add("idOnController=" + DataTools.URLEncoder(edgeNote.getTitle()));
+                                            paramsList1.add("controllerStrId=" + controllerStrId);
+
+                                            slvTools.addStreetLightData("MacAddress", "", paramsList1);
+                                            slvTools.setDeviceMacValues(paramsList1, slvSyncDetails, edgeNote);
+                                        }
+                                        if (isForTesting) {
                                             try {
-
-                                                clearDeviceValues(formComponents, edgeNote, controllerStrId, paramsListClear);
-                                            } catch (Exception e) {
-                                                throw new ValueClearException(e.getMessage());
-                                            }
-                                            slvTools.setDeviceValues(paramsListClear, slvSyncDetails, edgeNote);
-                                            if (isForTesting) {
-                                                //Send MacAddress for Testing
-                                                List<Object> paramsList1 = new ArrayList<>();
-                                                paramsList1.add("idOnController=" + DataTools.URLEncoder(edgeNote.getTitle()));
-                                                paramsList1.add("controllerStrId=" + controllerStrId);
-
-                                                slvTools.addStreetLightData("MacAddress", "", paramsList1);
-                                                slvTools.setDeviceMacValues(paramsList1, slvSyncDetails, edgeNote);
-                                            }
-                                            if (isForTesting) {
-                                                try {
-                                                    slvTools.replaceOLC(controllerStrId, edgeNote.getTitle(), "", edgeNote);
-                                                    slvTools.removeEdgeSLVMacAddress(edgeNote.getTitle());
-                                                } catch (Exception e) {
-                                                    e.printStackTrace();
-                                                }
-                                            } else {
                                                 slvTools.replaceOLC(controllerStrId, edgeNote.getTitle(), "", edgeNote);
                                                 slvTools.removeEdgeSLVMacAddress(edgeNote.getTitle());
+                                            } catch (Exception e) {
+                                                logger.error("Error",e);
                                             }
-
-                                            connectionDAO.updateSlvDevice(edgeNote.getTitle(), "", "[]");
-                                            slvSyncDetails.setStatus(Status.Success.toString());
-                                            slvSyncDetails.setMacAddress("");
+                                        } else {
+                                            slvTools.replaceOLC(controllerStrId, edgeNote.getTitle(), "", edgeNote);
+                                            slvTools.removeEdgeSLVMacAddress(edgeNote.getTitle());
                                         }
+
+                                        connectionDAO.updateSlvDevice(edgeNote.getTitle(), "", "[]");
+                                        slvSyncDetails.setStatus(Status.Success.toString());
+                                        slvSyncDetails.setMacAddress("");
                                     }
+                                }
                                 //}
                             }
 
@@ -650,136 +593,79 @@ public class StreetLightCanadaService {
 
                             //End Template match
                         } catch (GeoZoneCreationFailedException e) {
-                            StringWriter sw = new StringWriter();
-                            PrintWriter pw = new PrintWriter(sw);
-                            e.printStackTrace(pw);
-                            logger.error(sw.toString());
+                            logger.error("Error",e);
                             slvSyncDetails.setStatus(Status.Failure.toString());
                             slvSyncDetails.setErrorDetails("Error creating GeoZone");
                             slvSyncDetails.setMacAddress(errorMacAddress);
-                        }
-                        catch (SearchGeoZoneException e) {
-                            StringWriter sw = new StringWriter();
-                            PrintWriter pw = new PrintWriter(sw);
-                            e.printStackTrace(pw);
-                            logger.error(sw.toString());
+                        } catch (SearchGeoZoneException e) {
+                            logger.error("Error",e);
                             slvSyncDetails.setStatus(Status.Failure.toString());
                             slvSyncDetails.setErrorDetails("Error searching GeoZone");
                             slvSyncDetails.setMacAddress(errorMacAddress);
-                        }
-                        catch (DeviceCreationFailedException e) {
-                            StringWriter sw = new StringWriter();
-                            PrintWriter pw = new PrintWriter(sw);
-                            e.printStackTrace(pw);
-                            logger.error(sw.toString());
+                        } catch (DeviceCreationFailedException e) {
+                            logger.error("Error",e);
                             slvSyncDetails.setStatus(Status.Failure.toString());
                             slvSyncDetails.setErrorDetails("Error creating Device");
                             slvSyncDetails.setMacAddress(errorMacAddress);
-                        }
-                        catch (QRCodeAlreadyUsedException e) {
-                            StringWriter sw = new StringWriter();
-                            PrintWriter pw = new PrintWriter(sw);
-                            e.printStackTrace(pw);
-                            logger.error(sw.toString());
+                        } catch (QRCodeAlreadyUsedException e) {
+                            logger.error("Error",e);
                             slvSyncDetails.setStatus(Status.Failure.toString());
                             slvSyncDetails.setErrorDetails("Error using MacAddress " + e.getMessage());
                             slvSyncDetails.setMacAddress(errorMacAddress);
-                        }
-                        catch (DeviceUpdationFailedException e) {
-                            StringWriter sw = new StringWriter();
-                            PrintWriter pw = new PrintWriter(sw);
-                            e.printStackTrace(pw);
-                            logger.error(sw.toString());
+                        } catch (DeviceUpdationFailedException e) {
+                            logger.error("Error",e);
                             slvSyncDetails.setStatus(Status.Failure.toString());
                             slvSyncDetails.setErrorDetails("Error creating updating Device attributes");
                             slvSyncDetails.setMacAddress(errorMacAddress);
-                        }
-                        catch (ReplaceOLCFailedException e) {
-                            StringWriter sw = new StringWriter();
-                            PrintWriter pw = new PrintWriter(sw);
-                            e.printStackTrace(pw);
-                            logger.error(sw.toString());
+                        } catch (ReplaceOLCFailedException e) {
+                            logger.error("Error",e);
                             slvSyncDetails.setStatus(Status.Failure.toString());
                             slvSyncDetails.setErrorDetails("Error calling Replace OLC");
                             slvSyncDetails.setMacAddress(errorMacAddress);
-                        }
-                        catch (IOException e) {
-                            StringWriter sw = new StringWriter();
-                            PrintWriter pw = new PrintWriter(sw);
-                            e.printStackTrace(pw);
-                            logger.error(sw.toString());
+                        } catch (IOException e) {
+                            logger.error("Error",e);
                             slvSyncDetails.setStatus(Status.Failure.toString());
                             slvSyncDetails.setErrorDetails("Error during connection " + e.getMessage());
                             slvSyncDetails.setMacAddress(errorMacAddress);
-                        }
-                        catch (ValueCheckException e) {
-                            StringWriter sw = new StringWriter();
-                            PrintWriter pw = new PrintWriter(sw);
-                            e.printStackTrace(pw);
-                            logger.error(sw.toString());
+                        } catch (ValueCheckException e) {
+                            logger.error("Error",e);
                             slvSyncDetails.setStatus(Status.Failure.toString());
                             slvSyncDetails.setErrorDetails("Error Comparing Light attributes data");
                             slvSyncDetails.setMacAddress(errorMacAddress);
-                        }
-                        catch (ValueClearException e) {
-                            StringWriter sw = new StringWriter();
-                            PrintWriter pw = new PrintWriter(sw);
-                            e.printStackTrace(pw);
-                            logger.error(sw.toString());
+                        } catch (ValueClearException e) {
+                            logger.error("Error",e);
                             slvSyncDetails.setStatus(Status.Failure.toString());
                             slvSyncDetails.setErrorDetails("Error clearing Light attributes  data");
                             slvSyncDetails.setMacAddress(errorMacAddress);
-                        }
-                        catch (InvalidMacAddressException e) {
-                            StringWriter sw = new StringWriter();
-                            PrintWriter pw = new PrintWriter(sw);
-                            e.printStackTrace(pw);
-                            logger.error(sw.toString());
+                        } catch (InvalidMacAddressException e) {
+                            logger.error("Error",e);
                             slvSyncDetails.setStatus(Status.Failure.toString());
                             slvSyncDetails.setErrorDetails("Error in macaddress format");
                             slvSyncDetails.setMacAddress(errorMacAddress);
-                        }
-                        catch (ErrorCheckDeviceExists e)
-                        {
-                            StringWriter sw = new StringWriter();
-                            PrintWriter pw = new PrintWriter(sw);
-                            e.printStackTrace(pw);
-                            logger.error(sw.toString());
+                        } catch (ErrorCheckDeviceExists e) {
+                            logger.error("Error",e);
                             slvSyncDetails.setStatus(Status.Failure.toString());
                             slvSyncDetails.setErrorDetails(e.getMessage());
                             slvSyncDetails.setMacAddress(errorMacAddress);
-                        }
-                        catch (DimmingValueException e)
-                        {
-                            StringWriter sw = new StringWriter();
-                            PrintWriter pw = new PrintWriter(sw);
-                            e.printStackTrace(pw);
-                            logger.error(sw.toString());
+                        } catch (DimmingValueException e) {
+                            logger.error("Error",e);
                             slvSyncDetails.setErrorDetails("Not Dimming value found");
-                            slvSyncDetails.setErrorDetails(sw.toString());
                             slvSyncDetails.setStatus(Status.Failure.toString());
                             slvSyncDetails.setMacAddress(errorMacAddress);
-                        }
-                        catch (Exception e)
-                        {
-                            StringWriter sw = new StringWriter();
-                            PrintWriter pw = new PrintWriter(sw);
-                            e.printStackTrace(pw);
-                            logger.error(sw.toString());
-                            slvSyncDetails.setErrorDetails(sw.toString());
+                        } catch (Exception e) {
+                            logger.error("Error",e);
+                            slvSyncDetails.setErrorDetails(e.getMessage());
                             slvSyncDetails.setStatus(Status.Failure.toString());
                             slvSyncDetails.setMacAddress(errorMacAddress);
 
-                        }
-                        finally {
+                        } finally {
                             connectionDAO.saveSlvSyncDetails(slvSyncDetails);
                         }
                         //End Form Loop
                     }
 
                 }
-                if(!foundFormTemplate)
-                {
+                if (!foundFormTemplate) {
                     SlvSyncDetails slvSyncDetails = new SlvSyncDetails();
                     slvSyncDetails.setNoteName(edgeNote.getTitle());
                     slvSyncDetails.setNoteGuid(edgeNote.getNoteGuid());
@@ -793,63 +679,54 @@ public class StreetLightCanadaService {
             }
         }
     }
-    public void run(){
+
+    public void run() {
 
 
-        String actionResync =  PropertiesReader.getProperties().getProperty("streetlight.edge.data.resync");
+        String actionResync = PropertiesReader.getProperties().getProperty("streetlight.edge.data.resync");
 
-        if(actionResync == null)
-        {
+        if (actionResync == null) {
             actionResync = "false";
         }
 
-            if(actionResync.equals("true"))
-            {
-                BufferedReader bufferedReader = null;
-                try {
+        if (actionResync.equals("true")) {
+            BufferedReader bufferedReader = null;
+            try {
 
-                    File f = new File("./resync.txt");
+                File f = new File("./resync.txt");
 
-                    bufferedReader = new BufferedReader(new FileReader(f));
+                bufferedReader = new BufferedReader(new FileReader(f));
 
-                    String readLine = "";
+                String readLine = "";
 
-                    System.out.println("Reading file using Buffered Reader");
+                System.out.println("Reading file using Buffered Reader");
 
-                    while ((readLine = bufferedReader.readLine()) != null) {
-                        System.out.println(readLine);
-                        if(!readLine.equals(""))
-                        {
-                            System.out.println("Processing " + readLine);
-                            String terragoAccessToken = edgeRestService.getEdgeToken();
-                            doProcess(readLine, terragoAccessToken, false);
-                        }
+                while ((readLine = bufferedReader.readLine()) != null) {
+                    System.out.println(readLine);
+                    if (!readLine.equals("")) {
+                        System.out.println("Processing " + readLine);
+                        String terragoAccessToken = edgeRestService.getEdgeToken();
+                        doProcess(readLine, terragoAccessToken, false);
                     }
-
-
-                } catch (IOException e) {
-                    e.printStackTrace();
                 }
-                finally {
-                    if(bufferedReader != null)
-                    {
-                        try{
-                            bufferedReader.close();
-                        }
-                        catch (Exception e)
-                        {
 
-                        }
+
+            } catch (IOException e) {
+                logger.error("Error",e);
+            } finally {
+                if (bufferedReader != null) {
+                    try {
+                        bufferedReader.close();
+                    } catch (Exception e) {
+
                     }
                 }
             }
-
-        else
-        {
+        } else {
             //##############################################################################################
             do {
                 //Normal SLV Process
-                String edgeSlvUrl =  PropertiesReader.getProperties().getProperty("streetlight.edge.slvserver.url");
+                String edgeSlvUrl = PropertiesReader.getProperties().getProperty("streetlight.edge.slvserver.url");
                 edgeSlvUrl = edgeSlvUrl + "/notesGuid?lastSyncTime=";
 
                 long lastSynctime = connectionDAO.getLastSyncTime();
@@ -878,22 +755,18 @@ public class StreetLightCanadaService {
                             }
                         }
                     } catch (Exception e) {
-                        e.printStackTrace();
+                        logger.error("Error",e);
                     }
 
                 }
                 try {
                     Thread.sleep(10000);
+                } catch (Exception e) {
+                    logger.error("Error",e);
                 }
-                catch (Exception e)
-                {
-                    e.printStackTrace();
-                }
-            }while(true);
+            } while (true);
             //########################################################################################
         }
-
-
 
 
     }
