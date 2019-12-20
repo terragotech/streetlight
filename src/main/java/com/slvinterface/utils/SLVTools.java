@@ -297,7 +297,7 @@ public class SLVTools {
         paramsList.add("idOnController="+DataTools.URLEncoder(edgenote.getTitle()));
         paramsList.add("lat="+String.valueOf(geom.getCoordinate().y));
         paramsList.add("lng="+String.valueOf(geom.getCoordinate().x));
-        paramsList.add("nodeTypeStrId="+DataTools.URLEncoder(nodeTypeStrId));
+      //  paramsList.add("nodeTypeStrId="+DataTools.URLEncoder(nodeTypeStrId));
 
         String params = StringUtils.join(paramsList, "&");
         url = url + "?" + params;
