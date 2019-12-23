@@ -15,21 +15,22 @@ public class StreetlightApp {
 
 
 	public static void main(String[] args) {
-        Calendar calendar = Calendar.getInstance();
+
 	    while (true){
             StreetlightChicagoService streetlightChicagoService = null;
             try{
                 streetlightChicagoService = new StreetlightChicagoService();
                 streetlightChicagoService.run();
+
+                Calendar calendar = Calendar.getInstance();
                 calendar.setTime(new Date());
                 int hours = calendar.get(Calendar.HOUR_OF_DAY);
-                if(hours == Integer.valueOf(PropertiesReader.getProperties().getProperty("com.existing.mac.validation.failure.report.time"))){
+
+                if(hours == Integer.valueOf(PropertiesReader.getProperties().getProperty("com.installation.exception.report.time"))){
 
                     if(!isReportProcessed){
                         logger.info("Existing MAC Address Report process starts.");
-                        String fileUploadUrl = PropertiesReader.getProperties().getProperty("com.existing.mac.validation.failure.report.url");
-                        logger.info("File Upload Url:"+fileUploadUrl);
-                        streetlightChicagoService.edgeSlvserverCall(fileUploadUrl);
+                        streetlightChicagoService.generateInstallationRemovedExceptionReport();
                         logger.info("Existing MAC Address Report process Ends.");
                         isReportProcessed = true;
                     }

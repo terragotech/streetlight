@@ -1,11 +1,10 @@
 package com.terragoedge.streetlight.service;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
+import java.io.*;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
+import com.opencsv.CSVWriter;
 import com.terragoedge.edgeserver.*;
 import com.terragoedge.streetlight.OpenCsvUtils;
 import com.terragoedge.streetlight.dao.ClientAccountEntity;
@@ -13,12 +12,14 @@ import com.terragoedge.streetlight.edgeinterface.SlvData;
 import com.terragoedge.streetlight.edgeinterface.SlvToEdgeService;
 import com.terragoedge.streetlight.exception.NoValueException;
 import com.terragoedge.streetlight.json.model.ExistingMacValidationFailure;
+import com.terragoedge.streetlight.json.model.InstallationRemovedExceptionReport;
 import com.terragoedge.streetlight.json.model.SLVTransactionLogs;
 import com.terragoedge.streetlight.json.model.SlvInterfaceLogEntity;
 import com.terragoedge.streetlight.logging.InstallMaintenanceLogModel;
 import com.terragoedge.streetlight.logging.LoggingModel;
 import org.apache.log4j.Logger;
 import org.joda.time.DateTime;
+import org.springframework.core.io.FileSystemResource;
 import org.springframework.http.*;
 
 import com.google.gson.JsonArray;
@@ -263,56 +264,99 @@ public class StreetlightChicagoService extends AbstractProcessor {
         return dateFormat.format(cal.getTime());
     }
 
-    public ResponseEntity<String> edgeSlvserverCall(String url) {
-        long millis = DateTime.now().minusDays(1).withTimeAtStartOfDay().getMillis();
-        List<ExistingMacValidationFailure> existingMacValidationFailures = connectionDAO.getAllExistingMacVaildationFailures(millis);
-        List<String[]> datas = new ArrayList<>();
-        String[] headers = {"idoncontroller","noteguid","createdby","slvmacaddress","edge_existingmacaddress","edge_newmacaddress","created_datetime","processed_datetime"};
-        datas.add(headers);
-        for(ExistingMacValidationFailure existingMacValidationFailure : existingMacValidationFailures){
-            List<String> data = new ArrayList<>();
-            data.add(existingMacValidationFailure.getIdOnController());
-            data.add(existingMacValidationFailure.getNoteGuid());
-            data.add(existingMacValidationFailure.getCreatedBy());
-            data.add(existingMacValidationFailure.getSlvMacaddress());
-            data.add(existingMacValidationFailure.getEdgeExistingMacaddress());
-            data.add(existingMacValidationFailure.getEdgeNewNodeMacaddress());
-            data.add(OpenCsvUtils.getFormatedDateTime(existingMacValidationFailure.getCreatedDateTime()));
-            data.add(OpenCsvUtils.getFormatedDateTime(existingMacValidationFailure.getProcessedDateTime()));
-            datas.add(data.toArray(new String[0]));
-        }
-        String fileName = OpenCsvUtils.getCsvFileName()+".csv";
-        String folderPath = properties.getProperty("com.existing.macaddress.failure.report.path");
-        File folder = new File(folderPath);
-        if(!folder.exists()){
-            folder.mkdirs();
-        }
-        String outputFilePath = folderPath+"/"+fileName;
-        logger.error("Output File Path:"+outputFilePath);
-        try {
-            OpenCsvUtils.csvWriterAll(datas,outputFilePath);
+    public void generateInstallationRemovedExceptionReport() {
+        CSVWriter csvWriter = null;
+        Writer writer = null;
+        String folderPath = null;
+        try{
+
+            folderPath = properties.getProperty("com.installation.report.root.path");
+            String fileName = OpenCsvUtils.getCsvFileName();
+            folderPath = folderPath + "/"+fileName;
+            File folder = new File(folderPath);
+            if(!folder.exists()){
+                folder.mkdirs();
+            }
+            folderPath = folderPath + "/InstallationRemovedReport"+fileName+".csv";
+            writer = new FileWriter(folderPath);
+            csvWriter = new CSVWriter(writer,
+                    CSVWriter.DEFAULT_SEPARATOR,
+                    CSVWriter.DEFAULT_QUOTE_CHARACTER,
+                    CSVWriter.DEFAULT_ESCAPE_CHARACTER,
+                    CSVWriter.DEFAULT_LINE_END);
+            String[] headerRecord = {"title","createdby","slv_macaddress","created_datetime","communication_status"};
+            csvWriter.writeNext(headerRecord);
+
+            List<InstallationRemovedExceptionReport> installationRemovedExceptionReportList = connectionDAO.getInstallationRemovedExceptionReport();
+            for(InstallationRemovedExceptionReport installationRemovedExceptionReport : installationRemovedExceptionReportList){
+                csvWriter.writeNext(new String[]{installationRemovedExceptionReport.getIdOnController(),
+                        installationRemovedExceptionReport.getCreatedBy(),
+                        installationRemovedExceptionReport.getMacAddress(),
+                        OpenCsvUtils.getFormatedDateTime(installationRemovedExceptionReport.getCreatedDateTime()),
+                        installationRemovedExceptionReport.getCommunicationStatus()
+                });
+                csvWriter.flush();
+            }
         }catch (Exception e){
-           logger.error("Error in edgeSlvserverCall",e);
+            logger.error("Error in generateInstallationRemovedExceptionReport",e);
+            return;
+        }finally {
+            if(csvWriter != null){
+                try{
+                    csvWriter.close();
+                }catch (Exception e){
+                    logger.error("Error in generateInstallationRemovedExceptionReport",e);
+                }
+
+            }
+
+            if(writer != null){
+                try{
+                    writer.close();
+                }catch (Exception e){
+                    logger.error("Error in generateInstallationRemovedExceptionReport",e);
+                }
+            }
         }
-        return uploadFileToEdgeSlvServer(url,outputFilePath);
+
+         uploadFileToEdgeSlvServer(folderPath);
+
     }
 
-    private ResponseEntity<String> uploadFileToEdgeSlvServer(String url,String outputFilePath){
-        RestTemplate restTemplate = new RestTemplate();
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.MULTIPART_FORM_DATA);
+    private ResponseEntity<String> uploadFileToEdgeSlvServer(String outputFilePath){
+        try{
+            String baseUrl =  properties.getProperty("streetlight.edge.slvserver.url");
+            String uploadUrl = properties.getProperty("com.installation.report.upload.url");
 
-        MultiValueMap<String, Object> body
-                = new LinkedMultiValueMap<>();
-        body.add("file", new File(outputFilePath));
+            String subject = properties.getProperty("com.installation.report.mail.subject");
+            String body = properties.getProperty("com.installation.report.mail.body");
+            String receipents = properties.getProperty("com.installation.report.mail.receipts");
 
-        HttpEntity<MultiValueMap<String, Object>> requestEntity
-                = new HttpEntity<>(headers);
+            baseUrl = baseUrl + uploadUrl;
+            RestTemplate restTemplate = new RestTemplate();
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.MULTIPART_FORM_DATA);
 
-        ResponseEntity<String> responseEntity = restTemplate.postForEntity(url, requestEntity, String.class);
-        logger.info("------------ Response ------------------");
-        logger.info("Response Code:" + responseEntity.getStatusCode().toString());
-        return responseEntity;
+            MultiValueMap<String, Object> multiValueMap
+                    = new LinkedMultiValueMap<>();
+            multiValueMap.add("file", new FileSystemResource(outputFilePath));
+            multiValueMap.add("subject",subject);
+            multiValueMap.add("body",body);
+            multiValueMap.add("receipents",receipents);
+
+
+            HttpEntity<MultiValueMap<String, Object>> requestEntity
+                    = new HttpEntity<>(headers);
+
+            ResponseEntity<String> responseEntity = restTemplate.postForEntity(baseUrl, requestEntity, String.class);
+            logger.info("------------ Response ------------------");
+            logger.info("Response Code:" + responseEntity.getStatusCode().toString());
+            return responseEntity;
+        }catch (Exception e){
+            logger.error("Error in uploadFileToEdgeSlvServer",e);
+        }
+        return null;
+
     }
     private int validateForms(EdgeNote edgeNote){
         String installFormTemplateGuid = properties.getProperty("amerescousa.edge.formtemplateGuid");

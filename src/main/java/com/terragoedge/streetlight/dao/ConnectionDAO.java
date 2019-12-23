@@ -47,6 +47,8 @@ public enum ConnectionDAO {
     public Dao<ProContextLookupData, String> proContextLookupDao = null;
     public Dao<DroppedPinRemoveEvent, String> droppedPinRemoveEventDao = null;
 
+    public Dao<InstallationRemovedExceptionReport,String> installationRemovedExceptionReportStringDao =null;
+
     ConnectionDAO() {
         openConnection();
     }
@@ -55,6 +57,15 @@ public enum ConnectionDAO {
         try {
             String dbUrl = PropertiesReader.getProperties().getProperty("edge.db.url");
             connectionSource = new JdbcConnectionSource(dbUrl);
+
+            try {
+                TableUtils.createTableIfNotExists(connectionSource, InstallationRemovedExceptionReport.class);
+
+            } catch (Exception e) {
+                //logger.error("Error in openConnection", e);
+            }
+
+
             try {
                 TableUtils.createTableIfNotExists(connectionSource, DuplicateMacAddress.class);
 
@@ -139,6 +150,8 @@ public enum ConnectionDAO {
             edgeAllSerialNumbersDao = DaoManager.createDao(connectionSource, EdgeAllSerialNumber.class);
 
             droppedPinRemoveEventDao = DaoManager.createDao(connectionSource, DroppedPinRemoveEvent.class);
+
+            installationRemovedExceptionReportStringDao = DaoManager.createDao(connectionSource,InstallationRemovedExceptionReport.class);
 
             System.out.println("Connected.....");
         } catch (Exception e) {
@@ -469,6 +482,36 @@ public enum ConnectionDAO {
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    public void addInstallationRemovedReport(InstallationRemovedExceptionReport installationRemovedExceptionReport){
+        try {
+            removeInstallationRemovedReport(installationRemovedExceptionReport.getIdOnController());
+            installationRemovedExceptionReportStringDao.create(installationRemovedExceptionReport);
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+    }
+
+
+    public void  removeInstallationRemovedReport(String title){
+        try {
+            DeleteBuilder deleteBuilder = installationRemovedExceptionReportStringDao.deleteBuilder();
+            deleteBuilder.where().eq(InstallationRemovedExceptionReport.TITLE, title);
+            deleteBuilder.delete();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+
+    public List<InstallationRemovedExceptionReport> getInstallationRemovedExceptionReport(){
+        try{
+          return   installationRemovedExceptionReportStringDao.queryForAll();
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+        return new ArrayList<>();
     }
 
 
