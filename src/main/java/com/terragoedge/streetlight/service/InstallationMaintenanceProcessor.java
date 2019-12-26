@@ -1251,7 +1251,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
                         }
                         logger.info("empty replaceOLC called");
                         try {
-                            clearDeviceValues(installMaintenanceLogModel.getIdOnController(), installMaintenanceLogModel.getControllerSrtId(), "Installed on Wrong Fixture", installMaintenanceLogModel);
+                            clearDeviceValues(installMaintenanceLogModel.getIdOnController(), installMaintenanceLogModel.getControllerSrtId(), "Installed on Wrong Fixture", installMaintenanceLogModel,false);
                         } catch (Exception e) {
                             e.printStackTrace();
                             logger.error("Error in clear device values:" + e.getMessage());
@@ -1310,7 +1310,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
                                 logger.error("error in replace OLC:" + e.getMessage());
                             }
                         }
-                        clearDeviceValues(installMaintenanceLogModel.getIdOnController(), installMaintenanceLogModel.getControllerSrtId(), "Pole Removed", installMaintenanceLogModel);
+                        clearDeviceValues(installMaintenanceLogModel.getIdOnController(), installMaintenanceLogModel.getControllerSrtId(), "Pole Removed", installMaintenanceLogModel,false);
                         slvInterfaceLogEntity.setStatus(MessageConstants.SUCCESS);
                         connectionDAO.removeCurrentEdgeFormDates(installMaintenanceLogModel.getIdOnController());
                         installMaintenanceLogModel.setPoleKnockDown(true);
@@ -1318,9 +1318,9 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
                         logger.error("Error in processRemoveAction", e);
                     }
                     break;
-                case "Pole Knocked-Down":
+                case "Installation Removed":
                     try {
-                        if (deviceAttributes != null && (deviceAttributes.getInstallStatus().equals(InstallStatus.Pole_Knocked_Down.getValue()) || deviceAttributes.getInstallStatus().equals(InstallStatus.Pole_Knocked_Down.getValue()))) {
+                        if (deviceAttributes != null && (deviceAttributes.getInstallStatus().equals(InstallStatus.Pole_Knocked_Down.getValue()) || deviceAttributes.getInstallStatus().equals(InstallStatus.Installation_Removed.getValue()))) {
                             installMaintenanceLogModel.setStatus(MessageConstants.ERROR);
                             installMaintenanceLogModel.setErrorDetails("Already Processed.Install Status: Pole Knocked Down");
                             slvInterfaceLogEntity.setErrorcategory(MessageConstants.SLV_VALIDATION_ERROR);
@@ -1335,7 +1335,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
                              macaddress = deviceAttributes.getMacAddress();
                             connectionDAO.removeEdgeAllMAC(installMaintenanceLogModel.getIdOnController(),macaddress);
                         }
-
+                        boolean isMacRemoved = false;
                         if(isInActive){
                             addInstallationRemovedExpReport(macaddress,edgeNote,installMaintenanceLogModel.getCommunicationStatus());
                         }else{
@@ -1343,14 +1343,14 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
                                 SLVTransactionLogs slvTransactionLogs = getSLVTransactionLogs(installMaintenanceLogModel);
                                 replaceOLC(installMaintenanceLogModel.getControllerSrtId(), installMaintenanceLogModel.getIdOnController(), "", slvTransactionLogs, slvInterfaceLogEntity,null,installMaintenanceLogModel,null);
                                 removeEdgeSLVMacAddress(installMaintenanceLogModel.getIdOnController());
-
+                                isMacRemoved = true;
 
                             } catch (Exception e) {
                                 e.printStackTrace();
                                 logger.error("error in replace OLC:" + e.getMessage());
                             }
                         }
-                        clearDeviceValues(installMaintenanceLogModel.getIdOnController(), installMaintenanceLogModel.getControllerSrtId(), "Pole Knocked-Down", installMaintenanceLogModel);
+                        clearDeviceValues(installMaintenanceLogModel.getIdOnController(), installMaintenanceLogModel.getControllerSrtId(), "Pole Knocked-Down", installMaintenanceLogModel,isMacRemoved);
                         slvInterfaceLogEntity.setStatus(MessageConstants.SUCCESS);
 
                         installMaintenanceLogModel.setPoleKnockDown(true);
@@ -1379,7 +1379,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
         return false;
     }
 
-    private void clearDeviceValues(String idOnController, String controllerStrIdValue, String type, InstallMaintenanceLogModel loggingModel) {
+    private void clearDeviceValues(String idOnController, String controllerStrIdValue, String type, InstallMaintenanceLogModel loggingModel,boolean isMacRemoved) {
         List<Object> paramsList = new ArrayList<>();
         paramsList.add("idOnController=" + idOnController);
         paramsList.add("controllerStrId=" + controllerStrIdValue);
@@ -1411,8 +1411,9 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
                 break;
             case "Pole Knocked-Down":
                // clearFixtureValues(paramsList);
-                addStreetLightData("install.date", "", paramsList);
-                addStreetLightData("luminaire.installdate", "", paramsList);
+                if(isMacRemoved){
+                    addStreetLightData("install.date", "", paramsList);
+                }
                 addStreetLightData("DimmingGroupName", "", paramsList);
                 addStreetLightData("installStatus", InstallStatus.Installation_Removed.getValue(), paramsList);
                 addStreetLightData("power", "", paramsList);
