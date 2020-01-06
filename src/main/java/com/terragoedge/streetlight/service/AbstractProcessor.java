@@ -910,6 +910,12 @@ public abstract class AbstractProcessor {
                 powerVal = powerVal.replaceAll("w", "");
             }
 
+             // As per mail conversion, It looks like there is also a version of this Fixture QR Scan that contains a blank wattage as well. Instead of relying on the “912400973824” value like I stated below,
+             // it looks like it will be safer to just tell the system that whenever a fixture qr scan contains “RFM108WG”, push “108” as the wattage/power into SLV.
+            if(data.toUpperCase().contains("RFM108WG")){
+                powerVal = "108";
+            }
+
             addPower(loggingModel,powerVal,paramsList,proContextLookupData);
             //addStreetLightData("power", powerVal, paramsList);
 
