@@ -30,6 +30,15 @@ public class InstallMaintenanceLogModel extends LoggingModel {
 
     private boolean isBulkImport = false;
 
+    private boolean isMacRemoved = false;
+
+    public boolean isMacRemoved() {
+        return isMacRemoved;
+    }
+
+    public void setMacRemoved(boolean macRemoved) {
+        isMacRemoved = macRemoved;
+    }
 
     public boolean isBulkImport() {
         return isBulkImport;

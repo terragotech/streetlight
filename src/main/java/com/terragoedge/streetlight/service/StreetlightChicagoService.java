@@ -277,7 +277,7 @@ public class StreetlightChicagoService extends AbstractProcessor {
             if(!folder.exists()){
                 folder.mkdirs();
             }
-            folderPath = folderPath + "/InstallationRemovedReport"+fileName+".csv";
+            folderPath = folderPath + "/InstallationRemovedReport_"+fileName+".csv";
             writer = new FileWriter(folderPath);
             csvWriter = new CSVWriter(writer,
                     CSVWriter.DEFAULT_SEPARATOR,

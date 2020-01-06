@@ -1333,7 +1333,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
                         if (deviceAttributes != null) {
                             logger.info("removed mac address:" + deviceAttributes.getMacAddress());
                              macaddress = deviceAttributes.getMacAddress();
-                            connectionDAO.removeEdgeAllMAC(installMaintenanceLogModel.getIdOnController(),macaddress);
+                             connectionDAO.removeEdgeAllMAC(installMaintenanceLogModel.getIdOnController(),macaddress);
                         }
                         boolean isMacRemoved = false;
                         if(isInActive){
@@ -1344,7 +1344,8 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
                                 replaceOLC(installMaintenanceLogModel.getControllerSrtId(), installMaintenanceLogModel.getIdOnController(), "", slvTransactionLogs, slvInterfaceLogEntity,null,installMaintenanceLogModel,null);
                                 removeEdgeSLVMacAddress(installMaintenanceLogModel.getIdOnController());
                                 isMacRemoved = true;
-
+                                installMaintenanceLogModel.setMacRemoved(isMacRemoved);
+                                connectionDAO.removeCurrentEdgeFormDates(installMaintenanceLogModel.getIdOnController());
                             } catch (Exception e) {
                                 e.printStackTrace();
                                 logger.error("error in replace OLC:" + e.getMessage());
@@ -1352,9 +1353,8 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
                         }
                         clearDeviceValues(installMaintenanceLogModel.getIdOnController(), installMaintenanceLogModel.getControllerSrtId(), "Pole Knocked-Down", installMaintenanceLogModel,isMacRemoved);
                         slvInterfaceLogEntity.setStatus(MessageConstants.SUCCESS);
-
                         installMaintenanceLogModel.setPoleKnockDown(true);
-                        connectionDAO.removeCurrentEdgeFormDates(installMaintenanceLogModel.getIdOnController());
+
                     } catch (Exception e) {
                         logger.error("Error in processRemoveAction", e);
                     }
@@ -1409,14 +1409,15 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
                 addStreetLightData("DimmingGroupName", "", paramsList);
                 addStreetLightData("power", "", paramsList);
                 break;
-            case "Pole Knocked-Down":
+            case "Pole Knocked-Down": // Installation_Removed previously Pole Knocked-Down
                // clearFixtureValues(paramsList);
                 if(isMacRemoved){
                     addStreetLightData("install.date", "", paramsList);
+                    addStreetLightData("luminaire.installdate", "", paramsList);
                 }
-                addStreetLightData("DimmingGroupName", "", paramsList);
+               // addStreetLightData("DimmingGroupName", "", paramsList);
                 addStreetLightData("installStatus", InstallStatus.Installation_Removed.getValue(), paramsList);
-                addStreetLightData("power", "", paramsList);
+                //addStreetLightData("power", "", paramsList);
                 break;
         }
         SLVTransactionLogs slvTransactionLogs = getSLVTransactionLogs(loggingModel);
@@ -1811,7 +1812,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
                         promotedFormData.setCslpNodeInstallDate("");
                         promotedFormData.setInstallDate("");
                         promotedFormData.setLumInstallDate("");
-                    }else if(installMaintenanceLogModel.isPoleKnockDown()){
+                    }else if(installMaintenanceLogModel.isPoleKnockDown() && installMaintenanceLogModel.isMacRemoved()){ // Installation Removed.
                         promotedFormData.setInstallDate("");
                         promotedFormData.setLumInstallDate("");
                     }
