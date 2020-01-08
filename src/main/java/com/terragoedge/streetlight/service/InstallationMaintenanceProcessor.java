@@ -260,6 +260,10 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
                         loggingModel.setRepairsOption("Unable to Repair(CDOT Issue)");
                         return "Repairs & Outages";
                     }
+                    else if (repairsOutagesValue.contains("CIMCON Node Replacements")) {
+                        loggingModel.setRepairsOption("CNR");
+                        return "Repairs & Outages";
+                    }
 
 
                 } catch (NoValueException e) {
@@ -1001,6 +1005,10 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
                 //  String nightRideKey = properties.getProperty("amerescousa.night.ride.key_for_slv");
                 processOtherTask(edgeFormDatas, edgeNote, loggingModel, nightRideKey, formatedValueNR, slvInterfaceLogEntity);
                 break;
+
+            case "CNR":
+                cnrWorkFlow(edgeFormDatas,edgeNote,loggingModel,slvInterfaceLogEntity);
+                break;
         }
     }
 
@@ -1333,12 +1341,15 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
                         if (deviceAttributes != null) {
                             logger.info("removed mac address:" + deviceAttributes.getMacAddress());
                              macaddress = deviceAttributes.getMacAddress();
-                             connectionDAO.removeEdgeAllMAC(installMaintenanceLogModel.getIdOnController(),macaddress);
                         }
                         boolean isMacRemoved = false;
                         if(isInActive){
                             addInstallationRemovedExpReport(macaddress,edgeNote,installMaintenanceLogModel.getCommunicationStatus());
                         }else{
+                            if(macaddress != null){
+                                connectionDAO.removeEdgeAllMAC(installMaintenanceLogModel.getIdOnController(),macaddress);
+                            }
+                            connectionDAO.removeEdgeAllFixture(installMaintenanceLogModel.getIdOnController());
                             try {
                                 SLVTransactionLogs slvTransactionLogs = getSLVTransactionLogs(installMaintenanceLogModel);
                                 replaceOLC(installMaintenanceLogModel.getControllerSrtId(), installMaintenanceLogModel.getIdOnController(), "", slvTransactionLogs, slvInterfaceLogEntity,null,installMaintenanceLogModel,null);
@@ -1937,6 +1948,127 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
         installationRemovedExceptionReport.setMacAddress(macAddress);
         installationRemovedExceptionReport.setCommunicationStatus(communicationStatus);
         connectionDAO.addInstallationRemovedReport(installationRemovedExceptionReport);
+    }
+
+
+    private void cnrWorkFlow(List<EdgeFormData> edgeFormDatas, EdgeNote edgeNote, InstallMaintenanceLogModel loggingModel, SlvInterfaceLogEntity slvInterfaceLogEntity){
+        try{
+            // Get MAC value
+            String macAddress = null;
+            try {
+                macAddress = valueById(edgeFormDatas, 180);
+                logger.info("CNR MAC Address:"+macAddress);
+            } catch (NoValueException e) {
+
+            }
+            logger.info("CNR MAC Address:"+macAddress);
+            DeviceAttributes deviceAttributes = getDeviceValues(loggingModel);
+            // If MAC Address is empty or null, then we need to call Empty Replace OLC with Install Status as "To be verified"
+            if(macAddress == null || macAddress.trim().isEmpty()){
+                logger.info("MAC Address is empty, so Remove MAC Address from SLV.");
+                if (deviceAttributes != null && deviceAttributes.getMacAddress() != null) {
+                    String idOnController = loggingModel.getIdOnController();
+                    String controllerStrIdValue = loggingModel.getControllerSrtId();
+                    logger.info("Empty Replace OLC Called.");
+                    callReplaceOLC(loggingModel,slvInterfaceLogEntity,"",edgeNote);
+                    connectionDAO.removeEdgeAllMAC(loggingModel.getIdOnController(),deviceAttributes.getMacAddress());
+                    removeEdgeSLVMacAddress(loggingModel.getIdOnController());
+
+                    List<Object> paramsList = new ArrayList<>();
+                    paramsList.add("idOnController=" + idOnController);
+                    paramsList.add("controllerStrId=" + controllerStrIdValue);
+                    addStreetLightData("installStatus", InstallStatus.To_be_verified.getValue(), paramsList);
+                    addStreetLightData("install.date", dateFormat(edgeNote.getCreatedDateTime()), paramsList);
+                    logger.info("Set Device value Called.");
+                    SLVTransactionLogs slvTransactionLogsSetDevice = getSLVTransactionLogs(loggingModel);
+                    int errorCode = setDeviceValues(paramsList, slvTransactionLogsSetDevice);
+                    if (errorCode == 0) {
+                        logger.info("clearing device values completed: " + idOnController);
+                    } else {
+                        logger.error("Error in clearDeviceValues");
+                    }
+                }else{
+                    logger.info("MAC Address is empty in SLV.");
+                }
+
+            }else{
+                String idOnController = loggingModel.getIdOnController();
+                String controllerStrIdValue = loggingModel.getControllerSrtId();
+                try {
+                    checkMacAddressExists(macAddress, idOnController, null, null, loggingModel, slvInterfaceLogEntity);
+                } catch (QRCodeAlreadyUsedException e1) {
+                    slvInterfaceLogEntity.setStatus(MessageConstants.ERROR);
+                    slvInterfaceLogEntity.setErrorcategory(MessageConstants.EDGE_VALIDATION_ERROR);
+                    slvInterfaceLogEntity.setErrordetails("MacAddress Already use. So this pole not synced with slv");
+                    logger.error("MacAddress (" + e1.getMacAddress()
+                            + ")  - Already in use. So this pole is not synced with SLV. Note Title :[" + edgeNote.getTitle()
+                            + " ]");
+                    loggingModel.setStatus(MessageConstants.ERROR);
+                    loggingModel.setErrorDetails("MacAddress (" + e1.getMacAddress()
+                            + ")  - Already in use. So this pole is not synced with SLV. Note Title :[" + edgeNote.getTitle()
+                            + " ]");
+                    return;
+                }
+                logger.info("Captured MAC Address not Assigned to other Fixtures");
+                if (deviceAttributes != null && deviceAttributes.getMacAddress() != null) {
+                    logger.info("MAC Address is present in SLV. So First Call Empty Replace OLC.");
+                    callReplaceOLC(loggingModel,slvInterfaceLogEntity,"",edgeNote);
+                    connectionDAO.removeEdgeAllMAC(loggingModel.getIdOnController(),deviceAttributes.getMacAddress());
+                    removeEdgeSLVMacAddress(loggingModel.getIdOnController());
+                }
+                   logger.info("Replace OLC with New MAC Address");
+                    callReplaceOLC(loggingModel,slvInterfaceLogEntity,macAddress,edgeNote);
+
+                    List<Object> paramsList = new ArrayList<>();
+                    paramsList.add("idOnController=" + idOnController);
+                    paramsList.add("controllerStrId=" + controllerStrIdValue);
+                    InstallStatus installStatus = InstallStatus.Installed;
+                    if(loggingModel.getProposedContext() != null && loggingModel.getProposedContext().trim().contains("Node Only")){
+                        installStatus = InstallStatus.Node_Only;
+                    }
+                    addStreetLightData("installStatus", installStatus.getValue(), paramsList);
+                    addStreetLightData("install.date", dateFormat(edgeNote.getCreatedDateTime()), paramsList);
+                addStreetLightData("MacAddress", macAddress, paramsList);
+
+                    SLVTransactionLogs slvTransactionLogsSetDevice = getSLVTransactionLogs(loggingModel);
+                    int errorCode = setDeviceValues(paramsList, slvTransactionLogsSetDevice);
+                    if (errorCode == 0) {
+                        logger.info("clearing device values completed: " + idOnController);
+                    } else {
+                        logger.error("Error in clearDeviceValues");
+                    }
+
+                    loggingModel.setStatus(MessageConstants.SUCCESS);
+                    slvInterfaceLogEntity.setStatus(MessageConstants.SUCCESS);
+
+                    logger.info("CNR Success.");
+
+            }
+        }catch (Exception e){
+            logger.error("Error in cnrWorkFlow",e);
+            slvInterfaceLogEntity.setStatus(MessageConstants.ERROR);
+            slvInterfaceLogEntity.setErrorcategory(MessageConstants.SLV_VALIDATION_ERROR);
+            slvInterfaceLogEntity.setErrordetails(e.getMessage());
+            loggingModel.setStatus(MessageConstants.ERROR);
+            loggingModel.setErrorDetails(e.getMessage());
+        }
+
+
+
+    }
+
+
+    private void callReplaceOLC(InstallMaintenanceLogModel loggingModel,SlvInterfaceLogEntity slvInterfaceLogEntity,String macAddress,EdgeNote edgeNote)throws ReplaceOLCFailedException{
+        String idOnController = loggingModel.getIdOnController();
+        String controllerStrIdValue = loggingModel.getControllerSrtId();
+        SLVTransactionLogs slvTransactionLogs = getSLVTransactionLogs(loggingModel);
+        // Only for Testing -- TODO
+        try{
+            replaceOLC(controllerStrIdValue, idOnController, macAddress, slvTransactionLogs, slvInterfaceLogEntity,loggingModel.getAtlasPhysicalPage(),loggingModel,edgeNote);
+        }catch (Exception e){
+
+        }
+
     }
 
 }
