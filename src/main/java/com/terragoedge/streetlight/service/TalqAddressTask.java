@@ -134,10 +134,18 @@ public class TalqAddressTask extends AbstractService implements Runnable {
             dictionary.setValue(value);
             dictionaryList.add(dictionary);
         }else{
+            boolean isLayerUpdated= false;
             for (Dictionary dictionary : dictionaryList) {
                 if (dictionary.getKey().equals("groupGuid") && !dictionary.getValue().equals(value)) {
+                    isLayerUpdated = true;
                     dictionary.setValue(value);
                 }
+            }
+            if(!isLayerUpdated){
+                Dictionary dictionary = new Dictionary();
+                dictionary.setKey("groupGuid");
+                dictionary.setValue(value);
+                dictionaryList.add(dictionary);
             }
         }
         notesJson.add("dictionary", gson.toJsonTree(dictionaryList));
