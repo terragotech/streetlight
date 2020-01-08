@@ -3,7 +3,7 @@ package com.slvinterface.entity;
 import com.j256.ormlite.field.DatabaseField;
 import com.j256.ormlite.table.DatabaseTable;
 
-@DatabaseTable(tableName = "slvsyncdetails_1")
+@DatabaseTable(tableName = "slvsyncdetails_phi")
 public class SLVSyncTable {
 
     public static final String NOTE_GUID = "noteguid";

@@ -3,7 +3,7 @@ package com.slvinterface.entity;
 import com.j256.ormlite.field.DatabaseField;
 import com.j256.ormlite.table.DatabaseTable;
 
-@DatabaseTable(tableName = "edge_all_mac")
+@DatabaseTable(tableName = "edge_all_mac_phi")
 public class EdgeAllMac {
 
     public static String TITLE = "title";

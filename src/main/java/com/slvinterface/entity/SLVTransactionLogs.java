@@ -5,7 +5,7 @@ import com.j256.ormlite.field.DatabaseField;
 import com.j256.ormlite.table.DatabaseTable;
 import com.slvinterface.enumeration.CallType;
 
-@DatabaseTable(tableName = "slvtransactionlogs")
+@DatabaseTable(tableName = "slvtransactionlogs_phi")
 public class SLVTransactionLogs {
 
     @DatabaseField(generatedId = true)
