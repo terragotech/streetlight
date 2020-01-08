@@ -22,15 +22,16 @@ public class TalqAddressTask extends AbstractService implements Runnable {
     LoggingModel loggingModel = null;
     private Gson gson = null;
     private JsonParser jsonParser = null;
-    private ConnectionDAO connectionDAO;
     private StreetlightDao streetlightDao = null;
     private Logger logger = Logger.getLogger(TalkAddressService.class);
+    private Properties properties = null;
 
     public TalqAddressTask(LoggingModel loggingModel) {
         this.loggingModel = loggingModel;
         gson = new Gson();
         jsonParser = new JsonParser();
         streetlightDao = new StreetlightDao();
+        properties = PropertiesReader.getProperties();
     }
 
     @Override
@@ -38,7 +39,6 @@ public class TalqAddressTask extends AbstractService implements Runnable {
         String emptyTalqAddressGuid = PropertiesReader.getProperties().getProperty("empty.talkaddress.layerguid");
         String completeLayerGuid = PropertiesReader.getProperties().getProperty("talkaddress.complete.layerguid");
         String mainUrl = PropertiesReader.getProperties().getProperty("streetlight.edge.url.main");
-        String locationDescKeyword = PropertiesReader.getProperties().getProperty("edge.locationdesc.keyword");
         try {
             String notesJson = geTalqNoteDetails(mainUrl, loggingModel.getNoteName());
             if (notesJson == null) {
@@ -49,13 +49,9 @@ public class TalqAddressTask extends AbstractService implements Runnable {
             }.getType();
             List<EdgeNote> edgeNoteList = gson.fromJson(notesJson, listType);
             for (EdgeNote edgeNote : edgeNoteList) {
-                String locationDesc = edgeNote.getLocationDescription();
-                System.out.println("locationDescription is : " + locationDesc);
-                if (locationDesc != null && !locationDesc.contains(locationDescKeyword)) {
-                    logger.info("Current Location Description :" + locationDesc);
                     String oldNoteGuid = edgeNote.getNoteGuid();
                     String notebookGuid = edgeNote.getEdgeNotebook().getNotebookGuid();
-                    JsonObject jsonObject = processEdgeForms(gson.toJson(edgeNote));
+                    JsonObject jsonObject = processEdgeForms(gson.toJson(edgeNote),loggingModel);
                     boolean isProcess = isProcessNoteLayer(edgeNote, jsonObject, emptyTalqAddressGuid, completeLayerGuid, loggingModel);
                     if (isProcess) {
                         logger.info("-------------------request json--------------- ");
@@ -68,9 +64,6 @@ public class TalqAddressTask extends AbstractService implements Runnable {
                         streetlightDao.insertTalqSync(loggingModel);
                         logger.info("edgenote update to server: " + responseEntity.getBody());
                     }
-                } else {
-                    logger.info("There is no valid location description, its not processed:" + locationDesc);
-                }
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -83,7 +76,7 @@ public class TalqAddressTask extends AbstractService implements Runnable {
         List<Dictionary> dictionaryList = edgeNote.getDictionary();
         jsonObject.addProperty("createdDateTime", System.currentTimeMillis());
         jsonObject.addProperty("noteGuid", UUID.randomUUID().toString());
-        jsonObject.addProperty("createdBy","slvinterface");
+        jsonObject.addProperty("createdBy","admin");
         jsonObject.remove("dictionary");
         if (loggingModel != null) {
             if (loggingModel.getLayerType().equals("No data ever received")) {
@@ -131,7 +124,7 @@ public class TalqAddressTask extends AbstractService implements Runnable {
         notesJson.add("dictionary", gson.toJsonTree(dictionaryList));
     }
 
-    public JsonObject processEdgeForms(String edgenoteJson) {
+    public JsonObject processEdgeForms(String edgenoteJson,LoggingModel loggingModel) {
         JsonObject edgeJsonObject = (JsonObject) jsonParser.parse(edgenoteJson);
         JsonArray serverEdgeFormJsonArray = edgeJsonObject.get("formData").getAsJsonArray();
         int size = serverEdgeFormJsonArray.size();
@@ -140,6 +133,15 @@ public class TalqAddressTask extends AbstractService implements Runnable {
             String formDefJson = serverEdgeForm.get("formDef").toString();
             formDefJson = formDefJson.replaceAll("\\\\", "");
             List<EdgeFormData> formDataList = getEdgeFormData(formDefJson);
+            if(serverEdgeForm.get("formTemplateGuid").getAsString().equals(properties.getProperty("com.layer.changes.formtemplateguid"))){
+                String componentIdsStr = properties.getProperty("com.layer.changes.form.component.ids");
+                if(componentIdsStr != null){
+                    String[] componentIds = componentIdsStr.split(",",-1);
+                    for(String componentId : componentIds){
+                        updateFormValue(formDataList,componentId,loggingModel.getMacAddress());
+                    }
+                }
+            }
             serverEdgeForm.add("formDef", gson.toJsonTree(formDataList));
             serverEdgeForm.addProperty("formGuid", UUID.randomUUID().toString());
         }
@@ -147,5 +149,12 @@ public class TalqAddressTask extends AbstractService implements Runnable {
         edgeJsonObject.addProperty("createdDateTime", System.currentTimeMillis());
         edgeJsonObject.addProperty("noteGuid", UUID.randomUUID().toString());
         return edgeJsonObject;
+    }
+    private void updateFormValue(List<EdgeFormData> edgeFormDatas,String componentId,String value){
+        for(EdgeFormData edgeFormData : edgeFormDatas){
+            if(edgeFormData.getId() == Integer.valueOf(componentId)){
+                edgeFormData.setValue(value);
+            }
+        }
     }
 }

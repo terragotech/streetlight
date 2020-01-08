@@ -106,7 +106,7 @@
                             <goal>single</goal>
                         </goals>
                         <configuration>
-                            <finalName>slv_interface_production_v1</finalName>
+                            <finalName>milhouse_layer_changes</finalName>
 
                             <archive>
                                 <manifest>
