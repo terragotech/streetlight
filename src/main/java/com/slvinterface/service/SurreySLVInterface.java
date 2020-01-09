@@ -71,7 +71,7 @@ public class SurreySLVInterface extends  SLVInterfaceService {
             }
             try{
                 slvSyncTable.setIdOnController(previousEdge2SLVData.getIdOnController());
-
+                previousEdge2SLVData.setTitle(slvSyncTable.getNoteName());
                 encodeData(previousEdge2SLVData);
                 retryCount = 0;
                 checkTokenValidity(previousEdge2SLVData);

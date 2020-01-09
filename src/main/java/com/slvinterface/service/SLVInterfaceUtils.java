@@ -96,13 +96,6 @@ public class SLVInterfaceUtils {
             String url = mainUrl + searchGeoZone;
             List<String> paramsList = new ArrayList<>();
             paramsList.add("ser=json");
-
-            try{
-                geozone = URLEncoder.encode(geozone.trim(), "UTF-8");
-            }catch (Exception e){
-                logger.error("Error in addStreetLightData",e);
-            }
-
             paramsList.add("name="+geozone);
             paramsList.add("partialMatch=false");
             String params = StringUtils.join(paramsList, "&");
@@ -121,7 +114,9 @@ public class SLVInterfaceUtils {
                     for (JsonElement jsonElement : jsonArray) {
                         JsonObject jsonObject = (JsonObject) jsonElement;
                         String geozoneNamePath = jsonObject.get("namesPath").getAsString();
-                        if(geozoneNamePath.equals(rootGeoZone + geozone)){// inside unknown
+                        geozoneNamePath = URLEncoder.encode(geozoneNamePath,"UTF-8");
+                        rootGeoZone = URLEncoder.encode(rootGeoZone+"/","UTF-8");
+                        if(geozoneNamePath.endsWith(rootGeoZone + geozone)){// inside unknown
                             geozoneId = jsonObject.get("id").getAsInt();
                         }
                     }
@@ -244,8 +239,12 @@ public class SLVInterfaceUtils {
         if(geozoneId == -1){
             geozoneId =  createGeoZone(slvInterfaceUtilsModel);
             if(geozoneId != -1){
+                slvInterfaceUtilsModel.setGeoZoneId(geozoneId);
                 createDevice(slvInterfaceUtilsModel);
             }
+        }else{
+            slvInterfaceUtilsModel.setGeoZoneId(geozoneId);
+            createDevice(slvInterfaceUtilsModel);
         }
     }
 

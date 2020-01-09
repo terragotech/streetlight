@@ -92,7 +92,7 @@ public abstract class SLVInterfaceService {
         if (edgeSlvServerResponse.getStatusCode().is2xxSuccessful()) {
             // Get Response String
            // String notesGuids = edgeSlvServerResponse.getBody();
-            String notesGuids = "[2acadeaf-7624-4fed-a49a-1b5dd9f41eb4]";
+            String notesGuids = "[59886066-db49-4bbd-b553-16faac797eec]";
             JsonArray noteGuidsJsonArray = (JsonArray) jsonParser.parse(notesGuids);
             if (noteGuidsJsonArray != null && !noteGuidsJsonArray.isJsonNull()) {
                 for (JsonElement noteGuidJson : noteGuidsJsonArray) {
@@ -671,6 +671,9 @@ public abstract class SLVInterfaceService {
                             try{
                                 String geoZone = valueById(formValuesList,id.getId());
                                 logger.info("Form GeoZone:"+geoZone);
+                               String[] geoZoneArray = geoZone.split("/");
+                                geoZone = geoZoneArray[geoZoneArray.length - 1];
+                                logger.info("Form GeoZone:"+geoZone);
                                 edge2SLVData.setCurrentGeoZone(geoZone);
                             }catch (NoValueException e){
                                 logger.error("Error in processFormData",e);
@@ -695,9 +698,14 @@ public abstract class SLVInterfaceService {
      * @param idOnController
      */
     public void removeEdgeSLVMacAddress(String idOnController){
-        MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
-        params.add("slvIdOnController",idOnController);
-        edgeRestService.slv2Edge("/rest/validation/removeSLVMacAddress", HttpMethod.GET,params);
+        try{
+            MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
+            params.add("slvIdOnController",idOnController);
+            edgeRestService.slv2Edge("/rest/validation/removeSLVMacAddress", HttpMethod.GET,params);
+        }catch (Exception e){
+            logger.error("Error in removeEdgeSLVMacAddress",e);
+        }
+
     }
 
     /**
@@ -707,14 +715,19 @@ public abstract class SLVInterfaceService {
      * @param atlasPhysicalPage
      */
     public void syncMacAddress2Edge(String idOnController,String macAddress,String atlasPhysicalPage){
-        if(macAddress != null && !macAddress.trim().isEmpty()){
-            MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
-            params.add("slvMacAddress",macAddress);
-            params.add("slvIdOnController",idOnController);
-            if(atlasPhysicalPage != null){
-                params.add("atlasPhysicalPage",atlasPhysicalPage);
+        try{
+            if(macAddress != null && !macAddress.trim().isEmpty()){
+                MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
+                params.add("slvMacAddress",macAddress);
+                params.add("slvIdOnController",idOnController);
+                if(atlasPhysicalPage != null){
+                    params.add("atlasPhysicalPage",atlasPhysicalPage);
+                }
+                edgeRestService.slv2Edge("/rest/validation/updateSLVSyncedMAC", HttpMethod.GET,params);
             }
-            edgeRestService.slv2Edge("/rest/validation/updateSLVSyncedMAC", HttpMethod.GET,params);
+        }catch (Exception e){
+            logger.error("Error in syncMacAddress2Edge",e);
         }
+
     }
 }
