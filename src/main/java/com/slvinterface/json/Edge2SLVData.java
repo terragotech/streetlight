@@ -6,11 +6,39 @@ public class Edge2SLVData {
 
     private String title;
     private String idOnController;
-    private String controllerStrId = "TalqBridge@TB516071244";
+    private String controllerStrId;
     private String installDate;
     private String macAddress;
     private Priority priority;
     private String existingMACAddress;
+
+    private String currentGeoZone;
+    private String lat;
+    private String lng;
+
+    public String getCurrentGeoZone() {
+        return currentGeoZone;
+    }
+
+    public void setCurrentGeoZone(String currentGeoZone) {
+        this.currentGeoZone = currentGeoZone;
+    }
+
+    public String getLat() {
+        return lat;
+    }
+
+    public void setLat(String lat) {
+        this.lat = lat;
+    }
+
+    public String getLng() {
+        return lng;
+    }
+
+    public void setLng(String lng) {
+        this.lng = lng;
+    }
 
     public String getExistingMACAddress() {
         return existingMACAddress;
@@ -78,6 +106,9 @@ public class Edge2SLVData {
                 ", macAddress='" + macAddress + '\'' +
                 ", priority=" + priority +
                 ", existingMACAddress='" + existingMACAddress + '\'' +
+                ", currentGeoZone='" + currentGeoZone + '\'' +
+                ", lat='" + lat + '\'' +
+                ", lng='" + lng + '\'' +
                 '}';
     }
 }

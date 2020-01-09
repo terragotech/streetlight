@@ -1,14 +1,14 @@
 package com.slvinterface.service;
 
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
 import com.slvinterface.entity.SLVSyncTable;
 import com.slvinterface.entity.SLVTransactionLogs;
 import com.slvinterface.enumeration.SLVProcess;
-import com.slvinterface.exception.NoValueException;
-import com.slvinterface.exception.QRCodeAlreadyUsedException;
-import com.slvinterface.exception.ReplaceOLCFailedException;
-import com.slvinterface.exception.SLVConnectionException;
+import com.slvinterface.exception.*;
 import com.slvinterface.json.*;
 import com.slvinterface.utils.PropertiesReader;
+import com.slvinterface.utils.SLVInterfaceUtilsModel;
 import org.apache.log4j.Logger;
 
 import java.net.URLEncoder;
@@ -18,19 +18,35 @@ import java.util.*;
 public class SurreySLVInterface extends  SLVInterfaceService {
     private static final Logger logger = Logger.getLogger(SurreySLVInterface.class);
 
+    SLVInterfaceUtils slvInterfaceUtils;
+
     public SurreySLVInterface()throws Exception{
         super();
+        slvInterfaceUtils = new SLVInterfaceUtils(queryExecutor);
     }
 
 
+    private void getLocationDetails(EdgeNote edgeNote,Edge2SLVData currentEdge2SLVData){
+        String geoJson = edgeNote.getGeometry();
+        JsonObject geojsonObject = jsonParser.parse(geoJson).getAsJsonObject();
+        JsonObject geometryObject = geojsonObject.get("geometry").getAsJsonObject();
+        JsonArray latlngs = geometryObject.get("coordinates").getAsJsonArray();
+        currentEdge2SLVData.setLat(latlngs.get(1).toString());
+        currentEdge2SLVData.setLng(latlngs.get(0).toString());
+        String controllerStrId = properties.getProperty("streetlight.controller.str.id");
+        currentEdge2SLVData.setControllerStrId(controllerStrId);
+
+    }
+
 
     // 118 - Controller ID, Node Installation Date -  155,Scan Node QR Code - 85,New Node QR Code-132,Replacement Date-159,
-    public void processFormData(List<FormData> formDataList, SLVSyncTable slvSyncTable)throws SLVConnectionException{
+    public void processFormData(List<FormData> formDataList, SLVSyncTable slvSyncTable,EdgeNote edgeNote)throws SLVConnectionException{
         logger.info("Processing form value.");
         Edge2SLVData previousEdge2SLVData = null;
         for(FormData formData : formDataList){
             Edge2SLVData currentEdge2SLVData = new Edge2SLVData();
             processFormData(formData,currentEdge2SLVData);
+            getLocationDetails(edgeNote,currentEdge2SLVData);
             logger.info("Current Edge2SLVData:"+currentEdge2SLVData.toString());
             if(previousEdge2SLVData == null){
                 previousEdge2SLVData = currentEdge2SLVData;
@@ -56,7 +72,7 @@ public class SurreySLVInterface extends  SLVInterfaceService {
             try{
                 slvSyncTable.setIdOnController(previousEdge2SLVData.getIdOnController());
 
-                previousEdge2SLVData.setIdOnController(URLEncoder.encode(previousEdge2SLVData.getIdOnController(),"UTF-8"));
+                encodeData(previousEdge2SLVData);
                 retryCount = 0;
                 checkTokenValidity(previousEdge2SLVData);
                 if(!previousEdge2SLVData.getPriority().getType().toString().equals(SLVProcess.REMOVE.toString())){
@@ -94,6 +110,18 @@ public class SurreySLVInterface extends  SLVInterfaceService {
     }
 
 
+    private void encodeData(Edge2SLVData currentEdge2SLVData)throws Exception{
+        currentEdge2SLVData.setIdOnController(encodeData(currentEdge2SLVData.getIdOnController()));
+        currentEdge2SLVData.setCurrentGeoZone(encodeData(currentEdge2SLVData.getCurrentGeoZone()));
+        currentEdge2SLVData.setTitle(encodeData(currentEdge2SLVData.getTitle()));
+    }
+
+
+    private String encodeData(String data)throws Exception{
+       return URLEncoder.encode(data,"UTF-8");
+    }
+
+
 
     /**
      * Send Value to SLV.
@@ -101,7 +129,9 @@ public class SurreySLVInterface extends  SLVInterfaceService {
      * @param previousEdge2SLVData
      * @throws ReplaceOLCFailedException
      */
-    private void slvSync(SLVSyncTable slvSyncTable,Edge2SLVData previousEdge2SLVData)throws ReplaceOLCFailedException {
+    private void slvSync(SLVSyncTable slvSyncTable,Edge2SLVData previousEdge2SLVData)throws ReplaceOLCFailedException, DeviceSearchException,GeoZoneSearchException,CreateGeoZoneException,DeviceCreationException {
+        SLVInterfaceUtilsModel slvInterfaceUtilsModel = getSLVInterfaceUtilsModel(previousEdge2SLVData,slvSyncTable);
+        slvInterfaceUtils.checkDeviceDetails(slvInterfaceUtilsModel);
         switch (previousEdge2SLVData.getPriority().getType()){
             case REMOVE:
                 logger.info("Remove Option is Selected.");
@@ -177,14 +207,27 @@ public class SurreySLVInterface extends  SLVInterfaceService {
         String modelFunctionId = PropertiesReader.getProperties().getProperty("streetlight.slv.equipment.type");
 
         try {
-            modelFunctionId =  URLEncoder.encode(modelFunctionId,"UTF-8");
-            addStreetLightData("modelfunctionid",modelFunctionId,paramsList);
+            addStreetLightData("modelFunctionId",modelFunctionId,paramsList);
            // addStreetLightData("nodeTypeStrId", modelFunctionId,paramsList);
         }catch (Exception e){
             e.printStackTrace();
         }
 
         setDeviceValues(paramsList,slvTransactionLogs);
+    }
+
+
+
+    public SLVInterfaceUtilsModel getSLVInterfaceUtilsModel(Edge2SLVData edge2SLVData,SLVSyncTable slvSyncTable){
+        SLVInterfaceUtilsModel slvInterfaceUtilsModel = new SLVInterfaceUtilsModel(
+                edge2SLVData.getIdOnController(),
+                edge2SLVData.getCurrentGeoZone(),
+                edge2SLVData.getLat(),
+                edge2SLVData.getLng(),
+                edge2SLVData.getTitle(),
+                slvSyncTable
+        );
+        return slvInterfaceUtilsModel;
     }
 
 }

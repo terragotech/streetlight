@@ -91,7 +91,8 @@ public abstract class SLVInterfaceService {
         // Process only response code as success
         if (edgeSlvServerResponse.getStatusCode().is2xxSuccessful()) {
             // Get Response String
-            String notesGuids = edgeSlvServerResponse.getBody();
+           // String notesGuids = edgeSlvServerResponse.getBody();
+            String notesGuids = "[2acadeaf-7624-4fed-a49a-1b5dd9f41eb4]";
             JsonArray noteGuidsJsonArray = (JsonArray) jsonParser.parse(notesGuids);
             if (noteGuidsJsonArray != null && !noteGuidsJsonArray.isJsonNull()) {
                 for (JsonElement noteGuidJson : noteGuidsJsonArray) {
@@ -247,7 +248,7 @@ public abstract class SLVInterfaceService {
                 return;
             }
 
-            processFormData(formDataList,slvSyncTable);
+            processFormData(formDataList,slvSyncTable,edgeNote);
         }catch (SLVConnectionException e){
             throw new SLVConnectionException(e);
         }catch (Exception e) {
@@ -571,9 +572,7 @@ public abstract class SLVInterfaceService {
     }
 
 
-    public void processFormData(List<FormData> formDataList, SLVSyncTable slvSyncTable)throws SLVConnectionException{
-
-    }
+    public abstract void processFormData(List<FormData> formDataList, SLVSyncTable slvSyncTable,EdgeNote edgeNote)throws SLVConnectionException;
 
 
     protected void addStreetLightData(String key, String value, List<Object> paramsList) {
@@ -667,6 +666,17 @@ public abstract class SLVInterfaceService {
                                 logger.error("Error in processFormData",e);
                             }
                             break;
+
+                        case GEOZONE:
+                            try{
+                                String geoZone = valueById(formValuesList,id.getId());
+                                logger.info("Form GeoZone:"+geoZone);
+                                edge2SLVData.setCurrentGeoZone(geoZone);
+                            }catch (NoValueException e){
+                                logger.error("Error in processFormData",e);
+                            }
+                            break;
+
 
                     }
                 }

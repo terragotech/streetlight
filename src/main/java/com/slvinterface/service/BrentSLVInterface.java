@@ -6,6 +6,7 @@ import com.slvinterface.exception.QRCodeAlreadyUsedException;
 import com.slvinterface.exception.ReplaceOLCFailedException;
 import com.slvinterface.exception.SLVConnectionException;
 import com.slvinterface.json.Edge2SLVData;
+import com.slvinterface.json.EdgeNote;
 import com.slvinterface.json.FormData;
 import org.apache.log4j.Logger;
 
@@ -24,7 +25,7 @@ public class BrentSLVInterface extends  SLVInterfaceService {
 
 
     // 118 - Controller ID, Node Installation Date -  155,Scan Node QR Code - 85,New Node QR Code-132,Replacement Date-159,
-    public void processFormData(List<FormData> formDataList, SLVSyncTable slvSyncTable)throws SLVConnectionException {
+    public void processFormData(List<FormData> formDataList, SLVSyncTable slvSyncTable, EdgeNote edgeNote)throws SLVConnectionException {
         Edge2SLVData previousEdge2SLVData = null;
         for(FormData formData : formDataList){
             Edge2SLVData currentEdge2SLVData = new Edge2SLVData();
