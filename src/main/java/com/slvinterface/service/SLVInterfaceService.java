@@ -91,8 +91,7 @@ public abstract class SLVInterfaceService {
         // Process only response code as success
         if (edgeSlvServerResponse.getStatusCode().is2xxSuccessful()) {
             // Get Response String
-           // String notesGuids = edgeSlvServerResponse.getBody();
-            String notesGuids = "[59886066-db49-4bbd-b553-16faac797eec]";
+            String notesGuids = edgeSlvServerResponse.getBody();
             JsonArray noteGuidsJsonArray = (JsonArray) jsonParser.parse(notesGuids);
             if (noteGuidsJsonArray != null && !noteGuidsJsonArray.isJsonNull()) {
                 for (JsonElement noteGuidJson : noteGuidsJsonArray) {
