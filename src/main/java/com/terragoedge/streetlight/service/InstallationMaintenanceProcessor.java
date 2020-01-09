@@ -1342,6 +1342,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
                             logger.info("removed mac address:" + deviceAttributes.getMacAddress());
                              macaddress = deviceAttributes.getMacAddress();
                         }
+                        connectionDAO.removeEdgeAllFixture(installMaintenanceLogModel.getIdOnController());
                         boolean isMacRemoved = false;
                         if(isInActive){
                             addInstallationRemovedExpReport(macaddress,edgeNote,installMaintenanceLogModel.getCommunicationStatus());
@@ -1349,7 +1350,6 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
                             if(macaddress != null){
                                 connectionDAO.removeEdgeAllMAC(installMaintenanceLogModel.getIdOnController(),macaddress);
                             }
-                            connectionDAO.removeEdgeAllFixture(installMaintenanceLogModel.getIdOnController());
                             try {
                                 SLVTransactionLogs slvTransactionLogs = getSLVTransactionLogs(installMaintenanceLogModel);
                                 replaceOLC(installMaintenanceLogModel.getControllerSrtId(), installMaintenanceLogModel.getIdOnController(), "", slvTransactionLogs, slvInterfaceLogEntity,null,installMaintenanceLogModel,null);
