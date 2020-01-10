@@ -96,8 +96,8 @@ public class SLVInterfaceUtils {
             String url = mainUrl + searchGeoZone;
             List<String> paramsList = new ArrayList<>();
             paramsList.add("ser=json");
-            paramsList.add("name="+geozone);
-            paramsList.add("partialMatch=false");
+            //paramsList.add("name="+geozone);
+            //paramsList.add("partialMatch=true");
             String params = StringUtils.join(paramsList, "&");
             url = url + "?" + params;
             logger.info("checkAndCreateGeoZone method called");
@@ -114,10 +114,12 @@ public class SLVInterfaceUtils {
                     for (JsonElement jsonElement : jsonArray) {
                         JsonObject jsonObject = (JsonObject) jsonElement;
                         String geozoneNamePath = jsonObject.get("namesPath").getAsString();
+                        geozoneNamePath = geozoneNamePath.replaceAll("\'","");
                         geozoneNamePath = URLEncoder.encode(geozoneNamePath,"UTF-8");
-                        rootGeoZone = URLEncoder.encode(rootGeoZone+"/","UTF-8");
-                        if(geozoneNamePath.endsWith(rootGeoZone + geozone)){// inside unknown
+                        String rootGeoZoneEncoded = URLEncoder.encode(rootGeoZone+"/","UTF-8");
+                        if(geozoneNamePath.endsWith(rootGeoZoneEncoded + geozone)){// inside unknown
                             geozoneId = jsonObject.get("id").getAsInt();
+                            return geozoneId;
                         }
                     }
                 }
