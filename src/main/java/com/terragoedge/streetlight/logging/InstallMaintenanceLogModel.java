@@ -32,6 +32,17 @@ public class InstallMaintenanceLogModel extends LoggingModel {
 
     private boolean isMacRemoved = false;
 
+
+    private boolean isCNRNoMAC = false;
+
+    public boolean isCNRNoMAC() {
+        return isCNRNoMAC;
+    }
+
+    public void setCNRNoMAC(boolean CNRNoMAC) {
+        isCNRNoMAC = CNRNoMAC;
+    }
+
     public boolean isMacRemoved() {
         return isMacRemoved;
     }

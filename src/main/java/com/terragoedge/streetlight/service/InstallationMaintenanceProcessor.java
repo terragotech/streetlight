@@ -231,7 +231,11 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
                     slvInterfaceLogEntity.setStatus(MessageConstants.ERROR);
                 }
                 if(value == null || !value.equals("Remove")){
-                    syncEdgeDates(installMaintenanceLogModel);
+                    // As per vish comment, If CNR Workflow has no MAC then send current date(No need to send Form Date).
+                    if(!installMaintenanceLogModel.isCNRNoMAC()){
+                        syncEdgeDates(installMaintenanceLogModel);
+                    }
+
                 }
 
                 updatePromotedFormData(edgeNoteCreatedDateTime,installMaintenanceLogModel.getIdOnController(),installMaintenanceLogModel);
@@ -1966,6 +1970,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
             DeviceAttributes deviceAttributes = getDeviceValues(loggingModel);
             // If MAC Address is empty or null, then we need to call Empty Replace OLC with Install Status as "To be verified"
             if(macAddress == null || macAddress.trim().isEmpty()){
+                loggingModel.setCNRNoMAC(true);
                 logger.info("MAC Address is empty, so Remove MAC Address from SLV.");
                 if (deviceAttributes != null && deviceAttributes.getMacAddress() != null) {
                     String idOnController = loggingModel.getIdOnController();
@@ -2029,7 +2034,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
                     }
                     addStreetLightData("installStatus", installStatus.getValue(), paramsList);
                     addStreetLightData("install.date", dateFormat(edgeNote.getCreatedDateTime()), paramsList);
-                addStreetLightData("MacAddress", macAddress, paramsList);
+                    addStreetLightData("MacAddress", macAddress, paramsList);
 
                     SLVTransactionLogs slvTransactionLogsSetDevice = getSLVTransactionLogs(loggingModel);
                     int errorCode = setDeviceValues(paramsList, slvTransactionLogsSetDevice);
