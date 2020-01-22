@@ -3,6 +3,9 @@ package com.terragoedge.streetlight.logging;
 import com.terragoedge.streetlight.json.model.DatesHolder;
 import com.terragoedge.streetlight.json.model.SLVDates;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class InstallMaintenanceLogModel extends LoggingModel {
 
     private boolean isInstallFormPresent;
@@ -34,6 +37,17 @@ public class InstallMaintenanceLogModel extends LoggingModel {
 
 
     private boolean isCNRNoMAC = false;
+
+
+    private List unMatchedFormGuids = new ArrayList();
+
+    public List getUnMatchedFormGuids() {
+        return unMatchedFormGuids;
+    }
+
+    public void setUnMatchedFormGuids(List unMatchedFormGuids) {
+        this.unMatchedFormGuids = unMatchedFormGuids;
+    }
 
     public boolean isCNRNoMAC() {
         return isCNRNoMAC;

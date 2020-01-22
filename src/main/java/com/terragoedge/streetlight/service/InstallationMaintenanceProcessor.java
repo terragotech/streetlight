@@ -175,7 +175,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
             edgeNoteCreatedDateTime = new SLVDates();
             noteCreatedDateTime = String.valueOf(edgeNote.getCreatedDateTime());
             logger.info("Processing Form :" + formData.getFormTemplateGuid());
-            if (formData.getFormTemplateGuid().equals(INSTATALLATION_AND_MAINTENANCE_GUID) || formData.getFormTemplateGuid().equals("fa47c708-fb82-4877-938c-992e870ae2a4") || formData.getFormTemplateGuid().equals("c8acc150-6228-4a27-bc7e-0fabea0e2b93")) {
+            if (installMaintenanceLogModel.getUnMatchedFormGuids().contains(formData.getFormGuid())) {
                 installMaintenanceLogModel.setReplace(false);
                 isInstallForm = true;
 
