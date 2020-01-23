@@ -247,18 +247,19 @@ public enum ConnectionDAO {
     }
 
     public boolean isExistMacAddress(String idOncontroller, String macaddress) {
-        EdgeAllMacData edgeAllMacData = null;
+       /* EdgeAllMacData edgeAllMacData = null;
         try {
             edgeAllMacData = edgeAllMacDataDao.queryBuilder().where().eq("title", idOncontroller).and().eq("macaddress", macaddress).queryForFirst();
         } catch (Exception e) {
             logger.error("Error in isExistMacAddress", e);
         }
-        return (edgeAllMacData != null) ? true : false;
+        return (edgeAllMacData != null) ? true : false;*/
+       return false;
     }
 
     public void saveEdgeAllMac(EdgeAllMacData edgeAllMacData) {
         try {
-            edgeAllMacDataDao.create(edgeAllMacData);
+            //edgeAllMacDataDao.create(edgeAllMacData);
         } catch (Exception e) {
             logger.error("Error in saveEdgeAllMac", e);
         }
@@ -287,20 +288,21 @@ public enum ConnectionDAO {
 
     public void saveEdgeAllFixture(EdgeAllFixtureData edgeAllFixtureData) {
         try {
-            edgeAllFixtureDataDao.create(edgeAllFixtureData);
+            //edgeAllFixtureDataDao.create(edgeAllFixtureData);
         } catch (Exception e) {
             logger.error("Error in saveEdgeAllFixture", e);
         }
     }
 
     public boolean isExistFixture(String idOncontroller, String fixtureQrScan) {
-        EdgeAllFixtureData edgeAllFixtureData = null;
+        /*EdgeAllFixtureData edgeAllFixtureData = null;
         try {
             edgeAllFixtureData = edgeAllFixtureDataDao.queryBuilder().where().eq("title", idOncontroller).and().eq("fixtureqrscan", fixtureQrScan).queryForFirst();
         } catch (Exception e) {
             logger.error("Error in isExistFixture", e);
         }
-        return (edgeAllFixtureData != null) ? true : false;
+        return (edgeAllFixtureData != null) ? true : false;*/
+        return false;
     }
 
     public void saveSlvInterfaceLog(SlvInterfaceLogEntity slvInterfaceLogEntity) {

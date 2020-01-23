@@ -642,6 +642,7 @@ public class StreetlightChicagoService extends AbstractProcessor {
 
 
     private DataComparatorRes compareRevisionData(String noteGuid) {
+        logger.info("Comparing data from the Previous Revision.");
         String url =  PropertiesReader.getProperties().getProperty("streetlight.edge.url.checkrevisiondata");
         String config = PropertiesReader.getProperties().getProperty("streetlight.edge.url.checkrevisiondata.config");
         JsonObject configJson = (JsonObject)jsonParser.parse(config);
