@@ -914,6 +914,8 @@ public abstract class AbstractProcessor {
              // it looks like it will be safer to just tell the system that whenever a fixture qr scan contains “RFM108WG”, push “108” as the wattage/power into SLV.
             if(data.toUpperCase().contains("RFM108WG")){
                 powerVal = "108";
+            }else if(data.toUpperCase().contains("RFL180WB")){
+                powerVal = "180";
             }
 
             addPower(loggingModel,powerVal,paramsList,proContextLookupData);
