@@ -678,7 +678,52 @@ public abstract class SLVInterfaceService {
                                 logger.error("Error in processFormData",e);
                             }
                             break;
+                        case CLIENT_NUMBER:
+                            try{
+                                String clientNumber = valueById(formValuesList,id.getId());
+                                logger.info("CLient number:"+clientNumber);
+                                edge2SLVData.setClientNumber(clientNumber);
+                            }catch (NoValueException e){
+                                logger.error("Error in processFormData",e);
+                            }
+                            break;
+                        case CENTRAL_ASSET_ID:
+                            try{
+                                String centralAssetId = valueById(formValuesList,id.getId());
+                                logger.info("Central Asset Id:"+centralAssetId);
+                                edge2SLVData.setCentralAssetId(centralAssetId);
+                            }catch (NoValueException e){
+                                logger.error("Error in processFormData",e);
+                            }
+                            break;
+                        case FEATURE_ID:
+                            try{
+                                String featureId = valueById(formValuesList,id.getId());
+                                logger.info("Feature Id:"+featureId);
+                                edge2SLVData.setFeatureId(featureId);
+                            }catch (NoValueException e){
+                                logger.error("Error in processFormData",e);
+                            }
+                            break;
 
+                        case SITE_NAME:
+                            try{
+                                String siteName = valueById(formValuesList,id.getId());
+                                logger.info("Site name:"+siteName);
+                                edge2SLVData.setSiteName(siteName);
+                            }catch (NoValueException e){
+                                logger.error("Error in processFormData",e);
+                            }
+                            break;
+                        case FEATURE_LOCATION:
+                            try{
+                                String featureLocation = valueById(formValuesList,id.getId());
+                                logger.info("Feature Location:"+featureLocation);
+                                edge2SLVData.setFeatureLocation(featureLocation);
+                            }catch (NoValueException e){
+                                logger.error("Error in processFormData",e);
+                            }
+                            break;
 
                     }
                 }

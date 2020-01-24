@@ -194,6 +194,12 @@ public class SurreySLVInterface extends  SLVInterfaceService {
         addStreetLightData("MacAddress",previousEdge2SLVData.getMacAddress(),paramsList);
         addStreetLightData("install.date",previousEdge2SLVData.getInstallDate(),paramsList);
 
+        addStreetLightData("client.number",previousEdge2SLVData.getClientNumber(),paramsList);
+        addStreetLightData("client.name",previousEdge2SLVData.getCentralAssetId(),paramsList);
+        addStreetLightData("device.premise",previousEdge2SLVData.getFeatureId(),paramsList);
+        addStreetLightData("address",previousEdge2SLVData.getSiteName(),paramsList);
+        addStreetLightData("location.streetdescription",previousEdge2SLVData.getFeatureLocation(),paramsList);
+
         String slvCalender = PropertiesReader.getProperties().getProperty("streetlight.calendar");
         if(slvCalender != null && !slvCalender.trim().isEmpty()){
             try {

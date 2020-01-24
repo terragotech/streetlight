@@ -16,6 +16,12 @@ public class Edge2SLVData {
     private String lat;
     private String lng;
 
+    private String clientNumber;
+    private String centralAssetId;
+    private String featureId;
+    private String siteName;
+    private String featureLocation;
+
     public String getCurrentGeoZone() {
         return currentGeoZone;
     }
@@ -96,6 +102,47 @@ public class Edge2SLVData {
         this.priority = priority;
     }
 
+
+    public String getClientNumber() {
+        return clientNumber;
+    }
+
+    public void setClientNumber(String clientNumber) {
+        this.clientNumber = clientNumber;
+    }
+
+    public String getCentralAssetId() {
+        return centralAssetId;
+    }
+
+    public void setCentralAssetId(String centralAssetId) {
+        this.centralAssetId = centralAssetId;
+    }
+
+    public String getFeatureId() {
+        return featureId;
+    }
+
+    public void setFeatureId(String featureId) {
+        this.featureId = featureId;
+    }
+
+    public String getSiteName() {
+        return siteName;
+    }
+
+    public void setSiteName(String siteName) {
+        this.siteName = siteName;
+    }
+
+    public String getFeatureLocation() {
+        return featureLocation;
+    }
+
+    public void setFeatureLocation(String featureLocation) {
+        this.featureLocation = featureLocation;
+    }
+
     @Override
     public String toString() {
         return "Edge2SLVData{" +
@@ -109,6 +156,11 @@ public class Edge2SLVData {
                 ", currentGeoZone='" + currentGeoZone + '\'' +
                 ", lat='" + lat + '\'' +
                 ", lng='" + lng + '\'' +
+                ", clientNumber='" + clientNumber + '\'' +
+                ", centralAssetId='" + centralAssetId + '\'' +
+                ", featureId='" + featureId + '\'' +
+                ", siteName='" + siteName + '\'' +
+                ", featureLocation='" + featureLocation + '\'' +
                 '}';
     }
 }
