@@ -185,7 +185,7 @@ public class SurreySLVInterface extends  SLVInterfaceService {
 
     }
 
-
+    //Customer asset ID,Customer prefix,Feature ID,Road name,Location description
     private void setDeviceVal(SLVSyncTable slvSyncTable,Edge2SLVData previousEdge2SLVData){
         SLVTransactionLogs slvTransactionLogs = getSLVTransVal(slvSyncTable);
         List<Object> paramsList = new ArrayList<>();

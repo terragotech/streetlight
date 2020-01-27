@@ -76,26 +76,6 @@
           "id": 16,
           "type": "DATE",
           "isRequired": true
-        },{
-          "id": 55,
-          "type": "CLIENT_NUMBER",
-          "isRequired": true
-        },{
-          "id": 58,
-          "type": "CENTRAL_ASSET_ID",
-          "isRequired": true
-        },{
-          "id": 57,
-          "type": "FEATURE_ID",
-          "isRequired": true
-        },{
-          "id": 56,
-          "type": "SITE_NAME",
-          "isRequired": true
-        },{
-          "id": 77,
-          "type": "FEATURE_LOCATION",
-          "isRequired": true
         }
       ],
       "action": [
@@ -120,26 +100,6 @@
         },{
           "id": 60,
           "type": "GEOZONE",
-          "isRequired": true
-        },{
-          "id": 55,
-          "type": "CLIENT_NUMBER",
-          "isRequired": true
-        },{
-          "id": 58,
-          "type": "CENTRAL_ASSET_ID",
-          "isRequired": true
-        },{
-          "id": 57,
-          "type": "FEATURE_ID",
-          "isRequired": true
-        },{
-          "id": 56,
-          "type": "SITE_NAME",
-          "isRequired": true
-        },{
-          "id": 77,
-          "type": "FEATURE_LOCATION",
           "isRequired": true
         }
       ],
