@@ -41,7 +41,7 @@ public class StreetlightApp {
                 }
                 Thread.sleep(30000);
             }catch (Exception e){
-                e.printStackTrace();
+               logger.error("Error in main",e);
             }finally {
                 streetlightChicagoService.closeConnection();
             }

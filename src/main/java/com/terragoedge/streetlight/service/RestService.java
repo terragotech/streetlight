@@ -224,14 +224,14 @@ public class RestService {
 
 
     public ResponseEntity<String> callPostMethod(String httpUrl,  HttpMethod httpMethod,String requestData){
-        HttpHeaders headers = getEdgeHeaders();
-        RestTemplate restTemplate = new RestTemplate();
-        HttpEntity request = new HttpEntity<>(requestData,headers);
-
         String url = PropertiesReader.getProperties().getProperty("streetlight.edge.url.main");
         url = url + httpUrl;
-
-
+	    logger.info("Url:"+url);
+        logger.info("Request Data:"+requestData);
+	    HttpHeaders headers = getEdgeHeaders();
+        RestTemplate restTemplate = new RestTemplate();
+        HttpEntity request = new HttpEntity<>(requestData,headers);
+        logger.info("Server Call....");
         ResponseEntity<String> response = restTemplate.exchange(url, httpMethod, request, String.class);
         logger.info("------------ Response ------------------");
         logger.info("Response Code:" + response.getStatusCode().toString());
