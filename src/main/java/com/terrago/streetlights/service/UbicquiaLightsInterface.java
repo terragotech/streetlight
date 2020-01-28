@@ -1,0 +1,330 @@
+package com.terrago.streetlights.service;
+
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.terrago.streetlights.utils.JsonDataParser;
+import org.apache.log4j.Logger;
+import org.springframework.http.*;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
+import org.springframework.web.client.RestTemplate;
+
+import java.util.ArrayList;
+import java.util.List;
+
+public class UbicquiaLightsInterface {
+    private static Logger logger = Logger.getLogger(UbicquiaLightsInterface.class);
+    private static String dynamicToken = null;
+    public static List<String> getGroupNodes(String groupID)
+    {
+        logger.info("get all nodes in a group");
+        List<String> result = new ArrayList<>();
+        try {
+            HttpHeaders headers = new HttpHeaders();
+            String baseURL = "http://ubiapi-app.ubicquia.com/api";
+            String requestURL = baseURL + "/nodes/group/" + groupID;
+            headers.add("x-api-key", "321b0b2e5a815068913c659e93dc56608bd8c4dafcc586f5e1732cf41b443f54");
+            RestTemplate restTemplate = new RestTemplate();
+            HttpEntity<String> request = new HttpEntity<String>(headers);
+            ResponseEntity<String> response = restTemplate.exchange(requestURL, HttpMethod.GET, request, String.class);
+            if (response.getStatusCode() == HttpStatus.OK) {
+                JsonObject jsonObject = JsonDataParser.getJsonObject(response.getBody());
+
+                JsonArray jsonArray = jsonObject.getAsJsonArray ("data");
+                logger.info("Got Response : " + response.getBody() );
+
+                for (JsonElement pa : jsonArray) {
+                    JsonObject jsonObject1 = pa.getAsJsonObject();
+                    String res1 = JsonDataParser.checkDataNull(jsonObject1, "id");
+                    result.add(res1);
+
+                }
+
+            }
+            else
+            {
+                logger.info("Bad Repsponse "  + response.getStatusCode());
+            }
+
+        }
+        catch (Exception e)
+        {
+            e.printStackTrace();
+        }
+        return result;
+    }
+
+    public static JsonObject getNodes(String dev_eui)
+    {
+        logger.info("get all nodes");
+        JsonObject result = null;
+        try {
+            HttpHeaders headers = new HttpHeaders();
+            String baseURL = "https://api.ubishow.ubicquia.com/api";
+            String requestURL = baseURL + "/nodes";
+            //headers.add("x-api-key", "321b0b2e5a815068913c659e93dc56608bd8c4dafcc586f5e1732cf41b443f54");
+            headers.add("Authorization", "Bearer " + dynamicToken);
+            RestTemplate restTemplate = new RestTemplate();
+            HttpEntity<String> request = new HttpEntity<String>(headers);
+            ResponseEntity<String> response = restTemplate.exchange(requestURL, HttpMethod.GET, request, String.class);
+            if (response.getStatusCode() == HttpStatus.OK) {
+                JsonObject jsonObject = JsonDataParser.getJsonObject(response.getBody());
+
+                JsonArray jsonArray = jsonObject.getAsJsonArray ("data");
+                logger.info("Got Response : " + response.getBody() );
+
+                for (JsonElement pa : jsonArray) {
+                    JsonObject jsonObject1 = pa.getAsJsonObject();
+                    String res1 = JsonDataParser.checkDataNull(jsonObject1, "dev_eui");
+                    if(res1.equals(dev_eui))
+                    {
+                        result = jsonObject1;
+                        break;
+                    }
+
+                }
+
+            }
+            else
+            {
+                logger.info("Bad Repsponse "  + response.getStatusCode());
+            }
+
+        }
+        catch (Exception e)
+        {
+            e.printStackTrace();
+        }
+        return result;
+    }
+    public static void requestDynamicToken()
+    {
+
+        try{
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+
+            MultiValueMap<String, String> map= new LinkedMultiValueMap<String, String>();
+            map.add("email", "jross@terragotech.com");
+            map.add("password", "password1");
+            //String requestURL = "http://ubiapi-app.ubicquia.com/api/loginToUbiVu";
+            String requestURL = "https://api.ubishow.ubicquia.com/api/loginToUbiVu";
+            HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<MultiValueMap<String, String>>(map, headers);
+            RestTemplate restTemplate = new RestTemplate();
+            ResponseEntity<String> response = restTemplate.postForEntity( requestURL, request , String.class );
+            if(response.getStatusCode() == HttpStatus.OK)
+            {
+                JsonObject jsonObject = JsonDataParser.getJsonObject(response.getBody());
+                JsonObject datajsonObject = jsonObject.getAsJsonObject("data");
+                dynamicToken =  datajsonObject.get("access_token").getAsString();
+
+                logger.info("Dynamic token found " + dynamicToken);
+                System.out.println(dynamicToken);
+
+            }
+            System.out.println(response.getStatusCode());
+            System.out.println(response.getBody());
+
+        }
+        catch (Exception e)
+        {
+            e.printStackTrace();
+        }
+    }
+    public static String getNodeData(String nodeId)
+    {
+        logger.info("Entering getNode Data");
+        String result = null;
+        try {
+            HttpHeaders headers = new HttpHeaders();
+            String baseURL = "http://ubiapi-app.ubicquia.com/api";
+            String requestURL = baseURL + "/nodes/" + nodeId;
+            headers.add("Authorization", "Bearer " + dynamicToken);
+            RestTemplate restTemplate = new RestTemplate();
+            HttpEntity<String> request = new HttpEntity<String>(headers);
+            ResponseEntity<String> response = restTemplate.exchange(requestURL, HttpMethod.GET, request, String.class);
+            if (response.getStatusCode() == HttpStatus.OK) {
+                JsonObject jsonObject = JsonDataParser.getJsonObject(response.getBody());
+
+                JsonArray jsonArray = jsonObject.getAsJsonArray ("data");
+                logger.info("Got Response : " + response.getBody() );
+
+                for (JsonElement pa : jsonArray) {
+                    JsonObject jsonObject1 = pa.getAsJsonObject();
+                    result = jsonObject1.toString();
+                }
+
+            }
+            else
+            {
+                logger.info("Bad Repsponse "  + response.getStatusCode());
+            }
+
+        }
+        catch (Exception e)
+        {
+            e.printStackTrace();
+        }
+        return result;
+
+    }
+    public static String setNodeData(String nodeId,String nodeData)
+    {
+        String result = null;
+        try {
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+            //String baseURL = "https://ubiapi-app.ubicquia.com/api";
+            String baseURL = "https://api.ubishow.ubicquia.com/api";
+            //String baseURL = "http://ubiapi-app.ubicquia.com/api";
+            String requestURL = baseURL + "/nodes/" + nodeId;
+            headers.add("Authorization", "Bearer " + dynamicToken);
+            RestTemplate restTemplate = new RestTemplate();
+            HttpEntity<String> request = new HttpEntity<String>(nodeData,headers);
+            ResponseEntity<String> response = restTemplate.exchange(requestURL, HttpMethod.PUT, request, String.class);
+            if (response.getStatusCode() == HttpStatus.OK) {
+                System.out.println(response.getBody());
+                JsonObject jsonObject = JsonDataParser.getJsonObject(response.getBody());
+                JsonObject datajsonObject = jsonObject.getAsJsonObject("data");
+                result = datajsonObject.toString();
+            }
+
+        }
+        catch (Exception e)
+        {
+            e.printStackTrace();
+        }
+        return result;
+
+    }
+    public static String SetDevice(String id,boolean status)
+    {
+        String result = null;
+        try {
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+            //String baseURL = "http://ubiapi-app.ubicquia.com/api";
+            String baseURL = "https://api.ubishow.ubicquia.com/api";
+            String requestURL = baseURL + "/nodes/setLightState";
+            headers.add("Authorization", "Bearer " + dynamicToken);
+            RestTemplate restTemplate = new RestTemplate();
+            String idData = "";
+            if(status) {
+                idData = "{\"id_list\":[{\"id\":" + id + "}],\"value\":" + "1" + "}";
+            }
+            else
+            {
+                idData = "{\"id_list\":[{\"id\":" + id + "}],\"value\":" + "0" + "}";
+            }
+            System.out.println(idData);
+            HttpEntity<String> request = new HttpEntity<String>(idData,headers);
+            ResponseEntity<String> response = restTemplate.exchange(requestURL, HttpMethod.POST, request, String.class);
+            if (response.getStatusCode() == HttpStatus.OK) {
+                JsonObject jsonObject = JsonDataParser.getJsonObject(response.getBody());
+                JsonObject datajsonObject = jsonObject.getAsJsonObject("data");
+                result = datajsonObject.toString();
+            }
+
+        }
+        catch (Exception e)
+        {
+            e.printStackTrace();
+        }
+        return result;
+    }
+    public static String SetMultipleDevice(List<String> lstID,boolean status)
+    {
+        String result = null;
+        try {
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+            String baseURL = "http://ubiapi-app.ubicquia.com/api";
+            String requestURL = baseURL + "/nodes/setLightState";
+            headers.add("Authorization", "Bearer " + dynamicToken);
+            RestTemplate restTemplate = new RestTemplate();
+            String idData = "";
+            if(status) {
+                idData = "{\"id_list\":[";
+                String tmp = "";
+                int tc = lstID.size();
+                for(int idx=0;idx<tc;idx++)
+                {
+                    if(idx != tc-1)
+                    {
+                        tmp = tmp + "{\"id\":" + lstID.get(idx) + "},";
+                    }
+                    else
+                    {
+                        tmp = tmp + "{\"id\":" + lstID.get(idx) + "}";
+                    }
+                }
+                idData = idData + tmp + "],\"value\":" + "1" + "}";
+            }
+            else
+            {
+                idData = "{\"id_list\":[";
+                String tmp = "";
+                int tc = lstID.size();
+                for(int idx=0;idx<tc;idx++)
+                {
+                    if(idx != tc-1)
+                    {
+                        tmp = tmp + "{\"id\":" + lstID.get(idx) + "},";
+                    }
+                    else
+                    {
+                        tmp = tmp + "{\"id\":" + lstID.get(idx) + "}";
+                    }
+                }
+                idData = idData + tmp + "],\"value\":" + "0" + "}";
+            }
+            System.out.println(idData);
+            HttpEntity<String> request = new HttpEntity<String>(idData,headers);
+            ResponseEntity<String> response = restTemplate.exchange(requestURL, HttpMethod.POST, request, String.class);
+            if (response.getStatusCode() == HttpStatus.OK) {
+                JsonObject jsonObject = JsonDataParser.getJsonObject(response.getBody());
+                JsonObject datajsonObject = jsonObject.getAsJsonObject("data");
+                result = datajsonObject.toString();
+            }
+
+        }
+        catch (Exception e)
+        {
+            e.printStackTrace();
+        }
+        return result;
+    }
+    public static String getQueryData(String queryString)
+    {
+        String result = null;
+        try {
+            HttpHeaders headers = new HttpHeaders();
+            //String baseURL = "http://ubiapi-app.ubicquia.com/api";
+            String baseURL = "https://api.ubishow.ubicquia.com/api";
+            //String baseURL = "http://ubiapi-app.ubicquia.com/api";
+            String requestURL = baseURL + "/nodes?q=" + queryString;
+            headers.add("Authorization", "Bearer " + dynamicToken);
+            RestTemplate restTemplate = new RestTemplate();
+            HttpEntity<String> request = new HttpEntity<String>(headers);
+            ResponseEntity<String> response = restTemplate.exchange(requestURL, HttpMethod.GET, request, String.class);
+            if (response.getStatusCode() == HttpStatus.OK) {
+                System.out.println(response.getBody());
+                JsonObject jsonObject = JsonDataParser.getJsonObject(response.getBody());
+                JsonArray jsonArray = jsonObject.getAsJsonArray ("data");
+
+                for (JsonElement pa : jsonArray) {
+                    JsonObject jsonObject1 = pa.getAsJsonObject();
+                    result = jsonObject1.toString();
+                }
+            }
+
+        }
+        catch (Exception e)
+        {
+            e.printStackTrace();
+        }
+
+        return result;
+    }
+}
