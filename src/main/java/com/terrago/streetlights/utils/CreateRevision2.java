@@ -36,7 +36,7 @@ public class CreateRevision2 {
             List<String> lstNotProcessed = new ArrayList<String>();
             csvReader.readLine();
             while ((row = csvReader.readLine()) != null) {
-                String []columns = row.split(",");
+                String []columns = row.split(",",-1);
                 String noteguid = TerragoDAO.getNoteGUIDForTitle(columns[1]);
                 if(!noteguid.equals(""))
                 {

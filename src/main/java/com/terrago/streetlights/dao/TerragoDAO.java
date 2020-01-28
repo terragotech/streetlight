@@ -1,9 +1,19 @@
 package com.terrago.streetlights.dao;
 
 import com.google.gson.Gson;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+import com.google.gson.reflect.TypeToken;
+import com.terrago.streetlights.service.RESTService;
 import com.terrago.streetlights.utils.FailureReportModel;
 import com.terrago.streetlights.utils.OutageData;
+import com.terrago.streetlights.utils.PropertiesReader;
+import com.terragoedge.edgeserver.EdgeFormData;
+import com.terragoedge.edgeserver.EdgeNote;
+import com.terragoedge.streetlight.json.model.NoteInfo;
 
+import java.lang.reflect.Type;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -12,6 +22,102 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class TerragoDAO {
+    public  static NoteInfo getIMEI(String noteTitle){
+        NoteInfo noteInfo = new NoteInfo();
+        noteInfo.setNoteguid("");
+        noteInfo.setIMEI("");
+
+        String result = "";
+        String nguid = getNoteGUID(noteTitle);
+        noteInfo.setNoteguid(nguid);
+        if(!nguid.equals(""))
+        {
+            String notesJson =  RESTService.getNoteDetails(nguid);
+            Type listType = new TypeToken<ArrayList<EdgeNote>>() {
+            }.getType();
+            Gson gson = new Gson();
+            List<EdgeNote> edgeNoteList = new ArrayList<>();
+            //    List<EdgeNote> edgeNoteList = gson.fromJson(notesJson, listType);
+            EdgeNote restEdgeNote = gson.fromJson(notesJson, EdgeNote.class);
+            JsonObject edgenoteJson = new JsonParser().parse(notesJson).getAsJsonObject();
+            JsonArray serverForms = edgenoteJson.get("formData").getAsJsonArray();
+            int size = serverForms.size();
+            for (int i = 0; i < size; i++) {
+                JsonObject serverEdgeForm = serverForms.get(i).getAsJsonObject();
+                String formDefJson = serverEdgeForm.get("formDef").getAsString();
+                String formTemplate = serverEdgeForm.get("formTemplateGuid").getAsString();
+                //formDefJson = formDefJson.replaceAll("\\\\", "");
+                //formDefJson = formDefJson.replace("u0026","\\u0026");
+                List<EdgeFormData> formComponents = gson.fromJson(formDefJson, new TypeToken<List<EdgeFormData>>() {
+                }.getType());
+                if (formTemplate.equals(PropertiesReader.getProperties().getProperty("formtemplatetoprocess"))) {
+                    EdgeFormData cur = new EdgeFormData();
+                    String idDev = PropertiesReader.getProperties().getProperty("ubicquia_deveui");
+                    int nidDev = Integer.parseInt(idDev);
+                    cur.setId(nidDev);
+                    int pos = formComponents.indexOf(cur);
+                    if (pos != -1) {
+                        EdgeFormData f1 = formComponents.get(pos);
+                        String dev_eui = f1.getValue();
+                        if (dev_eui == null) {
+                            dev_eui = "";
+                            result = "";
+                        }
+                        if (!dev_eui.equals("")) {
+                            result = dev_eui;
+                            noteInfo.setIMEI(result);
+                        }
+                    }
+                }
+            }
+        }
+        return  noteInfo;
+    }
+    public static String getNoteGUID(String noteTitle)
+    {
+        Connection conn = DataBaseConnector.getConnection();
+        Statement statement = null;
+        ResultSet resultSet = null;
+        String noteGUID = "";
+        try{
+            String queryString = "select noteguid from edgenote where iscurrent=true and isdeleted=false and title='" + noteTitle + "'";
+            statement = conn.createStatement();
+            resultSet = statement.executeQuery(queryString);
+            while(resultSet.next())
+            {
+                noteGUID = resultSet.getString("noteguid");
+            }
+
+        }
+        catch(SQLException e)
+        {
+            e.printStackTrace();
+        }
+        finally {
+            if(statement != null)
+            {
+                try {
+                    statement.close();
+                }
+                catch (Exception e)
+                {
+                    e.printStackTrace();
+                }
+            }
+            if(resultSet != null)
+            {
+                try {
+                    resultSet.close();
+                }
+                catch (Exception e)
+                {
+                    e.printStackTrace();
+                }
+            }
+        }
+        DataBaseConnector.closeConnection();
+        return noteGUID;
+    }
     public static void updateModifiedUserName(String noteGUID)
     {
         Connection conn = DataBaseConnector.getConnection();

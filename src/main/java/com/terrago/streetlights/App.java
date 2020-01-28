@@ -19,8 +19,15 @@ public class App
 {
     private static Logger logger = Logger.getLogger(App.class);
     public static void main( String[] args ) {
-        UbicquiaLightsInterface.requestDynamicToken();
-        System.out.println("SI");
+       /* UbicquiaLightsInterface.requestDynamicToken();
+        System.out.println(UbicquiaLightsInterface.getNodes("5c0690").toString());
+        System.out.println(UbicquiaLightsInterface.getQueryData("5c0690"));
+        System.out.println(UbicquiaLightsInterface.getQueryData("5c1914"));*/
+        MonitorChanges monitorChanges = new MonitorChanges();
+        monitorChanges.startMonitoring();
+    }
+        //UbicquiaLightsInterface.requestDynamicToken();
+        //System.out.println("SI");
         //CreateRevision2 createRevision2 = new CreateRevision2();
         //System.out.println(args[0]);
        // createRevision2.createRevision(args[0]);
@@ -32,7 +39,7 @@ public class App
         String result1 = UbicquiaLightsInterface.getQueryData("5c0928c7920b29dd");
         System.out.println(result1);*/
 
-    }
+
         //UbicquiaLightsInterface.requestDynamicToken();
         //String setValue = "{\"id\":212,\"poleId\":\"14350\",\"fixtureId\":\"13221\",\"poleType\":\"Wood\",\"fixtureType\":\"Acorn\"}";
         //UbicquiaLightsInterface.setNodeData("212",setValue);

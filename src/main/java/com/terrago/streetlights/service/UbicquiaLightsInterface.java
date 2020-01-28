@@ -198,6 +198,42 @@ public class UbicquiaLightsInterface {
         return result;
 
     }
+    public static String SetDimmingValue(String id,String dimmingValue)
+    {
+        String result = null;
+        try {
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+            //String baseURL = "http://ubiapi-app.ubicquia.com/api";
+            String baseURL = "https://api.ubishow.ubicquia.com/api";
+            String requestURL = baseURL + "/nodes/setLightDim";
+            headers.add("Authorization", "Bearer " + dynamicToken);
+            RestTemplate restTemplate = new RestTemplate();
+            String idData = "";
+            if(dimmingValue == null)
+            {
+                idData = "{\"id_list\":[{\"id\":" + id + "}],\"value\":" + "80" + "}";
+            }
+            else
+            {
+                idData = "{\"id_list\":[{\"id\":" + id + "}],\"value\":" + dimmingValue + "}";
+            }
+            System.out.println(idData);
+            HttpEntity<String> request = new HttpEntity<String>(idData,headers);
+            ResponseEntity<String> response = restTemplate.exchange(requestURL, HttpMethod.POST, request, String.class);
+            if (response.getStatusCode() == HttpStatus.OK) {
+                JsonObject jsonObject = JsonDataParser.getJsonObject(response.getBody());
+                JsonObject datajsonObject = jsonObject.getAsJsonObject("data");
+                result = datajsonObject.toString();
+            }
+
+        }
+        catch (Exception e)
+        {
+            e.printStackTrace();
+        }
+        return result;
+    }
     public static String SetDevice(String id,boolean status)
     {
         String result = null;

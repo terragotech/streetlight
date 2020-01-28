@@ -20,11 +20,13 @@ public class DeviceMeteringData implements Runnable{
     private Logger logger = Logger.getLogger(DeviceMeteringData.class);
     private String fixtureID;
     private String strID;
+    private String nguid;
     Thread t;
-    public DeviceMeteringData(String fixtureID,String strID){
+    public DeviceMeteringData(String fixtureID,String strID,String nguid){
         this.fixtureID = fixtureID;
         this.strID = strID;
         t = new Thread(this);
+        this.nguid = nguid;
         t.start();
     }
     public void run(){
@@ -33,7 +35,7 @@ public class DeviceMeteringData implements Runnable{
             JsonObject result1 = UbicquiaLightsInterface.getNodes(fixtureID);
             if(result1 != null) {
                 Gson gson = new Gson();
-                String noteGUID = TerragoDAO.getCurrentNoteGUID(fixtureID);
+                String noteGUID = nguid;//TerragoDAO.getCurrentNoteGUID(fixtureID);
                 String notesJson = RESTService.getNoteDetails(noteGUID);
                 EdgeNote restEdgeNote = gson.fromJson(notesJson, EdgeNote.class);
                 JsonObject edgenoteJson = new JsonParser().parse(notesJson).getAsJsonObject();
@@ -66,7 +68,7 @@ public class DeviceMeteringData implements Runnable{
                         int idfixvoltage = Integer.parseInt(PropertiesReader.getProperties().getProperty("ubicquia_fixvoltage"));
                         TerragoUpdate.updateEdgeForm(formComponents, idfixvoltage, strFixVoltage);
                         //Dim Value
-                        int iddimvalue = Integer.parseInt(PropertiesReader.getProperties().getProperty("ubicquia_dimvalue"));
+                        int iddimvalue = Integer.parseInt(PropertiesReader.getProperties().getProperty("ubicquia_mdimvalue"));
                         TerragoUpdate.updateEdgeForm(formComponents, iddimvalue, strDimValue);
 
                         String sfc = PropertiesReader.getProperties().getProperty("ubicquia_sdc");
