@@ -1980,21 +1980,21 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
                     connectionDAO.removeEdgeAllMAC(loggingModel.getIdOnController(),deviceAttributes.getMacAddress());
                     removeEdgeSLVMacAddress(loggingModel.getIdOnController());
 
-                    List<Object> paramsList = new ArrayList<>();
-                    paramsList.add("idOnController=" + idOnController);
-                    paramsList.add("controllerStrId=" + controllerStrIdValue);
-                    addStreetLightData("installStatus", InstallStatus.To_be_verified.getValue(), paramsList);
-                    addStreetLightData("install.date", dateFormat(edgeNote.getCreatedDateTime()), paramsList);
-                    logger.info("Set Device value Called.");
-                    SLVTransactionLogs slvTransactionLogsSetDevice = getSLVTransactionLogs(loggingModel);
-                    int errorCode = setDeviceValues(paramsList, slvTransactionLogsSetDevice);
-                    if (errorCode == 0) {
-                        logger.info("clearing device values completed: " + idOnController);
-                    } else {
-                        logger.error("Error in clearDeviceValues");
-                    }
-                }else{
-                    logger.info("MAC Address is empty in SLV.");
+                }
+                String idOnController = loggingModel.getIdOnController();
+                String controllerStrIdValue = loggingModel.getControllerSrtId();
+                List<Object> paramsList = new ArrayList<>();
+                paramsList.add("idOnController=" + idOnController);
+                paramsList.add("controllerStrId=" + controllerStrIdValue);
+                addStreetLightData("installStatus", InstallStatus.To_be_verified.getValue(), paramsList);
+                addStreetLightData("install.date", dateFormat(edgeNote.getCreatedDateTime()), paramsList);
+                logger.info("Set Device value Called.");
+                SLVTransactionLogs slvTransactionLogsSetDevice = getSLVTransactionLogs(loggingModel);
+                int errorCode = setDeviceValues(paramsList, slvTransactionLogsSetDevice);
+                if (errorCode == 0) {
+                    logger.info("clearing device values completed: " + idOnController);
+                } else {
+                    logger.error("Error in clearDeviceValues");
                 }
 
             }else{
