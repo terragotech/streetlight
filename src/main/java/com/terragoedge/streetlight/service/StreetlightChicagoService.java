@@ -161,7 +161,13 @@ public class StreetlightChicagoService extends AbstractProcessor {
                    String noteGuid = noteGuidJson.getAsString();
                    streetlightDao.updateSLVInterfaceStatus();
                    if(!streetlightDao.isNoteProcessed(noteGuid)){
-                       doProcess(noteGuid,accessToken,false);
+                       try{
+                           SlvRestTemplate.INSTANCE.refreshToken();
+                           doProcess(noteGuid,accessToken,false);
+                       }catch (Exception e){
+                           logger.error("Error",e);
+                       }
+
                    }
                }
            }
