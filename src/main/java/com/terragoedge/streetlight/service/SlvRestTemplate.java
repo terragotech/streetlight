@@ -14,6 +14,11 @@ import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.protocol.BasicHttpContext;
 import org.apache.http.protocol.HttpContext;
 import org.apache.log4j.Logger;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.client.RestTemplate;
 
 import java.net.URI;
 import java.util.Properties;
@@ -24,28 +29,28 @@ public enum SlvRestTemplate {
 
     HttpClient httpClient;
     HttpContext httpContext;
-    String token;
+    private String token;
+    private String cookie;
     private CookieStore cookieStore;
 
     private static final Logger logger = Logger.getLogger(SlvRestTemplate.class);
     Properties properties = PropertiesReader.getProperties();
 
-    SlvRestTemplate(){
-        try{
-            reConnect();
-        }catch (Exception e){
-            httpClient = null;
-            httpContext = null;
-            token = null;
-            e.printStackTrace();
 
-        }
-    }
 
-    public void reConnect()throws Exception{
-        init();
-        getCsrfToken();
-    }
+     public void refreshToken()throws Exception{
+         getSLVCsrfToken();
+     }
+
+
+
+     public String getToken(){
+         return token;
+     }
+
+     public String getCookie(){
+         return cookie;
+     }
 
 
 
@@ -83,6 +88,39 @@ public enum SlvRestTemplate {
         }else{
             throw  new AuthenticationException("Unable to Authentication. Status code"+code);
         }
+    }
+
+
+
+    private void getSLVCsrfToken()throws AuthenticationException,Exception{
+        String userName = properties.getProperty("streetlight.slv.username");
+        String password = properties.getProperty("streetlight.slv.password");
+        String plainCreds = userName + ":" + password;
+        byte[] plainCredsBytes = plainCreds.getBytes();
+        byte[] base64CredsBytes = Base64.encodeBase64(plainCredsBytes);
+        String base64Creds = new String(base64CredsBytes);
+        String baseUrl = properties.getProperty("streetlight.url.main");
+        baseUrl =   baseUrl+"/reports/api/userprofile/getCurrentUser";
+        RestTemplate restTemplate = new RestTemplate();
+        HttpHeaders headers = new HttpHeaders();
+        headers.add("Authorization","Basic "+base64Creds);
+        headers.add("x-csrf-token","Fetch");
+        headers.add("x-requested-with","XMLHttpRequest");
+        HttpEntity request = new HttpEntity<>(headers);
+
+        ResponseEntity<String> response = restTemplate.exchange(baseUrl, HttpMethod.GET, request, String.class);
+        if(response.getStatusCode().is2xxSuccessful()){
+            HttpHeaders responseHeaders = response.getHeaders();
+            cookie = responseHeaders.getFirst(HttpHeaders.SET_COOKIE);
+            token = responseHeaders.getFirst("X-CSRF-Token");
+        }else{
+            logger.error("Error in getSLVCsrfToken");
+            if(response != null){
+                logger.error(response.getBody());
+            }
+            throw  new AuthenticationException("Unable to Authentication. Status code"+response.getStatusCodeValue());
+        }
+
     }
 
 

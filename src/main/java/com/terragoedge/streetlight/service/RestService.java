@@ -139,6 +139,7 @@ public class RestService {
 		return response;
 	}
 
+	/*
 	private HttpPost getSlvPostHeaders(String url){
 		HttpPost httpPost = new HttpPost();
 		httpPost.setHeader("x-csrf-token", SlvRestTemplate.INSTANCE.token);
@@ -157,7 +158,7 @@ public class RestService {
 		logger.info("------SLV Url Ends------------");
 		httpGet.setURI(URI.create(url));
 		return httpGet;
-	}
+	}*/
 
 	private String getResponseBody(HttpResponse httpResponse){
 		try{
@@ -183,6 +184,25 @@ public class RestService {
 		return HttpStatus.NOT_FOUND;
 	}
 
+    private ResponseEntity<String> callSlvWithToken(boolean isGetRequest,String url) throws Exception{
+        RestTemplate restTemplate = new RestTemplate();
+        HttpHeaders headers = new HttpHeaders();
+        headers.add("x-requested-with","XMLHttpRequest");
+        headers.add("x-csrf-token",SlvRestTemplate.INSTANCE.getToken());
+        headers.add("Cookie",SlvRestTemplate.INSTANCE.getCookie());
+        HttpEntity request = new HttpEntity<>(headers);
+        HttpMethod httpMethod = HttpMethod.POST;
+        if(isGetRequest){
+            httpMethod = HttpMethod.GET;
+        }
+        ResponseEntity<String> response = restTemplate.exchange(url, httpMethod, request, String.class);
+        logger.info("------------ Response ------------------");
+        logger.info("Response Code:" + response.getStatusCodeValue());
+        logger.info(response.getBody());
+        logger.info("------------ Response End ------------------");
+        return response;
+    }
+	/*
 	private ResponseEntity<String> callSlvWithToken(boolean isGetRequest,String url) throws Exception{
 		try{
 			SlvRestTemplate.INSTANCE.reConnect();
@@ -198,7 +218,7 @@ public class RestService {
 			logger.info(responseBody);
 			logger.info("------------ Response End ------------------");
 			return responseEntity;
-	}
+	}*/
 
 
 	public ResponseEntity<String> slv2Edge(String httpUrl,  HttpMethod httpMethod, MultiValueMap<String, String> params){

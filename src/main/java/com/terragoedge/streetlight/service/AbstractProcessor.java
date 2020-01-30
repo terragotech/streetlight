@@ -618,7 +618,8 @@ public abstract class AbstractProcessor {
                 }
             }
             paramsList.add("valueName=" + key.trim());
-            paramsList.add("value=" + URLEncoder.encode(value.trim(), "UTF-8"));
+            //paramsList.add("value=" + URLEncoder.encode(value.trim(), "UTF-8"));
+            paramsList.add("value=" + value.trim());
         }catch (Exception e){
             logger.error("Error in addStreetLightData",e);
         }
@@ -1016,7 +1017,8 @@ public abstract class AbstractProcessor {
             paramsList.add("ser=json");
 
             try{
-                geozone = URLEncoder.encode(geozone.trim(), "UTF-8");
+               // geozone = URLEncoder.encode(geozone.trim(), "UTF-8");
+                geozone = geozone.trim();
             }catch (Exception e){
                 logger.error("Error in addStreetLightData",e);
             }
@@ -1630,7 +1632,8 @@ public boolean checkExistingMacAddressValid(EdgeNote edgeNote, InstallMaintenanc
             paramsList.add("ser=json");
 
             try{
-                geozone = URLEncoder.encode(geozone.trim(), "UTF-8");
+               // geozone = URLEncoder.encode(geozone.trim(), "UTF-8");
+                geozone = geozone.trim();
             }catch (Exception e){
                 logger.error("Error in addStreetLightData",e);
             }
