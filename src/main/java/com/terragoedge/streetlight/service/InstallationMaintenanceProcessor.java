@@ -595,6 +595,15 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
 
             }
             if (macAddress != null && !macAddress.trim().isEmpty() && !loggingModel.isMacAddressUsed()) {
+                if(loggingModel.getSlvMacaddress() != null && !loggingModel.isReSync()){
+                    try {
+                        SLVTransactionLogs slvTransactionLogsTemp = getSLVTransactionLogs(loggingModel);
+                        replaceOLC(loggingModel.getControllerSrtId(), loggingModel.getIdOnController(), "", slvTransactionLogsTemp, slvInterfaceLogEntity,loggingModel.getAtlasPhysicalPage(),loggingModel,edgeNote);
+                    } catch (Exception e) {
+                        logger.error("Error in empty replaceOLC",e);
+                    }
+                }
+
                 boolean isNodeDatePresent = isNodeDatePresent(idOnController);
                 if (!isNodeDatePresent && !isButtonPhotoCell) {
                     // If its bulk import, then we need to send only Form Date value
@@ -921,6 +930,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
             if (isResync) {
                 if (nodeMacValue != null && !nodeMacValue.trim().isEmpty() && !loggingModel.isMacAddressUsed()) {
                     try {
+                        loggingModel.setReSync(true);
                         SLVTransactionLogs slvTransactionLogs = getSLVTransactionLogs(loggingModel);
                         replaceOLC(loggingModel.getControllerSrtId(), loggingModel.getIdOnController(), "", slvTransactionLogs, slvInterfaceLogEntity,loggingModel.getAtlasPhysicalPage(),loggingModel,edgeNote);
                     } catch (Exception e) {

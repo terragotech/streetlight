@@ -39,7 +39,18 @@ public class InstallMaintenanceLogModel extends LoggingModel {
     private boolean isCNRNoMAC = false;
 
 
+    private boolean isReSync = false;
+
+
     private List unMatchedFormGuids = new ArrayList();
+
+    public boolean isReSync() {
+        return isReSync;
+    }
+
+    public void setReSync(boolean reSync) {
+        isReSync = reSync;
+    }
 
     public List getUnMatchedFormGuids() {
         return unMatchedFormGuids;
