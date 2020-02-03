@@ -66,6 +66,7 @@ public class StreetlightChicagoService extends AbstractProcessor {
                         streetlightDao.deleteProcessedNotes(loggingModelTemp.getProcessedNoteId());
                         String utilLocId = getUtilLocationId(loggingModelTemp.getErrorDetails());
                        // installationMaintenanceProcessor.reSync(line, accessToken, true, utilLocId,false);
+                        SlvRestTemplate.INSTANCE.refreshToken();
                         doProcess(line,accessToken,true);
                     }
                 } else {
@@ -197,6 +198,9 @@ public class StreetlightChicagoService extends AbstractProcessor {
                 String notesData = responseEntity.getBody();
                 logger.info("rest service data:" + notesData);
                 EdgeNote edgeNote = gson.fromJson(notesData, EdgeNote.class);
+                if(edgeNote.getTitle() == null || edgeNote.getTitle().endsWith("-DC")){
+                    return;
+                }
                 if ((!edgeNote.getCreatedBy().contains("admin") && !edgeNote.getCreatedBy().contains("slvinterface")) ||  isReSync) {
                     // Below commented line need for dropped pin workflow in future
                     boolean isDroppedPinWorkFlow = isDroppedPinNote(edgeNote,droppedPinTag);
