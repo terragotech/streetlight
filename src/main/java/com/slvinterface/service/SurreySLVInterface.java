@@ -194,13 +194,13 @@ public class SurreySLVInterface extends  SLVInterfaceService {
         addStreetLightData("MacAddress",previousEdge2SLVData.getMacAddress(),paramsList);
         addStreetLightData("install.date",previousEdge2SLVData.getInstallDate(),paramsList);
 
-        addStreetLightData("client.number",previousEdge2SLVData.getClientNumber(),paramsList);
-        addStreetLightData("client.name",previousEdge2SLVData.getCentralAssetId(),paramsList);
-        addStreetLightData("device.premise",previousEdge2SLVData.getFeatureId(),paramsList);
-        addStreetLightData("address",previousEdge2SLVData.getSiteName(),paramsList);
-        addStreetLightData("location.streetdescription",previousEdge2SLVData.getFeatureLocation(),paramsList);
+        processFixtureQRScan(previousEdge2SLVData.getFixtureQRScan(),paramsList);
 
-        String slvCalender = PropertiesReader.getProperties().getProperty("streetlight.calendar");
+        String slvCalender = previousEdge2SLVData.getCalendar();
+        if(previousEdge2SLVData.getCalendar() == null || previousEdge2SLVData.getCalendar().trim().isEmpty()){
+            slvCalender = PropertiesReader.getProperties().getProperty("streetlight.calendar");
+        }
+
         if(slvCalender != null && !slvCalender.trim().isEmpty()){
             try {
                 addStreetLightData("DimmingGroupName",slvCalender,paramsList);
@@ -220,6 +220,32 @@ public class SurreySLVInterface extends  SLVInterfaceService {
         }
 
         setDeviceValues(paramsList,slvTransactionLogs);
+    }
+
+
+    private void processFixtureQRScan(String fixtureQRScan,List<Object> paramsList){
+        String[] fixtureQRScanVal = fixtureQRScan.split(",");
+
+        if(fixtureQRScanVal[0].trim() != null){
+            addStreetLightData("lampType",fixtureQRScanVal[0].trim(),paramsList);
+        }
+
+
+        if(fixtureQRScanVal[1].trim() != null){
+            addStreetLightData("power",fixtureQRScanVal[1].trim(),paramsList);
+        }
+
+        if(fixtureQRScanVal[2].trim() != null){
+            addStreetLightData("luminaire.brand",fixtureQRScanVal[2].trim(),paramsList);
+        }
+
+        if(fixtureQRScanVal[3].trim() != null){
+            addStreetLightData("luminaire.model",fixtureQRScanVal[3].trim(),paramsList);
+        }
+
+
+        //addStreetLightData("ElexonChargeCode",fixtureQRScanVal[1],paramsList);
+
     }
 
 

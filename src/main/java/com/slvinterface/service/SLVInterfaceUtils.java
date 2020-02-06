@@ -117,7 +117,7 @@ public class SLVInterfaceUtils {
                         geozoneNamePath = geozoneNamePath.replaceAll("\'","");
                         geozoneNamePath = URLEncoder.encode(geozoneNamePath,"UTF-8");
                         String rootGeoZoneEncoded = URLEncoder.encode(rootGeoZone+"/","UTF-8");
-                        if(geozoneNamePath.endsWith(rootGeoZoneEncoded + geozone)){// inside unknown
+                        if(geozoneNamePath.endsWith(geozone)){// inside unknown
                             geozoneId = jsonObject.get("id").getAsInt();
                             return geozoneId;
                         }
@@ -239,11 +239,12 @@ public class SLVInterfaceUtils {
         }
         int geozoneId =  getGeoZoneId(slvInterfaceUtilsModel.getCurrentGeoZoneName(),getSLVTransVal(slvInterfaceUtilsModel));
         if(geozoneId == -1){
-            geozoneId =  createGeoZone(slvInterfaceUtilsModel);
+            /*geozoneId =  createGeoZone(slvInterfaceUtilsModel);
             if(geozoneId != -1){
                 slvInterfaceUtilsModel.setGeoZoneId(geozoneId);
                 createDevice(slvInterfaceUtilsModel);
-            }
+            }*/
+            throw  new CreateGeoZoneException("GeoZone not found");
         }else{
             slvInterfaceUtilsModel.setGeoZoneId(geozoneId);
             createDevice(slvInterfaceUtilsModel);

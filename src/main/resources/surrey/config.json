@@ -1,0 +1,44 @@
+{
+  "priority": [{"type":"NEW_DEVICE","order":3}],
+  "config": [
+    {
+      "type": "NEW_DEVICE",
+      "ids": [
+        {
+          "id": 40,
+          "type": "MAC",
+          "isRequired": false
+        },
+        {
+          "id": 48,
+          "type": "DATE",
+          "isRequired": true
+        },
+        {
+          "id": 3,
+          "type": "IDONCONTROLLER",
+          "isRequired": true
+        },{
+          "id": 4,
+          "type": "GEOZONE",
+          "isRequired": true
+        },
+        {
+          "id": 39,
+          "type": "FIXTURE_QR",
+          "isRequired": true
+        },{
+          "id": 5,
+          "type": "CALENDAR",
+          "isRequired": true
+        }
+      ],
+      "action": [
+        {
+          "id": 63,
+          "value": "Installation Workflow"
+        }
+      ]
+    }
+  ]
+}

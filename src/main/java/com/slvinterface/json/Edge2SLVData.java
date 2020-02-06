@@ -22,6 +22,26 @@ public class Edge2SLVData {
     private String siteName;
     private String featureLocation;
 
+    private String fixtureQRScan;
+
+    private String calendar;
+
+    public String getCalendar() {
+        return calendar;
+    }
+
+    public void setCalendar(String calendar) {
+        this.calendar = calendar;
+    }
+
+    public String getFixtureQRScan() {
+        return fixtureQRScan;
+    }
+
+    public void setFixtureQRScan(String fixtureQRScan) {
+        this.fixtureQRScan = fixtureQRScan;
+    }
+
     public String getCurrentGeoZone() {
         return currentGeoZone;
     }
@@ -161,6 +181,8 @@ public class Edge2SLVData {
                 ", featureId='" + featureId + '\'' +
                 ", siteName='" + siteName + '\'' +
                 ", featureLocation='" + featureLocation + '\'' +
+                ", fixtureQRScan='" + fixtureQRScan + '\'' +
+                ", calendar='" + calendar + '\'' +
                 '}';
     }
 }

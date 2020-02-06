@@ -670,9 +670,10 @@ public abstract class SLVInterfaceService {
                             try{
                                 String geoZone = valueById(formValuesList,id.getId());
                                 logger.info("Form GeoZone:"+geoZone);
-                               String[] geoZoneArray = geoZone.split("/");
-                                geoZone = geoZoneArray[geoZoneArray.length - 1];
-                                logger.info("Form GeoZone:"+geoZone);
+                                geoZone =  geoZone.replace("Urban Control/","");
+                               //String[] geoZoneArray = geoZone.split("/");
+                               // geoZone = geoZoneArray[geoZoneArray.length - 1];
+                               // logger.info("Form GeoZone:"+geoZone);
                                 edge2SLVData.setCurrentGeoZone(geoZone);
                             }catch (NoValueException e){
                                 logger.error("Error in processFormData",e);
@@ -720,6 +721,26 @@ public abstract class SLVInterfaceService {
                                 String featureLocation = valueById(formValuesList,id.getId());
                                 logger.info("Feature Location:"+featureLocation);
                                 edge2SLVData.setFeatureLocation(featureLocation);
+                            }catch (NoValueException e){
+                                logger.error("Error in processFormData",e);
+                            }
+                            break;
+
+                        case FIXTURE_QR:
+                            try{
+                                String fixtureQRScan = valueById(formValuesList,id.getId());
+                                logger.info("Fixture QR Scan:"+fixtureQRScan);
+                                edge2SLVData.setFixtureQRScan(fixtureQRScan);
+                            }catch (NoValueException e){
+                                logger.error("Error in processFormData",e);
+                            }
+                            break;
+
+                        case CALENDAR:
+                            try{
+                                String calendar = valueById(formValuesList,id.getId());
+                                logger.info("Calendar:"+calendar);
+                                edge2SLVData.setCalendar(calendar);
                             }catch (NoValueException e){
                                 logger.error("Error in processFormData",e);
                             }
