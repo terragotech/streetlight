@@ -768,6 +768,16 @@ public abstract class SLVInterfaceService {
                             }
                             break;
 
+                        case CALENDAR:
+                            try{
+                                String calendar = valueById(formValuesList,id.getId());
+                                logger.info("Calendar:"+calendar);
+                                edge2SLVData.setCalendar(calendar);
+                            }catch (NoValueException e){
+                                logger.error("Error in processFormData",e);
+                            }
+                            break;
+
                         case AssetOwner:
                             try{
                                 String assetOwner = valueById(formValuesList,id.getId());
