@@ -31,6 +31,86 @@
           "id": 5,
           "type": "CALENDAR",
           "isRequired": true
+        },{
+          "id": 6,
+          "type": "CentralAssetID",
+          "isRequired": true
+        },
+        {
+          "id": 7,
+          "type": "VisualRef",
+          "isRequired": true
+        },
+        {
+          "id": 8,
+          "type": "StreetName",
+          "isRequired": true
+        },
+        {
+          "id": 9,
+          "type": "AssetOwner",
+          "isRequired": true
+        },
+        {
+          "id": 10,
+          "type": "AssetLocationDetails",
+          "isRequired": true
+        },
+        {
+          "id": 33,
+          "type": "AssetPostCode",
+          "isRequired": true
+        },
+        {
+          "id": 32,
+          "type": "RoadUSRN",
+          "isRequired": true
+        },
+        {
+          "id": 13,
+          "type": "Controllerchargecode",
+          "isRequired": true
+        },
+        {
+          "id": 30,
+          "type": "CommissionDate",
+          "isRequired": true
+        },
+        {
+          "id": 28,
+          "type": "ColumnMaterial",
+          "isRequired": true
+        },
+        {
+          "id": 27,
+          "type": "BracketType",
+          "isRequired": true
+        },
+        {
+          "id": 18,
+          "type": "ServiceOwner",
+          "isRequired": true
+        },
+        {
+          "id": 19,
+          "type": "NetworkOwner",
+          "isRequired": true
+        },
+
+        {
+          "id": 21,
+          "type": "HeightInMetres",
+          "isRequired": true
+        },
+        {
+          "id": 29,
+          "type": "Mounting",
+          "isRequired": true
+        },
+        {
+          "id": 24,
+          "type": "SpecialDetail",
+          "isRequired": true
         }
       ],
       "action": [

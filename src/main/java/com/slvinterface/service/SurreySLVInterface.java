@@ -194,7 +194,7 @@ public class SurreySLVInterface extends  SLVInterfaceService {
         addStreetLightData("MacAddress",previousEdge2SLVData.getMacAddress(),paramsList);
         addStreetLightData("install.date",previousEdge2SLVData.getInstallDate(),paramsList);
 
-        processFixtureQRScan(previousEdge2SLVData.getFixtureQRScan(),paramsList);
+        processFixtureQRScan(previousEdge2SLVData.getFixtureQRScan(),paramsList,previousEdge2SLVData);
 
         String slvCalender = previousEdge2SLVData.getCalendar();
         if(previousEdge2SLVData.getCalendar() == null || previousEdge2SLVData.getCalendar().trim().isEmpty()){
@@ -223,7 +223,7 @@ public class SurreySLVInterface extends  SLVInterfaceService {
     }
 
 
-    private void processFixtureQRScan(String fixtureQRScan,List<Object> paramsList){
+    private void processFixtureQRScan(String fixtureQRScan,List<Object> paramsList,Edge2SLVData previousEdge2SLVData){
         String[] fixtureQRScanVal = fixtureQRScan.split(",");
 
         if(fixtureQRScanVal[0].trim() != null){
@@ -232,7 +232,7 @@ public class SurreySLVInterface extends  SLVInterfaceService {
 
 
         if(fixtureQRScanVal[1].trim() != null){
-            addStreetLightData("power",fixtureQRScanVal[1].trim(),paramsList);
+            addStreetLightData("power",fixtureQRScanVal[1].replace("W","").trim(),paramsList);
         }
 
         if(fixtureQRScanVal[2].trim() != null){
@@ -243,8 +243,33 @@ public class SurreySLVInterface extends  SLVInterfaceService {
             addStreetLightData("luminaire.model",fixtureQRScanVal[3].trim(),paramsList);
         }
 
+        addData("client.name",previousEdge2SLVData.getCentralAssetId(),paramsList);
+        addData("device.premise",previousEdge2SLVData.getVisualRef(),paramsList);
+        addData("address",previousEdge2SLVData.getStreetName(),paramsList);
+        addData("location.zipcode",previousEdge2SLVData.getAssetPostalCode(),paramsList);
+        addData("client.number",previousEdge2SLVData.getAssetOwner(),paramsList);
+        addData("location.streetdescription",previousEdge2SLVData.getAssetLocationDetails(),paramsList);
+        addData("ElexonChargeCode2",previousEdge2SLVData.getControllerChargeCode(),paramsList);
+        addData("network.type",previousEdge2SLVData.getServiceOwner(),paramsList);
 
+
+        addData("SubMeterID",previousEdge2SLVData.getNetworkOwner(),paramsList);
+        addData("pole.height",previousEdge2SLVData.getHeightInMetres(),paramsList);
+        addData("pole.installdate",previousEdge2SLVData.getCommissionDate(),paramsList);
+        addData("luminaire.orientation",previousEdge2SLVData.getMounting(),paramsList);
+        addData("fixing.type",previousEdge2SLVData.getBracketType(),paramsList);
+        addData("pole.material",previousEdge2SLVData.getColumnMaterial(),paramsList);
+        addData("pole.shape",previousEdge2SLVData.getSpecialDetail(),paramsList);
+        addData("location.mapnumber",previousEdge2SLVData.getRoadUSRN(),paramsList);
         //addStreetLightData("ElexonChargeCode",fixtureQRScanVal[1],paramsList);
+
+    }
+
+
+    private void addData(String key,String value,List<Object> paramsList){
+        if(value != null && !value.trim().isEmpty()){
+            addStreetLightData(key,value.trim(),paramsList);
+        }
 
     }
 

@@ -1,6 +1,5 @@
 package com.slvinterface.json;
 
-import com.slvinterface.enumeration.SLVProcess;
 
 public class Edge2SLVData {
 
@@ -25,6 +24,194 @@ public class Edge2SLVData {
     private String fixtureQRScan;
 
     private String calendar;
+
+    private String visualRef;
+    private String StreetName;
+    private String assetOwner;
+    private String assetLocationDetails;
+    private String assetPostalCode;
+    private String roadUSRN;
+    private String controllerChargeCode;
+
+    private String commissionDate;
+    private String assetType;
+    private String columnMaterial;
+    private String bracketType;
+    //private String lanternModel;
+    private String lanternManufacturer;
+    private String serviceOwner;
+    private String networkOwner;
+
+    private String lanternType;
+    private String heightInMetres;
+    private String bracketLength;
+
+    private String mounting;
+    private String specialDetail;
+    private String columnFixing;
+
+
+
+
+    public String getVisualRef() {
+        return visualRef;
+    }
+
+    public void setVisualRef(String visualRef) {
+        this.visualRef = visualRef;
+    }
+
+    public String getStreetName() {
+        return StreetName;
+    }
+
+    public void setStreetName(String streetName) {
+        StreetName = streetName;
+    }
+
+    public String getAssetOwner() {
+        return assetOwner;
+    }
+
+    public void setAssetOwner(String assetOwner) {
+        this.assetOwner = assetOwner;
+    }
+
+    public String getAssetLocationDetails() {
+        return assetLocationDetails;
+    }
+
+    public void setAssetLocationDetails(String assetLocationDetails) {
+        this.assetLocationDetails = assetLocationDetails;
+    }
+
+    public String getAssetPostalCode() {
+        return assetPostalCode;
+    }
+
+    public void setAssetPostalCode(String assetPostalCode) {
+        this.assetPostalCode = assetPostalCode;
+    }
+
+    public String getRoadUSRN() {
+        return roadUSRN;
+    }
+
+    public void setRoadUSRN(String roadUSRN) {
+        this.roadUSRN = roadUSRN;
+    }
+
+    public String getControllerChargeCode() {
+        return controllerChargeCode;
+    }
+
+    public void setControllerChargeCode(String controllerChargeCode) {
+        this.controllerChargeCode = controllerChargeCode;
+    }
+
+    public String getCommissionDate() {
+        return commissionDate;
+    }
+
+    public void setCommissionDate(String commissionDate) {
+        this.commissionDate = commissionDate;
+    }
+
+    public String getAssetType() {
+        return assetType;
+    }
+
+    public void setAssetType(String assetType) {
+        this.assetType = assetType;
+    }
+
+    public String getColumnMaterial() {
+        return columnMaterial;
+    }
+
+    public void setColumnMaterial(String columnMaterial) {
+        this.columnMaterial = columnMaterial;
+    }
+
+    public String getBracketType() {
+        return bracketType;
+    }
+
+    public void setBracketType(String bracketType) {
+        this.bracketType = bracketType;
+    }
+
+    public String getLanternManufacturer() {
+        return lanternManufacturer;
+    }
+
+    public void setLanternManufacturer(String lanternManufacturer) {
+        this.lanternManufacturer = lanternManufacturer;
+    }
+
+    public String getServiceOwner() {
+        return serviceOwner;
+    }
+
+    public void setServiceOwner(String serviceOwner) {
+        this.serviceOwner = serviceOwner;
+    }
+
+    public String getNetworkOwner() {
+        return networkOwner;
+    }
+
+    public void setNetworkOwner(String networkOwner) {
+        this.networkOwner = networkOwner;
+    }
+
+    public String getLanternType() {
+        return lanternType;
+    }
+
+    public void setLanternType(String lanternType) {
+        this.lanternType = lanternType;
+    }
+
+    public String getHeightInMetres() {
+        return heightInMetres;
+    }
+
+    public void setHeightInMetres(String heightInMetres) {
+        this.heightInMetres = heightInMetres;
+    }
+
+    public String getBracketLength() {
+        return bracketLength;
+    }
+
+    public void setBracketLength(String bracketLength) {
+        this.bracketLength = bracketLength;
+    }
+
+    public String getMounting() {
+        return mounting;
+    }
+
+    public void setMounting(String mounting) {
+        this.mounting = mounting;
+    }
+
+    public String getSpecialDetail() {
+        return specialDetail;
+    }
+
+    public void setSpecialDetail(String specialDetail) {
+        this.specialDetail = specialDetail;
+    }
+
+    public String getColumnFixing() {
+        return columnFixing;
+    }
+
+    public void setColumnFixing(String columnFixing) {
+        this.columnFixing = columnFixing;
+    }
 
     public String getCalendar() {
         return calendar;
@@ -183,6 +370,26 @@ public class Edge2SLVData {
                 ", featureLocation='" + featureLocation + '\'' +
                 ", fixtureQRScan='" + fixtureQRScan + '\'' +
                 ", calendar='" + calendar + '\'' +
+                ", visualRef='" + visualRef + '\'' +
+                ", StreetName='" + StreetName + '\'' +
+                ", assetOwner='" + assetOwner + '\'' +
+                ", assetLocationDetails='" + assetLocationDetails + '\'' +
+                ", assetPostalCode='" + assetPostalCode + '\'' +
+                ", roadUSRN='" + roadUSRN + '\'' +
+                ", controllerChargeCode='" + controllerChargeCode + '\'' +
+                ", commissionDate='" + commissionDate + '\'' +
+                ", assetType='" + assetType + '\'' +
+                ", columnMaterial='" + columnMaterial + '\'' +
+                ", bracketType='" + bracketType + '\'' +
+                ", lanternManufacturer='" + lanternManufacturer + '\'' +
+                ", serviceOwner='" + serviceOwner + '\'' +
+                ", networkOwner='" + networkOwner + '\'' +
+                ", lanternType='" + lanternType + '\'' +
+                ", heightInMetres='" + heightInMetres + '\'' +
+                ", bracketLength='" + bracketLength + '\'' +
+                ", mounting='" + mounting + '\'' +
+                ", specialDetail='" + specialDetail + '\'' +
+                ", columnFixing='" + columnFixing + '\'' +
                 '}';
     }
 }
