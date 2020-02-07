@@ -652,7 +652,7 @@ public class SLVTools {
         url = url + httpUrl;
 
 
-        ResponseEntity<String> response = restTemplate.exchange(httpUrl, httpMethod, request, String.class);
+        ResponseEntity<String> response = restTemplate.exchange(url, httpMethod, request, String.class);
         logger.info("------------ Response ------------------");
         logger.info("Response Code:" + response.getStatusCode().toString());
         String responseBody = response.getBody();
