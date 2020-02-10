@@ -3,6 +3,9 @@ package com.terragoedge.streetlight.logging;
 import com.terragoedge.streetlight.json.model.DatesHolder;
 import com.terragoedge.streetlight.json.model.SLVDates;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class InstallMaintenanceLogModel extends LoggingModel {
 
     private boolean isInstallFormPresent;
@@ -30,6 +33,48 @@ public class InstallMaintenanceLogModel extends LoggingModel {
 
     private boolean isBulkImport = false;
 
+    private boolean isMacRemoved = false;
+
+
+    private boolean isCNRNoMAC = false;
+
+
+    private boolean isReSync = false;
+
+
+    private List unMatchedFormGuids = new ArrayList();
+
+    public boolean isReSync() {
+        return isReSync;
+    }
+
+    public void setReSync(boolean reSync) {
+        isReSync = reSync;
+    }
+
+    public List getUnMatchedFormGuids() {
+        return unMatchedFormGuids;
+    }
+
+    public void setUnMatchedFormGuids(List unMatchedFormGuids) {
+        this.unMatchedFormGuids = unMatchedFormGuids;
+    }
+
+    public boolean isCNRNoMAC() {
+        return isCNRNoMAC;
+    }
+
+    public void setCNRNoMAC(boolean CNRNoMAC) {
+        isCNRNoMAC = CNRNoMAC;
+    }
+
+    public boolean isMacRemoved() {
+        return isMacRemoved;
+    }
+
+    public void setMacRemoved(boolean macRemoved) {
+        isMacRemoved = macRemoved;
+    }
 
     public boolean isBulkImport() {
         return isBulkImport;

@@ -47,6 +47,8 @@ public enum ConnectionDAO {
     public Dao<ProContextLookupData, String> proContextLookupDao = null;
     public Dao<DroppedPinRemoveEvent, String> droppedPinRemoveEventDao = null;
 
+    public Dao<InstallationRemovedExceptionReport,String> installationRemovedExceptionReportStringDao =null;
+
     ConnectionDAO() {
         openConnection();
     }
@@ -55,6 +57,15 @@ public enum ConnectionDAO {
         try {
             String dbUrl = PropertiesReader.getProperties().getProperty("edge.db.url");
             connectionSource = new JdbcConnectionSource(dbUrl);
+
+            try {
+                TableUtils.createTableIfNotExists(connectionSource, InstallationRemovedExceptionReport.class);
+
+            } catch (Exception e) {
+                //logger.error("Error in openConnection", e);
+            }
+
+
             try {
                 TableUtils.createTableIfNotExists(connectionSource, DuplicateMacAddress.class);
 
@@ -139,6 +150,8 @@ public enum ConnectionDAO {
             edgeAllSerialNumbersDao = DaoManager.createDao(connectionSource, EdgeAllSerialNumber.class);
 
             droppedPinRemoveEventDao = DaoManager.createDao(connectionSource, DroppedPinRemoveEvent.class);
+
+            installationRemovedExceptionReportStringDao = DaoManager.createDao(connectionSource,InstallationRemovedExceptionReport.class);
 
             System.out.println("Connected.....");
         } catch (Exception e) {
@@ -234,18 +247,19 @@ public enum ConnectionDAO {
     }
 
     public boolean isExistMacAddress(String idOncontroller, String macaddress) {
-        EdgeAllMacData edgeAllMacData = null;
+       /* EdgeAllMacData edgeAllMacData = null;
         try {
             edgeAllMacData = edgeAllMacDataDao.queryBuilder().where().eq("title", idOncontroller).and().eq("macaddress", macaddress).queryForFirst();
         } catch (Exception e) {
             logger.error("Error in isExistMacAddress", e);
         }
-        return (edgeAllMacData != null) ? true : false;
+        return (edgeAllMacData != null) ? true : false;*/
+       return false;
     }
 
     public void saveEdgeAllMac(EdgeAllMacData edgeAllMacData) {
         try {
-            edgeAllMacDataDao.create(edgeAllMacData);
+            //edgeAllMacDataDao.create(edgeAllMacData);
         } catch (Exception e) {
             logger.error("Error in saveEdgeAllMac", e);
         }
@@ -274,20 +288,21 @@ public enum ConnectionDAO {
 
     public void saveEdgeAllFixture(EdgeAllFixtureData edgeAllFixtureData) {
         try {
-            edgeAllFixtureDataDao.create(edgeAllFixtureData);
+            //edgeAllFixtureDataDao.create(edgeAllFixtureData);
         } catch (Exception e) {
             logger.error("Error in saveEdgeAllFixture", e);
         }
     }
 
     public boolean isExistFixture(String idOncontroller, String fixtureQrScan) {
-        EdgeAllFixtureData edgeAllFixtureData = null;
+        /*EdgeAllFixtureData edgeAllFixtureData = null;
         try {
             edgeAllFixtureData = edgeAllFixtureDataDao.queryBuilder().where().eq("title", idOncontroller).and().eq("fixtureqrscan", fixtureQrScan).queryForFirst();
         } catch (Exception e) {
             logger.error("Error in isExistFixture", e);
         }
-        return (edgeAllFixtureData != null) ? true : false;
+        return (edgeAllFixtureData != null) ? true : false;*/
+        return false;
     }
 
     public void saveSlvInterfaceLog(SlvInterfaceLogEntity slvInterfaceLogEntity) {
@@ -469,6 +484,36 @@ public enum ConnectionDAO {
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    public void addInstallationRemovedReport(InstallationRemovedExceptionReport installationRemovedExceptionReport){
+        try {
+            removeInstallationRemovedReport(installationRemovedExceptionReport.getIdOnController());
+            installationRemovedExceptionReportStringDao.create(installationRemovedExceptionReport);
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+    }
+
+
+    public void  removeInstallationRemovedReport(String title){
+        try {
+            DeleteBuilder deleteBuilder = installationRemovedExceptionReportStringDao.deleteBuilder();
+            deleteBuilder.where().eq(InstallationRemovedExceptionReport.TITLE, title);
+            deleteBuilder.delete();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+
+    public List<InstallationRemovedExceptionReport> getInstallationRemovedExceptionReport(){
+        try{
+          return   installationRemovedExceptionReportStringDao.queryForAll();
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+        return new ArrayList<>();
     }
 
 

@@ -1,24 +1,24 @@
 package com.terragoedge.streetlight.service;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
+import java.io.*;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+import com.opencsv.CSVWriter;
 import com.terragoedge.edgeserver.*;
 import com.terragoedge.streetlight.OpenCsvUtils;
 import com.terragoedge.streetlight.dao.ClientAccountEntity;
 import com.terragoedge.streetlight.edgeinterface.SlvData;
 import com.terragoedge.streetlight.edgeinterface.SlvToEdgeService;
 import com.terragoedge.streetlight.exception.NoValueException;
-import com.terragoedge.streetlight.json.model.ExistingMacValidationFailure;
-import com.terragoedge.streetlight.json.model.SLVTransactionLogs;
-import com.terragoedge.streetlight.json.model.SlvInterfaceLogEntity;
+import com.terragoedge.streetlight.json.model.*;
 import com.terragoedge.streetlight.logging.InstallMaintenanceLogModel;
 import com.terragoedge.streetlight.logging.LoggingModel;
 import org.apache.log4j.Logger;
 import org.joda.time.DateTime;
+import org.springframework.core.io.FileSystemResource;
 import org.springframework.http.*;
 
 import com.google.gson.JsonArray;
@@ -159,6 +159,7 @@ public class StreetlightChicagoService extends AbstractProcessor {
            JsonArray noteGuidsJsonArray = (JsonArray)jsonParser.parse(notesGuids);
            if(noteGuidsJsonArray != null &&  !noteGuidsJsonArray.isJsonNull()){
                for(JsonElement noteGuidJson : noteGuidsJsonArray){
+
                    String noteGuid = noteGuidJson.getAsString();
                    streetlightDao.updateSLVInterfaceStatus();
                    if(!streetlightDao.isNoteProcessed(noteGuid)){
@@ -181,15 +182,22 @@ public class StreetlightChicagoService extends AbstractProcessor {
 
 
     private void doProcess(String noteGuid,String accessToken,boolean isReSync){
-        String url = PropertiesReader.getProperties().getProperty("streetlight.edge.url.main");
+        DataComparatorRes dataComparatorRes =  compareRevisionData(noteGuid);
+        if(dataComparatorRes != null){
+            if(dataComparatorRes.isMatched()){
+                logger.info("Current Note Data Matched with Previous Revision.");
+               return;
+            }
+            String url = PropertiesReader.getProperties().getProperty("streetlight.edge.url.main");
 
-        url = url + PropertiesReader.getProperties().getProperty("streetlight.edge.url.notes.get");
+            url = url + PropertiesReader.getProperties().getProperty("streetlight.edge.url.notes.get");
 
-        url = url + "/" +noteGuid;
-        logger.info("Given url is :" + url);
+            url = url + "/" +noteGuid;
+            logger.info("Given url is :" + url);
 
-        // Get NoteList from edgeserver
-        ResponseEntity<String> responseEntity = restService.getRequest(url, false, accessToken);
+
+            // Get NoteList from edgeserver
+            ResponseEntity<String> responseEntity = restService.getRequest(url, false, accessToken);
 
         // Process only response code as success
         if (responseEntity.getStatusCode().is2xxSuccessful()) {
@@ -223,53 +231,57 @@ public class StreetlightChicagoService extends AbstractProcessor {
                     installMaintenanceLogModel.setLastSyncTime(edgeNote.getSyncTime());
                     installMaintenanceLogModel.setCreatedDatetime(String.valueOf(edgeNote.getCreatedDateTime()));
                     installMaintenanceLogModel.setParentNoteId(edgeNote.getBaseParentNoteId());
+                    installMaintenanceLogModel.getUnMatchedFormGuids().addAll(dataComparatorRes.getUnMatchedFormGuids());
                     //ES-274
                     String droppedPinUser = null;
                     if(isDroppedPinWorkFlow){
                         droppedPinUser = getDroppedPinUser(edgeNote);
                     }
 
-                    // Check Current note is created via Bulk Import
-                    //isBulkImport(edgeNote,accessToken,installMaintenanceLogModel);
+                        // Check Current note is created via Bulk Import
+                        //isBulkImport(edgeNote,accessToken,installMaintenanceLogModel);
 
-                    loadDefaultVal(edgeNote, installMaintenanceLogModel,accessToken,droppedPinUser);
+                        loadDefaultVal(edgeNote, installMaintenanceLogModel,accessToken,droppedPinUser);
 
 
-                    slvInterfaceLogEntity.setIdOnController(edgeNote.getTitle());
-                    slvInterfaceLogEntity.setCreateddatetime(System.currentTimeMillis());
-                    slvInterfaceLogEntity.setResync(false);
-                    String utilLocId = null;
-                    // Below commented lines need for dropped pin workflow in future
-                    if(isDroppedPinWorkFlow){
-                        //As per Email Communication, "5" is removed from utilLocId Fwd: Utility Location ID For Dropped Pins (20190918)
-                        utilLocId = edgeNote.getTitle();
-                    }
-                    boolean isDeviceCreated = false;
-                    if(edgeNote.getEdgeNotebook() != null && edgeNote.getEdgeNotebook().getNotebookName() != null &&  ( installMaintenanceLogModel.getAtlasPhysicalPage() == null || installMaintenanceLogModel.getAtlasPhysicalPage().isEmpty()) ){
-                        installMaintenanceLogModel.setAtlasPhysicalPage(edgeNote.getEdgeNotebook().getNotebookName());
-                    }
-                    if(isDroppedPinWorkFlow) {
-                        isDeviceCreated = processDroppedPinWorkflow(edgeNote,slvInterfaceLogEntity,installMaintenanceLogModel,utilLocId);
-                    }
-                    if(!isDroppedPinWorkFlow || (isDroppedPinWorkFlow && isDeviceCreated)) {
-                        loadDeviceValues(edgeNote.getTitle(),installMaintenanceLogModel);
-                        // Check whether the current note
-                        isBulkImport(edgeNote,accessToken,installMaintenanceLogModel);
+                        slvInterfaceLogEntity.setIdOnController(edgeNote.getTitle());
+                        slvInterfaceLogEntity.setCreateddatetime(System.currentTimeMillis());
+                        slvInterfaceLogEntity.setResync(false);
+                        String utilLocId = null;
+                        // Below commented lines need for dropped pin workflow in future
+                        if(isDroppedPinWorkFlow){
+                            //As per Email Communication, "5" is removed from utilLocId Fwd: Utility Location ID For Dropped Pins (20190918)
+                            utilLocId = edgeNote.getTitle();
+                        }
+                        boolean isDeviceCreated = false;
+                        if(edgeNote.getEdgeNotebook() != null && edgeNote.getEdgeNotebook().getNotebookName() != null &&  ( installMaintenanceLogModel.getAtlasPhysicalPage() == null || installMaintenanceLogModel.getAtlasPhysicalPage().isEmpty()) ){
+                            installMaintenanceLogModel.setAtlasPhysicalPage(edgeNote.getEdgeNotebook().getNotebookName());
+                        }
+                        if(isDroppedPinWorkFlow) {
+                            isDeviceCreated = processDroppedPinWorkflow(edgeNote,slvInterfaceLogEntity,installMaintenanceLogModel,utilLocId);
+                        }
+                        if(!isDroppedPinWorkFlow || (isDroppedPinWorkFlow && isDeviceCreated)) {
+                            loadDeviceValues(edgeNote.getTitle(),installMaintenanceLogModel);
+                            // Check whether the current note
+                            isBulkImport(edgeNote,accessToken,installMaintenanceLogModel);
 
-                        installationMaintenanceProcessor.processNewAction(edgeNote, installMaintenanceLogModel, false, utilLocId, slvInterfaceLogEntity);
-                       // updateSlvStatusToEdge(installMaintenanceLogModel, edgeNote);
-                        LoggingModel loggingModel = installMaintenanceLogModel;
-                        streetlightDao.insertProcessedNotes(loggingModel, installMaintenanceLogModel);
+                            installationMaintenanceProcessor.processNewAction(edgeNote, installMaintenanceLogModel, false, utilLocId, slvInterfaceLogEntity);
+                            // updateSlvStatusToEdge(installMaintenanceLogModel, edgeNote);
+                            LoggingModel loggingModel = installMaintenanceLogModel;
+                            streetlightDao.insertProcessedNotes(loggingModel, installMaintenanceLogModel);
+                        }
                     }
+                }catch (Exception e){
+                    logger.error("Error in run",e);
+                }finally {
+                    connectionDAO.saveSlvInterfaceLog(slvInterfaceLogEntity);
                 }
-            }catch (Exception e){
-                logger.error("Error in run",e);
-            }finally {
-                connectionDAO.saveSlvInterfaceLog(slvInterfaceLogEntity);
+                // Get Response String
+
             }
-            // Get Response String
 
         }
+
     }
 
     public String getYesterdayDate() {
@@ -284,56 +296,99 @@ public class StreetlightChicagoService extends AbstractProcessor {
         return dateFormat.format(cal.getTime());
     }
 
-    public ResponseEntity<String> edgeSlvserverCall(String url) {
-        long millis = DateTime.now().minusDays(1).withTimeAtStartOfDay().getMillis();
-        List<ExistingMacValidationFailure> existingMacValidationFailures = connectionDAO.getAllExistingMacVaildationFailures(millis);
-        List<String[]> datas = new ArrayList<>();
-        String[] headers = {"idoncontroller","noteguid","createdby","slvmacaddress","edge_existingmacaddress","edge_newmacaddress","created_datetime","processed_datetime"};
-        datas.add(headers);
-        for(ExistingMacValidationFailure existingMacValidationFailure : existingMacValidationFailures){
-            List<String> data = new ArrayList<>();
-            data.add(existingMacValidationFailure.getIdOnController());
-            data.add(existingMacValidationFailure.getNoteGuid());
-            data.add(existingMacValidationFailure.getCreatedBy());
-            data.add(existingMacValidationFailure.getSlvMacaddress());
-            data.add(existingMacValidationFailure.getEdgeExistingMacaddress());
-            data.add(existingMacValidationFailure.getEdgeNewNodeMacaddress());
-            data.add(OpenCsvUtils.getFormatedDateTime(existingMacValidationFailure.getCreatedDateTime()));
-            data.add(OpenCsvUtils.getFormatedDateTime(existingMacValidationFailure.getProcessedDateTime()));
-            datas.add(data.toArray(new String[0]));
-        }
-        String fileName = OpenCsvUtils.getCsvFileName()+".csv";
-        String folderPath = properties.getProperty("com.existing.macaddress.failure.report.path");
-        File folder = new File(folderPath);
-        if(!folder.exists()){
-            folder.mkdirs();
-        }
-        String outputFilePath = folderPath+"/"+fileName;
-        logger.error("Output File Path:"+outputFilePath);
-        try {
-            OpenCsvUtils.csvWriterAll(datas,outputFilePath);
+    public void generateInstallationRemovedExceptionReport() {
+        CSVWriter csvWriter = null;
+        Writer writer = null;
+        String folderPath = null;
+        try{
+
+            folderPath = properties.getProperty("com.installation.report.root.path");
+            String fileName = OpenCsvUtils.getCsvFileName();
+            folderPath = folderPath + "/"+fileName;
+            File folder = new File(folderPath);
+            if(!folder.exists()){
+                folder.mkdirs();
+            }
+            folderPath = folderPath + "/InstallationRemovedReport_"+fileName+".csv";
+            writer = new FileWriter(folderPath);
+            csvWriter = new CSVWriter(writer,
+                    CSVWriter.DEFAULT_SEPARATOR,
+                    CSVWriter.DEFAULT_QUOTE_CHARACTER,
+                    CSVWriter.DEFAULT_ESCAPE_CHARACTER,
+                    CSVWriter.DEFAULT_LINE_END);
+            String[] headerRecord = {"title","createdby","slv_macaddress","created_datetime","communication_status"};
+            csvWriter.writeNext(headerRecord);
+
+            List<InstallationRemovedExceptionReport> installationRemovedExceptionReportList = connectionDAO.getInstallationRemovedExceptionReport();
+            for(InstallationRemovedExceptionReport installationRemovedExceptionReport : installationRemovedExceptionReportList){
+                csvWriter.writeNext(new String[]{installationRemovedExceptionReport.getIdOnController(),
+                        installationRemovedExceptionReport.getCreatedBy(),
+                        installationRemovedExceptionReport.getMacAddress(),
+                        OpenCsvUtils.getFormatedDateTime(installationRemovedExceptionReport.getCreatedDateTime()),
+                        installationRemovedExceptionReport.getCommunicationStatus()
+                });
+                csvWriter.flush();
+            }
         }catch (Exception e){
-           logger.error("Error in edgeSlvserverCall",e);
+            logger.error("Error in generateInstallationRemovedExceptionReport",e);
+            return;
+        }finally {
+            if(csvWriter != null){
+                try{
+                    csvWriter.close();
+                }catch (Exception e){
+                    logger.error("Error in generateInstallationRemovedExceptionReport",e);
+                }
+
+            }
+
+            if(writer != null){
+                try{
+                    writer.close();
+                }catch (Exception e){
+                    logger.error("Error in generateInstallationRemovedExceptionReport",e);
+                }
+            }
         }
-        return uploadFileToEdgeSlvServer(url,outputFilePath);
+
+         uploadFileToEdgeSlvServer(folderPath);
+
     }
 
-    private ResponseEntity<String> uploadFileToEdgeSlvServer(String url,String outputFilePath){
-        RestTemplate restTemplate = new RestTemplate();
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.MULTIPART_FORM_DATA);
+    private ResponseEntity<String> uploadFileToEdgeSlvServer(String outputFilePath){
+        try{
+            String baseUrl =  properties.getProperty("streetlight.edge.slvserver.url");
+            String uploadUrl = properties.getProperty("com.installation.report.upload.url");
 
-        MultiValueMap<String, Object> body
-                = new LinkedMultiValueMap<>();
-        body.add("file", new File(outputFilePath));
+            String subject = properties.getProperty("com.installation.report.mail.subject");
+            String body = properties.getProperty("com.installation.report.mail.body");
+            String receipents = properties.getProperty("com.installation.report.mail.receipts");
 
-        HttpEntity<MultiValueMap<String, Object>> requestEntity
-                = new HttpEntity<>(headers);
+            baseUrl = baseUrl + uploadUrl;
+            RestTemplate restTemplate = new RestTemplate();
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.MULTIPART_FORM_DATA);
 
-        ResponseEntity<String> responseEntity = restTemplate.postForEntity(url, requestEntity, String.class);
-        logger.info("------------ Response ------------------");
-        logger.info("Response Code:" + responseEntity.getStatusCode().toString());
-        return responseEntity;
+            MultiValueMap<String, Object> multiValueMap
+                    = new LinkedMultiValueMap<>();
+            multiValueMap.add("file", new FileSystemResource(outputFilePath));
+            multiValueMap.add("subject",subject);
+            multiValueMap.add("body",body);
+            multiValueMap.add("receipents",receipents);
+
+
+            HttpEntity<MultiValueMap<String, Object>> requestEntity
+                    = new HttpEntity<>(headers);
+
+            ResponseEntity<String> responseEntity = restTemplate.postForEntity(baseUrl, requestEntity, String.class);
+            logger.info("------------ Response ------------------");
+            logger.info("Response Code:" + responseEntity.getStatusCode().toString());
+            return responseEntity;
+        }catch (Exception e){
+            logger.error("Error in uploadFileToEdgeSlvServer",e);
+        }
+        return null;
+
     }
     private int validateForms(EdgeNote edgeNote){
         String installFormTemplateGuid = properties.getProperty("amerescousa.edge.formtemplateGuid");
@@ -551,61 +606,82 @@ public class StreetlightChicagoService extends AbstractProcessor {
         }
     }
 
-private String getFixtureCode(EdgeNote edgeNote){
-    String fixtureCode = "";
-    List<FormData> formDatas = edgeNote.getFormData();
-    for(FormData formData : formDatas){
-        if(formData.getFormTemplateGuid().equals(properties.getProperty("amerescousa.edge.formtemplateGuid"))){
-            List<EdgeFormData> edgeFormDatas = formData.getFormDef();
-            for(EdgeFormData edgeFormData : edgeFormDatas){
-                if(edgeFormData.getId() == Integer.valueOf(properties.getProperty("edge.formtemplate.fixturecode.id"))){
-                    fixtureCode = edgeFormData.getValue();
+    private String getFixtureCode(EdgeNote edgeNote) {
+        String fixtureCode = "";
+        List<FormData> formDatas = edgeNote.getFormData();
+        for (FormData formData : formDatas) {
+            if (formData.getFormTemplateGuid().equals(properties.getProperty("amerescousa.edge.formtemplateGuid"))) {
+                List<EdgeFormData> edgeFormDatas = formData.getFormDef();
+                for (EdgeFormData edgeFormData : edgeFormDatas) {
+                    if (edgeFormData.getId() == Integer.valueOf(properties.getProperty("edge.formtemplate.fixturecode.id"))) {
+                        fixtureCode = edgeFormData.getValue();
+                    }
                 }
             }
         }
-    }
-    return fixtureCode;
-}
-
-private void addotherParamsForDroppedPin(List<EdgeFormData> edgeFormDatas,List<Object> paramsList){
-     int poleMaterialId = Integer.valueOf(properties.getProperty("com.edge.pole.material.id"));
-     int fixtureTypeId = Integer.valueOf(properties.getProperty("edge.formtemplate.fixturecode.id"));
-
-    String poleMaterial = "";
-    String fixtureType = "";
-    try{
-        poleMaterial = valueById(edgeFormDatas,poleMaterialId);
-    }catch (Exception e){
-        logger.error("Error while getting pole material from this id: "+poleMaterialId, e);
+        return fixtureCode;
     }
 
-    try{
-        fixtureType = valueById(edgeFormDatas,fixtureTypeId);
-    }catch (Exception e){
-        logger.error("Error while getting fixture type from this id: "+fixtureTypeId, e);
-    }
-    if(poleMaterial != null && !poleMaterial.equals("")){
-        // pole material
-        addStreetLightData("pole.material", poleMaterial, paramsList);
+    private void addotherParamsForDroppedPin(List<EdgeFormData> edgeFormDatas, List<Object> paramsList) {
+        int poleMaterialId = Integer.valueOf(properties.getProperty("com.edge.pole.material.id"));
+        int fixtureTypeId = Integer.valueOf(properties.getProperty("edge.formtemplate.fixturecode.id"));
+
+        String poleMaterial = "";
+        String fixtureType = "";
+        try {
+            poleMaterial = valueById(edgeFormDatas, poleMaterialId);
+        } catch (Exception e) {
+            logger.error("Error while getting pole material from this id: " + poleMaterialId, e);
+        }
+
+        try {
+            fixtureType = valueById(edgeFormDatas, fixtureTypeId);
+        } catch (Exception e) {
+            logger.error("Error while getting fixture type from this id: " + fixtureTypeId, e);
+        }
+        if (poleMaterial != null && !poleMaterial.equals("")) {
+            // pole material
+            addStreetLightData("pole.material", poleMaterial, paramsList);
+        }
+
+        String comedLiteType = null;
+        if (poleMaterial.equals("Wood")) {
+            comedLiteType = "Alley Light";
+        } else if (poleMaterial.equals("No Pole") && fixtureType.equals("Cobrahead Alley")) {
+            comedLiteType = "Alley Light";
+        } else if (poleMaterial.equals("No Pole") && fixtureType.equals("Viaduct")) {
+            comedLiteType = "Viaduct Light";
+        } else if (poleMaterial.equals("No Pole") && !fixtureType.equals("Cobrahead Alley") && !fixtureType.equals("Viaduct")) {
+            comedLiteType = "Street Light";
+        } else if (!poleMaterial.equals("Wood") && !poleMaterial.equals("No Pole")) {
+            comedLiteType = "Street Light";
+        }
+        if (comedLiteType != null && !comedLiteType.equals("")) {
+            // comed litetype
+            addStreetLightData("comed.litetype", comedLiteType, paramsList);
+        }
     }
 
-    String comedLiteType = null;
-    if(poleMaterial.equals("Wood")){
-        comedLiteType = "Alley Light";
-    }else if(poleMaterial.equals("No Pole") && fixtureType.equals("Cobrahead Alley")){
-        comedLiteType = "Alley Light";
-    }else if(poleMaterial.equals("No Pole") && fixtureType.equals("Viaduct")){
-        comedLiteType = "Viaduct Light";
-    }else if(poleMaterial.equals("No Pole") && !fixtureType.equals("Cobrahead Alley") && !fixtureType.equals("Viaduct")){
-        comedLiteType = "Street Light";
-    }else if(!poleMaterial.equals("Wood") && !poleMaterial.equals("No Pole")){
-        comedLiteType = "Street Light";
+
+    private DataComparatorRes compareRevisionData(String noteGuid) {
+        logger.info("Comparing data from the Previous Revision.");
+        String url =  PropertiesReader.getProperties().getProperty("streetlight.edge.url.checkrevisiondata");
+        String config = PropertiesReader.getProperties().getProperty("streetlight.edge.url.checkrevisiondata.config");
+        JsonObject configJson = (JsonObject)jsonParser.parse(config);
+        configJson.addProperty("noteGuid",noteGuid);
+        logger.info("Given url is :" + url);
+        // Get NoteList from edgeserver
+        ResponseEntity<String> responseEntity = restService.callPostMethod(url, HttpMethod.POST, configJson.toString());
+
+        if (responseEntity.getStatusCode().is2xxSuccessful()) {
+            String responseBody = responseEntity.getBody();
+            logger.info(responseBody);
+            DataComparatorRes dataComparatorRes = gson.fromJson(responseBody, DataComparatorRes.class);
+            return dataComparatorRes;
+        }
+        return null;
+
     }
-    if(comedLiteType != null && !comedLiteType.equals("")) {
-        // comed litetype
-        addStreetLightData("comed.litetype", comedLiteType, paramsList);
-    }
-}
 
 
 
