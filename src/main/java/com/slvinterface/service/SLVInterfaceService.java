@@ -3,10 +3,7 @@ package com.slvinterface.service;
 import com.google.gson.*;
 import com.google.gson.reflect.TypeToken;
 import com.slvinterface.dao.QueryExecutor;
-import com.slvinterface.entity.DeviceEntity;
-import com.slvinterface.entity.EdgeAllMac;
-import com.slvinterface.entity.SLVSyncTable;
-import com.slvinterface.entity.SLVTransactionLogs;
+import com.slvinterface.entity.*;
 import com.slvinterface.enumeration.CallType;
 import com.slvinterface.exception.*;
 import com.slvinterface.json.*;
@@ -462,7 +459,7 @@ public abstract class SLVInterfaceService {
     private void setResponseDetails(SLVTransactionLogs slvTransactionLogs, String responseString) {
         slvTransactionLogs.setResponseBody(responseString);
     }
-    protected int setDeviceValues(List<Object> paramsList, SLVTransactionLogs slvTransactionLogs) {
+    protected int setDeviceValues(List<Object> paramsList, SLVTransactionLogs slvTransactionLogs,PromotedFormDataEntity promotedFormDataEntity,Edge2SLVData previousEdge2SLVData) {
         int errorCode = -1;
         try {
             String mainUrl = properties.getProperty("streetlight.slv.base.url");
@@ -480,6 +477,27 @@ public abstract class SLVInterfaceService {
             setResponseDetails(slvTransactionLogs, responseString);
             JsonObject replaceOlcResponse = (JsonObject) jsonParser.parse(responseString);
             errorCode = replaceOlcResponse.get("errorCode").getAsInt();
+
+            PromotedFormDataEntity dbPromotedFormDataEntity = queryExecutor.getPromotedFormDataEntity(previousEdge2SLVData.getParentNoteId());
+            if(dbPromotedFormDataEntity != null){
+                dbPromotedFormDataEntity.setPromotedvalue(promotedFormDataEntity.getPromotedvalue());
+                dbPromotedFormDataEntity.setLastupdateddatetime(System.currentTimeMillis());
+                if(promotedFormDataEntity.getNotebookguid() != null){
+                    dbPromotedFormDataEntity.setNotebookguid(promotedFormDataEntity.getNotebookguid());
+                }
+
+                queryExecutor.updatePromotedFormDataEntity(dbPromotedFormDataEntity);
+            }else{
+                long maxId = queryExecutor.getMaxId();
+                if(maxId != -1){
+                    maxId += 1;
+                }else {
+                    maxId = 1;
+                }
+                promotedFormDataEntity.setPromotedId(maxId);
+                queryExecutor.savePromotedFormDataEntity(promotedFormDataEntity);
+            }
+
         } catch (Exception e) {
             setResponseDetails(slvTransactionLogs, "Error in setDeviceValues:" + e.getMessage());
             logger.error("Error in setDeviceValues", e);

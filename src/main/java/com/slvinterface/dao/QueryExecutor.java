@@ -3,9 +3,11 @@ package com.slvinterface.dao;
 import com.j256.ormlite.dao.Dao;
 import com.j256.ormlite.dao.DaoManager;
 import com.j256.ormlite.stmt.DeleteBuilder;
+import com.j256.ormlite.stmt.UpdateBuilder;
 import com.j256.ormlite.support.ConnectionSource;
 import com.j256.ormlite.table.TableUtils;
 import com.slvinterface.entity.EdgeAllMac;
+import com.slvinterface.entity.PromotedFormDataEntity;
 import com.slvinterface.entity.SLVSyncTable;
 import com.slvinterface.entity.SLVTransactionLogs;
 import org.apache.log4j.Logger;
@@ -19,6 +21,7 @@ public class QueryExecutor {
     private Dao<EdgeAllMac, String> edgeAllMacsDao;
     public Dao<SLVSyncTable, String> slvSyncTablesDao = null;
     public Dao<SLVTransactionLogs, String> slvTransactionLogsDao = null;
+    public Dao<PromotedFormDataEntity, String> promotedFormDataEntities = null;
 
 
     public QueryExecutor() throws Exception {
@@ -32,6 +35,7 @@ public class QueryExecutor {
         edgeAllMacsDao = DaoManager.createDao(connectionSource, EdgeAllMac.class);
         slvSyncTablesDao = DaoManager.createDao(connectionSource, SLVSyncTable.class);
         slvTransactionLogsDao = DaoManager.createDao(connectionSource, SLVTransactionLogs.class);
+        promotedFormDataEntities = DaoManager.createDao(connectionSource,PromotedFormDataEntity.class);
     }
 
 
@@ -117,9 +121,56 @@ public class QueryExecutor {
             }
 
         }catch (Exception e){
-            e.printStackTrace();
+            logger.error("Error in getMaxSyncTime",e);
         }
         return -1L;
+    }
+
+
+    public long getMaxId(){
+        try {
+            PromotedFormDataEntity promotedFormDataEntity =  promotedFormDataEntities.queryBuilder().orderBy(PromotedFormDataEntity.PROMOTED_ID,false).queryForFirst();
+            if(promotedFormDataEntity != null){
+                return promotedFormDataEntity.getPromotedId();
+            }
+        }catch (Exception e){
+            logger.error("Error in getMaxId",e);
+        }
+        return -1L;
+    }
+
+    public PromotedFormDataEntity getPromotedFormDataEntity(String parentNoteGuid){
+        try {
+           return promotedFormDataEntities.queryBuilder().where().eq(PromotedFormDataEntity.PARENT_NOTE_GUID,parentNoteGuid).queryForFirst();
+        }catch (Exception e){
+            logger.error("Error in getPromotedFormDataEntity",e);
+        }
+        return null;
+    }
+
+
+    public void updatePromotedFormDataEntity(PromotedFormDataEntity promotedFormDataEntity){
+        try {
+          UpdateBuilder updateBuilder =  promotedFormDataEntities.updateBuilder();
+            updateBuilder =   updateBuilder.updateColumnValue(PromotedFormDataEntity.PROMOTED_VALUE,promotedFormDataEntity.getPromotedvalue());
+            updateBuilder =   updateBuilder.updateColumnValue(PromotedFormDataEntity.LAST_UPDATED_DATE_TIME,System.currentTimeMillis());
+            if(promotedFormDataEntity.getNotebookguid() != null){
+                updateBuilder =   updateBuilder.updateColumnValue(PromotedFormDataEntity.NOTEBOOK_GUID,promotedFormDataEntity.getNotebookguid());
+            }
+            updateBuilder.where().eq(PromotedFormDataEntity.PARENT_NOTE_GUID,promotedFormDataEntity.getParentnoteguid());
+            updateBuilder.update();
+        }catch (Exception e){
+            logger.error("Error in updatePromotedFormDataEntity",e);
+        }
+    }
+
+
+    public void savePromotedFormDataEntity(PromotedFormDataEntity promotedFormDataEntity){
+        try {
+            promotedFormDataEntities.create(promotedFormDataEntity);
+        }catch (Exception e){
+            logger.error("Error in savePromotedFormDataEntity",e);
+        }
     }
 
 }

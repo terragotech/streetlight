@@ -51,7 +51,33 @@ public class Edge2SLVData {
     private String columnFixing;
 
 
+    private String parentNoteId;
+    private String notebookGuid;
+    private String noteTitle;
 
+    public String getParentNoteId() {
+        return parentNoteId;
+    }
+
+    public void setParentNoteId(String parentNoteId) {
+        this.parentNoteId = parentNoteId;
+    }
+
+    public String getNotebookGuid() {
+        return notebookGuid;
+    }
+
+    public void setNotebookGuid(String notebookGuid) {
+        this.notebookGuid = notebookGuid;
+    }
+
+    public String getNoteTitle() {
+        return noteTitle;
+    }
+
+    public void setNoteTitle(String noteTitle) {
+        this.noteTitle = noteTitle;
+    }
 
     public String getVisualRef() {
         return visualRef;
@@ -390,6 +416,9 @@ public class Edge2SLVData {
                 ", mounting='" + mounting + '\'' +
                 ", specialDetail='" + specialDetail + '\'' +
                 ", columnFixing='" + columnFixing + '\'' +
+                ", parentNoteId='" + parentNoteId + '\'' +
+                ", notebookGuid='" + notebookGuid + '\'' +
+                ", noteTitle='" + noteTitle + '\'' +
                 '}';
     }
 }

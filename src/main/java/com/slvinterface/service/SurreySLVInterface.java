@@ -2,6 +2,7 @@ package com.slvinterface.service;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
+import com.slvinterface.entity.PromotedFormDataEntity;
 import com.slvinterface.entity.SLVSyncTable;
 import com.slvinterface.entity.SLVTransactionLogs;
 import com.slvinterface.enumeration.SLVProcess;
@@ -72,6 +73,14 @@ public class SurreySLVInterface extends  SLVInterfaceService {
             try{
                 slvSyncTable.setIdOnController(previousEdge2SLVData.getIdOnController());
                 previousEdge2SLVData.setTitle(slvSyncTable.getNoteName());
+                previousEdge2SLVData.setParentNoteId(
+                        (edgeNote.getBaseParentNoteId() != null && !edgeNote.getBaseParentNoteId().trim().isEmpty()) ?
+                                edgeNote.getBaseParentNoteId() : edgeNote.getNoteGuid()
+                );
+                if(edgeNote.getEdgeNotebook() != null){
+                    previousEdge2SLVData.setNotebookGuid(edgeNote.getEdgeNotebook().getNotebookGuid());
+                }
+
                 encodeData(previousEdge2SLVData);
                 retryCount = 0;
                 checkTokenValidity(previousEdge2SLVData);
@@ -181,7 +190,14 @@ public class SurreySLVInterface extends  SLVInterfaceService {
         loadVal(paramsList,previousEdge2SLVData);
         addStreetLightData("installStatus","To be installed",paramsList);
         addStreetLightData("install.date","",paramsList);
-        setDeviceValues(paramsList,slvTransactionLogs);
+
+        PromotedFormDataEntity promotedFormDataEntity = new PromotedFormDataEntity();
+        promotedFormDataEntity.setLastupdateddatetime(System.currentTimeMillis());
+        promotedFormDataEntity.setPromotedvalue(gson.toJson(new ArrayList<>()));
+        promotedFormDataEntity.setNotebookguid(previousEdge2SLVData.getNotebookGuid());
+        promotedFormDataEntity.setParentnoteguid(previousEdge2SLVData.getParentNoteId());
+
+        setDeviceValues(paramsList,slvTransactionLogs,promotedFormDataEntity,previousEdge2SLVData);
 
     }
 
@@ -194,7 +210,18 @@ public class SurreySLVInterface extends  SLVInterfaceService {
         addStreetLightData("MacAddress",previousEdge2SLVData.getMacAddress(),paramsList);
         addStreetLightData("install.date",previousEdge2SLVData.getInstallDate(),paramsList);
 
-        processFixtureQRScan(previousEdge2SLVData.getFixtureQRScan(),paramsList,previousEdge2SLVData);
+        List<PromotedValue> promotedValueList = new ArrayList<>();
+        PromotedValue promotedValue = new PromotedValue();
+        promotedValueList.add(promotedValue);
+        processFixtureQRScan(previousEdge2SLVData.getFixtureQRScan(),paramsList,previousEdge2SLVData,promotedValue);
+
+        PromotedFormDataEntity promotedFormDataEntity = new PromotedFormDataEntity();
+        promotedFormDataEntity.setLastupdateddatetime(System.currentTimeMillis());
+        promotedFormDataEntity.setPromotedvalue(gson.toJson(promotedValueList));
+        promotedFormDataEntity.setNotebookguid(previousEdge2SLVData.getNotebookGuid());
+        promotedFormDataEntity.setParentnoteguid(previousEdge2SLVData.getParentNoteId());
+
+
 
         String slvCalender = previousEdge2SLVData.getCalendar();
         if(previousEdge2SLVData.getCalendar() == null || previousEdge2SLVData.getCalendar().trim().isEmpty()){
@@ -219,29 +246,85 @@ public class SurreySLVInterface extends  SLVInterfaceService {
             e.printStackTrace();
         }
 
-        setDeviceValues(paramsList,slvTransactionLogs);
+        setDeviceValues(paramsList,slvTransactionLogs,promotedFormDataEntity,previousEdge2SLVData);
+    }
+
+    private PromotedComponent getPromotedComponent(List<FormId> formIdList,String slvKey,String value){
+        FormId formId = new FormId();
+        formId.setSlvName(slvKey);
+        int pos =  formIdList.indexOf(formId);
+        if(pos != -1){
+            formId =  formIdList.get(pos);
+            PromotedComponent promotedComponent = new PromotedComponent();
+            promotedComponent.setComponentId(formId.getFormId());
+            promotedComponent.setName(formId.getName());
+            promotedComponent.setValue(value);
+            return promotedComponent;
+        }
+        return null;
     }
 
 
-    private void processFixtureQRScan(String fixtureQRScan,List<Object> paramsList,Edge2SLVData previousEdge2SLVData){
+    private void processFixtureQRScan(String fixtureQRScan,List<Object> paramsList,Edge2SLVData previousEdge2SLVData,PromotedValue promotedValue){
         String[] fixtureQRScanVal = fixtureQRScan.split(",");
 
-        if(fixtureQRScanVal[0].trim() != null){
-            addStreetLightData("lampType",fixtureQRScanVal[0].trim(),paramsList);
+        String promotedConfigJson = PropertiesReader.getProperties().getProperty("edge.promoted.config");
+        PromotedConfig promotedConfig = gson.fromJson(promotedConfigJson,PromotedConfig.class);
+        List<FormId> formIdList = promotedConfig.getFormIds();
+        promotedValue.setFormTemplateGuid(promotedConfig.getFormTemplateGuid());
+
+        List<PromotedComponent> promotedComponentList =  promotedValue.getPromotedData();
+
+        if(fixtureQRScanVal.length >= 14){
+            if(fixtureQRScanVal[0].trim() != null){
+                addStreetLightData("lampType",fixtureQRScanVal[0].trim(),paramsList);
+                PromotedComponent promotedComponent =  getPromotedComponent(formIdList,"lampType",fixtureQRScanVal[0].trim());
+                promotedComponentList.add(promotedComponent);
+            }
+
+
+            if(fixtureQRScanVal[1].trim() != null){
+                addStreetLightData("power",fixtureQRScanVal[1].replace("W","").trim(),paramsList);
+                PromotedComponent promotedComponent =  getPromotedComponent(formIdList,"wattage",fixtureQRScanVal[1].trim());
+                promotedComponentList.add(promotedComponent);
+            }
+
+            if(fixtureQRScanVal[2].trim() != null){
+                addStreetLightData("luminaire.brand",fixtureQRScanVal[2].trim(),paramsList);
+                PromotedComponent promotedComponent =  getPromotedComponent(formIdList,"luminaireManufacturer",fixtureQRScanVal[2].trim());
+                promotedComponentList.add(promotedComponent);
+            }
+
+            if(fixtureQRScanVal[3].trim() != null){
+                addStreetLightData("luminaire.model",fixtureQRScanVal[3].trim(),paramsList);
+                PromotedComponent promotedComponent =  getPromotedComponent(formIdList,"luminaireModel",fixtureQRScanVal[3].trim());
+                promotedComponentList.add(promotedComponent);
+            }
+
+            PromotedComponent promotedComponent =  getPromotedComponent(formIdList,"luminairePartNumber",fixtureQRScanVal[4].trim());
+            promotedComponentList.add(promotedComponent);
+
+            PromotedComponent luminaireLumenOutp =  getPromotedComponent(formIdList,"luminaireLumenOutp",fixtureQRScanVal[6].trim());
+            promotedComponentList.add(luminaireLumenOutp);
+
+            PromotedComponent luminaireCCT =  getPromotedComponent(formIdList,"luminaireCCT",fixtureQRScanVal[7].trim());
+            promotedComponentList.add(luminaireCCT);
+
+
+            PromotedComponent luminaireSN =  getPromotedComponent(formIdList,"luminaireSN",fixtureQRScanVal[8].trim());
+            promotedComponentList.add(luminaireSN);
+
+            PromotedComponent luminaireMfgDate =  getPromotedComponent(formIdList,"luminaireMfgDate",fixtureQRScanVal[9].trim());
+            promotedComponentList.add(luminaireMfgDate);
+
+            PromotedComponent driverManufacturer =  getPromotedComponent(formIdList,"driverManufacturer",fixtureQRScanVal[12].trim());
+            promotedComponentList.add(driverManufacturer);
+
+            PromotedComponent driverName =  getPromotedComponent(formIdList,"driverName",fixtureQRScanVal[13].trim());
+            promotedComponentList.add(driverName);
         }
 
 
-        if(fixtureQRScanVal[1].trim() != null){
-            addStreetLightData("power",fixtureQRScanVal[1].replace("W","").trim(),paramsList);
-        }
-
-        if(fixtureQRScanVal[2].trim() != null){
-            addStreetLightData("luminaire.brand",fixtureQRScanVal[2].trim(),paramsList);
-        }
-
-        if(fixtureQRScanVal[3].trim() != null){
-            addStreetLightData("luminaire.model",fixtureQRScanVal[3].trim(),paramsList);
-        }
 
         addData("client.name",previousEdge2SLVData.getCentralAssetId(),paramsList);
         addData("device.premise",previousEdge2SLVData.getVisualRef(),paramsList);

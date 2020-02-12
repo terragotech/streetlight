@@ -155,7 +155,7 @@ public class UrbanControlSLVInterfaceService extends  SLVInterfaceService{
             e.printStackTrace();
         }
 
-        setDeviceValues(paramsList,slvTransactionLogs);
+        setDeviceValues(paramsList,slvTransactionLogs,null,null);
     }
 
 
