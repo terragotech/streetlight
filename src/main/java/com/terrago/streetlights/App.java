@@ -19,6 +19,12 @@ public class App
 {
     private static Logger logger = Logger.getLogger(App.class);
     public static void main( String[] args ) {
+        //LatLong latLong = LatLongUtils.getLatLngFromGeoJson("{\"type\":\"Feature\",\"properties\":{},\"geometry\":{\"type\":\"Point\",\"coordinates\":[ 104.8214, 38.8339 ]}}");
+        //UbicquiaLightsInterface.requestDynamicToken();
+        //JsonObject jsonObject = UbicquiaLightsInterface.getNodes("5c1919");
+       // System.out.println(jsonObject.toString());
+        //UbicquiaLightsInterface.CreateNewNode("5c1920","27.6648","-81.5158");
+
        /* UbicquiaLightsInterface.requestDynamicToken();
         System.out.println(UbicquiaLightsInterface.getNodes("5c0690").toString());
         System.out.println(UbicquiaLightsInterface.getQueryData("5c0690"));

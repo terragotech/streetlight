@@ -149,7 +149,7 @@ public class MonitorChanges {
             }
         }
     }
-    private void doInstallation(String result,List<EdgeFormData> formComponents)
+    private void doInstallation(String result,List<EdgeFormData> formComponents, int iMode,LatLong latLong)
     {
         if (result != null)
         {
@@ -244,6 +244,19 @@ public class MonitorChanges {
             jsonObject.addProperty("poleType", strpoleType);
             jsonObject.addProperty("fixtureType", strFixtureType);
             jsonObject.addProperty("poleId",strPoleID);
+
+            if(iMode == 1)
+            {
+                if(latLong != null) {
+                    jsonObject.addProperty("latitude", latLong.getLat());
+                    jsonObject.addProperty("longitude", latLong.getLng());
+                }
+                else
+                {
+                    jsonObject.addProperty("latitude", "");
+                    jsonObject.addProperty("longitude", "");
+                }
+            }
 
             String id = jsonObject.get("id").getAsString();
             String result2 = jsonObject.toString();
@@ -351,6 +364,8 @@ public class MonitorChanges {
                         }.getType());
                         if (formTemplate.equals(PropertiesReader.getProperties().getProperty("formtemplatetoprocess"))) {
                             logger.info("Matching template found");
+                            int iMode = 0;
+                            LatLong latLong = null;
                             EdgeFormData cur = new EdgeFormData();
                             String idDev = PropertiesReader.getProperties().getProperty("ubicquia_deveui");
                             int nidDev = Integer.parseInt(idDev);
@@ -384,6 +399,30 @@ public class MonitorChanges {
                                     //String result = UbicquiaLightsInterface.getQueryData(dev_eui);
                                     JsonObject jobj1 = UbicquiaLightsInterface.getNodes(dev_eui);
                                     String result = null;
+                                    if(jobj1 == null)
+                                    {
+                                        String strGeom = restEdgeNote.getGeometry();
+                                        //Create Node here
+                                        iMode = 1;
+                                        latLong = LatLongUtils.getLatLngFromGeoJson(strGeom);
+                                        String strNodeStatus = "";
+                                        if(latLong != null) {
+                                            strNodeStatus = UbicquiaLightsInterface.CreateNewNode(dev_eui, latLong.getLat(), latLong.getLng());
+                                        }
+                                        else
+                                        {
+                                            strNodeStatus = UbicquiaLightsInterface.CreateNewNode(dev_eui, "", "");
+                                        }
+                                        if(strNodeStatus.equals("success"))
+                                        {
+                                            jobj1 = UbicquiaLightsInterface.getNodes(dev_eui);
+                                        }
+                                        else
+                                        {
+                                            jobj1 = null;
+                                        }
+
+                                    }
                                     if(jobj1 != null)
                                     {
                                         result = jobj1.toString();
@@ -457,7 +496,7 @@ public class MonitorChanges {
                                     }
                                     if(!isDeviceControl) {
                                         System.out.println("Install Process");
-                                        doInstallation(result, formComponents);
+                                        doInstallation(result, formComponents,iMode,latLong);
                                     }
                                     ///////////////////////////
                                 }

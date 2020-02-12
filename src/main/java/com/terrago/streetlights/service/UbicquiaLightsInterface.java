@@ -363,4 +363,53 @@ public class UbicquiaLightsInterface {
 
         return result;
     }
+    public static String CreateNewNode(String dev_eui,String strLatitude,String strLongitude)
+    {
+        String result = null;
+        try {
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+            //String baseURL = "http://ubiapi-app.ubicquia.com/api";
+            String baseURL = "https://api.ubishow.ubicquia.com/api";
+            String requestURL = baseURL + "/nodes";
+            headers.add("Authorization", "Bearer " + dynamicToken);
+            RestTemplate restTemplate = new RestTemplate();
+            String idData = "";
+            JsonObject jsonObjectNewNode = new JsonObject();
+            jsonObjectNewNode.addProperty("node",dev_eui);
+            jsonObjectNewNode.addProperty("latitude",strLatitude);
+            jsonObjectNewNode.addProperty("longitude",strLongitude);
+            jsonObjectNewNode.addProperty("dev_eui",dev_eui);
+            jsonObjectNewNode.addProperty("active","true");
+            jsonObjectNewNode.addProperty("twinPole","0");
+            idData = jsonObjectNewNode.toString();
+            System.out.println(idData);
+            HttpEntity<String> request = new HttpEntity<String>(idData,headers);
+            ResponseEntity<String> response = restTemplate.exchange(requestURL, HttpMethod.POST, request, String.class);
+            if (response.getStatusCode() == HttpStatus.OK) {
+                try {
+                    JsonObject jsonObject = JsonDataParser.getJsonObject(response.getBody());
+                    System.out.println(jsonObject.toString());
+                    JsonObject datajsonObject = jsonObject.getAsJsonObject("data");
+
+                    String strStatus = jsonObject.get("status").getAsString();
+                    String strCode = jsonObject.get("code").getAsString();
+                    if(strStatus.equals("success") && strCode.equals("200"))
+                    {
+                        result = "success";
+                    }
+                }
+                catch (Exception e)
+                {
+                    e.printStackTrace();
+                }
+            }
+
+        }
+        catch (Exception e)
+        {
+            e.printStackTrace();
+        }
+        return result;
+    }
 }
