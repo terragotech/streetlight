@@ -140,7 +140,7 @@
                             <goal>single</goal>
                         </goals>
                         <configuration>
-                            <finalName>uc_slvinterface_v2</finalName>
+                            <finalName>uc_slvinterface_v3</finalName>
                             <archive>
                                 <manifest>
                                     <mainClass>
