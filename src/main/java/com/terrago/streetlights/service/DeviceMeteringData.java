@@ -57,19 +57,19 @@ public class DeviceMeteringData implements Runnable{
                         String strDimValue = JsonDataParser.checkDataNull(result1, "LD1State");
                         //Pole Current
                         int idpolecurrent = Integer.parseInt(PropertiesReader.getProperties().getProperty("ubicquia_polecurrent"));
-                        TerragoUpdate.updateEdgeForm(formComponents, idpolecurrent, strPolecurrent);
+                        //TerragoUpdate.updateEdgeForm(formComponents, idpolecurrent, strPolecurrent);
                         //Fixture Current
                         int idfixcurrent = Integer.parseInt(PropertiesReader.getProperties().getProperty("ubicquia_fixturecurrent"));
-                        TerragoUpdate.updateEdgeForm(formComponents, idfixcurrent, strFixturecurrent);
+                        //TerragoUpdate.updateEdgeForm(formComponents, idfixcurrent, strFixturecurrent);
                         //Pole Voltage
                         int idpolevoltage = Integer.parseInt(PropertiesReader.getProperties().getProperty("ubicquia_polevoltage"));
-                        TerragoUpdate.updateEdgeForm(formComponents, idpolevoltage, strPoleVoltage);
+                        //TerragoUpdate.updateEdgeForm(formComponents, idpolevoltage, strPoleVoltage);
                         //Fixture Voltage
                         int idfixvoltage = Integer.parseInt(PropertiesReader.getProperties().getProperty("ubicquia_fixvoltage"));
-                        TerragoUpdate.updateEdgeForm(formComponents, idfixvoltage, strFixVoltage);
+                        //TerragoUpdate.updateEdgeForm(formComponents, idfixvoltage, strFixVoltage);
                         //Dim Value
                         int iddimvalue = Integer.parseInt(PropertiesReader.getProperties().getProperty("ubicquia_mdimvalue"));
-                        TerragoUpdate.updateEdgeForm(formComponents, iddimvalue, strDimValue);
+                        //TerragoUpdate.updateEdgeForm(formComponents, iddimvalue, strDimValue);
 
                         String sfc = PropertiesReader.getProperties().getProperty("ubicquia_sdc");
                         int idsfc = Integer.parseInt(sfc);

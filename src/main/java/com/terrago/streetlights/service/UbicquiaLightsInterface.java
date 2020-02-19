@@ -254,12 +254,15 @@ public class UbicquiaLightsInterface {
                 idData = "{\"id_list\":[{\"id\":" + id + "}],\"value\":" + "0" + "}";
             }
             System.out.println(idData);
+            System.out.println(requestURL);
+            System.out.println(idData);
             HttpEntity<String> request = new HttpEntity<String>(idData,headers);
             ResponseEntity<String> response = restTemplate.exchange(requestURL, HttpMethod.POST, request, String.class);
             if (response.getStatusCode() == HttpStatus.OK) {
-                JsonObject jsonObject = JsonDataParser.getJsonObject(response.getBody());
+                System.out.println(response.getBody());
+                /*JsonObject jsonObject = JsonDataParser.getJsonObject(response.getBody());
                 JsonObject datajsonObject = jsonObject.getAsJsonObject("data");
-                result = datajsonObject.toString();
+                result = datajsonObject.toString();*/
             }
 
         }
@@ -363,7 +366,7 @@ public class UbicquiaLightsInterface {
 
         return result;
     }
-    public static String CreateNewNode(String dev_eui,String strLatitude,String strLongitude)
+    public static String CreateNewNode(String dev_eui,String strLatitude,String strLongitude,String poleID)
     {
         String result = null;
         try {
@@ -376,7 +379,7 @@ public class UbicquiaLightsInterface {
             RestTemplate restTemplate = new RestTemplate();
             String idData = "";
             JsonObject jsonObjectNewNode = new JsonObject();
-            jsonObjectNewNode.addProperty("node",dev_eui);
+            jsonObjectNewNode.addProperty("node",poleID);
             jsonObjectNewNode.addProperty("latitude",strLatitude);
             jsonObjectNewNode.addProperty("longitude",strLongitude);
             jsonObjectNewNode.addProperty("dev_eui",dev_eui);

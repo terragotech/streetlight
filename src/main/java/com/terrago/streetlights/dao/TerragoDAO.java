@@ -22,6 +22,20 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class TerragoDAO {
+    private static String getReplaceDevui(List<EdgeFormData> formComponents)
+    {
+        //ubicquia_replacedeveui
+        int idReplacedevui = Integer.parseInt(PropertiesReader.getProperties().getProperty("ubicquia_replacedeveui"));
+        String strReplacedevui = "";
+        EdgeFormData repdevui = new EdgeFormData();
+        repdevui.setId(idReplacedevui);
+        int pos = formComponents.indexOf(repdevui);
+        if(pos != -1){
+            EdgeFormData tmp1 = formComponents.get(pos);
+            strReplacedevui = tmp1.getValue();
+        }
+        return strReplacedevui;
+    }
     public  static NoteInfo getIMEI(String noteTitle){
         NoteInfo noteInfo = new NoteInfo();
         noteInfo.setNoteguid("");
@@ -59,6 +73,14 @@ public class TerragoDAO {
                     if (pos != -1) {
                         EdgeFormData f1 = formComponents.get(pos);
                         String dev_eui = f1.getValue();
+                        String repEUI = getReplaceDevui(formComponents);
+                        if(repEUI != null)
+                        {
+                            if(repEUI.equals(""))
+                            {
+                                dev_eui = repEUI;
+                            }
+                        }
                         if (dev_eui == null) {
                             dev_eui = "";
                             result = "";

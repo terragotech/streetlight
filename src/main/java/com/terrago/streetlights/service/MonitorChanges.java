@@ -36,10 +36,61 @@ import com.terrago.streetlights.utils.*;
 
 public class MonitorChanges {
     private Logger logger = Logger.getLogger(MonitorChanges.class);
-
-
-
-
+    //
+    private String getDevicControlStatus(List<EdgeFormData> formComponents)
+    {
+        //ubicquia_replacedeveui
+        int idReplacedevui = Integer.parseInt(PropertiesReader.getProperties().getProperty("ubicquia_devicecontrol"));
+        String strReplacedevui = "";
+        EdgeFormData repdevui = new EdgeFormData();
+        repdevui.setId(idReplacedevui);
+        int pos = formComponents.indexOf(repdevui);
+        if(pos != -1){
+            EdgeFormData tmp1 = formComponents.get(pos);
+            strReplacedevui = tmp1.getValue();
+        }
+        return strReplacedevui;
+    }
+    private String getReplaceDevui(List<EdgeFormData> formComponents)
+    {
+        //ubicquia_replacedeveui
+        int idReplacedevui = Integer.parseInt(PropertiesReader.getProperties().getProperty("ubicquia_replacedeveui"));
+        String strReplacedevui = "";
+        EdgeFormData repdevui = new EdgeFormData();
+        repdevui.setId(idReplacedevui);
+        int pos = formComponents.indexOf(repdevui);
+        if(pos != -1){
+            EdgeFormData tmp1 = formComponents.get(pos);
+            strReplacedevui = tmp1.getValue();
+        }
+        return strReplacedevui;
+    }
+    private String getPoleID(List<EdgeFormData> formComponents)
+    {
+        int idPoleIdInstall = Integer.parseInt(PropertiesReader.getProperties().getProperty("ubicquia_poleidi"));
+        String strPoleID = "";
+        EdgeFormData poleIdInstall = new EdgeFormData();
+        poleIdInstall.setId(idPoleIdInstall);
+        int pos = formComponents.indexOf(poleIdInstall);
+        if(pos != -1){
+            EdgeFormData tmp1 = formComponents.get(pos);
+            strPoleID = tmp1.getValue();
+        }
+        return strPoleID;
+    }
+    private String getAction(List<EdgeFormData> formComponents)
+    {
+        int idAction = Integer.parseInt(PropertiesReader.getProperties().getProperty("ubicquia_action"));
+        String actionString = "";
+        EdgeFormData actionInstall = new EdgeFormData();
+        actionInstall.setId(idAction);
+        int pos = formComponents.indexOf(actionInstall);
+        if(pos != -1){
+            EdgeFormData tmp1 = formComponents.get(pos);
+            actionString = tmp1.getValue();
+        }
+        return actionString;
+    }
 
     private List<LastUpdated> getUpdatedNotes(String lastProcessedTime)
     {
@@ -149,7 +200,7 @@ public class MonitorChanges {
             }
         }
     }
-    private void doInstallation(String result,List<EdgeFormData> formComponents, int iMode,LatLong latLong)
+    private void doInstallation(String result,List<EdgeFormData> formComponents, int iMode,LatLong latLong,String repdevui)
     {
         if (result != null)
         {
@@ -243,7 +294,10 @@ public class MonitorChanges {
 
             jsonObject.addProperty("poleType", strpoleType);
             jsonObject.addProperty("fixtureType", strFixtureType);
-            jsonObject.addProperty("poleId",strPoleID);
+            if(!strPoleID.equals(""))
+            {
+                jsonObject.addProperty("poleId", strPoleID);
+            }
 
             if(iMode == 1)
             {
@@ -257,7 +311,10 @@ public class MonitorChanges {
                     jsonObject.addProperty("longitude", "");
                 }
             }
-
+            /*if(repdevui != null)
+            {
+                jsonObject.addProperty("dev_eui", repdevui);
+            }*/
             String id = jsonObject.get("id").getAsString();
             String result2 = jsonObject.toString();
             UbicquiaLightsInterface.requestDynamicToken();
@@ -282,15 +339,15 @@ public class MonitorChanges {
 
 
 
-                    TerragoUpdate.updateEdgeForm(formComponents, idID, strID);
-                    TerragoUpdate.updateEdgeForm(formComponents, idnode, strNode);
-                    TerragoUpdate.updateEdgeForm(formComponents, idlat, strLat);
+                    //TerragoUpdate.updateEdgeForm(formComponents, idID, strID);
+                    //TerragoUpdate.updateEdgeForm(formComponents, idnode, strNode);
+                    //TerragoUpdate.updateEdgeForm(formComponents, idlat, strLat);
 
-                    TerragoUpdate.updateEdgeForm(formComponents, idlng, strLong);
-                    TerragoUpdate.updateEdgeForm(formComponents, idmc, strMC);
+                   // TerragoUpdate.updateEdgeForm(formComponents, idlng, strLong);
+                    //TerragoUpdate.updateEdgeForm(formComponents, idmc, strMC);
 
-                    TerragoUpdate.updateEdgeForm(formComponents, idfixid, strFixID);
-                    TerragoUpdate.updateEdgeForm(formComponents, idPoleid, strPoleID1);
+                    //TerragoUpdate.updateEdgeForm(formComponents, idfixid, strFixID);
+                    //TerragoUpdate.updateEdgeForm(formComponents, idPoleid, strPoleID1);
 
                     if(strPoleType.equals(""))
                     {
@@ -301,7 +358,7 @@ public class MonitorChanges {
                         strFixType = "Not selected";
                     }
                     //TerragoUpdate.updateEdgeForm(formComponents, idPoleTypeInstall, strPoleType);
-                    TerragoUpdate.updateEdgeForm(formComponents, idfixtype, strFixType);
+                    //TerragoUpdate.updateEdgeForm(formComponents, idfixtype, strFixType);
 
                     // Create Revision
 
@@ -315,6 +372,8 @@ public class MonitorChanges {
     }
     public void startMonitoring()
     {
+        String ubicquia_actioninstall = PropertiesReader.getProperties().getProperty("ubicquia_actioninstall");
+        String ubicquia_actionmaintain = PropertiesReader.getProperties().getProperty("ubicquia_actionmaintain");
         String nnguid = "";
         do {
             long lastMaxUpdatedTime = TerragoDAO.readLastUpdatedTime();
@@ -386,126 +445,177 @@ public class MonitorChanges {
                             int pos1 = formComponents.indexOf(cur1);
                             int pos2 = formComponents.indexOf(cur2);
                             int pos3 = formComponents.indexOf(cur3);
-                            if (pos != -1) {
-                                EdgeFormData f1 = formComponents.get(pos);
-                                String dev_eui = f1.getValue();
-                                if(dev_eui == null)
-                                {
-                                    dev_eui = "";
-                                }
-                                if(!dev_eui.equals(""))
-                                {
-                                    UbicquiaLightsInterface.requestDynamicToken();
-                                    //String result = UbicquiaLightsInterface.getQueryData(dev_eui);
-                                    JsonObject jobj1 = UbicquiaLightsInterface.getNodes(dev_eui);
-                                    String result = null;
-                                    if(jobj1 == null)
-                                    {
-                                        String strGeom = restEdgeNote.getGeometry();
-                                        //Create Node here
-                                        iMode = 1;
-                                        latLong = LatLongUtils.getLatLngFromGeoJson(strGeom);
-                                        String strNodeStatus = "";
-                                        if(latLong != null) {
-                                            strNodeStatus = UbicquiaLightsInterface.CreateNewNode(dev_eui, latLong.getLat(), latLong.getLng());
-                                        }
-                                        else
-                                        {
-                                            strNodeStatus = UbicquiaLightsInterface.CreateNewNode(dev_eui, "", "");
-                                        }
-                                        if(strNodeStatus.equals("success"))
-                                        {
-                                            jobj1 = UbicquiaLightsInterface.getNodes(dev_eui);
-                                        }
-                                        else
-                                        {
-                                            jobj1 = null;
-                                        }
-
+                            String frmAction = getAction(formComponents);
+                            boolean isDeviceControl = false;
+                            if(frmAction.equals(ubicquia_actioninstall))
+                            {
+                                if (pos != -1) {
+                                    EdgeFormData f1 = formComponents.get(pos);
+                                    String dev_eui = f1.getValue();
+                                    if (dev_eui == null) {
+                                        dev_eui = "";
                                     }
-                                    if(jobj1 != null)
-                                    {
-                                        result = jobj1.toString();
-                                    }
-                                    if(result != null)
-                                    {
-                                        mustUpdate = true;
-                                    }
-                                    boolean isDeviceControl = false;
-                                    if(pos1 != -1)
-                                    {
-                                        EdgeFormData f2 = formComponents.get(pos1);
-                                        EdgeFormData f3 = formComponents.get(pos2);
-                                        String groupControl = f2.getValue();
-                                        String singleFixture = f3.getValue();
-                                        if(groupControl == null)
-                                        {
-                                            groupControl = "";
-                                        }
-                                        if(singleFixture == null)
-                                        {
-                                            singleFixture = "";
-                                        }
-                                        if(groupControl != null || singleFixture != null)
-                                        {
-                                            if(groupControl.equals("Yes")) {
-                                                isDeviceControl = true;
-                                                System.out.println("Group Device Control");
-                                                doGroupLightsOn(result, formComponents);
+                                    if (!dev_eui.equals("")) {
+                                        UbicquiaLightsInterface.requestDynamicToken();
+                                        JsonObject jobj1 = UbicquiaLightsInterface.getNodes(dev_eui);
+                                        String result = null;
+                                        if (jobj1 == null) {
+                                            String strGeom = restEdgeNote.getGeometry();
+                                            //Create Node here
+                                            iMode = 1;
+                                            latLong = LatLongUtils.getLatLngFromGeoJson(strGeom);
+                                            String strNodeStatus = "";
+                                            String recPoleID = getPoleID(formComponents);
+                                            if (latLong != null) {
+                                                strNodeStatus = UbicquiaLightsInterface.CreateNewNode(dev_eui, latLong.getLat(), latLong.getLng(), recPoleID);
+                                            } else {
+                                                strNodeStatus = UbicquiaLightsInterface.CreateNewNode(dev_eui, "", "", recPoleID);
                                             }
-                                            else if(singleFixture != null && !singleFixture.equals(""))
-                                            {
-                                                if(singleFixture.equals("Yes")) {
-                                                    mustUpdate = false;
-                                                    System.out.println("Single Device Control");
-                                                    isDeviceControl = true;
-                                                    //doSingleLightOn(dev_eui, formComponents);
-                                                    JsonObject jobj = null;
-                                                    try {
-                                                        logger.info("Parsing the ID");
-                                                        jobj = JsonDataParser.getJsonObject(result);
-                                                    }
-                                                    catch (Exception e)
-                                                    {
-                                                        e.printStackTrace();
-                                                    }
-                                                    if(jobj != null)
-                                                    {
-                                                        String strID = jobj.get("id").getAsString();
-                                                        System.out.println(strID);
-                                                        logger.info("Turing the light ON");
-                                                        UbicquiaLightsInterface.SetDevice(strID,true);
-                                                        if(pos3 != -1)
-                                                        {
-                                                            EdgeFormData f4 = formComponents.get(pos3);
-                                                            String dimmingValue = f4.getValue();
-                                                            UbicquiaLightsInterface.SetDimmingValue(strID,dimmingValue);
-                                                            try {
-                                                                Thread.sleep(1000);
-                                                            }
-                                                            catch (InterruptedException e)
-                                                            {e.printStackTrace();}
-                                                        }
-                                                        new DeviceMeteringData(dev_eui,strID,nnguid);
-
-                                                    }
-                                                }
+                                            if (strNodeStatus.equals("success")) {
+                                                jobj1 = UbicquiaLightsInterface.getNodes(dev_eui);
+                                            } else {
+                                                jobj1 = null;
                                             }
 
                                         }
+                                        if (jobj1 != null) {
+                                            result = jobj1.toString();
+                                        }
+                                        if (result != null) {
+                                            mustUpdate = true;
+                                        }
+                                        doInstallation(result, formComponents,iMode,latLong,null);
                                     }
-                                    if(!isDeviceControl) {
-                                        System.out.println("Install Process");
-                                        doInstallation(result, formComponents,iMode,latLong);
-                                    }
-                                    ///////////////////////////
                                 }
-                                else
-                                {
-                                    mustUpdate = false;
-                                }
-                                ////////////////////////////////////////////////////////////////////
                             }
+                            if(frmAction.equals(ubicquia_actionmaintain))
+                            {
+                                String dcStatus = getDevicControlStatus(formComponents);
+                                if(dcStatus != null ) {
+                                    if(dcStatus.equals("Show")) {
+                                        //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@2
+                                        if (pos1 != -1) {
+                                            EdgeFormData f2 = formComponents.get(pos1);
+                                            EdgeFormData f3 = formComponents.get(pos2);
+                                            String groupControl = f2.getValue();
+                                            String singleFixture = f3.getValue();
+                                            if (groupControl == null) {
+                                                groupControl = "";
+                                            }
+                                            if (singleFixture == null) {
+                                                singleFixture = "";
+                                            }
+                                            if (groupControl != null || singleFixture != null) {
+                                                if (pos != -1) {
+                                                    EdgeFormData f1 = formComponents.get(pos);
+                                                    String dev_eui = f1.getValue();
+                                                    if (dev_eui == null) {
+                                                        dev_eui = "";
+                                                    }
+                                                    if (!dev_eui.equals("")) {
+                                                        String strRepDevUI = getReplaceDevui(formComponents);
+                                                        if (!strRepDevUI.equals("")) {
+                                                            dev_eui = strRepDevUI;
+                                                        }
+                                                        UbicquiaLightsInterface.requestDynamicToken();
+                                                        JsonObject jobj1 = UbicquiaLightsInterface.getNodes(dev_eui);
+                                                        String result = jobj1.toString();
+                                                         if (singleFixture != null && !singleFixture.equals(""))
+                                                         {
+                                                            if (singleFixture.equals("Yes")) {
+                                                                mustUpdate = false;
+                                                                System.out.println("Single Device Control");
+                                                                isDeviceControl = true;
+                                                                //doSingleLightOn(dev_eui, formComponents);
+                                                                JsonObject jobj = null;
+                                                                try {
+                                                                    logger.info("Parsing the ID");
+                                                                    jobj = JsonDataParser.getJsonObject(result);
+                                                                } catch (Exception e) {
+                                                                    e.printStackTrace();
+                                                                }
+                                                                if (jobj != null) {
+                                                                    String strID = jobj.get("id").getAsString();
+                                                                    System.out.println(strID);
+                                                                    logger.info("Turing the light ON");
+
+                                                                    if (pos3 != -1) {
+                                                                        EdgeFormData f4 = formComponents.get(pos3);
+                                                                        String dimmingValue = f4.getValue();
+                                                                        UbicquiaLightsInterface.SetDimmingValue(strID, dimmingValue);
+                                                                        UbicquiaLightsInterface.SetDevice(strID, true);
+                                                                        try {
+                                                                            Thread.sleep(1000);
+                                                                        } catch (InterruptedException e) {
+                                                                            e.printStackTrace();
+                                                                        }
+                                                                    }
+                                                                    new DeviceMeteringData(dev_eui, strID, nnguid);
+
+                                                                }
+                                                            }
+                                                        }
+                                                        else if (groupControl.equals("Yes")) {
+                                                            isDeviceControl = true;
+                                                            System.out.println("Group Device Control");
+
+                                                            doGroupLightsOn(result, formComponents);
+                                                        }
+                                                    }
+
+                                                }
+
+
+                                            }
+
+                                        }
+                                    }
+                                    //@@@@@@@@@@@@@@@@@@@@@@@@@@@
+                                }
+
+                                    if (!isDeviceControl) {
+                                        //Perform Replace
+                                        String strRepDevUI = getReplaceDevui(formComponents);
+                                        if (!strRepDevUI.equals("")) {
+                                            UbicquiaLightsInterface.requestDynamicToken();
+                                            JsonObject jobj1 = UbicquiaLightsInterface.getNodes(strRepDevUI);
+                                            String result = null;
+                                            if (jobj1 == null) {
+                                                String strGeom = restEdgeNote.getGeometry();
+                                                //Create Node here
+                                                iMode = 1;
+                                                latLong = LatLongUtils.getLatLngFromGeoJson(strGeom);
+                                                String strNodeStatus = "";
+                                                String recPoleID = getPoleID(formComponents);
+                                                if (latLong != null) {
+                                                    strNodeStatus = UbicquiaLightsInterface.CreateNewNode(strRepDevUI, latLong.getLat(), latLong.getLng(), recPoleID);
+                                                } else {
+                                                    strNodeStatus = UbicquiaLightsInterface.CreateNewNode(strRepDevUI, "", "", recPoleID);
+                                                }
+                                                if (strNodeStatus.equals("success")) {
+                                                    jobj1 = UbicquiaLightsInterface.getNodes(strRepDevUI);
+                                                } else {
+                                                    jobj1 = null;
+                                                }
+
+                                            }
+                                            if (jobj1 != null) {
+                                                result = jobj1.toString();
+                                            }
+                                            if (jobj1 != null) {
+                                                result = jobj1.toString();
+                                            }
+                                            if (result != null) {
+                                                mustUpdate = true;
+                                            }
+                                            doInstallation(result, formComponents, iMode, latLong, strRepDevUI);
+                                        }
+                                        //End of replace
+                                    }
+
+
+                            }
+
                         }
                         serverEdgeForm.add("formDef", gson.toJsonTree(formComponents));
                         serverEdgeForm.addProperty("formGuid", UUID.randomUUID().toString());
@@ -590,7 +700,7 @@ public class MonitorChanges {
                 TerragoDAO.writeLastUpdateTime(lastMaxUpdatedTime);
             }
             try {
-                Thread.sleep(10000);
+                Thread.sleep(5000);
             }
             catch (Exception e)
             {

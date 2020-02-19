@@ -22,7 +22,7 @@ public class App
         //LatLong latLong = LatLongUtils.getLatLngFromGeoJson("{\"type\":\"Feature\",\"properties\":{},\"geometry\":{\"type\":\"Point\",\"coordinates\":[ 104.8214, 38.8339 ]}}");
         //UbicquiaLightsInterface.requestDynamicToken();
         //JsonObject jsonObject = UbicquiaLightsInterface.getNodes("5c1919");
-       // System.out.println(jsonObject.toString());
+       // System.out.println(jsonObject.toString());52
         //UbicquiaLightsInterface.CreateNewNode("5c1920","27.6648","-81.5158");
 
        /* UbicquiaLightsInterface.requestDynamicToken();
