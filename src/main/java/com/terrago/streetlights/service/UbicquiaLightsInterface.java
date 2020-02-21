@@ -4,6 +4,7 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.terrago.streetlights.utils.JsonDataParser;
+import com.terrago.streetlights.utils.PropertiesReader;
 import org.apache.log4j.Logger;
 import org.springframework.http.*;
 import org.springframework.util.LinkedMultiValueMap;
@@ -19,12 +20,14 @@ public class UbicquiaLightsInterface {
     public static List<String> getGroupNodes(String groupID)
     {
         logger.info("get all nodes in a group");
+        String strBaseUrl = PropertiesReader.getProperties().getProperty("ubicquia_baseurl");
         List<String> result = new ArrayList<>();
         try {
             HttpHeaders headers = new HttpHeaders();
-            String baseURL = "http://ubiapi-app.ubicquia.com/api";
+            String baseURL = strBaseUrl;
             String requestURL = baseURL + "/nodes/group/" + groupID;
-            headers.add("x-api-key", "321b0b2e5a815068913c659e93dc56608bd8c4dafcc586f5e1732cf41b443f54");
+            //headers.add("x-api-key", "321b0b2e5a815068913c659e93dc56608bd8c4dafcc586f5e1732cf41b443f54");
+            headers.add("Authorization", "Bearer " + dynamicToken);
             RestTemplate restTemplate = new RestTemplate();
             HttpEntity<String> request = new HttpEntity<String>(headers);
             ResponseEntity<String> response = restTemplate.exchange(requestURL, HttpMethod.GET, request, String.class);
@@ -61,7 +64,8 @@ public class UbicquiaLightsInterface {
         JsonObject result = null;
         try {
             HttpHeaders headers = new HttpHeaders();
-            String baseURL = "https://api.ubishow.ubicquia.com/api";
+            String strBaseUrl = PropertiesReader.getProperties().getProperty("ubicquia_baseurl");
+            String baseURL = strBaseUrl;
             String requestURL = baseURL + "/nodes";
             //headers.add("x-api-key", "321b0b2e5a815068913c659e93dc56608bd8c4dafcc586f5e1732cf41b443f54");
             headers.add("Authorization", "Bearer " + dynamicToken);
@@ -104,12 +108,16 @@ public class UbicquiaLightsInterface {
         try{
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+            String strUserName = PropertiesReader.getProperties().getProperty("ubicquia_user");
+            String strPassword = PropertiesReader.getProperties().getProperty("ubicquia_pwd");
 
             MultiValueMap<String, String> map= new LinkedMultiValueMap<String, String>();
-            map.add("email", "jross@terragotech.com");
-            map.add("password", "password1");
-            //String requestURL = "http://ubiapi-app.ubicquia.com/api/loginToUbiVu";
-            String requestURL = "https://api.ubishow.ubicquia.com/api/loginToUbiVu";
+            map.add("email", strUserName);
+            map.add("password", strPassword);
+
+            String strBaseUrl = PropertiesReader.getProperties().getProperty("ubicquia_baseurl");
+            String baseURL = strBaseUrl;
+            String requestURL = baseURL + "/loginToUbiVu";
             HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<MultiValueMap<String, String>>(map, headers);
             RestTemplate restTemplate = new RestTemplate();
             ResponseEntity<String> response = restTemplate.postForEntity( requestURL, request , String.class );
@@ -138,7 +146,8 @@ public class UbicquiaLightsInterface {
         String result = null;
         try {
             HttpHeaders headers = new HttpHeaders();
-            String baseURL = "http://ubiapi-app.ubicquia.com/api";
+            String strBaseUrl = PropertiesReader.getProperties().getProperty("ubicquia_baseurl");
+            String baseURL = strBaseUrl;
             String requestURL = baseURL + "/nodes/" + nodeId;
             headers.add("Authorization", "Bearer " + dynamicToken);
             RestTemplate restTemplate = new RestTemplate();
@@ -175,9 +184,10 @@ public class UbicquiaLightsInterface {
         try {
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON);
-            //String baseURL = "https://ubiapi-app.ubicquia.com/api";
-            String baseURL = "https://api.ubishow.ubicquia.com/api";
-            //String baseURL = "http://ubiapi-app.ubicquia.com/api";
+
+            String strBaseUrl = PropertiesReader.getProperties().getProperty("ubicquia_baseurl");
+            String baseURL = strBaseUrl;
+
             String requestURL = baseURL + "/nodes/" + nodeId;
             headers.add("Authorization", "Bearer " + dynamicToken);
             RestTemplate restTemplate = new RestTemplate();
@@ -204,8 +214,9 @@ public class UbicquiaLightsInterface {
         try {
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON);
-            //String baseURL = "http://ubiapi-app.ubicquia.com/api";
-            String baseURL = "https://api.ubishow.ubicquia.com/api";
+
+            String strBaseUrl = PropertiesReader.getProperties().getProperty("ubicquia_baseurl");
+            String baseURL = strBaseUrl;
             String requestURL = baseURL + "/nodes/setLightDim";
             headers.add("Authorization", "Bearer " + dynamicToken);
             RestTemplate restTemplate = new RestTemplate();
@@ -240,8 +251,9 @@ public class UbicquiaLightsInterface {
         try {
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON);
-            //String baseURL = "http://ubiapi-app.ubicquia.com/api";
-            String baseURL = "https://api.ubishow.ubicquia.com/api";
+
+            String strBaseUrl = PropertiesReader.getProperties().getProperty("ubicquia_baseurl");
+            String baseURL = strBaseUrl;
             String requestURL = baseURL + "/nodes/setLightState";
             headers.add("Authorization", "Bearer " + dynamicToken);
             RestTemplate restTemplate = new RestTemplate();
@@ -278,7 +290,9 @@ public class UbicquiaLightsInterface {
         try {
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON);
-            String baseURL = "http://ubiapi-app.ubicquia.com/api";
+            String strBaseUrl = PropertiesReader.getProperties().getProperty("ubicquia_baseurl");
+            String baseURL = strBaseUrl;
+
             String requestURL = baseURL + "/nodes/setLightState";
             headers.add("Authorization", "Bearer " + dynamicToken);
             RestTemplate restTemplate = new RestTemplate();
@@ -339,9 +353,10 @@ public class UbicquiaLightsInterface {
         String result = null;
         try {
             HttpHeaders headers = new HttpHeaders();
-            //String baseURL = "http://ubiapi-app.ubicquia.com/api";
-            String baseURL = "https://api.ubishow.ubicquia.com/api";
-            //String baseURL = "http://ubiapi-app.ubicquia.com/api";
+
+            String strBaseUrl = PropertiesReader.getProperties().getProperty("ubicquia_baseurl");
+            String baseURL = strBaseUrl;
+
             String requestURL = baseURL + "/nodes?q=" + queryString;
             headers.add("Authorization", "Bearer " + dynamicToken);
             RestTemplate restTemplate = new RestTemplate();
@@ -372,8 +387,8 @@ public class UbicquiaLightsInterface {
         try {
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON);
-            //String baseURL = "http://ubiapi-app.ubicquia.com/api";
-            String baseURL = "https://api.ubishow.ubicquia.com/api";
+            String strBaseUrl = PropertiesReader.getProperties().getProperty("ubicquia_baseurl");
+            String baseURL = strBaseUrl;
             String requestURL = baseURL + "/nodes";
             headers.add("Authorization", "Bearer " + dynamicToken);
             RestTemplate restTemplate = new RestTemplate();
