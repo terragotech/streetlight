@@ -375,6 +375,9 @@ public class MonitorChanges {
         String ubicquia_actioninstall = PropertiesReader.getProperties().getProperty("ubicquia_actioninstall");
         String ubicquia_actionmaintain = PropertiesReader.getProperties().getProperty("ubicquia_actionmaintain");
         String nnguid = "";
+        /*DoLocationUpdate doLocationUpdate = new DoLocationUpdate();
+        Thread t = new Thread(doLocationUpdate);
+        t.start();*/
         do {
             long lastMaxUpdatedTime = TerragoDAO.readLastUpdatedTime();
             System.out.println("Looking for Changes ...");
@@ -393,7 +396,7 @@ public class MonitorChanges {
                 JsonObject edgenoteJson = new JsonParser().parse(notesJson).getAsJsonObject();
                 JsonArray serverForms = edgenoteJson.get("formData").getAsJsonArray();
                 int size = serverForms.size();
-
+                String ignoreUser = PropertiesReader.getProperties().getProperty("ignoreuser");
                 boolean ispresent = false;
                 boolean isDCPresent = false;
                 for (int i = 0; i < size; i++) {
@@ -401,7 +404,14 @@ public class MonitorChanges {
                     String formDefJson = serverEdgeForm.get("formDef").getAsString();
                     String formTemplate = serverEdgeForm.get("formTemplateGuid").getAsString();
                     if (formTemplate.equals(PropertiesReader.getProperties().getProperty("formtemplatetoprocess"))) {
-                        ispresent = true;
+                        if(!restEdgeNote.getCreatedBy().equals(ignoreUser))
+                        {
+                            ispresent = true;
+                        }
+                        else
+                        {
+                            System.out.println("Ignoring user " + ignoreUser);
+                        }
                         List<EdgeFormData> formComponents = gson.fromJson(formDefJson, new TypeToken<List<EdgeFormData>>() {
                         }.getType());
 
@@ -485,6 +495,8 @@ public class MonitorChanges {
                                             mustUpdate = true;
                                         }
                                         doInstallation(result, formComponents,iMode,latLong,null);
+
+
                                     }
                                 }
                             }
@@ -570,6 +582,11 @@ public class MonitorChanges {
 
                                         }
                                     }
+                                    else
+                                    {
+
+
+                                    }
                                     //@@@@@@@@@@@@@@@@@@@@@@@@@@@
                                 }
 
@@ -626,7 +643,12 @@ public class MonitorChanges {
                     lastMaxUpdatedTime = Math.max(lastMaxUpdatedTime, ntime);
                     edgenoteJson.addProperty("createdDateTime", ntime);
                     if(mustUpdate) {
-                        RESTService.updateNoteDetails(edgenoteJson.toString(), lstCur.getNoteguid(), restEdgeNote.getEdgeNotebook().getNotebookGuid());
+                        ResponseEntity<String> ge = RESTService.updateNoteDetails(edgenoteJson.toString(), lstCur.getNoteguid(), restEdgeNote.getEdgeNotebook().getNotebookGuid());
+                        String ne1 = ge.getBody();
+                        DoLocationUpdate doLocationUpdate = new DoLocationUpdate();
+                        doLocationUpdate.setNoteguid(ne1);
+                        doLocationUpdate.processLocationChange();
+
                     }
                 }
 
@@ -708,6 +730,6 @@ public class MonitorChanges {
             }
         }while(true);
     }
-
+    
 
 }

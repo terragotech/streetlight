@@ -19,6 +19,7 @@ public class App
 {
     private static Logger logger = Logger.getLogger(App.class);
     public static void main( String[] args ) {
+
         //UbicquiaLightsInterface.requestDynamicToken();
         //JsonObject jsonObject = UbicquiaLightsInterface.getNodes("5c0928c7920b29dd");
         //String u1 =  UbicquiaLightsInterface.getQueryData("5c0928c7920b29dd");

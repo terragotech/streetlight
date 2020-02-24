@@ -17,6 +17,10 @@ import java.util.List;
 public class UbicquiaLightsInterface {
     private static Logger logger = Logger.getLogger(UbicquiaLightsInterface.class);
     private static String dynamicToken = null;
+    private static long timeStamp = 0;
+    public static long getTimeStamp(){
+        return timeStamp;
+    }
     public static List<String> getGroupNodes(String groupID)
     {
         logger.info("get all nodes in a group");
@@ -126,7 +130,7 @@ public class UbicquiaLightsInterface {
                 JsonObject jsonObject = JsonDataParser.getJsonObject(response.getBody());
                 JsonObject datajsonObject = jsonObject.getAsJsonObject("data");
                 dynamicToken =  datajsonObject.get("access_token").getAsString();
-
+                timeStamp = System.currentTimeMillis();
                 logger.info("Dynamic token found " + dynamicToken);
                 System.out.println(dynamicToken);
 

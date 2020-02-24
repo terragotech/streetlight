@@ -7,6 +7,7 @@ import com.google.gson.JsonParser;
 import com.google.gson.reflect.TypeToken;
 import com.terrago.streetlights.service.RESTService;
 import com.terrago.streetlights.utils.FailureReportModel;
+import com.terrago.streetlights.utils.LastUpdated;
 import com.terrago.streetlights.utils.OutageData;
 import com.terrago.streetlights.utils.PropertiesReader;
 import com.terragoedge.edgeserver.EdgeFormData;
@@ -94,6 +95,55 @@ public class TerragoDAO {
             }
         }
         return  noteInfo;
+    }
+    public static List<LastUpdated> getUpdatedNotes(String lastProcessedTime)
+    {
+        List<LastUpdated> lstString = new ArrayList<LastUpdated>();
+        Connection conn = DataBaseConnector.getConnection();
+        Statement statement = null;
+        ResultSet resultSet = null;
+        //logger.info("Checking for updates");
+        try {
+            statement = conn.createStatement();
+            resultSet = statement.executeQuery("select title,noteguid,createddatetime from edgenote where iscurrent=true and isdeleted=false and createddatetime > " + lastProcessedTime );
+            while(resultSet.next())
+            {
+                String noteguid = resultSet.getString("noteguid");
+                LastUpdated lastUpdated = new LastUpdated();
+                lastUpdated.setNoteguid(noteguid);
+                lastUpdated.setCreateddatetime(resultSet.getLong("createddatetime"));
+                lstString.add(lastUpdated);
+            }
+
+        }
+        catch (Exception e)
+        {
+            e.printStackTrace();
+        }
+        finally {
+            if(resultSet != null)
+            {
+                try{
+                    resultSet.close();
+                }
+                catch (SQLException e)
+                {
+                    e.printStackTrace();
+                }
+            }
+            if(statement != null)
+            {
+                try{
+                    statement.close();
+                }
+                catch (SQLException e)
+                {
+                    e.printStackTrace();
+                }
+            }
+            DataBaseConnector.closeConnection();
+        }
+        return lstString;
     }
     public static String getNoteGUID(String noteTitle)
     {
@@ -284,6 +334,72 @@ public class TerragoDAO {
         DataBaseConnector.closeConnection();
         return result;
     }
+    public static long updateUser(String noteguid, String usrname){
+        long result = 0;
+        Connection conn = DataBaseConnector.getConnection();
+        Statement statement = null;
+
+        try{
+            statement = conn.createStatement();
+            String queryString = "update edgenote set createdby='" + usrname + "' where noteguid='" + noteguid + "'";
+            statement.execute(queryString);
+
+
+        }
+        catch(SQLException e){
+            e.printStackTrace();
+        }
+        finally {
+
+            if(statement != null)
+            {
+                try {
+                    statement.close();
+                }
+                catch (SQLException e)
+                {
+                    e.printStackTrace();
+                }
+            }
+        }
+
+
+        DataBaseConnector.closeConnection();
+        return result;
+    }
+    public static long writeLastUpdateTime2(long timeValue){
+        long result = 0;
+        Connection conn = DataBaseConnector.getConnection();
+        Statement statement = null;
+
+        try{
+            statement = conn.createStatement();
+            String queryString = "update tmp_florlights2 set lastmaxtime=" + timeValue + " where id=1";
+            statement.execute(queryString);
+
+
+        }
+        catch(SQLException e){
+            e.printStackTrace();
+        }
+        finally {
+
+            if(statement != null)
+            {
+                try {
+                    statement.close();
+                }
+                catch (SQLException e)
+                {
+                    e.printStackTrace();
+                }
+            }
+        }
+
+
+        DataBaseConnector.closeConnection();
+        return result;
+    }
     public static long readLastUpdatedTime(){
         long result = 0;
         Connection conn = DataBaseConnector.getConnection();
@@ -292,6 +408,50 @@ public class TerragoDAO {
         try{
             statement = conn.createStatement();
             resultSet = statement.executeQuery("select lastmaxtime from tmp_florlights");
+            while(resultSet.next())
+            {
+                result = resultSet.getLong("lastmaxtime");
+            }
+
+        }
+        catch(SQLException e){
+            e.printStackTrace();
+        }
+        finally {
+            if(resultSet != null)
+            {
+                try {
+                    resultSet.close();
+                }
+                catch (SQLException e)
+                {
+                    e.printStackTrace();
+                }
+            }
+            if(statement != null)
+            {
+                try {
+                    statement.close();
+                }
+                catch (SQLException e)
+                {
+                    e.printStackTrace();
+                }
+            }
+        }
+
+
+        DataBaseConnector.closeConnection();
+        return result;
+    }
+    public static long readLastUpdatedTime2(){
+        long result = 0;
+        Connection conn = DataBaseConnector.getConnection();
+        Statement statement = null;
+        ResultSet resultSet = null;
+        try{
+            statement = conn.createStatement();
+            resultSet = statement.executeQuery("select lastmaxtime from tmp_florlights2");
             while(resultSet.next())
             {
                 result = resultSet.getLong("lastmaxtime");
@@ -375,5 +535,51 @@ public class TerragoDAO {
         }
         DataBaseConnector.closeConnection();
         return result;
+    }
+    public static List<String> getUpdatedTitles(String lastProcessedTime)
+    {
+        List<String> lstString = new ArrayList<String>();
+        Connection conn = DataBaseConnector.getConnection();
+        Statement statement = null;
+        ResultSet resultSet = null;
+        //logger.info("Checking for updates");
+        try {
+            statement = conn.createStatement();
+            resultSet = statement.executeQuery("select title,noteguid,createddatetime from edgenote where iscurrent=true and isdeleted=false and createddatetime > " + lastProcessedTime );
+            while(resultSet.next())
+            {
+                String notetitle = resultSet.getString("title");
+                lstString.add(notetitle);
+            }
+
+        }
+        catch (Exception e)
+        {
+            e.printStackTrace();
+        }
+        finally {
+            if(resultSet != null)
+            {
+                try{
+                    resultSet.close();
+                }
+                catch (SQLException e)
+                {
+                    e.printStackTrace();
+                }
+            }
+            if(statement != null)
+            {
+                try{
+                    statement.close();
+                }
+                catch (SQLException e)
+                {
+                    e.printStackTrace();
+                }
+            }
+            DataBaseConnector.closeConnection();
+        }
+        return lstString;
     }
 }
