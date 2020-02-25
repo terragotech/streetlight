@@ -77,7 +77,7 @@ public class TerragoDAO {
                         String repEUI = getReplaceDevui(formComponents);
                         if(repEUI != null)
                         {
-                            if(repEUI.equals(""))
+                            if(!repEUI.equals(""))
                             {
                                 dev_eui = repEUI;
                             }
@@ -88,6 +88,7 @@ public class TerragoDAO {
                         }
                         if (!dev_eui.equals("")) {
                             result = dev_eui;
+
                             noteInfo.setIMEI(result);
                         }
                     }

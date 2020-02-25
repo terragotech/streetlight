@@ -4,6 +4,7 @@ import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.terrago.streetlights.dao.TerragoDAO;
 import com.terrago.streetlights.service.MonitorChanges;
+import com.terrago.streetlights.service.MonitorChanges2;
 import com.terrago.streetlights.service.UbicquiaLightsInterface;
 import com.terrago.streetlights.utils.*;
 import org.apache.log4j.Logger;
@@ -38,8 +39,11 @@ public class App
         System.out.println(UbicquiaLightsInterface.getNodes("5c0690").toString());
         System.out.println(UbicquiaLightsInterface.getQueryData("5c0690"));
         System.out.println(UbicquiaLightsInterface.getQueryData("5c1914"));*/
+
         MonitorChanges monitorChanges = new MonitorChanges();
         monitorChanges.startMonitoring();
+        /*MonitorChanges2 monitorChanges2 = new MonitorChanges2();
+        monitorChanges2.startMonitoring();*/
     }
         //UbicquiaLightsInterface.requestDynamicToken();
         //System.out.println("SI");

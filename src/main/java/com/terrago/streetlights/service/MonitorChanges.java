@@ -298,7 +298,7 @@ public class MonitorChanges {
             {
                 jsonObject.addProperty("poleId", strPoleID);
             }
-
+            jsonObject.addProperty("node", strPoleID);
             if(iMode == 1)
             {
                 if(latLong != null) {
@@ -369,6 +369,20 @@ public class MonitorChanges {
             }
             System.out.println(result3);
         }
+    }
+    private String get_devui(String qrstring)
+    {
+        String result = "";
+        String []values = qrstring.split(",");
+        if(values.length > 0)
+        {
+            result = values[0];
+        }
+        else
+        {
+            result = qrstring;
+        }
+        return result;
     }
     public void startMonitoring()
     {
@@ -467,6 +481,8 @@ public class MonitorChanges {
                                     }
                                     if (!dev_eui.equals("")) {
                                         UbicquiaLightsInterface.requestDynamicToken();
+                                        dev_eui = get_devui(dev_eui);
+                                        System.out.println("Parsed : " + dev_eui);
                                         JsonObject jobj1 = UbicquiaLightsInterface.getNodes(dev_eui);
                                         String result = null;
                                         if (jobj1 == null) {
@@ -492,7 +508,7 @@ public class MonitorChanges {
                                             result = jobj1.toString();
                                         }
                                         if (result != null) {
-                                            mustUpdate = true;
+                                            //mustUpdate = true;
                                         }
                                         doInstallation(result, formComponents,iMode,latLong,null);
 
@@ -528,8 +544,10 @@ public class MonitorChanges {
                                                         String strRepDevUI = getReplaceDevui(formComponents);
                                                         if (!strRepDevUI.equals("")) {
                                                             dev_eui = strRepDevUI;
+
                                                         }
                                                         UbicquiaLightsInterface.requestDynamicToken();
+                                                        dev_eui = get_devui(dev_eui);
                                                         JsonObject jobj1 = UbicquiaLightsInterface.getNodes(dev_eui);
                                                         String result = jobj1.toString();
                                                          if (singleFixture != null && !singleFixture.equals(""))
@@ -562,7 +580,7 @@ public class MonitorChanges {
                                                                             e.printStackTrace();
                                                                         }
                                                                     }
-                                                                    new DeviceMeteringData(dev_eui, strID, nnguid);
+                                                                    new DeviceMeteringData(dev_eui, strID, nnguid,"update");
 
                                                                 }
                                                             }
@@ -595,6 +613,7 @@ public class MonitorChanges {
                                         String strRepDevUI = getReplaceDevui(formComponents);
                                         if (!strRepDevUI.equals("")) {
                                             UbicquiaLightsInterface.requestDynamicToken();
+                                            strRepDevUI = get_devui(strRepDevUI);
                                             JsonObject jobj1 = UbicquiaLightsInterface.getNodes(strRepDevUI);
                                             String result = null;
                                             if (jobj1 == null) {
@@ -623,7 +642,7 @@ public class MonitorChanges {
                                                 result = jobj1.toString();
                                             }
                                             if (result != null) {
-                                                mustUpdate = true;
+                                                //mustUpdate = true;
                                             }
                                             doInstallation(result, formComponents, iMode, latLong, strRepDevUI);
                                         }
@@ -642,14 +661,17 @@ public class MonitorChanges {
                     long ntime = System.currentTimeMillis();
                     lastMaxUpdatedTime = Math.max(lastMaxUpdatedTime, ntime);
                     edgenoteJson.addProperty("createdDateTime", ntime);
-                    if(mustUpdate) {
+                    /**if(mustUpdate) {
                         ResponseEntity<String> ge = RESTService.updateNoteDetails(edgenoteJson.toString(), lstCur.getNoteguid(), restEdgeNote.getEdgeNotebook().getNotebookGuid());
                         String ne1 = ge.getBody();
                         DoLocationUpdate doLocationUpdate = new DoLocationUpdate();
                         doLocationUpdate.setNoteguid(ne1);
                         doLocationUpdate.processLocationChange();
 
-                    }
+                    }*/
+                    /*DoLocationUpdate doLocationUpdate = new DoLocationUpdate();
+                    doLocationUpdate.setNoteguid(lstCur.getNoteguid());
+                    doLocationUpdate.processLocationChange();*/
                 }
 
                 if(isDCPresent)
@@ -679,6 +701,7 @@ public class MonitorChanges {
                                 if(!noteInfo.getIMEI().equals(""))
                                 {
                                     fixtureId = noteInfo.getIMEI();
+                                    fixtureId = get_devui(fixtureId);
                                     UbicquiaLightsInterface.requestDynamicToken();
                                     logger.info("Requesting the Fixture information");
                                     String queryResults = null;
@@ -702,7 +725,7 @@ public class MonitorChanges {
                                             System.out.println(strID);
                                             logger.info("Turing the light ON");
                                             UbicquiaLightsInterface.SetDevice(strID, true);
-                                            new DeviceMeteringData(fixtureId, strID,noteInfo.getNoteguid());
+                                            new DeviceMeteringData(fixtureId, strID,noteInfo.getNoteguid(),null);
 
                                         }
                                     }

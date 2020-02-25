@@ -21,12 +21,23 @@ public class DeviceMeteringData implements Runnable{
     private String fixtureID;
     private String strID;
     private String nguid;
+    private String mode;
+
+    public String getMode() {
+        return mode;
+    }
+
+    public void setMode(String mode) {
+        this.mode = mode;
+    }
+
     Thread t;
-    public DeviceMeteringData(String fixtureID,String strID,String nguid){
+    public DeviceMeteringData(String fixtureID,String strID,String nguid,String mode){
         this.fixtureID = fixtureID;
         this.strID = strID;
         t = new Thread(this);
         this.nguid = nguid;
+        this.mode = mode;
         t.start();
     }
     public void run(){
@@ -83,8 +94,15 @@ public class DeviceMeteringData implements Runnable{
                     if (lastMaxUpdatedTime <= ntime) {
                         TerragoDAO.writeLastUpdateTime(ntime);
                     }
+                    edgenoteJson.add("formData", serverForms);
                     edgenoteJson.addProperty("createdDateTime", ntime);
-                    RESTService.updateNoteDetails(edgenoteJson.toString(), noteGUID, restEdgeNote.getEdgeNotebook().getNotebookGuid());
+                    if(mode != null)
+                    {
+                        if(mode.equals("update")) {
+                            RESTService.updateNoteDetails(edgenoteJson.toString(), noteGUID, restEdgeNote.getEdgeNotebook().getNotebookGuid());
+                        }
+                    }
+
 
                 }
                 Thread.sleep(300000);

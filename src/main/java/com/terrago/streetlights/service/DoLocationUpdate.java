@@ -59,11 +59,26 @@ public class DoLocationUpdate {
         }
         return actionString;
     }
+    private String get_devui(String qrstring)
+    {
+        String result = "";
+        String []values = qrstring.split(",");
+        if(values.length > 0)
+        {
+            result = values[0];
+        }
+        else
+        {
+            result = qrstring;
+        }
+        return result;
+    }
     public void run(){
         //processLocationChange();
     }
     public void processLocationChange(){
-        long lastMaxUpdatedTime = 0;
+        System.out.println("Entering processLocationChange");
+        //long lastMaxUpdatedTime = 0;
         String completeLayer = PropertiesReader.getProperties().getProperty("ubicquia_notelayer");
         String installAction = PropertiesReader.getProperties().getProperty("ubicquia_actioninstall");
         String replaceAction = PropertiesReader.getProperties().getProperty("ubicquia_actionmaintain");
@@ -103,62 +118,72 @@ public class DoLocationUpdate {
                             }
                             String strGeom = restEdgeNote.getGeometry();
                             LatLong latLong = LatLongUtils.getLatLngFromGeoJson(strGeom);
+                            System.out.println("Checking layer");
                             if(strValue.equals(completeLayer) && latLong != null)
                             {
+                                System.out.println("layer : Complete");
                                 String strAction = getValue(formComponents,"ubicquia_action");
                                 long ctimestamp = System.currentTimeMillis();
-                                if(UbicquiaLightsInterface.getTimeStamp() == 0)
-                                {
-                                    UbicquiaLightsInterface.requestDynamicToken();
-                                }
-                                else
-                                {
-                                    if(ctimestamp - UbicquiaLightsInterface.getTimeStamp() >= 300000)
+                                UbicquiaLightsInterface.requestDynamicToken();
+
+                                if(strAction.equals(installAction)) {
+                                    String strInstalldevui = getValue(formComponents, "ubicquia_deveui");
+                                    strInstalldevui = get_devui(strInstalldevui);
+                                    System.out.println("devui : strInstalldevui");
+                                    if(!strInstalldevui.equals(""))
                                     {
-                                        UbicquiaLightsInterface.requestDynamicToken();
-                                    }
-                                }
-                                if(strAction.equals(installAction))
-                                {
-                                    String strInstalldevui = getValue(formComponents,"ubicquia_deveui");
-                                    JsonObject jobj1 = UbicquiaLightsInterface.getNodes(strInstalldevui);
-                                    if(jobj1 != null)
-                                    {
-                                        LatLong2 lampLatLng = getLatLong(jobj1);
-                                        LatLong2 noteLatLng = new LatLong2();
-                                        noteLatLng.setLat(Double.parseDouble(latLong.getLat()));
-                                        noteLatLng.setLng(Double.parseDouble(latLong.getLng()));
-                                        double distance = DistanceCalculator.getDistance(lampLatLng,noteLatLng);
-                                        if(distance > distth)
+                                        JsonObject jobj1 = UbicquiaLightsInterface.getNodes(strInstalldevui);
+                                        if (jobj1 != null)
                                         {
-                                            String lampLng = Double.toString(lampLatLng.getLng());
-                                            String lampLat = Double.toString(lampLatLng.getLat());
-                                            updateLocationData(edgenoteJson,lampLng,lampLat);
-                                            mustUpdate = true;
+                                            LatLong2 lampLatLng = getLatLong(jobj1);
+                                            LatLong2 noteLatLng = new LatLong2();
+                                            noteLatLng.setLat(Double.parseDouble(latLong.getLat()));
+                                            noteLatLng.setLng(Double.parseDouble(latLong.getLng()));
+                                            if ((lampLatLng.getLat() != 0.0) && (lampLatLng.getLng() != 0.0)) {
+                                                double distance = DistanceCalculator.getDistance(lampLatLng, noteLatLng);
+                                                if (distance > distth) {
+                                                    String lampLng = Double.toString(lampLatLng.getLng());
+                                                    String lampLat = Double.toString(lampLatLng.getLat());
+                                                    updateLocationData(edgenoteJson, lampLng, lampLat);
+                                                    mustUpdate = true;
+                                                }
+                                            }
+
                                         }
                                     }
+                                    ///////////////////////////////////////////////////
                                 }
                                 else if(strAction.equals(replaceAction))
                                 {
                                     String strReplacedevui = getValue(formComponents,"ubicquia_replacedeveui");
                                     UbicquiaLightsInterface.requestDynamicToken();
-                                    JsonObject jobj1 = UbicquiaLightsInterface.getNodes(strReplacedevui);
-                                    if(jobj1 != null)
+                                    strReplacedevui = get_devui(strReplacedevui);
+                                    if(strReplacedevui.equals(""))
                                     {
-                                        LatLong2 lampLatLng = getLatLong(jobj1);
-                                        LatLong2 noteLatLng = new LatLong2();
-                                        noteLatLng.setLat(Double.parseDouble(latLong.getLat()));
-                                        noteLatLng.setLng(Double.parseDouble(latLong.getLng()));
-                                        double distance = DistanceCalculator.getDistance(lampLatLng,noteLatLng);
-                                        if(distance > distth)
-                                        {
-                                            String lampLng = Double.toString(lampLatLng.getLng());
-                                            String lampLat = Double.toString(lampLatLng.getLat());
-                                            updateLocationData(edgenoteJson,lampLng,lampLat);
-                                            mustUpdate = true;
+                                        String strInstalldevui = getValue(formComponents, "ubicquia_deveui");
+                                        strInstalldevui = get_devui(strInstalldevui);
+                                        strReplacedevui = strInstalldevui;
+                                    }
+                                    if(!strReplacedevui.equals(""))
+                                    {
+                                        JsonObject jobj1 = UbicquiaLightsInterface.getNodes(strReplacedevui);
+                                        if (jobj1 != null) {
+                                            LatLong2 lampLatLng = getLatLong(jobj1);
+                                            LatLong2 noteLatLng = new LatLong2();
+                                            noteLatLng.setLat(Double.parseDouble(latLong.getLat()));
+                                            noteLatLng.setLng(Double.parseDouble(latLong.getLng()));
+                                            if ((lampLatLng.getLat() != 0.0) && (lampLatLng.getLng() != 0.0)) {
+                                                double distance = DistanceCalculator.getDistance(lampLatLng, noteLatLng);
+                                                if (distance > distth) {
+                                                    String lampLng = Double.toString(lampLatLng.getLng());
+                                                    String lampLat = Double.toString(lampLatLng.getLat());
+                                                    updateLocationData(edgenoteJson, lampLng, lampLat);
+                                                    mustUpdate = true;
+                                                }
+                                            }
                                         }
                                     }
-
+                                    ///////////////////////////////////////////////////////////
                                 }
 
                             }
@@ -176,7 +201,7 @@ public class DoLocationUpdate {
                 edgenoteJson.add("formData", serverForms);
                 edgenoteJson.addProperty("createdBy", ignoreUser);
                 long ntime = System.currentTimeMillis();
-                lastMaxUpdatedTime = Math.max(lastMaxUpdatedTime, ntime);
+                //lastMaxUpdatedTime = Math.max(lastMaxUpdatedTime, ntime);
                 edgenoteJson.addProperty("createdDateTime", ntime);
                 if(mustUpdate) {
                     ResponseEntity<String> upresponse = RESTService.updateNoteDetails(edgenoteJson.toString(), noteguid, restEdgeNote.getEdgeNotebook().getNotebookGuid());
@@ -184,22 +209,6 @@ public class DoLocationUpdate {
                     System.out.println(id1);
                     TerragoDAO.updateUser(id1,ignoreUser);
                 }
-
-            /*//Write
-            long lntime = TerragoDAO.readLastUpdatedTime2();
-            if(lntime >= lastMaxUpdatedTime)
-            {
-                lastMaxUpdatedTime = lntime;
-            }
-            TerragoDAO.writeLastUpdateTime2(lastMaxUpdatedTime);
-            try {
-                Thread.sleep(2000);
-            }
-            catch (InterruptedException e)
-            {
-                e.printStackTrace();
-            }*/
-
     }
     public void run2() {
         //super.run();
