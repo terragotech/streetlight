@@ -144,7 +144,21 @@ public class MonitorChanges2 {
                         String strSingleDC = getComponentValue(formComponents,"ubicquia_sdc");
                         String strMDC = getComponentValue(formComponents,"ubicquia_mdc");
                         //if (dcStatus != null) {
-                            if (strSingleDC.equals("No") && strMDC.equals("No")) {
+                        if (strSingleDC == null)
+                        {
+                            strSingleDC = "";
+                        }
+                        if (strMDC == null)
+                        {
+                            strMDC = "";
+                        }
+                        if (strSingleDC.equals("") && strMDC.equals(""))
+                        {
+                            DoLocationUpdate doLocationUpdate = new DoLocationUpdate();
+                            doLocationUpdate.setNoteguid(lstCur.getNoteguid());
+                            doLocationUpdate.processLocationChange();
+                        }
+                        else if (strSingleDC.equals("No") && strMDC.equals("No")) {
                                 DoLocationUpdate doLocationUpdate = new DoLocationUpdate();
                                 doLocationUpdate.setNoteguid(lstCur.getNoteguid());
                                 doLocationUpdate.processLocationChange();
