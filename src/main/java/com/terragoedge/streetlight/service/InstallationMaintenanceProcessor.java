@@ -267,6 +267,9 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
                     else if (repairsOutagesValue.contains("CIMCON Node Replacements")) {
                         loggingModel.setRepairsOption("CNR");
                         return "Repairs & Outages";
+                    }else if(repairsOutagesValue.equals("Resolved (Other)")){
+                        loggingModel.setRepairsOption("Resolved (Other)");
+                        return "Repairs & Outages";
                     }
 
 
@@ -1022,6 +1025,13 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
 
             case "CNR":
                 cnrWorkFlow(edgeFormDatas,edgeNote,loggingModel,slvInterfaceLogEntity);
+                break;
+
+            case "Resolved (Other)":
+                loggingModel.setStatus(MessageConstants.ERROR);
+                loggingModel.setErrorDetails("SLV Interface Doest not support this(Power Issue option is selected).");
+                slvInterfaceLogEntity.setErrorcategory(MessageConstants.EDGE_VALIDATION_ERROR);
+                slvInterfaceLogEntity.setSelectedReplace("Power Issue");
                 break;
         }
     }
