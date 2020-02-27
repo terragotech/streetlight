@@ -40,14 +40,14 @@ public abstract class AbstractProcessor {
     final Logger logger = Logger.getLogger(AbstractProcessor.class);
 
     StreetlightDao streetlightDao = null;
-    RestService restService = null;
-    Properties properties = null;
-    Gson gson = null;
-    JsonParser jsonParser = null;
-    ConnectionDAO connectionDAO;
+    protected  RestService restService = null;
+    protected Properties properties = null;
+    protected  Gson gson = null;
+    protected  JsonParser jsonParser = null;
+    protected ConnectionDAO connectionDAO;
 
-    WeakHashMap<String, String> contextListHashMap = new WeakHashMap<>();
-    HashMap<String, SLVDates> cslpDateHashMap = new HashMap<>();
+   protected WeakHashMap<String, String> contextListHashMap = new WeakHashMap<>();
+    protected  HashMap<String, SLVDates> cslpDateHashMap = new HashMap<>();
     HashMap<String, String> macHashMap = new HashMap<>();
     protected String droppedPinTag;
 

@@ -16,6 +16,9 @@ import com.terragoedge.streetlight.exception.NoValueException;
 import com.terragoedge.streetlight.json.model.*;
 import com.terragoedge.streetlight.logging.InstallMaintenanceLogModel;
 import com.terragoedge.streetlight.logging.LoggingModel;
+import com.terragoedge.streetlight.swap.SwapTemplateProcessor;
+import com.terragoedge.streetlight.swap.exception.NoDataChangeException;
+import com.terragoedge.streetlight.swap.exception.SkipNoteException;
 import org.apache.log4j.Logger;
 import org.joda.time.DateTime;
 import org.springframework.core.io.FileSystemResource;
@@ -34,11 +37,13 @@ public class StreetlightChicagoService extends AbstractProcessor {
     final Logger logger = Logger.getLogger(StreetlightChicagoService.class);
     InstallationMaintenanceProcessor installationMaintenanceProcessor;
     SlvToEdgeService slvToEdgeService = null;
+    SwapTemplateProcessor swapTemplateProcessor;
 
     public StreetlightChicagoService() {
         super();
        // loadContextList();
         installationMaintenanceProcessor = new InstallationMaintenanceProcessor(contextListHashMap,cslpDateHashMap,macHashMap);
+        swapTemplateProcessor = new SwapTemplateProcessor(contextListHashMap,cslpDateHashMap);
         slvToEdgeService = new SlvToEdgeService();
         System.out.println("Object Created.");
     }
@@ -181,49 +186,63 @@ public class StreetlightChicagoService extends AbstractProcessor {
     }
 
 
-    private void doProcess(String noteGuid,String accessToken,boolean isReSync){
-        DataComparatorRes dataComparatorRes =  compareRevisionData(noteGuid);
-        if(dataComparatorRes != null){
-            if(dataComparatorRes.isMatched()){
-                logger.info("Current Note Data Matched with Previous Revision.");
-               return;
-            }
-            String url = PropertiesReader.getProperties().getProperty("streetlight.edge.url.main");
+    private void doProcess(String noteGuid, String accessToken, boolean isReSync) {
+        String url = PropertiesReader.getProperties().getProperty("streetlight.edge.url.main");
 
-            url = url + PropertiesReader.getProperties().getProperty("streetlight.edge.url.notes.get");
+        url = url + PropertiesReader.getProperties().getProperty("streetlight.edge.url.notes.get");
 
-            url = url + "/" +noteGuid;
-            logger.info("Given url is :" + url);
+        url = url + "/" + noteGuid;
+        logger.info("Given url is :" + url);
 
 
-            // Get NoteList from edgeserver
-            ResponseEntity<String> responseEntity = restService.getRequest(url, false, accessToken);
+        // Get NoteList from edgeserver
+        ResponseEntity<String> responseEntity = restService.getRequest(url, false, accessToken);
 
         // Process only response code as success
         if (responseEntity.getStatusCode().is2xxSuccessful()) {
             SlvInterfaceLogEntity slvInterfaceLogEntity = new SlvInterfaceLogEntity();
-            try{
+            try {
                 String notesData = responseEntity.getBody();
                 logger.info("rest service data:" + notesData);
                 EdgeNote edgeNote = gson.fromJson(notesData, EdgeNote.class);
-                if(edgeNote.getTitle() == null || edgeNote.getTitle().endsWith("-DC")){
+                if (edgeNote.getTitle() == null || edgeNote.getTitle().endsWith("-DC")) {
                     return;
                 }
-                List<FormData> formDataList =  edgeNote.getFormData();
+
+                try {
+                    swapTemplateProcessor.processSwapData(edgeNote);
+                }catch (NoDataChangeException e){
+                    logger.info("Skip Swap Form Template process because either Swap form template is not present or no data change on this.");
+                }catch (SkipNoteException e){
+                    return;
+                }
+
+                DataComparatorRes dataComparatorRes =  compareRevisionData(noteGuid);
+                if(dataComparatorRes == null){
+                    logger.info("No Response from Previous revision comparision.");
+                    return;
+                }
+
+                if(dataComparatorRes.isMatched()){
+                    logger.info("Current Note Data Matched with Previous Revision.");
+                    return;
+                }
+
+                List<FormData> formDataList = edgeNote.getFormData();
                 boolean isInstallFormPresent = false;
                 for (FormData formData : formDataList) {
-                    if(formData.getFormTemplateGuid().equals("c8acc150-6228-4a27-bc7e-0fabea0e2b93")){
+                    if (formData.getFormTemplateGuid().equals("c8acc150-6228-4a27-bc7e-0fabea0e2b93")) {
                         isInstallFormPresent = true;
                     }
 
                 }
-                if(!isInstallFormPresent){
+                if (!isInstallFormPresent) {
                     return;
                 }
-                if ((!edgeNote.getCreatedBy().contains("admin") && !edgeNote.getCreatedBy().contains("slvinterface")) ||  isReSync) {
+                if ((!edgeNote.getCreatedBy().contains("admin") && !edgeNote.getCreatedBy().contains("slvinterface")) || isReSync) {
                     // Below commented line need for dropped pin workflow in future
-                    boolean isDroppedPinWorkFlow = isDroppedPinNote(edgeNote,droppedPinTag);
-                    logger.info("isDroppedPinWorkFlow:"+isDroppedPinWorkFlow);
+                    boolean isDroppedPinWorkFlow = isDroppedPinNote(edgeNote, droppedPinTag);
+                    logger.info("isDroppedPinWorkFlow:" + isDroppedPinWorkFlow);
                     InstallMaintenanceLogModel installMaintenanceLogModel = new InstallMaintenanceLogModel();
                     installMaintenanceLogModel.setDroppedPinWorkflow(isDroppedPinWorkFlow);
                     installMaintenanceLogModel.setProcessedNoteId(edgeNote.getNoteGuid());
@@ -234,51 +253,49 @@ public class StreetlightChicagoService extends AbstractProcessor {
                     installMaintenanceLogModel.getUnMatchedFormGuids().addAll(dataComparatorRes.getUnMatchedFormGuids());
                     //ES-274
                     String droppedPinUser = null;
-                    if(isDroppedPinWorkFlow){
+                    if (isDroppedPinWorkFlow) {
                         droppedPinUser = getDroppedPinUser(edgeNote);
                     }
 
-                        // Check Current note is created via Bulk Import
-                        //isBulkImport(edgeNote,accessToken,installMaintenanceLogModel);
+                    // Check Current note is created via Bulk Import
+                    //isBulkImport(edgeNote,accessToken,installMaintenanceLogModel);
 
-                        loadDefaultVal(edgeNote, installMaintenanceLogModel,accessToken,droppedPinUser);
+                    loadDefaultVal(edgeNote, installMaintenanceLogModel, accessToken, droppedPinUser);
 
 
-                        slvInterfaceLogEntity.setIdOnController(edgeNote.getTitle());
-                        slvInterfaceLogEntity.setCreateddatetime(System.currentTimeMillis());
-                        slvInterfaceLogEntity.setResync(false);
-                        String utilLocId = null;
-                        // Below commented lines need for dropped pin workflow in future
-                        if(isDroppedPinWorkFlow){
-                            //As per Email Communication, "5" is removed from utilLocId Fwd: Utility Location ID For Dropped Pins (20190918)
-                            utilLocId = edgeNote.getTitle();
-                        }
-                        boolean isDeviceCreated = false;
-                        if(edgeNote.getEdgeNotebook() != null && edgeNote.getEdgeNotebook().getNotebookName() != null &&  ( installMaintenanceLogModel.getAtlasPhysicalPage() == null || installMaintenanceLogModel.getAtlasPhysicalPage().isEmpty()) ){
-                            installMaintenanceLogModel.setAtlasPhysicalPage(edgeNote.getEdgeNotebook().getNotebookName());
-                        }
-                        if(isDroppedPinWorkFlow) {
-                            isDeviceCreated = processDroppedPinWorkflow(edgeNote,slvInterfaceLogEntity,installMaintenanceLogModel,utilLocId);
-                        }
-                        if(!isDroppedPinWorkFlow || (isDroppedPinWorkFlow && isDeviceCreated)) {
-                            loadDeviceValues(edgeNote.getTitle(),installMaintenanceLogModel);
-                            // Check whether the current note
-                            isBulkImport(edgeNote,accessToken,installMaintenanceLogModel);
-
-                            installationMaintenanceProcessor.processNewAction(edgeNote, installMaintenanceLogModel, false, utilLocId, slvInterfaceLogEntity);
-                            // updateSlvStatusToEdge(installMaintenanceLogModel, edgeNote);
-                            LoggingModel loggingModel = installMaintenanceLogModel;
-                            streetlightDao.insertProcessedNotes(loggingModel, installMaintenanceLogModel);
-                        }
+                    slvInterfaceLogEntity.setIdOnController(edgeNote.getTitle());
+                    slvInterfaceLogEntity.setCreateddatetime(System.currentTimeMillis());
+                    slvInterfaceLogEntity.setResync(false);
+                    String utilLocId = null;
+                    // Below commented lines need for dropped pin workflow in future
+                    if (isDroppedPinWorkFlow) {
+                        //As per Email Communication, "5" is removed from utilLocId Fwd: Utility Location ID For Dropped Pins (20190918)
+                        utilLocId = edgeNote.getTitle();
                     }
-                }catch (Exception e){
-                    logger.error("Error in run",e);
-                }finally {
-                    connectionDAO.saveSlvInterfaceLog(slvInterfaceLogEntity);
-                }
-                // Get Response String
+                    boolean isDeviceCreated = false;
+                    if (edgeNote.getEdgeNotebook() != null && edgeNote.getEdgeNotebook().getNotebookName() != null && (installMaintenanceLogModel.getAtlasPhysicalPage() == null || installMaintenanceLogModel.getAtlasPhysicalPage().isEmpty())) {
+                        installMaintenanceLogModel.setAtlasPhysicalPage(edgeNote.getEdgeNotebook().getNotebookName());
+                    }
+                    if (isDroppedPinWorkFlow) {
+                        isDeviceCreated = processDroppedPinWorkflow(edgeNote, slvInterfaceLogEntity, installMaintenanceLogModel, utilLocId);
+                    }
+                    if (!isDroppedPinWorkFlow || (isDroppedPinWorkFlow && isDeviceCreated)) {
+                        loadDeviceValues(edgeNote.getTitle(), installMaintenanceLogModel);
+                        // Check whether the current note
+                        isBulkImport(edgeNote, accessToken, installMaintenanceLogModel);
 
+                        installationMaintenanceProcessor.processNewAction(edgeNote, installMaintenanceLogModel, false, utilLocId, slvInterfaceLogEntity);
+                        // updateSlvStatusToEdge(installMaintenanceLogModel, edgeNote);
+                        LoggingModel loggingModel = installMaintenanceLogModel;
+                        streetlightDao.insertProcessedNotes(loggingModel, installMaintenanceLogModel);
+                    }
+                }
+            } catch (Exception e) {
+                logger.error("Error in run", e);
+            } finally {
+                connectionDAO.saveSlvInterfaceLog(slvInterfaceLogEntity);
             }
+            // Get Response String
 
         }
 
