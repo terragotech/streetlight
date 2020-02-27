@@ -84,11 +84,17 @@ public class SurreySLVInterface extends  SLVInterfaceService {
                 encodeData(previousEdge2SLVData);
                 retryCount = 0;
                 checkTokenValidity(previousEdge2SLVData);
+                boolean isMacAlreadyPresent= false;
                 if(!previousEdge2SLVData.getPriority().getType().toString().equals(SLVProcess.REMOVE.toString())){
-                    checkMacAddressExists(macAddress,previousEdge2SLVData.getIdOnController());
+                    try {
+                        checkMacAddressExists(macAddress, previousEdge2SLVData.getIdOnController());
+                    }catch (QRCodeAlreadyUsedException e){
+                        isMacAlreadyPresent = true;
+                        logger.error("MAC Address is already Present.");
+                    }
                 }
 
-                slvSync(slvSyncTable,previousEdge2SLVData);
+                slvSync(slvSyncTable,previousEdge2SLVData,isMacAlreadyPresent);
             }catch (SLVConnectionException e){
                 throw new SLVConnectionException(e);
             }catch (QRCodeAlreadyUsedException e){
@@ -138,7 +144,7 @@ public class SurreySLVInterface extends  SLVInterfaceService {
      * @param previousEdge2SLVData
      * @throws ReplaceOLCFailedException
      */
-    private void slvSync(SLVSyncTable slvSyncTable,Edge2SLVData previousEdge2SLVData)throws ReplaceOLCFailedException, DeviceSearchException,GeoZoneSearchException,CreateGeoZoneException,DeviceCreationException {
+    private void slvSync(SLVSyncTable slvSyncTable,Edge2SLVData previousEdge2SLVData,boolean isMacPresent)throws ReplaceOLCFailedException, DeviceSearchException,GeoZoneSearchException,CreateGeoZoneException,DeviceCreationException {
         SLVInterfaceUtilsModel slvInterfaceUtilsModel = getSLVInterfaceUtilsModel(previousEdge2SLVData,slvSyncTable);
         slvInterfaceUtils.checkDeviceDetails(slvInterfaceUtilsModel);
         switch (previousEdge2SLVData.getPriority().getType()){
@@ -146,7 +152,9 @@ public class SurreySLVInterface extends  SLVInterfaceService {
                 logger.info("Remove Option is Selected.");
                 slvSyncTable.setSelectedAction("Remove WorkFlow");
                 logger.info("Empty Replace OLC going to call.");
-                replaceOLC(previousEdge2SLVData.getControllerStrId(),previousEdge2SLVData.getIdOnController(),"",slvSyncTable);
+                if(!isMacPresent) {
+                    replaceOLC(previousEdge2SLVData.getControllerStrId(), previousEdge2SLVData.getIdOnController(), "", slvSyncTable);
+                }
                 logger.info("Empty Replace OLC called.");
                 clearValue(slvSyncTable,previousEdge2SLVData);
                 logger.info("Clearing Local DB");
@@ -158,12 +166,16 @@ public class SurreySLVInterface extends  SLVInterfaceService {
                 logger.info("Replace Option is Selected.");
                 slvSyncTable.setSelectedAction("Replace WorkFlow");
                 logger.info("Empty Replace OLC going to call.");
-                replaceOLC(previousEdge2SLVData.getControllerStrId(),previousEdge2SLVData.getIdOnController(),"",slvSyncTable);
+                if(!isMacPresent) {
+                    replaceOLC(previousEdge2SLVData.getControllerStrId(), previousEdge2SLVData.getIdOnController(), "", slvSyncTable);
+                }
                 logger.info("Empty Replace OLC called.");
                 logger.info("Set Install Status and Install Date.");
                 setDeviceVal(slvSyncTable,previousEdge2SLVData);
                 logger.info("Replace OLC With New MAC.");
-                replaceOLC(previousEdge2SLVData.getControllerStrId(),previousEdge2SLVData.getIdOnController(),previousEdge2SLVData.getMacAddress(),slvSyncTable);
+                if(!isMacPresent) {
+                    replaceOLC(previousEdge2SLVData.getControllerStrId(), previousEdge2SLVData.getIdOnController(), previousEdge2SLVData.getMacAddress(), slvSyncTable);
+                }
                 logger.info("Replace OLC With New MAC Success.");
                 slvSyncTable.setStatus("Success");
                 break;
@@ -174,7 +186,9 @@ public class SurreySLVInterface extends  SLVInterfaceService {
                 logger.info("Set Install Status and Install Date.");
                 setDeviceVal(slvSyncTable,previousEdge2SLVData);
                 logger.info("Replace OLC With MAC.");
-                replaceOLC(previousEdge2SLVData.getControllerStrId(),previousEdge2SLVData.getIdOnController(),previousEdge2SLVData.getMacAddress(),slvSyncTable);
+                if(!isMacPresent) {
+                    replaceOLC(previousEdge2SLVData.getControllerStrId(), previousEdge2SLVData.getIdOnController(), previousEdge2SLVData.getMacAddress(), slvSyncTable);
+                }
                 slvSyncTable.setStatus("Success");
                 break;
 
