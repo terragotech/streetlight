@@ -218,14 +218,24 @@ public class StreetlightChicagoService extends AbstractProcessor {
                     return;
                 }
 
+                InstallMaintenanceLogModel installMaintenanceLogModel = new InstallMaintenanceLogModel();
+                installMaintenanceLogModel.setProcessedNoteId(edgeNote.getNoteGuid());
+                installMaintenanceLogModel.setNoteName(edgeNote.getTitle());
+                installMaintenanceLogModel.setLastSyncTime(edgeNote.getSyncTime());
+                installMaintenanceLogModel.setCreatedDatetime(String.valueOf(edgeNote.getCreatedDateTime()));
+                installMaintenanceLogModel.setParentNoteId(edgeNote.getBaseParentNoteId());
+
+
                 DataComparatorRes dataComparatorRes =  compareRevisionData(noteGuid);
                 if(dataComparatorRes == null){
                     logger.info("No Response from Previous revision comparision.");
+                    addFailureLog(installMaintenanceLogModel,edgeNote);
                     return;
                 }
 
                 if(dataComparatorRes.isMatched()){
                     logger.info("Current Note Data Matched with Previous Revision.");
+                    addFailureLog(installMaintenanceLogModel,edgeNote);
                     return;
                 }
 
@@ -238,19 +248,14 @@ public class StreetlightChicagoService extends AbstractProcessor {
 
                 }
                 if (!isInstallFormPresent) {
+                    addFailureLog(installMaintenanceLogModel,edgeNote);
                     return;
                 }
                 if ((!edgeNote.getCreatedBy().contains("admin") && !edgeNote.getCreatedBy().contains("slvinterface")) || isReSync) {
                     // Below commented line need for dropped pin workflow in future
                     boolean isDroppedPinWorkFlow = isDroppedPinNote(edgeNote, droppedPinTag);
                     logger.info("isDroppedPinWorkFlow:" + isDroppedPinWorkFlow);
-                    InstallMaintenanceLogModel installMaintenanceLogModel = new InstallMaintenanceLogModel();
                     installMaintenanceLogModel.setDroppedPinWorkflow(isDroppedPinWorkFlow);
-                    installMaintenanceLogModel.setProcessedNoteId(edgeNote.getNoteGuid());
-                    installMaintenanceLogModel.setNoteName(edgeNote.getTitle());
-                    installMaintenanceLogModel.setLastSyncTime(edgeNote.getSyncTime());
-                    installMaintenanceLogModel.setCreatedDatetime(String.valueOf(edgeNote.getCreatedDateTime()));
-                    installMaintenanceLogModel.setParentNoteId(edgeNote.getBaseParentNoteId());
                     installMaintenanceLogModel.getUnMatchedFormGuids().addAll(dataComparatorRes.getUnMatchedFormGuids());
                     //ES-274
                     String droppedPinUser = null;
@@ -300,6 +305,17 @@ public class StreetlightChicagoService extends AbstractProcessor {
 
         }
 
+    }
+
+    private void addFailureLog(InstallMaintenanceLogModel installMaintenanceLogModel,EdgeNote edgeNote){
+        installMaintenanceLogModel.setProcessedNoteId(edgeNote.getNoteGuid());
+        installMaintenanceLogModel.setNoteName(edgeNote.getTitle());
+        installMaintenanceLogModel.setLastSyncTime(edgeNote.getSyncTime());
+        installMaintenanceLogModel.setCreatedDatetime(String.valueOf(edgeNote.getCreatedDateTime()));
+        installMaintenanceLogModel.setParentNoteId(edgeNote.getBaseParentNoteId());
+        installMaintenanceLogModel.setIdOnController(edgeNote.getTitle());
+        installMaintenanceLogModel.setStatus(MessageConstants.ERROR);
+        streetlightDao.insertProcessedNotes(installMaintenanceLogModel, null);
     }
 
     public String getYesterdayDate() {
