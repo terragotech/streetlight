@@ -211,6 +211,7 @@ public class StreetlightChicagoService extends AbstractProcessor {
 
                 try {
                     swapTemplateProcessor.processSwapData(edgeNote);
+                    return;
                 }catch (NoDataChangeException e){
                     logger.info("Skip Swap Form Template process because either Swap form template is not present or no data change on this.");
                 }catch (SkipNoteException e){

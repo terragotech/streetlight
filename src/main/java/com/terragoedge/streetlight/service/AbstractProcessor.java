@@ -39,7 +39,7 @@ public abstract class AbstractProcessor {
 
     final Logger logger = Logger.getLogger(AbstractProcessor.class);
 
-    StreetlightDao streetlightDao = null;
+    protected StreetlightDao streetlightDao = null;
     protected  RestService restService = null;
     protected Properties properties = null;
     protected  Gson gson = null;
@@ -624,7 +624,7 @@ public abstract class AbstractProcessor {
         }catch (Exception e){
             logger.error("Error in addStreetLightData",e);
         }
-        if(value != null){
+        if(value != null && edgeNoteCreatedDateTime != null){
             switch (key.trim()){
                 case "install.date":
                     edgeNoteCreatedDateTime.setNodeInstallDate(value);
