@@ -659,7 +659,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
                 logger.info("Replace OLC End");
                 loggingModel.setStatus(MessageConstants.SUCCESS);
                 slvInterfaceLogEntity.setStatus(MessageConstants.SUCCESS);
-
+                removeSwapPromotedData(loggingModel.getIdOnController());
                 logger.info("Status Changed. to Success");
             }
 
@@ -1306,6 +1306,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
                         connectionDAO.removeEdgeAllFixture(installMaintenanceLogModel.getIdOnController());
                         installMaintenanceLogModel.setInstallOnWrongFix(true);
                         removeEdgeSLVMacAddress(installMaintenanceLogModel.getIdOnController());
+
                         connectionDAO.removeAllEdgeFormDates(installMaintenanceLogModel.getIdOnController());
 
                         logger.info("Luminaire Serial Number going to clear.");

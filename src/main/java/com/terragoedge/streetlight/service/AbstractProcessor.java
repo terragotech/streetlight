@@ -1913,4 +1913,14 @@ public boolean checkExistingMacAddressValid(EdgeNote edgeNote, InstallMaintenanc
 
     }
 
+
+    public void removeSwapPromotedData(String idOnController){
+        try{
+            String httpUrl = "edgeSlvServer/promoted/removeSwapPromoted.html?idOnController="+idOnController;
+            restService.callPostMethod(httpUrl,HttpMethod.GET,null);
+        }catch (Exception e){
+            logger.error("Error in removeSwapPromotedData",e);
+        }
+    }
+
 }

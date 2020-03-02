@@ -246,21 +246,26 @@ public class RestService {
 	}
 
 
-    public ResponseEntity<String> callPostMethod(String httpUrl,  HttpMethod httpMethod,String requestData){
-        String url = PropertiesReader.getProperties().getProperty("streetlight.edge.url.main");
-        url = url + httpUrl;
-	    logger.info("Url:"+url);
-        logger.info("Request Data:"+requestData);
-	    HttpHeaders headers = getEdgeHeaders();
-        RestTemplate restTemplate = new RestTemplate();
-        HttpEntity request = new HttpEntity<>(requestData,headers);
-        logger.info("Server Call....");
-        ResponseEntity<String> response = restTemplate.exchange(url, httpMethod, request, String.class);
-        logger.info("------------ Response ------------------");
-        logger.info("Response Code:" + response.getStatusCode().toString());
-        String responseBody = response.getBody();
-        logger.info(responseBody);
-        logger.info("------------ Response End ------------------");
-        return response;
-    }
+	public ResponseEntity<String> callPostMethod(String httpUrl, HttpMethod httpMethod, String requestData) {
+		String url = PropertiesReader.getProperties().getProperty("streetlight.edge.url.main");
+		url = url + httpUrl;
+		logger.info("Url:" + url);
+		logger.info("Request Data:" + requestData);
+		HttpHeaders headers = getEdgeHeaders();
+		RestTemplate restTemplate = new RestTemplate();
+		HttpEntity request = null;
+		if (requestData != null) {
+			request = new HttpEntity<>(requestData, headers);
+		} else {
+			request = new HttpEntity<>(headers);
+		}
+		logger.info("Server Call....");
+		ResponseEntity<String> response = restTemplate.exchange(url, httpMethod, request, String.class);
+		logger.info("------------ Response ------------------");
+		logger.info("Response Code:" + response.getStatusCode().toString());
+		String responseBody = response.getBody();
+		logger.info(responseBody);
+		logger.info("------------ Response End ------------------");
+		return response;
+	}
 }

@@ -313,6 +313,7 @@ public class SwapTemplateProcessor extends AbstractProcessor {
 
                 try {
                     replaceOLC(controllerStrId, edgeNote.getTitle(), cityWorkflowSyncLog.getMacAddress().trim(), slvTransactionLogs, slvInterfaceLogEntity, installMaintenanceLogModel.getAtlasPhysicalPage(), installMaintenanceLogModel, edgeNote);
+                    cityWorkflowSyncLog.setMacAddressSynced(true);
                 } catch (ReplaceOLCFailedException e) {
                     logger.error("Error in slvSyncProcess", e);
                     cityWorkflowSyncLog.setMacAddressSynced(false);
@@ -342,11 +343,18 @@ public class SwapTemplateProcessor extends AbstractProcessor {
                 if (errorCode != 0) {
                     cityWorkflowSyncLog.setFixtureQRScanSynced(false);
                     cityWorkflowSyncLog.setFixtureQRScanSyncStatus("Error During SetDevice Values.");
+                }else{
+                    cityWorkflowSyncLog.setFixtureQRScanSynced(true);
                 }
             } catch (InValidBarCodeException e) {
                 logger.error("Error in slvSyncProcess", e);
             }
 
+        }
+
+        if(cityWorkflowSyncLog.isMacAddressSynced() || cityWorkflowSyncLog.isFixtureQRScanSynced()){
+            cityWorkflowSyncLog.setTitle(installMaintenanceLogModel.getIdOnController());
+            updatePromotedData(cityWorkflowSyncLog);
         }
 
     }
@@ -378,23 +386,31 @@ public class SwapTemplateProcessor extends AbstractProcessor {
     }
 
 
-    private void updatePromotedData(String idOnController, String macAddress, String fixtureQRScan) {
+    private void updatePromotedData(CityWorkflowSyncLog cityWorkflowSyncLog) {
         try {
-            String httpUrl = "edgeSlvServer/promoted/removeSwapPromoted.html";
-            JsonObject requestData = new JsonObject();
-            requestData.addProperty("idOnController", idOnController);
-            requestData.addProperty("macAddress", macAddress);
-            requestData.addProperty("fixtureQRScan", fixtureQRScan);
+            if(cityWorkflowSyncLog.getMacAddress() != null || cityWorkflowSyncLog.getFixtureQRScan() != null){
+                String httpUrl = "edgeSlvServer/promoted/removeSwapPromoted.html";
+                JsonObject requestData = new JsonObject();
+                requestData.addProperty("idOnController", cityWorkflowSyncLog.getTitle());
 
-            ResponseEntity<String> responseEntity = restService.callPostMethod(httpUrl, HttpMethod.POST, requestData.toString());
-            if(responseEntity.getStatusCodeValue() == 200){
+                if(cityWorkflowSyncLog.getMacAddress() != null){
+                    requestData.addProperty("macAddress", cityWorkflowSyncLog.getMacAddress());
+                }
 
+                if(cityWorkflowSyncLog.getFixtureQRScan() != null){
+                    requestData.addProperty("fixtureQRScan", cityWorkflowSyncLog.getFixtureQRScan());
+                }
+
+                ResponseEntity<String> responseEntity = restService.callPostMethod(httpUrl, HttpMethod.POST, requestData.toString());
             }
+
         }catch (Exception e){
             logger.error("Error in updatePromotedData",e);
         }
 
     }
+
+
 
 
 }
