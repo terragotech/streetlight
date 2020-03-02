@@ -234,6 +234,8 @@ public class RestService {
 
 		uriBuilder.queryParams(params);
 
+
+
 		ResponseEntity<String> response = restTemplate.exchange(uriBuilder.toUriString(), httpMethod, request, String.class);
 		logger.info("------------ Response ------------------");
 		logger.info("Response Code:" + response.getStatusCode().toString());

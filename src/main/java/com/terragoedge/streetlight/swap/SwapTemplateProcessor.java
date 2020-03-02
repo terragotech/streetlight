@@ -21,6 +21,7 @@ import com.terragoedge.streetlight.swap.model.DataDiffResponse;
 import org.apache.log4j.Logger;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
+import org.springframework.util.MultiValueMap;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -374,6 +375,25 @@ public class SwapTemplateProcessor extends AbstractProcessor {
         slvTransactionLogs.setDroppedPinWorkflow(false);
 
         return slvTransactionLogs;
+    }
+
+
+    private void updatePromotedData(String idOnController, String macAddress, String fixtureQRScan) {
+        try {
+            String httpUrl = "edgeSlvServer/promoted/removeSwapPromoted.html";
+            JsonObject requestData = new JsonObject();
+            requestData.addProperty("idOnController", idOnController);
+            requestData.addProperty("macAddress", macAddress);
+            requestData.addProperty("fixtureQRScan", fixtureQRScan);
+
+            ResponseEntity<String> responseEntity = restService.callPostMethod(httpUrl, HttpMethod.POST, requestData.toString());
+            if(responseEntity.getStatusCodeValue() == 200){
+
+            }
+        }catch (Exception e){
+            logger.error("Error in updatePromotedData",e);
+        }
+
     }
 
 
