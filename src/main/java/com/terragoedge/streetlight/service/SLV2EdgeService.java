@@ -62,9 +62,9 @@ public class SLV2EdgeService {
                 String baseUrl = PropertiesReader.getProperties().getProperty("streetlight.edge.url.main");
                 String urlNew = null;
                 if(notebookGuid != null){
-                    urlNew = baseUrl + "/rest/notebooks/" + notebookGuid + "/notes/" + noteGuid;
+                    urlNew = "/rest/notebooks/" + notebookGuid + "/notes/" + noteGuid;
                 }else{
-                    urlNew = baseUrl + "/rest/notes/" + noteGuid;
+                    urlNew = "/rest/notes/" + noteGuid;
                 }
 
                 ResponseEntity responseEntity =  restService.callPostMethod(urlNew, HttpMethod.PUT, edgeNoteJson.toString(),false);

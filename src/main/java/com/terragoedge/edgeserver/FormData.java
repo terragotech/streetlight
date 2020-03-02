@@ -12,7 +12,7 @@ import com.terragoedge.streetlight.json.model.SLVEdgeFormData;
 public class FormData {
 
 	private String formTemplateGuid = null;
-	private String formDef = null;
+	private List<EdgeFormData> formDef = null;
 	private String category = null;
 	private String formGuid = null;
 	//private String formTemplateDef = null;
@@ -27,20 +27,10 @@ public class FormData {
 	}
 
 	public List<EdgeFormData> getFormDef() {
-		Type listType = new TypeToken<ArrayList<EdgeFormData>>() {
-		}.getType();
-		Gson gson = new Gson();
-		List<EdgeFormData> edgeFormDatas = gson.fromJson(formDef, listType);
-		return edgeFormDatas;
+
+		return formDef;
 	}
 
-	public List<SLVEdgeFormData> getSlvEdgeFormDef() {
-		Type listType = new TypeToken<ArrayList<SLVEdgeFormData>>() {
-		}.getType();
-		Gson gson = new Gson();
-		List<SLVEdgeFormData> slvEdgeFormData = gson.fromJson(formDef, listType);
-		return slvEdgeFormData;
-	}
 
 
 	public String getCategory() {

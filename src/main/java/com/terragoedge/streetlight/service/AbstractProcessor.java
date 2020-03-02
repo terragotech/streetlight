@@ -1918,8 +1918,11 @@ public boolean checkExistingMacAddressValid(EdgeNote edgeNote, InstallMaintenanc
 
     public void removeSwapPromotedData(String idOnController){
         try{
+            logger.info("removeSwapPromotedData Called.....");
             String httpUrl = "/promoted/removeSwapPromoted.html?idOnController="+idOnController;
+            logger.info("httpUrl"+httpUrl);
             restService.callPostMethod(httpUrl,HttpMethod.GET,null,true);
+            logger.info("removeSwapPromotedData Done.");
         }catch (Exception e){
             logger.error("Error in removeSwapPromotedData",e);
         }

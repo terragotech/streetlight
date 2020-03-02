@@ -648,6 +648,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
                 logger.info("New :" + isNew + " \nmacAddress :" + macAddress);
                 if (macAddress == null || macAddress.isEmpty()) {
                     loggingModel.setStatus(MessageConstants.SUCCESS);
+                    removeSwapPromotedData(loggingModel.getIdOnController());
                     return;
                 } else {
                     if (!loggingModel.isMacAddressUsed()) {

@@ -351,7 +351,9 @@ public class SwapTemplateProcessor extends AbstractProcessor {
             }
 
         }
-
+        logger.info(cityWorkflowSyncLog.toString());
+        logger.info("cityWorkflowSyncLog.isMacAddressSynced() :::::" + cityWorkflowSyncLog.isMacAddressSynced());
+        logger.info("cityWorkflowSyncLog.isFixtureQRScanSynced() :::::" + cityWorkflowSyncLog.isFixtureQRScanSynced());
         if(cityWorkflowSyncLog.isMacAddressSynced() || cityWorkflowSyncLog.isFixtureQRScanSynced()){
             cityWorkflowSyncLog.setTitle(installMaintenanceLogModel.getIdOnController());
             updatePromotedData(cityWorkflowSyncLog);
@@ -388,8 +390,10 @@ public class SwapTemplateProcessor extends AbstractProcessor {
 
     private void updatePromotedData(CityWorkflowSyncLog cityWorkflowSyncLog) {
         try {
+            logger.info("cityWorkflowSyncLog.getMacAddress():::::"+cityWorkflowSyncLog.getMacAddress());
+            logger.info("cityWorkflowSyncLog.getFixtureQRScan():::::"+cityWorkflowSyncLog.getFixtureQRScan());
             if(cityWorkflowSyncLog.getMacAddress() != null || cityWorkflowSyncLog.getFixtureQRScan() != null){
-                String httpUrl = "/promoted/removeSwapPromoted.html";
+                String httpUrl = "/promoted/addSwapPromoted";
                 JsonObject requestData = new JsonObject();
                 requestData.addProperty("idOnController", cityWorkflowSyncLog.getTitle());
 
@@ -400,8 +404,9 @@ public class SwapTemplateProcessor extends AbstractProcessor {
                 if(cityWorkflowSyncLog.getFixtureQRScan() != null){
                     requestData.addProperty("fixtureQRScan", cityWorkflowSyncLog.getFixtureQRScan());
                 }
-
+                logger.info("httpUrl::::::"+httpUrl);
                 ResponseEntity<String> responseEntity = restService.callPostMethod(httpUrl, HttpMethod.POST, requestData.toString(),true);
+                logger.info("updatePromotedData Done.");
             }
 
         }catch (Exception e){
