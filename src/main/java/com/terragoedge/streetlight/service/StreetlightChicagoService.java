@@ -5,19 +5,15 @@ import java.text.SimpleDateFormat;
 import java.util.*;
 
 import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
 import com.opencsv.CSVWriter;
 import com.terragoedge.edgeserver.*;
 import com.terragoedge.streetlight.OpenCsvUtils;
 import com.terragoedge.streetlight.dao.ClientAccountEntity;
-import com.terragoedge.streetlight.edgeinterface.SlvData;
-import com.terragoedge.streetlight.edgeinterface.SlvToEdgeService;
 import com.terragoedge.streetlight.exception.NoValueException;
 import com.terragoedge.streetlight.json.model.*;
 import com.terragoedge.streetlight.logging.InstallMaintenanceLogModel;
 import com.terragoedge.streetlight.logging.LoggingModel;
 import org.apache.log4j.Logger;
-import org.joda.time.DateTime;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.http.*;
 
@@ -33,13 +29,11 @@ public class StreetlightChicagoService extends AbstractProcessor {
 
     final Logger logger = Logger.getLogger(StreetlightChicagoService.class);
     InstallationMaintenanceProcessor installationMaintenanceProcessor;
-    SlvToEdgeService slvToEdgeService = null;
 
     public StreetlightChicagoService() {
         super();
        // loadContextList();
         installationMaintenanceProcessor = new InstallationMaintenanceProcessor(contextListHashMap,cslpDateHashMap,macHashMap);
-        slvToEdgeService = new SlvToEdgeService();
         System.out.println("Object Created.");
     }
 
@@ -88,24 +82,6 @@ public class StreetlightChicagoService extends AbstractProcessor {
 
             }
         }
-    }
-
-    private void updateSlvStatusToEdge(InstallMaintenanceLogModel installMaintenanceLogModel, EdgeNote edgeNote) {
-        try {
-            SlvData slvData = new SlvData();
-            slvData.setNoteGuid(edgeNote.getNoteGuid());
-            slvData.setNoteTitle(edgeNote.getTitle());
-            slvData.setProcessedTime(String.valueOf(System.currentTimeMillis()));
-            slvData.setSyncToSlvStatus(installMaintenanceLogModel.getStatus());
-            slvData.setErrorDetails(installMaintenanceLogModel.getErrorDetails());
-            slvData.setInstalledDate(installMaintenanceLogModel.getInstalledDate());
-            slvData.setReplacedDate(installMaintenanceLogModel.getReplacedDate());
-            slvData.setFixtureOnly(installMaintenanceLogModel.isFixtureOnly());
-            slvToEdgeService.run(slvData);
-        } catch (Exception e) {
-            logger.error("Error in updateSlvStatusToEdge", e);
-        }
-
     }
 
 
@@ -365,7 +341,7 @@ public class StreetlightChicagoService extends AbstractProcessor {
             String receipents = properties.getProperty("com.installation.report.mail.receipts");
 
             baseUrl = baseUrl + uploadUrl;
-            RestTemplate restTemplate = new RestTemplate();
+            RestTemplate restTemplate = getRestTemplate();
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.MULTIPART_FORM_DATA);
 

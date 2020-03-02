@@ -24,8 +24,10 @@ import org.joda.time.format.DateTimeFormatter;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
+import org.springframework.web.client.RestTemplate;
 
 import java.net.URLEncoder;
 import java.sql.SQLException;
@@ -1911,6 +1913,14 @@ public boolean checkExistingMacAddressValid(EdgeNote edgeNote, InstallMaintenanc
            logger.error("Error in isBulkImport",e);
        }
 
+    }
+
+    public RestTemplate getRestTemplate(){
+        SimpleClientHttpRequestFactory simpleClientHttpRequestFactory = new SimpleClientHttpRequestFactory();
+        simpleClientHttpRequestFactory.setReadTimeout(1000 * 60 * 5);
+        simpleClientHttpRequestFactory.setConnectTimeout(1000 * 60 * 5);
+        RestTemplate restTemplate = new RestTemplate(simpleClientHttpRequestFactory);
+        return restTemplate;
     }
 
 }

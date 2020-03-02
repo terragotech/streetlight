@@ -1,6 +1,7 @@
 package com.terragoedge.streetlight.service;
 
 import java.io.BufferedReader;
+import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.URI;
 import java.util.Properties;
@@ -13,6 +14,10 @@ import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.log4j.Logger;
 import org.springframework.http.*;
+import org.springframework.http.client.ClientHttpRequest;
+import org.springframework.http.client.ClientHttpRequestFactory;
+import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
+import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 
@@ -44,7 +49,7 @@ public class RestService {
 			}
 		}else{//edge rest call or slv rest call without token
 			HttpHeaders headers = getHeaders(accessToken);
-			RestTemplate restTemplate = new RestTemplate();
+			RestTemplate restTemplate = getRestTemplate();
 			HttpEntity request = new HttpEntity<>(headers);
 			ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.GET, request, String.class);
 			logger.info("------------ Response ------------------");
@@ -73,7 +78,7 @@ public class RestService {
 			}
 		}else{//edge rest call or slv rest call without token
 			HttpHeaders headers = getHeaders(accessToken);
-			RestTemplate restTemplate = new RestTemplate();
+			RestTemplate restTemplate = getRestTemplate();
 			HttpEntity request = new HttpEntity<>(headers);
 			ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.POST, request, String.class);
 			logger.info("------------ Response ------------------");
@@ -128,7 +133,7 @@ public class RestService {
 		logger.info("------------ Request ------------------");
 		logger.info(url);
 		logger.info("------------ Request End ------------------");
-		RestTemplate restTemplate = new RestTemplate();
+		RestTemplate restTemplate = getRestTemplate();
 		ResponseEntity<String> response = restTemplate.postForEntity(url,null,   String.class);
 		logger.info("------------ Response ------------------");
 		logger.info("Response Code:" + response.getStatusCode().toString());
@@ -186,7 +191,8 @@ public class RestService {
 	}
 
     private ResponseEntity<String> callSlvWithToken(boolean isGetRequest,String url) throws Exception{
-        RestTemplate restTemplate = new RestTemplate();
+		RestTemplate restTemplate = getRestTemplate();
+
         HttpHeaders headers = new HttpHeaders();
         headers.add("x-requested-with","XMLHttpRequest");
         headers.add("x-csrf-token", SlvRestTemplate.INSTANCE.getToken());
@@ -224,7 +230,7 @@ public class RestService {
 
 	public ResponseEntity<String> slv2Edge(String httpUrl,  HttpMethod httpMethod, MultiValueMap<String, String> params){
 		HttpHeaders headers = getEdgeHeaders();
-		RestTemplate restTemplate = new RestTemplate();
+		RestTemplate restTemplate = getRestTemplate();
 		HttpEntity request = new HttpEntity<>(headers);
 
         String url = PropertiesReader.getProperties().getProperty("streetlight.edge.url.main");
@@ -250,7 +256,7 @@ public class RestService {
 	    logger.info("Url:"+url);
         logger.info("Request Data:"+requestData);
 	    HttpHeaders headers = getEdgeHeaders();
-        RestTemplate restTemplate = new RestTemplate();
+        RestTemplate restTemplate = getRestTemplate();
         HttpEntity request = new HttpEntity<>(requestData,headers);
         logger.info("Server Call....");
         ResponseEntity<String> response = restTemplate.exchange(url, httpMethod, request, String.class);
@@ -261,4 +267,12 @@ public class RestService {
         logger.info("------------ Response End ------------------");
         return response;
     }
+
+    public  RestTemplate getRestTemplate(){
+		SimpleClientHttpRequestFactory simpleClientHttpRequestFactory = new SimpleClientHttpRequestFactory();
+		simpleClientHttpRequestFactory.setConnectTimeout(1000 * 60 * 5);
+		simpleClientHttpRequestFactory.setReadTimeout(1000 * 60 * 5);
+		RestTemplate restTemplate = new RestTemplate(simpleClientHttpRequestFactory);
+		return restTemplate;
+	}
 }
