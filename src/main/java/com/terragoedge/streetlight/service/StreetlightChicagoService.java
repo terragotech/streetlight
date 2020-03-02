@@ -290,7 +290,7 @@ public class StreetlightChicagoService extends AbstractProcessor {
                         // Check whether the current note
                         isBulkImport(edgeNote, accessToken, installMaintenanceLogModel);
 
-                        installationMaintenanceProcessor.processNewAction(edgeNote, installMaintenanceLogModel, false, utilLocId, slvInterfaceLogEntity);
+                        installationMaintenanceProcessor.processNewAction(edgeNote, installMaintenanceLogModel, false, utilLocId, slvInterfaceLogEntity,notesData);
                         // updateSlvStatusToEdge(installMaintenanceLogModel, edgeNote);
                         LoggingModel loggingModel = installMaintenanceLogModel;
                         streetlightDao.insertProcessedNotes(loggingModel, installMaintenanceLogModel);
@@ -705,7 +705,7 @@ public class StreetlightChicagoService extends AbstractProcessor {
         configJson.addProperty("noteGuid",noteGuid);
         logger.info("Given url is :" + url);
         // Get NoteList from edgeserver
-        ResponseEntity<String> responseEntity = restService.callPostMethod(url, HttpMethod.POST, configJson.toString());
+        ResponseEntity<String> responseEntity = restService.callPostMethod(url, HttpMethod.POST, configJson.toString(),false);
 
         if (responseEntity.getStatusCode().is2xxSuccessful()) {
             String responseBody = responseEntity.getBody();

@@ -148,7 +148,7 @@ public class SwapTemplateProcessor extends AbstractProcessor {
         configJson.addProperty("noteGuid", noteGuid);
         logger.info("Given url is :" + url);
         // Compare Revision data to identify any changes or not.
-        ResponseEntity<String> responseEntity = restService.callPostMethod(url, HttpMethod.POST, configJson.toString());
+        ResponseEntity<String> responseEntity = restService.callPostMethod(url, HttpMethod.POST, configJson.toString(),false);
         // Success Response
         if (responseEntity.getStatusCode().is2xxSuccessful()) {
             String responseBody = responseEntity.getBody();
@@ -389,7 +389,7 @@ public class SwapTemplateProcessor extends AbstractProcessor {
     private void updatePromotedData(CityWorkflowSyncLog cityWorkflowSyncLog) {
         try {
             if(cityWorkflowSyncLog.getMacAddress() != null || cityWorkflowSyncLog.getFixtureQRScan() != null){
-                String httpUrl = "edgeSlvServer/promoted/removeSwapPromoted.html";
+                String httpUrl = "/promoted/removeSwapPromoted.html";
                 JsonObject requestData = new JsonObject();
                 requestData.addProperty("idOnController", cityWorkflowSyncLog.getTitle());
 
@@ -401,7 +401,7 @@ public class SwapTemplateProcessor extends AbstractProcessor {
                     requestData.addProperty("fixtureQRScan", cityWorkflowSyncLog.getFixtureQRScan());
                 }
 
-                ResponseEntity<String> responseEntity = restService.callPostMethod(httpUrl, HttpMethod.POST, requestData.toString());
+                ResponseEntity<String> responseEntity = restService.callPostMethod(httpUrl, HttpMethod.POST, requestData.toString(),true);
             }
 
         }catch (Exception e){

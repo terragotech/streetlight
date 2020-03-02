@@ -160,7 +160,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
         }
     }
 
-    public void processNewAction(EdgeNote edgeNote, InstallMaintenanceLogModel installMaintenanceLogModel, boolean isReSync, String utilLocId, SlvInterfaceLogEntity slvInterfaceLogEntity) {
+    public void processNewAction(EdgeNote edgeNote, InstallMaintenanceLogModel installMaintenanceLogModel, boolean isReSync, String utilLocId, SlvInterfaceLogEntity slvInterfaceLogEntity,String notesData) {
         slvInterfaceLogEntity.setParentnoteid((edgeNote.getBaseParentNoteId() == null) ? edgeNote.getNoteGuid() : edgeNote.getBaseParentNoteId());
         logger.info("processNewAction");
         slvInterfaceLogEntity.setIdOnController(edgeNote.getTitle());
@@ -215,7 +215,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
                             case "Remove":
                                 slvInterfaceLogEntity.setSelectedAction("Remove");
                                 logger.info("entered remove action");
-                                processRemoveAction(edgeFormDatas, utilLocId, installMaintenanceLogModel, slvInterfaceLogEntity,edgeNote);
+                                processRemoveAction(edgeFormDatas, utilLocId, installMaintenanceLogModel, slvInterfaceLogEntity,edgeNote,notesData);
                                 break;
                             case "Other Task":
                                 slvInterfaceLogEntity.setSelectedAction("Other Task");
@@ -1239,7 +1239,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
         }
     }
 
-    private void processRemoveAction(List<EdgeFormData> edgeFormDatas, String utilLocId, InstallMaintenanceLogModel installMaintenanceLogModel, SlvInterfaceLogEntity slvInterfaceLogEntity,EdgeNote edgeNote) {
+    private void processRemoveAction(List<EdgeFormData> edgeFormDatas, String utilLocId, InstallMaintenanceLogModel installMaintenanceLogModel, SlvInterfaceLogEntity slvInterfaceLogEntity,EdgeNote edgeNote,String notesData) {
         String removeReason = null;
         try {
             removeReason = valueById(edgeFormDatas, 35);
@@ -1303,6 +1303,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
                             connectionDAO.removeEdgeAllMAC(installMaintenanceLogModel.getIdOnController(),macaddress);
                         }
 
+                        slv2EdgeService.removeSwapForm(edgeNote,notesData);
                         connectionDAO.removeEdgeAllFixture(installMaintenanceLogModel.getIdOnController());
                         installMaintenanceLogModel.setInstallOnWrongFix(true);
                         removeEdgeSLVMacAddress(installMaintenanceLogModel.getIdOnController());
@@ -1346,6 +1347,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
                         clearDeviceValues(installMaintenanceLogModel.getIdOnController(), installMaintenanceLogModel.getControllerSrtId(), "Pole Removed", installMaintenanceLogModel,false);
                         slvInterfaceLogEntity.setStatus(MessageConstants.SUCCESS);
                         connectionDAO.removeCurrentEdgeFormDates(installMaintenanceLogModel.getIdOnController());
+                        slv2EdgeService.removeSwapForm(edgeNote,notesData);
                         installMaintenanceLogModel.setPoleKnockDown(true);
                     } catch (Exception e) {
                         logger.error("Error in processRemoveAction", e);
@@ -1390,6 +1392,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
                         clearDeviceValues(installMaintenanceLogModel.getIdOnController(), installMaintenanceLogModel.getControllerSrtId(), "Pole Knocked-Down", installMaintenanceLogModel,isMacRemoved);
                         slvInterfaceLogEntity.setStatus(MessageConstants.SUCCESS);
                         installMaintenanceLogModel.setPoleKnockDown(true);
+                        slv2EdgeService.removeSwapForm(edgeNote,notesData);
 
                     } catch (Exception e) {
                         logger.error("Error in processRemoveAction", e);

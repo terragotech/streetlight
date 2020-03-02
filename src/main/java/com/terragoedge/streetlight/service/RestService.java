@@ -246,8 +246,14 @@ public class RestService {
 	}
 
 
-	public ResponseEntity<String> callPostMethod(String httpUrl, HttpMethod httpMethod, String requestData) {
-		String url = PropertiesReader.getProperties().getProperty("streetlight.edge.url.main");
+	public ResponseEntity<String> callPostMethod(String httpUrl, HttpMethod httpMethod, String requestData,boolean isEdgeSlvServer) {
+		String url = null;
+		if(isEdgeSlvServer){
+			url = PropertiesReader.getProperties().getProperty("streetlight.edge.slvserver.url");
+		}else {
+			url = PropertiesReader.getProperties().getProperty("streetlight.edge.url.main");
+		}
+
 		url = url + httpUrl;
 		logger.info("Url:" + url);
 		logger.info("Request Data:" + requestData);

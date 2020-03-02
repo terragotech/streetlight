@@ -45,6 +45,7 @@ public abstract class AbstractProcessor {
     protected  Gson gson = null;
     protected  JsonParser jsonParser = null;
     protected ConnectionDAO connectionDAO;
+    protected SLV2EdgeService slv2EdgeService;
 
    protected WeakHashMap<String, String> contextListHashMap = new WeakHashMap<>();
     protected  HashMap<String, SLVDates> cslpDateHashMap = new HashMap<>();
@@ -61,6 +62,7 @@ public abstract class AbstractProcessor {
         this.properties = PropertiesReader.getProperties();
         this.gson = new Gson();
         this.jsonParser = new JsonParser();
+        this.slv2EdgeService = new SLV2EdgeService();
         droppedPinTag = properties.getProperty("com.droppedpin.tag");
     }
 
@@ -1916,8 +1918,8 @@ public boolean checkExistingMacAddressValid(EdgeNote edgeNote, InstallMaintenanc
 
     public void removeSwapPromotedData(String idOnController){
         try{
-            String httpUrl = "edgeSlvServer/promoted/removeSwapPromoted.html?idOnController="+idOnController;
-            restService.callPostMethod(httpUrl,HttpMethod.GET,null);
+            String httpUrl = "/promoted/removeSwapPromoted.html?idOnController="+idOnController;
+            restService.callPostMethod(httpUrl,HttpMethod.GET,null,true);
         }catch (Exception e){
             logger.error("Error in removeSwapPromotedData",e);
         }
