@@ -1304,6 +1304,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
                         }
 
                         slv2EdgeService.removeSwapForm(edgeNote,notesData);
+                        removeSwapPromotedData(installMaintenanceLogModel.getIdOnController());
                         connectionDAO.removeEdgeAllFixture(installMaintenanceLogModel.getIdOnController());
                         installMaintenanceLogModel.setInstallOnWrongFix(true);
                         removeEdgeSLVMacAddress(installMaintenanceLogModel.getIdOnController());
@@ -1348,6 +1349,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
                         slvInterfaceLogEntity.setStatus(MessageConstants.SUCCESS);
                         connectionDAO.removeCurrentEdgeFormDates(installMaintenanceLogModel.getIdOnController());
                         slv2EdgeService.removeSwapForm(edgeNote,notesData);
+                        removeSwapPromotedData(installMaintenanceLogModel.getIdOnController());
                         installMaintenanceLogModel.setPoleKnockDown(true);
                     } catch (Exception e) {
                         logger.error("Error in processRemoveAction", e);
@@ -1393,6 +1395,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
                         slvInterfaceLogEntity.setStatus(MessageConstants.SUCCESS);
                         installMaintenanceLogModel.setPoleKnockDown(true);
                         slv2EdgeService.removeSwapForm(edgeNote,notesData);
+                        removeSwapPromotedData(installMaintenanceLogModel.getIdOnController());
 
                     } catch (Exception e) {
                         logger.error("Error in processRemoveAction", e);
