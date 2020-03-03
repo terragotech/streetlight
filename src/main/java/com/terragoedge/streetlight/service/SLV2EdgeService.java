@@ -1,8 +1,10 @@
 package com.terragoedge.streetlight.service;
 
+import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import com.google.gson.reflect.TypeToken;
 import com.terragoedge.edgeserver.EdgeFormData;
 import com.terragoedge.edgeserver.EdgeNote;
 import com.terragoedge.streetlight.PropertiesReader;
@@ -22,10 +24,12 @@ public class SLV2EdgeService {
     final Logger logger = Logger.getLogger(SLV2EdgeService.class);
     RestService restService = null;
     JsonParser jsonParser = null;
+    Gson gson = null;
 
     public SLV2EdgeService(){
         restService = new RestService();
         jsonParser = new JsonParser();
+        gson = new Gson();
     }
 
 
@@ -46,6 +50,10 @@ public class SLV2EdgeService {
                     swapFormPositionList.add(i);
                     isSwapFormPresent = true;
                 } else {
+                    String formDefJson = serverEdgeForm.get("formDef").toString();
+                    formDefJson = formDefJson.replaceAll("\\\\", "");
+                    List<EdgeFormData> edgeFormDataList = getEdgeFormData(formDefJson);
+                    serverEdgeForm.add("formDef", gson.toJsonTree(edgeFormDataList));
                     serverEdgeForm.addProperty("formGuid", UUID.randomUUID().toString());
                 }
 
@@ -79,5 +87,19 @@ public class SLV2EdgeService {
             logger.error("Error in removeSwapForm",e);
         }
 
+    }
+
+
+    protected List<EdgeFormData> getEdgeFormData(String formDefJson) {
+        try {
+            List<EdgeFormData> edgeFormDatas = gson.fromJson(formDefJson, new TypeToken<List<EdgeFormData>>() {
+            }.getType());
+            return edgeFormDatas;
+        } catch (Exception e) {
+            formDefJson = formDefJson.substring(1, formDefJson.length() - 1);
+            List<EdgeFormData> edgeFormDatas = gson.fromJson(formDefJson, new TypeToken<List<EdgeFormData>>() {
+            }.getType());
+            return edgeFormDatas;
+        }
     }
 }
