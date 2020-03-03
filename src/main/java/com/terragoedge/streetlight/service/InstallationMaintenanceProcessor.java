@@ -1908,6 +1908,8 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
         MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
         params.add("slvIdOnController",idOnController);
         restService.slv2Edge("/rest/validation/removeSLVMacAddress", HttpMethod.GET,params);
+        syncMacAddress2Promoted(idOnController,null);
+
     }
 
     private String addUserToLuminaireSerialNumber(String luminaireSerialNumber,String user){

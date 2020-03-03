@@ -1682,6 +1682,25 @@ public boolean checkExistingMacAddressValid(EdgeNote edgeNote, InstallMaintenanc
             }
 
             restService.slv2Edge("/rest/validation/updateSLVSyncedMAC", HttpMethod.GET,params);
+
+            syncMacAddress2Promoted(idOnController,macAddress);
+        }
+    }
+
+
+    protected void syncMacAddress2Promoted(String idOnController,String macAddress){
+        // Remove MAC Address from the Promoted Data.
+        logger.info("Remove MAC Address from the Promoted Data.");
+        try {
+            String url = "/promoted/updateSLVMacAddress?idOnController="+idOnController;
+            if(macAddress != null && !macAddress.trim().isEmpty()){
+                url = url + "&slvMacAddress="+macAddress;
+            }
+
+            restService.callPostMethod(url,HttpMethod.GET,null,true);
+            logger.info("Remove MAC Address from the Promoted Data End.");
+        }catch (Exception e){
+            logger.error("Error in removeEdgeSLVMacAddress",e);
         }
     }
 
