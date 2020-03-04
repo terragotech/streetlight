@@ -316,13 +316,15 @@ public class SwapTemplateProcessor extends AbstractProcessor {
                     cityWorkflowSyncLog.setMacAddressSynced(true);
                 } catch (ReplaceOLCFailedException e) {
                     logger.error("Error in slvSyncProcess", e);
-                    cityWorkflowSyncLog.setMacAddressSynced(false);
+                    //cityWorkflowSyncLog.setMacAddressSynced(false);
+                    cityWorkflowSyncLog.setMacAddressSynced(true);
                     cityWorkflowSyncLog.setMacSyncStatus(e.getMessage());
                 }
             } catch (QRCodeAlreadyUsedException e) {
                 logger.error("Error in slvSyncProcess", e);
             } catch (Exception e) {
                 e.printStackTrace();
+                cityWorkflowSyncLog.setMacAddressSynced(false);
             }
 
         }
