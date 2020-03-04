@@ -18,6 +18,7 @@ import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.web.client.RestTemplate;
 
 import java.net.URI;
@@ -101,7 +102,7 @@ public enum SlvRestTemplate {
         String base64Creds = new String(base64CredsBytes);
         String baseUrl = properties.getProperty("streetlight.url.main");
         baseUrl =   baseUrl+"/reports/api/userprofile/getCurrentUser";
-        RestTemplate restTemplate = new RestTemplate();
+        RestTemplate restTemplate = getRestTemplate();
         HttpHeaders headers = new HttpHeaders();
         headers.add("Authorization","Basic "+base64Creds);
         headers.add("x-csrf-token","Fetch");
@@ -121,6 +122,14 @@ public enum SlvRestTemplate {
             throw  new AuthenticationException("Unable to Authentication. Status code"+response.getStatusCodeValue());
         }
 
+    }
+
+    public  RestTemplate getRestTemplate(){
+        SimpleClientHttpRequestFactory simpleClientHttpRequestFactory = new SimpleClientHttpRequestFactory();
+        simpleClientHttpRequestFactory.setReadTimeout(1000 * 60 * 5);
+        simpleClientHttpRequestFactory.setConnectTimeout(1000 * 60 * 5);
+        RestTemplate restTemplate = new RestTemplate(simpleClientHttpRequestFactory);
+        return restTemplate;
     }
 
 

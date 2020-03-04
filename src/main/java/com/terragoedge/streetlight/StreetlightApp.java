@@ -1,9 +1,7 @@
 package com.terragoedge.streetlight;
 
 import com.terragoedge.streetlight.service.StreetlightChicagoService;
-import com.terragoedge.streetlight.service.TalkAddressService;
 import org.apache.log4j.Logger;
-import org.springframework.http.HttpMethod;
 
 import java.util.Calendar;
 import java.util.Date;

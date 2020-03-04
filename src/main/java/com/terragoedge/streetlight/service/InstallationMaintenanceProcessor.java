@@ -1879,7 +1879,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
     public ResponseEntity<String> serverCall(String url, HttpMethod httpMethod, String body) {
         logger.info("Request Url : " + url);
         logger.info("Request Data : " + body);
-        RestTemplate restTemplate = new RestTemplate();
+        RestTemplate restTemplate = getRestTemplate();
         HttpHeaders headers =new HttpHeaders();
 
         HttpEntity request = null;
@@ -2106,5 +2106,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
         }
 
     }
+
+
 
 }
