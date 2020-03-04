@@ -32,7 +32,6 @@ public class StreetlightChicagoService extends AbstractProcessor {
 
     final Logger logger = Logger.getLogger(StreetlightChicagoService.class);
     InstallationMaintenanceProcessor installationMaintenanceProcessor;
-    SlvToEdgeService slvToEdgeService = null;
     SwapTemplateProcessor swapTemplateProcessor;
 
     public StreetlightChicagoService() {
@@ -40,7 +39,6 @@ public class StreetlightChicagoService extends AbstractProcessor {
        // loadContextList();
         installationMaintenanceProcessor = new InstallationMaintenanceProcessor(contextListHashMap,cslpDateHashMap,macHashMap);
         swapTemplateProcessor = new SwapTemplateProcessor(contextListHashMap,cslpDateHashMap);
-        slvToEdgeService = new SlvToEdgeService();
         System.out.println("Object Created.");
     }
 
