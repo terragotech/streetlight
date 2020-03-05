@@ -566,9 +566,11 @@ public abstract class AbstractProcessor {
         if (installStatus != null && loggingModel.isActionNew()) {
             addStreetLightData("installStatus", loggingModel.isButtonPhotoCell() ? InstallStatus.Photocell_Only.getValue() : installStatus, paramsList);
         }
-
-
-        addStreetLightData("DimmingGroupName", edgeNotebookName, paramsList);
+        if(loggingModel.isDroppedPinWorkflow() && (loggingModel.getLuminaireFixturecode() != null && loggingModel.getLuminaireFixturecode().equals("Piggy-back"))){
+            addStreetLightData("DimmingGroupName", edgeNotebookName +" & Acorns", paramsList);
+        }else {
+            addStreetLightData("DimmingGroupName", edgeNotebookName, paramsList);
+        }
         // addStreetLightData("DimmingGroupName", "Group Calendar 1", paramsList);
         addPower(loggingModel,null,paramsList,null);
     }
