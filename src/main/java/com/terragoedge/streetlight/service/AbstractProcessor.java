@@ -567,7 +567,7 @@ public abstract class AbstractProcessor {
             addStreetLightData("installStatus", loggingModel.isButtonPhotoCell() ? InstallStatus.Photocell_Only.getValue() : installStatus, paramsList);
         }
         if(loggingModel.isDroppedPinWorkflow() && (loggingModel.getLuminaireFixturecode() != null && loggingModel.getLuminaireFixturecode().equals("Piggy-back"))){
-            addStreetLightData("DimmingGroupName", edgeNotebookName +" & Acorns", paramsList);
+            addStreetLightData("DimmingGroupName", edgeNotebookName +" Acorns", paramsList);
         }else {
             addStreetLightData("DimmingGroupName", edgeNotebookName, paramsList);
         }
