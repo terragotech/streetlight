@@ -1252,6 +1252,16 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
             switch (removeReason) {
                 case "Installed on Wrong Fixture":
                     try {
+                        logger.info("Luminaire Serial Number going to clear.");
+                        connectionDAO.removeEdgeAllSerialNumber(installMaintenanceLogModel.getIdOnController());
+
+                        logger.info("Luminaire Serial Number value cleared.");
+                    }catch (Exception e){
+                        logger.error("Error in removeEdgeAllSerialNumber",e);
+                    }
+
+
+                    try {
                         if(installMaintenanceLogModel.isDroppedPinWorkflow())
                         {
                             DroppedPinRemoveEvent droppedPinRemoveEvent = new DroppedPinRemoveEvent();
@@ -1266,6 +1276,14 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
                             slvInterfaceLogEntity.setErrorcategory(MessageConstants.SLV_VALIDATION_ERROR);
                             slvInterfaceLogEntity.setErrordetails("Already Processed.Install Status: To be installed");
                             slvInterfaceLogEntity.setStatus(MessageConstants.ERROR);
+
+                            try {
+                                clearDeviceValues(installMaintenanceLogModel.getIdOnController(), installMaintenanceLogModel.getControllerSrtId(), "serialnumber", installMaintenanceLogModel,false);
+                            } catch (Exception e) {
+                                e.printStackTrace();
+                                logger.error("Error in clear device values:" + e.getMessage());
+                            }
+
                             return;
                         }
                         String macaddress = null;
@@ -1454,6 +1472,11 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
                // addStreetLightData("DimmingGroupName", "", paramsList);
                 addStreetLightData("installStatus", InstallStatus.Installation_Removed.getValue(), paramsList);
                 //addStreetLightData("power", "", paramsList);
+                break;
+
+            case "serialnumber":
+                addStreetLightData("installStatus", InstallStatus.To_be_installed.getValue(), paramsList);
+                addStreetLightData("luminaire.serialnumber", "", paramsList);
                 break;
         }
         SLVTransactionLogs slvTransactionLogs = getSLVTransactionLogs(loggingModel);
