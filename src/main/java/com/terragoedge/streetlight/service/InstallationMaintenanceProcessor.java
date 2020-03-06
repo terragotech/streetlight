@@ -651,6 +651,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
                     removeSwapPromotedData(loggingModel.getIdOnController());
                     return;
                 } else {
+                    removeSwapPromotedData(loggingModel.getIdOnController());
                     if (!loggingModel.isMacAddressUsed()) {
                         slvTransactionLogs = getSLVTransactionLogs(loggingModel);
                         replaceOLC(controllerStrIdValue, idOnController, macAddress, slvTransactionLogs, slvInterfaceLogEntity,loggingModel.getAtlasPhysicalPage(),loggingModel,edgeNote);// insert mac address
@@ -660,7 +661,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
                 logger.info("Replace OLC End");
                 loggingModel.setStatus(MessageConstants.SUCCESS);
                 slvInterfaceLogEntity.setStatus(MessageConstants.SUCCESS);
-                removeSwapPromotedData(loggingModel.getIdOnController());
+
                 logger.info("Status Changed. to Success");
             }
 
