@@ -5,6 +5,8 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.reflect.TypeToken;
+import com.terrago.streetlights.dao.model.UbiInterfaceLog;
+import com.terrago.streetlights.dao.model.UbiTransactionLog;
 import com.terrago.streetlights.service.RESTService;
 import com.terrago.streetlights.utils.FailureReportModel;
 import com.terrago.streetlights.utils.LastUpdated;
@@ -15,10 +17,7 @@ import com.terragoedge.edgeserver.EdgeNote;
 import com.terragoedge.streetlight.json.model.NoteInfo;
 
 import java.lang.reflect.Type;
-import java.sql.Connection;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
+import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -91,61 +90,42 @@ public class TerragoDAO {
 
                             noteInfo.setIMEI(result);
                         }
+                        else
+                        {
+                            noteInfo.setIMEI(result);
+                        }
                     }
                 }
             }
         }
         return  noteInfo;
     }
-    public static List<LastUpdated> getUpdatedNotes(String lastProcessedTime)
+    public static List<String> getNearByFixtures(String latitude,String longitude, String distance)
     {
-        List<LastUpdated> lstString = new ArrayList<LastUpdated>();
+        String query = "SELECT noteguid FROM edgenote WHERE iscurrent=true and isdeleted=false and " +
+                "ST_GeometryType(geometry::geometry)='ST_Point' and ST_Distance_Sphere(geometry::geometry, ST_MakePoint("
+                + longitude + "," + latitude + ")) <= " + distance;
         Connection conn = DataBaseConnector.getConnection();
         Statement statement = null;
         ResultSet resultSet = null;
-        //logger.info("Checking for updates");
+        String noteGUID = "";
+        List<String> lstNoteGUID = new ArrayList<String>();
         try {
             statement = conn.createStatement();
-            resultSet = statement.executeQuery("select title,noteguid,createddatetime from edgenote where iscurrent=true and isdeleted=false and createddatetime > " + lastProcessedTime );
+            resultSet = statement.executeQuery(query);
             while(resultSet.next())
             {
-                String noteguid = resultSet.getString("noteguid");
-                LastUpdated lastUpdated = new LastUpdated();
-                lastUpdated.setNoteguid(noteguid);
-                lastUpdated.setCreateddatetime(resultSet.getLong("createddatetime"));
-                lstString.add(lastUpdated);
+                noteGUID = resultSet.getString("noteguid");
+                lstNoteGUID.add(noteGUID);
             }
-
         }
-        catch (Exception e)
-        {
+        catch (SQLException e) {
             e.printStackTrace();
         }
-        finally {
-            if(resultSet != null)
-            {
-                try{
-                    resultSet.close();
-                }
-                catch (SQLException e)
-                {
-                    e.printStackTrace();
-                }
-            }
-            if(statement != null)
-            {
-                try{
-                    statement.close();
-                }
-                catch (SQLException e)
-                {
-                    e.printStackTrace();
-                }
-            }
-            DataBaseConnector.closeConnection();
-        }
-        return lstString;
+        return lstNoteGUID;
     }
+
+
     public static String getNoteGUID(String noteTitle)
     {
         Connection conn = DataBaseConnector.getConnection();
@@ -408,10 +388,10 @@ public class TerragoDAO {
         ResultSet resultSet = null;
         try{
             statement = conn.createStatement();
-            resultSet = statement.executeQuery("select lastmaxtime from tmp_florlights");
+            resultSet = statement.executeQuery("select max(synctime) as utime from ubitransactionlog");
             while(resultSet.next())
             {
-                result = resultSet.getLong("lastmaxtime");
+                result = resultSet.getLong("utime");
             }
 
         }
@@ -452,10 +432,10 @@ public class TerragoDAO {
         ResultSet resultSet = null;
         try{
             statement = conn.createStatement();
-            resultSet = statement.executeQuery("select lastmaxtime from tmp_florlights2");
+            resultSet = statement.executeQuery("select max(synctime) as utime from ubitransactionlog2");
             while(resultSet.next())
             {
-                result = resultSet.getLong("lastmaxtime");
+                result = resultSet.getLong("utime");
             }
 
         }
@@ -582,5 +562,112 @@ public class TerragoDAO {
             DataBaseConnector.closeConnection();
         }
         return lstString;
+    }
+    public static void addUbiTransactionLog(UbiTransactionLog ubiTransactionLog)
+    {
+        PreparedStatement preparedStatement = null;
+        String SQL = "INSERT INTO ubitransactionlog(notegui,title,action,deviceStatus,devui,synctime,eventtime) "
+                + "VALUES(?,?,?,?,?,?,?)";
+        try {
+            Connection conn = DataBaseConnector.getConnection();
+            preparedStatement = conn.prepareStatement(SQL);
+            preparedStatement.setString(1,ubiTransactionLog.getNotegui());
+            preparedStatement.setString(2,ubiTransactionLog.getTitle());
+            preparedStatement.setString(3,ubiTransactionLog.getAction());
+            preparedStatement.setString(4,ubiTransactionLog.getDeviceStatus());
+            preparedStatement.setString(5,ubiTransactionLog.getDevui());
+            preparedStatement.setLong(6,ubiTransactionLog.getSynctime());
+            preparedStatement.setLong(7,ubiTransactionLog.getEventtime());
+            preparedStatement.executeUpdate();
+
+        }
+        catch (SQLException e)
+        {
+            e.printStackTrace();
+        }
+        finally
+        {
+            if(preparedStatement != null)
+            {
+                try {
+                    preparedStatement.close();
+                }
+                catch (Exception e)
+                {
+                    e.printStackTrace();
+                }
+            }
+        }
+    }
+    public static void addUbiTransactionLog2(UbiTransactionLog ubiTransactionLog)
+    {
+        PreparedStatement preparedStatement = null;
+        String SQL = "INSERT INTO ubitransactionlog2(notegui,title,action,deviceStatus,devui,synctime,eventtime) "
+                + "VALUES(?,?,?,?,?,?,?)";
+        try {
+            Connection conn = DataBaseConnector.getConnection();
+            preparedStatement = conn.prepareStatement(SQL);
+            preparedStatement.setString(1,ubiTransactionLog.getNotegui());
+            preparedStatement.setString(2,ubiTransactionLog.getTitle());
+            preparedStatement.setString(3,ubiTransactionLog.getAction());
+            preparedStatement.setString(4,ubiTransactionLog.getDeviceStatus());
+            preparedStatement.setString(5,ubiTransactionLog.getDevui());
+            preparedStatement.setLong(6,ubiTransactionLog.getSynctime());
+            preparedStatement.setLong(7,ubiTransactionLog.getEventtime());
+            preparedStatement.executeUpdate();
+
+        }
+        catch (SQLException e)
+        {
+            e.printStackTrace();
+        }
+        finally
+        {
+            if(preparedStatement != null)
+            {
+                try {
+                    preparedStatement.close();
+                }
+                catch (Exception e)
+                {
+                    e.printStackTrace();
+                }
+            }
+        }
+    }
+    public static void addUbiInterfaceLog(UbiInterfaceLog ubiInterfaceLog)
+    {
+        PreparedStatement preparedStatement = null;
+        String SQL = "INSERT INTO ubiinterfacelog(notegui,title,urlrequest,requestBody,requestResponse,eventtime) "
+                + "VALUES(?,?,?,?,?,?)";
+        try {
+            Connection conn = DataBaseConnector.getConnection();
+            preparedStatement = conn.prepareStatement(SQL);
+            preparedStatement.setString(1,ubiInterfaceLog.getNotegui());
+            preparedStatement.setString(2,ubiInterfaceLog.getTitle());
+            preparedStatement.setString(3,ubiInterfaceLog.getUrlrequest());
+            preparedStatement.setString(4,ubiInterfaceLog.getRequestBody());
+            preparedStatement.setString(5,ubiInterfaceLog.getRequestResponse());
+            preparedStatement.setLong(6,ubiInterfaceLog.getEventtime());
+            preparedStatement.executeUpdate();
+
+        }
+        catch (SQLException e)
+        {
+            e.printStackTrace();
+        }
+        finally
+        {
+            if(preparedStatement != null)
+            {
+                try {
+                    preparedStatement.close();
+                }
+                catch (Exception e)
+                {
+                    e.printStackTrace();
+                }
+            }
+        }
     }
 }

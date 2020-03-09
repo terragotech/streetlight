@@ -3,7 +3,10 @@ package com.terrago.streetlights.service;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.terrago.streetlights.dao.TerragoDAO;
+import com.terrago.streetlights.dao.model.UbiInterfaceLog;
 import com.terrago.streetlights.utils.JsonDataParser;
+import com.terrago.streetlights.utils.LastUpdated;
 import com.terrago.streetlights.utils.PropertiesReader;
 import org.apache.log4j.Logger;
 import org.springframework.http.*;
@@ -62,7 +65,7 @@ public class UbicquiaLightsInterface {
         return result;
     }
 
-    public static JsonObject getNodes(String dev_eui)
+    public static JsonObject getNodes(LastUpdated lastUpdated, String dev_eui)
     {
         logger.info("get all nodes");
         JsonObject result = null;
@@ -76,6 +79,17 @@ public class UbicquiaLightsInterface {
             RestTemplate restTemplate = new RestTemplate();
             HttpEntity<String> request = new HttpEntity<String>(headers);
             ResponseEntity<String> response = restTemplate.exchange(requestURL, HttpMethod.GET, request, String.class);
+            if(lastUpdated != null)
+            {
+                UbiInterfaceLog ubiInterfaceLog = new UbiInterfaceLog();
+                ubiInterfaceLog.setNotegui(lastUpdated.getNoteguid());
+                ubiInterfaceLog.setTitle(lastUpdated.getTitle());
+                ubiInterfaceLog.setUrlrequest(requestURL);
+                ubiInterfaceLog.setRequestBody("");
+                ubiInterfaceLog.setRequestResponse(response.getBody());
+                ubiInterfaceLog.setEventtime(System.currentTimeMillis());
+                TerragoDAO.addUbiInterfaceLog(ubiInterfaceLog);
+            }
             if (response.getStatusCode() == HttpStatus.OK) {
                 JsonObject jsonObject = JsonDataParser.getJsonObject(response.getBody());
 
@@ -182,7 +196,7 @@ public class UbicquiaLightsInterface {
         return result;
 
     }
-    public static String setNodeData(String nodeId,String nodeData)
+    public static String setNodeData(LastUpdated lastUpdated,String nodeId,String nodeData)
     {
         String result = null;
         try {
@@ -197,6 +211,17 @@ public class UbicquiaLightsInterface {
             RestTemplate restTemplate = new RestTemplate();
             HttpEntity<String> request = new HttpEntity<String>(nodeData,headers);
             ResponseEntity<String> response = restTemplate.exchange(requestURL, HttpMethod.PUT, request, String.class);
+            if(lastUpdated != null)
+            {
+                UbiInterfaceLog ubiInterfaceLog = new UbiInterfaceLog();
+                ubiInterfaceLog.setNotegui(lastUpdated.getNoteguid());
+                ubiInterfaceLog.setTitle(lastUpdated.getTitle());
+                ubiInterfaceLog.setUrlrequest(requestURL);
+                ubiInterfaceLog.setRequestBody(nodeData);
+                ubiInterfaceLog.setRequestResponse(response.getBody());
+                ubiInterfaceLog.setEventtime(System.currentTimeMillis());
+                TerragoDAO.addUbiInterfaceLog(ubiInterfaceLog);
+            }
             if (response.getStatusCode() == HttpStatus.OK) {
                 System.out.println(response.getBody());
                 JsonObject jsonObject = JsonDataParser.getJsonObject(response.getBody());
@@ -212,7 +237,7 @@ public class UbicquiaLightsInterface {
         return result;
 
     }
-    public static String SetDimmingValue(String id,String dimmingValue)
+    public static String SetDimmingValue(LastUpdated lastUpdated,String id,String dimmingValue)
     {
         String result = null;
         try {
@@ -236,6 +261,17 @@ public class UbicquiaLightsInterface {
             System.out.println(idData);
             HttpEntity<String> request = new HttpEntity<String>(idData,headers);
             ResponseEntity<String> response = restTemplate.exchange(requestURL, HttpMethod.POST, request, String.class);
+            if(lastUpdated != null)
+            {
+                UbiInterfaceLog ubiInterfaceLog = new UbiInterfaceLog();
+                ubiInterfaceLog.setNotegui(lastUpdated.getNoteguid());
+                ubiInterfaceLog.setTitle(lastUpdated.getTitle());
+                ubiInterfaceLog.setUrlrequest(requestURL);
+                ubiInterfaceLog.setRequestBody(idData);
+                ubiInterfaceLog.setRequestResponse(response.getBody());
+                ubiInterfaceLog.setEventtime(System.currentTimeMillis());
+                TerragoDAO.addUbiInterfaceLog(ubiInterfaceLog);
+            }
             if (response.getStatusCode() == HttpStatus.OK) {
                 JsonObject jsonObject = JsonDataParser.getJsonObject(response.getBody());
                 JsonObject datajsonObject = jsonObject.getAsJsonObject("data");
@@ -249,7 +285,7 @@ public class UbicquiaLightsInterface {
         }
         return result;
     }
-    public static String SetDevice(String id,boolean status)
+    public static String SetDevice(LastUpdated lastUpdated,String id,boolean status)
     {
         String result = null;
         try {
@@ -274,6 +310,17 @@ public class UbicquiaLightsInterface {
             System.out.println(idData);
             HttpEntity<String> request = new HttpEntity<String>(idData,headers);
             ResponseEntity<String> response = restTemplate.exchange(requestURL, HttpMethod.POST, request, String.class);
+            if(lastUpdated != null)
+            {
+                UbiInterfaceLog ubiInterfaceLog = new UbiInterfaceLog();
+                ubiInterfaceLog.setNotegui(lastUpdated.getNoteguid());
+                ubiInterfaceLog.setTitle(lastUpdated.getTitle());
+                ubiInterfaceLog.setUrlrequest(requestURL);
+                ubiInterfaceLog.setRequestBody(idData);
+                ubiInterfaceLog.setRequestResponse(response.getBody());
+                ubiInterfaceLog.setEventtime(System.currentTimeMillis());
+                TerragoDAO.addUbiInterfaceLog(ubiInterfaceLog);
+            }
             if (response.getStatusCode() == HttpStatus.OK) {
                 System.out.println(response.getBody());
                 /*JsonObject jsonObject = JsonDataParser.getJsonObject(response.getBody());
@@ -288,7 +335,7 @@ public class UbicquiaLightsInterface {
         }
         return result;
     }
-    public static String SetMultipleDevice(List<String> lstID,boolean status)
+    public static String SetMultipleDevice(LastUpdated lastUpdated,List<String> lstID,boolean status)
     {
         String result = null;
         try {
@@ -339,6 +386,17 @@ public class UbicquiaLightsInterface {
             System.out.println(idData);
             HttpEntity<String> request = new HttpEntity<String>(idData,headers);
             ResponseEntity<String> response = restTemplate.exchange(requestURL, HttpMethod.POST, request, String.class);
+            if(lastUpdated != null)
+            {
+                UbiInterfaceLog ubiInterfaceLog = new UbiInterfaceLog();
+                ubiInterfaceLog.setNotegui(lastUpdated.getNoteguid());
+                ubiInterfaceLog.setTitle(lastUpdated.getTitle());
+                ubiInterfaceLog.setUrlrequest(requestURL);
+                ubiInterfaceLog.setRequestBody(idData);
+                ubiInterfaceLog.setRequestResponse(response.getBody());
+                ubiInterfaceLog.setEventtime(System.currentTimeMillis());
+                TerragoDAO.addUbiInterfaceLog(ubiInterfaceLog);
+            }
             if (response.getStatusCode() == HttpStatus.OK) {
                 JsonObject jsonObject = JsonDataParser.getJsonObject(response.getBody());
                 JsonObject datajsonObject = jsonObject.getAsJsonObject("data");
@@ -385,7 +443,7 @@ public class UbicquiaLightsInterface {
 
         return result;
     }
-    public static String CreateNewNode(String dev_eui,String strLatitude,String strLongitude,String poleID)
+    public static String CreateNewNode(LastUpdated lastUpdated,String dev_eui,String strLatitude,String strLongitude,String poleID)
     {
         String result = null;
         try {
@@ -408,6 +466,17 @@ public class UbicquiaLightsInterface {
             System.out.println(idData);
             HttpEntity<String> request = new HttpEntity<String>(idData,headers);
             ResponseEntity<String> response = restTemplate.exchange(requestURL, HttpMethod.POST, request, String.class);
+            if(lastUpdated != null)
+            {
+                UbiInterfaceLog ubiInterfaceLog = new UbiInterfaceLog();
+                ubiInterfaceLog.setNotegui(lastUpdated.getNoteguid());
+                ubiInterfaceLog.setTitle(lastUpdated.getTitle());
+                ubiInterfaceLog.setUrlrequest(requestURL);
+                ubiInterfaceLog.setRequestBody(idData);
+                ubiInterfaceLog.setRequestResponse(response.getBody());
+                ubiInterfaceLog.setEventtime(System.currentTimeMillis());
+                TerragoDAO.addUbiInterfaceLog(ubiInterfaceLog);
+            }
             if (response.getStatusCode() == HttpStatus.OK) {
                 try {
                     JsonObject jsonObject = JsonDataParser.getJsonObject(response.getBody());

@@ -7,6 +7,7 @@ import com.google.gson.JsonParser;
 import com.google.gson.reflect.TypeToken;
 import com.terrago.streetlights.dao.TerragoDAO;
 import com.terrago.streetlights.utils.JsonDataParser;
+import com.terrago.streetlights.utils.LastUpdated;
 import com.terrago.streetlights.utils.PropertiesReader;
 import com.terrago.streetlights.utils.TerragoUpdate;
 import com.terragoedge.edgeserver.EdgeFormData;
@@ -22,6 +23,7 @@ public class DeviceMeteringData implements Runnable{
     private String strID;
     private String nguid;
     private String mode;
+    private LastUpdated lastUpdated;
 
     public String getMode() {
         return mode;
@@ -32,18 +34,19 @@ public class DeviceMeteringData implements Runnable{
     }
 
     Thread t;
-    public DeviceMeteringData(String fixtureID,String strID,String nguid,String mode){
+    public DeviceMeteringData(LastUpdated lastUpdated,String fixtureID, String strID, String nguid, String mode){
         this.fixtureID = fixtureID;
         this.strID = strID;
         t = new Thread(this);
         this.nguid = nguid;
         this.mode = mode;
+        this.lastUpdated = lastUpdated;
         t.start();
     }
     public void run(){
         try {
             Thread.sleep(2000);
-            JsonObject result1 = UbicquiaLightsInterface.getNodes(fixtureID);
+            JsonObject result1 = UbicquiaLightsInterface.getNodes(lastUpdated,fixtureID);
             if(result1 != null) {
                 Gson gson = new Gson();
                 String noteGUID = nguid;//TerragoDAO.getCurrentNoteGUID(fixtureID);
@@ -92,7 +95,7 @@ public class DeviceMeteringData implements Runnable{
                     long ntime = System.currentTimeMillis();
                     long lastMaxUpdatedTime = TerragoDAO.readLastUpdatedTime();
                     if (lastMaxUpdatedTime <= ntime) {
-                        TerragoDAO.writeLastUpdateTime(ntime);
+                        //TerragoDAO.writeLastUpdateTime(ntime);
                     }
                     edgenoteJson.add("formData", serverForms);
                     edgenoteJson.addProperty("createdDateTime", ntime);
@@ -107,7 +110,7 @@ public class DeviceMeteringData implements Runnable{
                 }
                 Thread.sleep(300000);
                 UbicquiaLightsInterface.requestDynamicToken();
-                UbicquiaLightsInterface.SetDevice(strID,false);
+                UbicquiaLightsInterface.SetDevice(lastUpdated,strID,false);
             }
 
         }catch (Exception e)

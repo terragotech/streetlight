@@ -7,6 +7,7 @@ import com.google.gson.JsonParser;
 import com.google.gson.reflect.TypeToken;
 import com.terrago.streetlights.dao.DataBaseConnector;
 import com.terrago.streetlights.dao.TerragoDAO;
+import com.terrago.streetlights.dao.model.UbiTransactionLog;
 import com.terrago.streetlights.utils.LastUpdated;
 import com.terrago.streetlights.utils.PropertiesReader;
 import com.terragoedge.edgeserver.EdgeFormData;
@@ -30,13 +31,14 @@ public class MonitorChanges2 {
         //logger.info("Checking for updates");
         try {
             statement = conn.createStatement();
-            resultSet = statement.executeQuery("select title,noteguid,createddatetime from edgenote where iscurrent=true and isdeleted=false and createddatetime > " + lastProcessedTime );
+            resultSet = statement.executeQuery("select title,noteguid,synctime from edgenote where iscurrent=true and isdeleted=false and synctime > " + lastProcessedTime + " order by synctime ");
             while(resultSet.next())
             {
                 String noteguid = resultSet.getString("noteguid");
                 LastUpdated lastUpdated = new LastUpdated();
                 lastUpdated.setNoteguid(noteguid);
-                lastUpdated.setCreateddatetime(resultSet.getLong("createddatetime"));
+                lastUpdated.setSynctime(resultSet.getLong("synctime"));
+                lastUpdated.setTitle(resultSet.getString("title"));
                 lstString.add(lastUpdated);
             }
 
@@ -103,11 +105,20 @@ public class MonitorChanges2 {
         do {
             ////////////////////////////////////////////////////////
             long lastMaxUpdatedTime = TerragoDAO.readLastUpdatedTime2();
+            if(lastMaxUpdatedTime == 0)
+            {
+                lastMaxUpdatedTime = System.currentTimeMillis() - 300000;
+            }
             System.out.println("Looking for Changes ...");
             List<LastUpdated> lstUpdated = getUpdatedNotes(Long.toString(lastMaxUpdatedTime));
             for (LastUpdated lstCur : lstUpdated) {
+                UbiTransactionLog ubiTransactionLog = new UbiTransactionLog();
+                ubiTransactionLog.setNotegui(lstCur.getNoteguid());
+                ubiTransactionLog.setTitle(lstCur.getTitle());
+                ubiTransactionLog.setSynctime(lstCur.getSynctime());
+
                 System.out.println("Processing Changes ...");
-                lastMaxUpdatedTime = Math.max(lastMaxUpdatedTime, lstCur.getCreateddatetime());
+                lastMaxUpdatedTime = Math.max(lastMaxUpdatedTime, lstCur.getSynctime());
                 nnguid = lstCur.getNoteguid();
                 String notesJson = RESTService.getNoteDetails(nnguid);
                 Type listType = new TypeToken<ArrayList<EdgeNote>>() {
@@ -122,63 +133,80 @@ public class MonitorChanges2 {
                 String ignoreUser = PropertiesReader.getProperties().getProperty("ignoreuser");
                 boolean ispresent = false;
                 boolean isDCPresent = false;
+                boolean isInvalidUser = false;
                 for (int i = 0; i < size; i++) {
                     JsonObject serverEdgeForm = serverForms.get(i).getAsJsonObject();
                     String formDefJson = serverEdgeForm.get("formDef").getAsString();
                     String formTemplate = serverEdgeForm.get("formTemplateGuid").getAsString();
                     List<EdgeFormData> formComponents = null;
-                    if (formTemplate.equals(PropertiesReader.getProperties().getProperty("formtemplatetoprocess"))) {
-                        if(restEdgeNote.getCreatedBy().equals(ignoreUser))
-                        {
-                            System.out.println("Ignoring user " + ignoreUser);
-                            continue;
-                        }
-                        try {
-                            formComponents = gson.fromJson(formDefJson, new TypeToken<List<EdgeFormData>>() {
-                            }.getType());
-                        } catch (Exception e) {
-                            e.printStackTrace();
-                            continue;
-                        }
-                        String dcStatus = getDevicControlStatus(formComponents);
-                        String strSingleDC = getComponentValue(formComponents,"ubicquia_sdc");
-                        String strMDC = getComponentValue(formComponents,"ubicquia_mdc");
-                        //if (dcStatus != null) {
-                        if (strSingleDC == null)
-                        {
-                            strSingleDC = "";
-                        }
-                        if (strMDC == null)
-                        {
-                            strMDC = "";
-                        }
-                        if (strSingleDC.equals("") && strMDC.equals(""))
-                        {
-                            DoLocationUpdate doLocationUpdate = new DoLocationUpdate();
-                            doLocationUpdate.setNoteguid(lstCur.getNoteguid());
-                            doLocationUpdate.processLocationChange();
-                        }
-                        else if (strSingleDC.equals("No") && strMDC.equals("No")) {
-                                DoLocationUpdate doLocationUpdate = new DoLocationUpdate();
-                                doLocationUpdate.setNoteguid(lstCur.getNoteguid());
-                                doLocationUpdate.processLocationChange();
-                            }
-                        //}
 
+                    if (formTemplate.equals(PropertiesReader.getProperties().getProperty("formtemplatetoprocess"))) {
+                        ispresent = true;
+                    }
+                    if(restEdgeNote.getCreatedBy().equals(ignoreUser))
+                    {
+                        isInvalidUser = true;
                     }
                 }
+                if(ispresent)
+                {
+                    if(isInvalidUser)
+                    {
+                        ubiTransactionLog.setAction("Cannot process this user");
+                    }
+                    else
+                    {
+                        for (int i = 0; i < size; i++) {
+                            JsonObject serverEdgeForm = serverForms.get(i).getAsJsonObject();
+                            String formDefJson = serverEdgeForm.get("formDef").getAsString();
+                            String formTemplate = serverEdgeForm.get("formTemplateGuid").getAsString();
+                            List<EdgeFormData> formComponents = null;
+
+                            if (formTemplate.equals(PropertiesReader.getProperties().getProperty("formtemplatetoprocess"))) {
+                                formComponents = gson.fromJson(formDefJson, new TypeToken<List<EdgeFormData>>() {
+                                }.getType());
+                                String dcStatus = getDevicControlStatus(formComponents);
+                                String strSingleDC = getComponentValue(formComponents,"ubicquia_sdc");
+                                String strMDC = getComponentValue(formComponents,"ubicquia_mdc");
+
+                                if (strSingleDC == null)
+                                {
+                                    strSingleDC = "";
+                                }
+                                if (strMDC == null)
+                                {
+                                    strMDC = "";
+                                }
+
+                                if (!strSingleDC.equals("Yes") && !strMDC.equals("Yes"))
+                                {
+                                    DoLocationUpdate doLocationUpdate = new DoLocationUpdate(lstCur);
+                                    doLocationUpdate.setNoteguid(lstCur.getNoteguid());
+                                    doLocationUpdate.processLocationChange(ubiTransactionLog);
+                                }
+                            }
+                        }
+                    }
+                }
+                else
+                {
+                    ubiTransactionLog.setAction("Not valid formtemplate");
+                }
+                ubiTransactionLog.setEventtime(System.currentTimeMillis());
+                TerragoDAO.addUbiTransactionLog2(ubiTransactionLog);
             }
+
             if (lstUpdated.size() > 0) {
-                long lntime = TerragoDAO.readLastUpdatedTime2();
+                /*long lntime = TerragoDAO.readLastUpdatedTime2();
                 if(lntime >= lastMaxUpdatedTime)
                 {
                     lastMaxUpdatedTime = lntime;
                 }
-                TerragoDAO.writeLastUpdateTime2(lastMaxUpdatedTime);
+                TerragoDAO.writeLastUpdateTime2(lastMaxUpdatedTime);*/
             }
             ////////////////////////////////////////////////////////
             try{
-                Thread.sleep(8000);
+                Thread.sleep(1000);
             }
             catch (InterruptedException e)
             {
