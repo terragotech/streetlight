@@ -12,6 +12,7 @@ import com.slvinterface.exception.CreateGeoZoneException;
 import com.slvinterface.exception.DeviceCreationException;
 import com.slvinterface.exception.DeviceSearchException;
 import com.slvinterface.exception.GeoZoneSearchException;
+import com.slvinterface.json.Edge2SLVData;
 import com.slvinterface.utils.PropertiesReader;
 import com.slvinterface.utils.SLVInterfaceUtilsModel;
 import org.apache.commons.lang3.StringUtils;
@@ -232,10 +233,10 @@ public class SLVInterfaceUtils {
 
 
 
-    public void checkDeviceDetails(SLVInterfaceUtilsModel slvInterfaceUtilsModel)throws DeviceSearchException,GeoZoneSearchException,CreateGeoZoneException,DeviceCreationException{
+    public boolean checkDeviceDetails(SLVInterfaceUtilsModel slvInterfaceUtilsModel)throws DeviceSearchException,GeoZoneSearchException,CreateGeoZoneException,DeviceCreationException{
        boolean isDevicePresent =  isDevicePresent(getSLVTransVal(slvInterfaceUtilsModel),slvInterfaceUtilsModel.getIdOnController());
         if(isDevicePresent){
-            return;
+            return false;
         }
         int geozoneId =  getGeoZoneId(slvInterfaceUtilsModel.getCurrentGeoZoneName(),getSLVTransVal(slvInterfaceUtilsModel));
         if(geozoneId == -1){
@@ -248,6 +249,7 @@ public class SLVInterfaceUtils {
         }else{
             slvInterfaceUtilsModel.setGeoZoneId(geozoneId);
             createDevice(slvInterfaceUtilsModel);
+            return true;
         }
     }
 

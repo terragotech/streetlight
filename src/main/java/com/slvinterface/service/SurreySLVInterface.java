@@ -146,7 +146,10 @@ public class SurreySLVInterface extends  SLVInterfaceService {
      */
     private void slvSync(SLVSyncTable slvSyncTable,Edge2SLVData previousEdge2SLVData,boolean isMacPresent)throws ReplaceOLCFailedException, DeviceSearchException,GeoZoneSearchException,CreateGeoZoneException,DeviceCreationException {
         SLVInterfaceUtilsModel slvInterfaceUtilsModel = getSLVInterfaceUtilsModel(previousEdge2SLVData,slvSyncTable);
-        slvInterfaceUtils.checkDeviceDetails(slvInterfaceUtilsModel);
+        boolean isDeviceCreate = slvInterfaceUtils.checkDeviceDetails(slvInterfaceUtilsModel);
+        if(isDeviceCreate){
+            loadDefaultVal(slvSyncTable,previousEdge2SLVData);
+        }
         switch (previousEdge2SLVData.getPriority().getType()){
             case REMOVE:
                 logger.info("Remove Option is Selected.");
@@ -215,7 +218,7 @@ public class SurreySLVInterface extends  SLVInterfaceService {
 
     }
 
-    //Customer asset ID,Customer prefix,Feature ID,Road name,Location description
+
     private void setDeviceVal(SLVSyncTable slvSyncTable,Edge2SLVData previousEdge2SLVData){
         SLVTransactionLogs slvTransactionLogs = getSLVTransVal(slvSyncTable);
         List<Object> paramsList = new ArrayList<>();
@@ -223,18 +226,16 @@ public class SurreySLVInterface extends  SLVInterfaceService {
         addStreetLightData("installStatus","Installed",paramsList);
         addStreetLightData("MacAddress",previousEdge2SLVData.getMacAddress(),paramsList);
         addStreetLightData("install.date",previousEdge2SLVData.getInstallDate(),paramsList);
+        setDeviceValues(paramsList,slvTransactionLogs,null,previousEdge2SLVData);
+    }
 
-        List<PromotedValue> promotedValueList = new ArrayList<>();
-        PromotedValue promotedValue = new PromotedValue();
-        promotedValueList.add(promotedValue);
-        processFixtureQRScan(previousEdge2SLVData.getFixtureQRScan(),paramsList,previousEdge2SLVData,promotedValue);
+    //Customer asset ID,Customer prefix,Feature ID,Road name,Location description
+    private void loadDefaultVal(SLVSyncTable slvSyncTable,Edge2SLVData previousEdge2SLVData){
+        SLVTransactionLogs slvTransactionLogs = getSLVTransVal(slvSyncTable);
+        List<Object> paramsList = new ArrayList<>();
+        loadVal(paramsList,previousEdge2SLVData);
 
-        PromotedFormDataEntity promotedFormDataEntity = new PromotedFormDataEntity();
-        promotedFormDataEntity.setLastupdateddatetime(System.currentTimeMillis());
-        promotedFormDataEntity.setPromotedvalue(gson.toJson(promotedValueList));
-        promotedFormDataEntity.setNotebookguid(previousEdge2SLVData.getNotebookGuid());
-        promotedFormDataEntity.setParentnoteguid(previousEdge2SLVData.getParentNoteId());
-
+        processFixtureQRScan(previousEdge2SLVData.getFixtureQRScan(),paramsList,previousEdge2SLVData,null);
 
 
         String slvCalender = previousEdge2SLVData.getCalendar();
@@ -260,7 +261,7 @@ public class SurreySLVInterface extends  SLVInterfaceService {
             e.printStackTrace();
         }
 
-        setDeviceValues(paramsList,slvTransactionLogs,promotedFormDataEntity,previousEdge2SLVData);
+        setDeviceValues(paramsList,slvTransactionLogs,null,previousEdge2SLVData);
     }
 
     private PromotedComponent getPromotedComponent(List<FormId> formIdList,String slvKey,String value){
@@ -280,85 +281,13 @@ public class SurreySLVInterface extends  SLVInterfaceService {
 
 
     private void processFixtureQRScan(String fixtureQRScan,List<Object> paramsList,Edge2SLVData previousEdge2SLVData,PromotedValue promotedValue){
-        String[] fixtureQRScanVal = fixtureQRScan.split(",");
-
-        String promotedConfigJson = PropertiesReader.getProperties().getProperty("edge.promoted.config");
-        PromotedConfig promotedConfig = gson.fromJson(promotedConfigJson,PromotedConfig.class);
-        List<FormId> formIdList = promotedConfig.getFormIds();
-        promotedValue.setFormTemplateGuid(promotedConfig.getFormTemplateGuid());
-
-        List<PromotedComponent> promotedComponentList =  promotedValue.getPromotedData();
-
-        if(fixtureQRScanVal.length >= 14){
-            if(fixtureQRScanVal[0].trim() != null){
-                addStreetLightData("lampType",fixtureQRScanVal[0].trim(),paramsList);
-                PromotedComponent promotedComponent =  getPromotedComponent(formIdList,"lampType",fixtureQRScanVal[0].trim());
-                promotedComponentList.add(promotedComponent);
-            }
-
-
-            if(fixtureQRScanVal[1].trim() != null){
-                addStreetLightData("power",fixtureQRScanVal[1].replace("W","").trim(),paramsList);
-                PromotedComponent promotedComponent =  getPromotedComponent(formIdList,"wattage",fixtureQRScanVal[1].trim());
-                promotedComponentList.add(promotedComponent);
-            }
-
-            if(fixtureQRScanVal[2].trim() != null){
-                addStreetLightData("luminaire.brand",fixtureQRScanVal[2].trim(),paramsList);
-                PromotedComponent promotedComponent =  getPromotedComponent(formIdList,"luminaireManufacturer",fixtureQRScanVal[2].trim());
-                promotedComponentList.add(promotedComponent);
-            }
-
-            if(fixtureQRScanVal[3].trim() != null){
-                addStreetLightData("luminaire.model",fixtureQRScanVal[3].trim(),paramsList);
-                PromotedComponent promotedComponent =  getPromotedComponent(formIdList,"luminaireModel",fixtureQRScanVal[3].trim());
-                promotedComponentList.add(promotedComponent);
-            }
-
-            PromotedComponent promotedComponent =  getPromotedComponent(formIdList,"luminairePartNumber",fixtureQRScanVal[4].trim());
-            promotedComponentList.add(promotedComponent);
-
-            PromotedComponent luminaireLumenOutp =  getPromotedComponent(formIdList,"luminaireLumenOutp",fixtureQRScanVal[6].trim());
-            promotedComponentList.add(luminaireLumenOutp);
-
-            PromotedComponent luminaireCCT =  getPromotedComponent(formIdList,"luminaireCCT",fixtureQRScanVal[7].trim());
-            promotedComponentList.add(luminaireCCT);
-
-
-            PromotedComponent luminaireSN =  getPromotedComponent(formIdList,"luminaireSN",fixtureQRScanVal[8].trim());
-            promotedComponentList.add(luminaireSN);
-
-            PromotedComponent luminaireMfgDate =  getPromotedComponent(formIdList,"luminaireMfgDate",fixtureQRScanVal[9].trim());
-            promotedComponentList.add(luminaireMfgDate);
-
-            PromotedComponent driverManufacturer =  getPromotedComponent(formIdList,"driverManufacturer",fixtureQRScanVal[12].trim());
-            promotedComponentList.add(driverManufacturer);
-
-            PromotedComponent driverName =  getPromotedComponent(formIdList,"driverName",fixtureQRScanVal[13].trim());
-            promotedComponentList.add(driverName);
-        }
-
-
-
-        addData("client.name",previousEdge2SLVData.getCentralAssetId(),paramsList);
-        addData("device.premise",previousEdge2SLVData.getVisualRef(),paramsList);
-        addData("address",previousEdge2SLVData.getStreetName(),paramsList);
-        addData("location.zipcode",previousEdge2SLVData.getAssetPostalCode(),paramsList);
-        addData("client.number",previousEdge2SLVData.getAssetOwner(),paramsList);
-        addData("location.streetdescription",previousEdge2SLVData.getAssetLocationDetails(),paramsList);
-        addData("ElexonChargeCode2",previousEdge2SLVData.getControllerChargeCode(),paramsList);
-        addData("network.type",previousEdge2SLVData.getServiceOwner(),paramsList);
-
-
-        addData("SubMeterID",previousEdge2SLVData.getNetworkOwner(),paramsList);
-        addData("pole.height",previousEdge2SLVData.getHeightInMetres(),paramsList);
-        addData("pole.installdate",previousEdge2SLVData.getCommissionDate(),paramsList);
-        addData("luminaire.orientation",previousEdge2SLVData.getMounting(),paramsList);
-        addData("fixing.type",previousEdge2SLVData.getBracketType(),paramsList);
-        addData("pole.material",previousEdge2SLVData.getColumnMaterial(),paramsList);
-        addData("pole.shape",previousEdge2SLVData.getSpecialDetail(),paramsList);
+        addData("client.name",previousEdge2SLVData.getClientName(),paramsList);
+        addData("device.premise",previousEdge2SLVData.getDevicePremise(),paramsList);
+        addData("address",previousEdge2SLVData.getAddress(),paramsList);
+        addData("client.number",previousEdge2SLVData.getClientNumber(),paramsList);
         addData("location.mapnumber",previousEdge2SLVData.getRoadUSRN(),paramsList);
-        //addStreetLightData("ElexonChargeCode",fixtureQRScanVal[1],paramsList);
+        addData("power",previousEdge2SLVData.getPower(),paramsList);
+
 
     }
 

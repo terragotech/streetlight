@@ -478,26 +478,6 @@ public abstract class SLVInterfaceService {
             JsonObject replaceOlcResponse = (JsonObject) jsonParser.parse(responseString);
             errorCode = replaceOlcResponse.get("errorCode").getAsInt();
 
-            PromotedFormDataEntity dbPromotedFormDataEntity = queryExecutor.getPromotedFormDataEntity(previousEdge2SLVData.getParentNoteId());
-            if(dbPromotedFormDataEntity != null){
-                dbPromotedFormDataEntity.setPromotedvalue(promotedFormDataEntity.getPromotedvalue());
-                dbPromotedFormDataEntity.setLastupdateddatetime(System.currentTimeMillis());
-                if(promotedFormDataEntity.getNotebookguid() != null){
-                    dbPromotedFormDataEntity.setNotebookguid(promotedFormDataEntity.getNotebookguid());
-                }
-
-                queryExecutor.updatePromotedFormDataEntity(dbPromotedFormDataEntity);
-            }else{
-                long maxId = queryExecutor.getMaxId();
-                if(maxId != -1){
-                    maxId += 1;
-                }else {
-                    maxId = 1;
-                }
-                promotedFormDataEntity.setPromotedId(maxId);
-                queryExecutor.savePromotedFormDataEntity(promotedFormDataEntity);
-            }
-
         } catch (Exception e) {
             setResponseDetails(slvTransactionLogs, "Error in setDeviceValues:" + e.getMessage());
             logger.error("Error in setDeviceValues", e);
@@ -634,11 +614,56 @@ public abstract class SLVInterfaceService {
 
             int pos = configList.indexOf(temp);
 
+            //,,DEVICE_PREMISE,ADDRESS,CLIENT_NUMBER,RoadUSRN,WATTAGE,
+            //    MAC,FIXTURE_QR,EXISTING_MAC,DATE;
             if(pos != -1){
                 Config config =  configList.get(pos);
                 List<Id> idList = config.getIds();
                 for(Id id : idList){
                     switch (id.getType()){
+
+                        case WATTAGE:
+                            try{
+                                String wattage = valueById(formValuesList,id.getId()).toUpperCase();
+                                logger.info("Wattage:"+wattage);
+                                edge2SLVData.setPower(wattage);
+                            }catch (NoValueException e){
+                                logger.error("Error in processFormData",e);
+                            }
+                            break;
+
+                        case DEVICE_PREMISE:
+                            try{
+                                String devicePremise = valueById(formValuesList,id.getId()).toUpperCase();
+                                logger.info("DEVICE_PREMISE:"+devicePremise);
+                                edge2SLVData.setDevicePremise(devicePremise);
+                            }catch (NoValueException e){
+                                logger.error("Error in processFormData",e);
+                            }
+                            break;
+
+                        case ADDRESS:
+                            try{
+                                String address = valueById(formValuesList,id.getId()).toUpperCase();
+                                logger.info("Address:"+address);
+                                edge2SLVData.setAddress(address);
+
+                            }catch (NoValueException e){
+                                logger.error("Error in processFormData",e);
+                            }
+                            break;
+                        case NAME:
+                            try{
+                                String name = valueById(formValuesList,id.getId()).toUpperCase();
+                                logger.info("Name:"+name);
+                                edge2SLVData.setNoteTitle(name);
+                                edge2SLVData.setTitle(name);
+                            }catch (NoValueException e){
+                                logger.error("Error in processFormData",e);
+                            }
+
+                            break;
+
                         case MAC:
                             try{
                                 String macAddress = valueById(formValuesList,id.getId()).toUpperCase();
@@ -688,17 +713,26 @@ public abstract class SLVInterfaceService {
                             try{
                                 String geoZone = valueById(formValuesList,id.getId());
                                 logger.info("Form GeoZone:"+geoZone);
-                                geoZone =  geoZone.replace("Urban Control/","");
-                                geoZone =  geoZone.replace("UKPN/","surr19e/");
-                                geoZone =  geoZone.replace("SSE/","surr20e/");
-                               //String[] geoZoneArray = geoZone.split("/");
-                               // geoZone = geoZoneArray[geoZoneArray.length - 1];
-                               // logger.info("Form GeoZone:"+geoZone);
+                                //geoZone =  geoZone.replace("Urban Control/Amey/Norfolk PFI/Norwich Trial/","");
+                               String[] geoZoneArray = geoZone.split("/");
+                                geoZone = geoZoneArray[geoZoneArray.length - 1];
+                                logger.info("Form GeoZone:"+geoZone);
                                 edge2SLVData.setCurrentGeoZone(geoZone);
                             }catch (NoValueException e){
                                 logger.error("Error in processFormData",e);
                             }
                             break;
+                        case CLIENT_NAME:
+                            try{
+                                String clientName = valueById(formValuesList,id.getId());
+                                logger.info("CLient name:"+clientName);
+                                edge2SLVData.setClientName(clientName);
+                            }catch (NoValueException e){
+                                logger.error("Error in processFormData",e);
+                            }
+                            break;
+
+
                         case CLIENT_NUMBER:
                             try{
                                 String clientNumber = valueById(formValuesList,id.getId());
@@ -708,43 +742,7 @@ public abstract class SLVInterfaceService {
                                 logger.error("Error in processFormData",e);
                             }
                             break;
-                        case CENTRAL_ASSET_ID:
-                            try{
-                                String centralAssetId = valueById(formValuesList,id.getId());
-                                logger.info("Central Asset Id:"+centralAssetId);
-                                edge2SLVData.setCentralAssetId(centralAssetId);
-                            }catch (NoValueException e){
-                                logger.error("Error in processFormData",e);
-                            }
-                            break;
-                        case FEATURE_ID:
-                            try{
-                                String featureId = valueById(formValuesList,id.getId());
-                                logger.info("Feature Id:"+featureId);
-                                edge2SLVData.setFeatureId(featureId);
-                            }catch (NoValueException e){
-                                logger.error("Error in processFormData",e);
-                            }
-                            break;
 
-                        case SITE_NAME:
-                            try{
-                                String siteName = valueById(formValuesList,id.getId());
-                                logger.info("Site name:"+siteName);
-                                edge2SLVData.setSiteName(siteName);
-                            }catch (NoValueException e){
-                                logger.error("Error in processFormData",e);
-                            }
-                            break;
-                        case FEATURE_LOCATION:
-                            try{
-                                String featureLocation = valueById(formValuesList,id.getId());
-                                logger.info("Feature Location:"+featureLocation);
-                                edge2SLVData.setFeatureLocation(featureLocation);
-                            }catch (NoValueException e){
-                                logger.error("Error in processFormData",e);
-                            }
-                            break;
 
                         case FIXTURE_QR:
                             try{
@@ -756,35 +754,7 @@ public abstract class SLVInterfaceService {
                             }
                             break;
 
-                        case CentralAssetID:
-                            try{
-                                String centralAssetID = valueById(formValuesList,id.getId());
-                                logger.info("centralAssetID:"+centralAssetID);
-                                edge2SLVData.setCentralAssetId(centralAssetID);
-                            }catch (NoValueException e){
-                                logger.error("Error in processFormData",e);
-                            }
-                            break;
 
-                        case VisualRef:
-                            try{
-                                String visualRef = valueById(formValuesList,id.getId());
-                                logger.info("VisualRef:"+visualRef);
-                                edge2SLVData.setVisualRef(visualRef);
-                            }catch (NoValueException e){
-                                logger.error("Error in processFormData",e);
-                            }
-                            break;
-
-                        case StreetName:
-                            try{
-                                String streetName = valueById(formValuesList,id.getId());
-                                logger.info("streetName:"+streetName);
-                                edge2SLVData.setStreetName(streetName);
-                            }catch (NoValueException e){
-                                logger.error("Error in processFormData",e);
-                            }
-                            break;
 
                         case CALENDAR:
                             try{
@@ -796,35 +766,6 @@ public abstract class SLVInterfaceService {
                             }
                             break;
 
-                        case AssetOwner:
-                            try{
-                                String assetOwner = valueById(formValuesList,id.getId());
-                                logger.info("assetOwner:"+assetOwner);
-                                edge2SLVData.setAssetOwner(assetOwner);
-                            }catch (NoValueException e){
-                                logger.error("Error in processFormData",e);
-                            }
-                            break;
-
-                        case AssetLocationDetails:
-                            try{
-                                String assetLocationDetails = valueById(formValuesList,id.getId());
-                                logger.info("AssetLocationDetails:"+assetLocationDetails);
-                                edge2SLVData.setAssetLocationDetails(assetLocationDetails);
-                            }catch (NoValueException e){
-                                logger.error("Error in processFormData",e);
-                            }
-                            break;
-
-                        case AssetPostCode:
-                            try{
-                                String assetPostCode = valueById(formValuesList,id.getId());
-                                logger.info("assetPostCode:"+assetPostCode);
-                                edge2SLVData.setAssetPostalCode(assetPostCode);
-                            }catch (NoValueException e){
-                                logger.error("Error in processFormData",e);
-                            }
-                            break;
 
                         case RoadUSRN:
                             try{
@@ -836,148 +777,7 @@ public abstract class SLVInterfaceService {
                             }
                             break;
 
-                        case Controllerchargecode:
-                            try{
-                                String controllerChargeCode = valueById(formValuesList,id.getId());
-                                logger.info("controllerChargeCode:"+controllerChargeCode);
-                                edge2SLVData.setControllerChargeCode(controllerChargeCode);
-                            }catch (NoValueException e){
-                                logger.error("Error in processFormData",e);
-                            }
-                            break;
 
-                        case CommissionDate:
-                            try{
-                                String commissionDate = valueById(formValuesList,id.getId());
-                                logger.info("CommissionDate:"+commissionDate);
-                                edge2SLVData.setCommissionDate(commissionDate);
-                            }catch (NoValueException e){
-                                logger.error("Error in processFormData",e);
-                            }
-                            break;
-
-                        case AssetType:
-                            try{
-                                String assetType = valueById(formValuesList,id.getId());
-                                logger.info("assetType:"+assetType);
-                                edge2SLVData.setAssetType(assetType);
-                            }catch (NoValueException e){
-                                logger.error("Error in processFormData",e);
-                            }
-                            break;
-
-
-                        case ColumnMaterial:
-                            try{
-                                String columnMaterial = valueById(formValuesList,id.getId());
-                                logger.info("ColumnMaterial:"+columnMaterial);
-                                edge2SLVData.setColumnMaterial(columnMaterial);
-                            }catch (NoValueException e){
-                                logger.error("Error in processFormData",e);
-                            }
-                            break;
-
-
-                        case BracketType:
-                            try{
-                                String bracketType = valueById(formValuesList,id.getId());
-                                logger.info("BracketType:"+bracketType);
-                                edge2SLVData.setBracketType(bracketType);
-                            }catch (NoValueException e){
-                                logger.error("Error in processFormData",e);
-                            }
-                            break;
-
-
-                        case LanternManufacturer:
-                            try{
-                                String lanternManufacturer = valueById(formValuesList,id.getId());
-                                logger.info("LanternManufacturer:"+lanternManufacturer);
-                                edge2SLVData.setLanternManufacturer(lanternManufacturer);
-                            }catch (NoValueException e){
-                                logger.error("Error in processFormData",e);
-                            }
-                            break;
-
-                        case ServiceOwner:
-                            try{
-                                String serviceOwner = valueById(formValuesList,id.getId());
-                                logger.info("ServiceOwner:"+serviceOwner);
-                                edge2SLVData.setServiceOwner(serviceOwner);
-                            }catch (NoValueException e){
-                                logger.error("Error in processFormData",e);
-                            }
-                            break;
-
-                        case NetworkOwner:
-                            try{
-                                String networkOwner = valueById(formValuesList,id.getId());
-                                logger.info("NetworkOwner:"+networkOwner);
-                                edge2SLVData.setNetworkOwner(networkOwner);
-                            }catch (NoValueException e){
-                                logger.error("Error in processFormData",e);
-                            }
-                            break;
-
-                        case LanternType:
-                            try{
-                                String lanternType = valueById(formValuesList,id.getId());
-                                logger.info("LanternType:"+lanternType);
-                                edge2SLVData.setLanternType(lanternType);
-                            }catch (NoValueException e){
-                                logger.error("Error in processFormData",e);
-                            }
-                            break;
-
-                        case HeightInMetres:
-                            try{
-                                String heightInMetres = valueById(formValuesList,id.getId());
-                                logger.info("HeightInMetres:"+heightInMetres);
-                                edge2SLVData.setHeightInMetres(heightInMetres);
-                            }catch (NoValueException e){
-                                logger.error("Error in processFormData",e);
-                            }
-                            break;
-
-                        case BracketLength:
-                            try{
-                                String bracketLength = valueById(formValuesList,id.getId());
-                                logger.info("BracketLength:"+bracketLength);
-                                edge2SLVData.setBracketLength(bracketLength);
-                            }catch (NoValueException e){
-                                logger.error("Error in processFormData",e);
-                            }
-                            break;
-
-                        case Mounting:
-                            try{
-                                String mounting = valueById(formValuesList,id.getId());
-                                logger.info("Mounting:"+mounting);
-                                edge2SLVData.setMounting(mounting);
-                            }catch (NoValueException e){
-                                logger.error("Error in processFormData",e);
-                            }
-                            break;
-
-                        case SpecialDetail:
-                            try{
-                                String specialDetail = valueById(formValuesList,id.getId());
-                                logger.info("SpecialDetail:"+specialDetail);
-                                edge2SLVData.setSpecialDetail(specialDetail);
-                            }catch (NoValueException e){
-                                logger.error("Error in processFormData",e);
-                            }
-                            break;
-
-                        case ColumnFixing:
-                            try{
-                                String columnFixing = valueById(formValuesList,id.getId());
-                                logger.info("ColumnFixing:"+columnFixing);
-                                edge2SLVData.setColumnFixing(columnFixing);
-                            }catch (NoValueException e){
-                                logger.error("Error in processFormData",e);
-                            }
-                            break;
                     }
                 }
 
