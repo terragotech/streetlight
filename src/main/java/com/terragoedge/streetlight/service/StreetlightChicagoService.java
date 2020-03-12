@@ -51,7 +51,7 @@ public class StreetlightChicagoService extends AbstractProcessor {
                 logger.info("Current Note Guid:" + line);
                 LoggingModel loggingModelTemp = new LoggingModel();
                 loggingModelTemp.setProcessedNoteId(line);
-
+                SlvRestTemplate.INSTANCE.refreshToken();
                 int pos = loggingModelList.indexOf(loggingModelTemp);
                 if (pos != -1) {
                     loggingModelTemp = loggingModelList.get(pos);
@@ -60,7 +60,7 @@ public class StreetlightChicagoService extends AbstractProcessor {
                         streetlightDao.deleteProcessedNotes(loggingModelTemp.getProcessedNoteId());
                         String utilLocId = getUtilLocationId(loggingModelTemp.getErrorDetails());
                        // installationMaintenanceProcessor.reSync(line, accessToken, true, utilLocId,false);
-                        SlvRestTemplate.INSTANCE.refreshToken();
+
                         doProcess(line,accessToken,true);
                     }
                 } else {
