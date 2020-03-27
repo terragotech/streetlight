@@ -45,8 +45,18 @@ public class EdgeNote {
 	private String altitudeAccuracy = null;
 	private List<Dictionary> dictionary = new ArrayList<Dictionary>();
 	private Long syncTime=null;
+	private String revisionfromNoteid;
 
-private EdgeNotebook edgeNotebook = null;
+
+	public String getRevisionfromNoteid() {
+		return revisionfromNoteid;
+	}
+
+	public void setRevisionfromNoteid(String revisionfromNoteid) {
+		this.revisionfromNoteid = revisionfromNoteid;
+	}
+
+	private EdgeNotebook edgeNotebook = null;
 	public EdgeNote() {
 
 	}
@@ -362,6 +372,7 @@ private EdgeNotebook edgeNotebook = null;
 				", altitudeAccuracy='" + altitudeAccuracy + '\'' +
 				", dictionary=" + dictionary +
 				", syncTime=" + syncTime +
+				", revisionfromNoteid='" + revisionfromNoteid + '\'' +
 				", edgeNotebook=" + edgeNotebook +
 				'}';
 	}

@@ -29,12 +29,14 @@ public class StreetlightChicagoService extends AbstractProcessor {
 
     final Logger logger = Logger.getLogger(StreetlightChicagoService.class);
     InstallationMaintenanceProcessor installationMaintenanceProcessor;
+    private WorkflowConfig workflowConfig;
 
     public StreetlightChicagoService() {
         super();
        // loadContextList();
         installationMaintenanceProcessor = new InstallationMaintenanceProcessor(contextListHashMap,cslpDateHashMap,macHashMap);
         System.out.println("Object Created.");
+        workflowConfig = getWorkflowConfig();
     }
 
 
@@ -241,7 +243,7 @@ public class StreetlightChicagoService extends AbstractProcessor {
                             // Check whether the current note
                             isBulkImport(edgeNote,accessToken,installMaintenanceLogModel);
 
-                            installationMaintenanceProcessor.processNewAction(edgeNote, installMaintenanceLogModel, false, utilLocId, slvInterfaceLogEntity);
+                            installationMaintenanceProcessor.processNewAction(edgeNote, installMaintenanceLogModel, false, utilLocId, slvInterfaceLogEntity,workflowConfig);
                             // updateSlvStatusToEdge(installMaintenanceLogModel, edgeNote);
                             LoggingModel loggingModel = installMaintenanceLogModel;
                             streetlightDao.insertProcessedNotes(loggingModel, installMaintenanceLogModel);
@@ -660,6 +662,16 @@ public class StreetlightChicagoService extends AbstractProcessor {
     }
 
 
+    private WorkflowConfig getWorkflowConfig(){
+        try {
+            File file = new File("./resources/workflow.json");
+            WorkflowConfig workflowConfig = gson.fromJson(new FileReader(file), WorkflowConfig.class);
+            return workflowConfig;
+        }catch (Exception e){
+            logger.error("Error while processing workflow config: ",e);
+        }
+        return null;
+    }
 
     // http://192.168.1.9:8080/edgeServer/oauth/token?grant_type=password&username=admin&password=admin&client_id=edgerestapp
 }
