@@ -280,6 +280,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
                 int id = dataDiffValueHolder.getId();
                 String selectedAction = getDataDiffValue(dataDiffValueHolders,workflowConfig.getAction());
                 selectedAction = selectedAction.equals("") ? getFormValue(edgeFormDatas,workflowConfig.getAction()) : selectedAction;
+                selectedAction = selectedAction.equals("") ? "New" : selectedAction;
                 //Remove
                 if(workflowConfig.getRemoveAction().contains(id)){
                     addSelectedWorkflow(selectedWorkflows,selectedAction,"Remove","Remove","Remove",value,id);
@@ -313,6 +314,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
                 }
                 if(replaceAction.getRNFIds().contains(id)){
                     String selectedSubAction = getActionValue(dataDiffValueHolders,edgeFormDatas,replaceAction.getRepairAndOutages());
+                    selectedSubAction = selectedSubAction.equals("") ? "Replace Node and Fixture" : selectedSubAction;
                     addSelectedWorkflow(selectedWorkflows,selectedAction,selectedSubAction,"Repairs & Outages","Replace Node and Fixture",value,id);
                 }
                 if(replaceAction.getRNIds().contains(id)){
