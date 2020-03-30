@@ -278,46 +278,48 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
                 String value = getValidValue(dataDiffValueHolder.getValue());
                 int id = dataDiffValueHolder.getId();
                 String selectedAction = getDataDiffValue(dataDiffValueHolders,workflowConfig.getAction());
+                selectedAction = selectedAction.equals("") ? getFormValue(edgeFormDatas,workflowConfig.getAction()) : selectedAction;
                 //Remove
                 if(workflowConfig.getRemoveAction().contains(id)){
-                    addSelectedWorkflow(selectedWorkflows,selectedAction,"","Remove","",value,id);
+                    addSelectedWorkflow(selectedWorkflows,selectedAction,"Remove","Remove","Remove",value,id);
                 }
                 //New
                 if(newAction.getCompleteIds().contains(id)){
-                    String selectedSubAction = getDataDiffValue(dataDiffValueHolders,newAction.getInstallStatus());
-                    addSelectedWorkflow(selectedWorkflows,selectedAction,selectedSubAction,"New","Complete",value,id);
+                    boolean isComplete = iscompleteOrPhotocell(dataDiffValueHolders,edgeFormDatas);
+                    String selectedSubAction = getActionValue(dataDiffValueHolders,edgeFormDatas,newAction.getInstallStatus());
+                    if(isComplete) {
+                        addSelectedWorkflow(selectedWorkflows, selectedAction, selectedSubAction, "New", "Complete", value, id);
+                    }else{
+                        addSelectedWorkflow(selectedWorkflows,selectedAction,selectedSubAction,"New","Button Photocell Installation",value,id);
+                    }
                 }
                 if(newAction.getCouldNotCompleteIds().contains(id)){
-                    String selectedSubAction = getDataDiffValue(dataDiffValueHolders,newAction.getInstallStatus());
+                    String selectedSubAction = getActionValue(dataDiffValueHolders,edgeFormDatas,newAction.getInstallStatus());
                     addSelectedWorkflow(selectedWorkflows,selectedAction,selectedSubAction,"New","Could not complete",value,id);
-                }
-                if(newAction.getPhotocellIds().contains(id)){
-                    String selectedSubAction = getDataDiffValue(dataDiffValueHolders,newAction.getInstallStatus());
-                    addSelectedWorkflow(selectedWorkflows,selectedAction,selectedSubAction,"New","Button Photocell Installation",value,id);
                 }
                 //Replace
                 if(replaceAction.getCIMCONIds().contains(id)){
-                    String selectedSubAction = getDataDiffValue(dataDiffValueHolders,replaceAction.getRepairAndOutages());
+                    String selectedSubAction = getActionValue(dataDiffValueHolders,edgeFormDatas,replaceAction.getRepairAndOutages());
                     addSelectedWorkflow(selectedWorkflows,selectedAction,selectedSubAction,"Repairs & Outages","CIMCON Node Replacements JBCC Only",value,id);
                 }
                 if(replaceAction.getResolvedIds().contains(id)){
-                    String selectedSubAction = getDataDiffValue(dataDiffValueHolders,replaceAction.getRepairAndOutages());
+                    String selectedSubAction = getActionValue(dataDiffValueHolders,edgeFormDatas,replaceAction.getRepairAndOutages());
                     addSelectedWorkflow(selectedWorkflows,selectedAction,selectedSubAction,"Repairs & Outages","Resolved (Other)",value,id);
                 }
                 if(replaceAction.getRFIds().contains(id)){
-                    String selectedSubAction = getDataDiffValue(dataDiffValueHolders,replaceAction.getRepairAndOutages());
+                    String selectedSubAction = getActionValue(dataDiffValueHolders,edgeFormDatas,replaceAction.getRepairAndOutages());
                     addSelectedWorkflow(selectedWorkflows,selectedAction,selectedSubAction,"Repairs & Outages","Replace Fixture only",value,id);
                 }
                 if(replaceAction.getRNFIds().contains(id)){
-                    String selectedSubAction = getDataDiffValue(dataDiffValueHolders,replaceAction.getRepairAndOutages());
+                    String selectedSubAction = getActionValue(dataDiffValueHolders,edgeFormDatas,replaceAction.getRepairAndOutages());
                     addSelectedWorkflow(selectedWorkflows,selectedAction,selectedSubAction,"Repairs & Outages","Replace Node and Fixture",value,id);
                 }
                 if(replaceAction.getRNIds().contains(id)){
-                    String selectedSubAction = getDataDiffValue(dataDiffValueHolders,replaceAction.getRepairAndOutages());
+                    String selectedSubAction = getActionValue(dataDiffValueHolders,edgeFormDatas,replaceAction.getRepairAndOutages());
                     addSelectedWorkflow(selectedWorkflows,selectedAction,selectedSubAction,"Repairs & Outages","Replace Node only",value,id);
                 }
                 if(replaceAction.getUnableToRepairIds().contains(id)){
-                    String selectedSubAction = getDataDiffValue(dataDiffValueHolders,replaceAction.getRepairAndOutages());
+                    String selectedSubAction = getActionValue(dataDiffValueHolders,edgeFormDatas,replaceAction.getRepairAndOutages());
                     addSelectedWorkflow(selectedWorkflows,selectedAction,selectedSubAction,"Repairs & Outages","Unable to Repair(CDOT Issue)",value,id);
                 }
             }
@@ -331,6 +333,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
                 for(SelectedWorkflow selectedWorkflow : selectedWorkflows){
                     if(selectedWorkflow.getActualSubaction().equals(selectedWorkflow.getSelectedSubAction())){
                         processSelectedWorkflow(selectedWorkflow,loggingModel,edgeFormDatas,edgeNote,slvInterfaceLogEntity,idOnController);
+                        logger.info("selected workflow is: "+gson.toJson(selectedWorkflow));
                     }
                 }
             }
@@ -338,6 +341,24 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
             return "New";
         }
         return "New";
+    }
+
+    private boolean iscompleteOrPhotocell(List<DataDiffValueHolder> dataDiffValueHolders,List<EdgeFormData> edgeFormDatas){
+        boolean isComplete = true;
+        String installStatusValue = getValidValue(getDataDiffValue(dataDiffValueHolders,22));
+        if(installStatusValue.equals("")){
+            installStatusValue = getFormValue(edgeFormDatas,22);
+        }
+        if(installStatusValue.equals("Button Photocell Installation")){
+            isComplete = false;
+        }
+        return isComplete;
+    }
+
+    private String getActionValue(List<DataDiffValueHolder> dataDiffValueHolders,List<EdgeFormData> edgeFormDatas,int compId){
+        String action = getDataDiffValue(dataDiffValueHolders,compId);
+        action = action.equals("") ? getFormValue(edgeFormDatas,compId) : action;
+        return action;
     }
 
     private String processSelectedWorkflow(SelectedWorkflow selectedWorkflow,InstallMaintenanceLogModel loggingModel,List<EdgeFormData> edgeFormDatas,EdgeNote edgeNote,SlvInterfaceLogEntity slvInterfaceLogEntity,String idOnController)  throws AlreadyUsedException{
@@ -443,6 +464,17 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
         int pos  = dataDiffValueHolders.indexOf(dataDiffValueHolder);
         if(pos != -1){
             String value = dataDiffValueHolders.get(pos).getValue();
+            return getValidValue(value);
+        }
+        return "";
+    }
+
+    private String getFormValue(List<EdgeFormData> edgeFormDatas,int componentId){
+        EdgeFormData edgeFormData = new EdgeFormData();
+        edgeFormData.setId(componentId);
+        int pos  = edgeFormDatas.indexOf(edgeFormData);
+        if(pos != -1){
+            String value = edgeFormDatas.get(pos).getValue();
             return getValidValue(value);
         }
         return "";
