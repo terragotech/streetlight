@@ -279,7 +279,8 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
                 String value = getValidValue(dataDiffValueHolder.getValue());
                 int id = dataDiffValueHolder.getId();
                 String selectedAction = getDataDiffValue(dataDiffValueHolders,workflowConfig.getAction());
-                selectedAction = selectedAction.equals("") ? getFormValue(edgeFormDatas,workflowConfig.getAction()) : selectedAction;
+                String formAction = getFormValue(edgeFormDatas,workflowConfig.getAction());
+                selectedAction = selectedAction.equals("") ? formAction : selectedAction;
                 selectedAction = selectedAction.equals("") ? "New" : selectedAction;
                 //Remove
                 if(workflowConfig.getRemoveAction().contains(id)){
@@ -473,12 +474,10 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
     }
 
     private String getFormValue(List<EdgeFormData> edgeFormDatas,int componentId){
-        EdgeFormData edgeFormData = new EdgeFormData();
-        edgeFormData.setId(componentId);
-        int pos  = edgeFormDatas.indexOf(edgeFormData);
-        if(pos != -1){
-            String value = edgeFormDatas.get(pos).getValue();
-            return getValidValue(value);
+        for(EdgeFormData edgeFormData : edgeFormDatas){
+            if(edgeFormData.getId() == componentId){
+                return getValidValue(edgeFormData.getValue());
+            }
         }
         return "";
     }
