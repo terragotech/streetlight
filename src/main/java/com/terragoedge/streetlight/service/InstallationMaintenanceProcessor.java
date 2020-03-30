@@ -188,6 +188,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
 
                     try {
                         value = getActionFromConfig(edgeFormDatas, edgeNote.getTitle(), installMaintenanceLogModel, edgeNote, slvInterfaceLogEntity,workflowConfig);
+                        logger.info("changed Action value is "+value);
                         logger.info("After Action Val");
                     } catch (AlreadyUsedException w) {
                         if (installMaintenanceLogModel.isNigthRideSame()) {
@@ -328,12 +329,12 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
                 return "New";
             }else if(selectedWorkflows.size() == 1){
                 SelectedWorkflow selectedWorkflow = selectedWorkflows.get(0);
-                processSelectedWorkflow(selectedWorkflow,loggingModel,edgeFormDatas,edgeNote,slvInterfaceLogEntity,idOnController);
+                return processSelectedWorkflow(selectedWorkflow,loggingModel,edgeFormDatas,edgeNote,slvInterfaceLogEntity,idOnController);
             }else{
                 for(SelectedWorkflow selectedWorkflow : selectedWorkflows){
                     if(selectedWorkflow.getActualSubaction().equals(selectedWorkflow.getSelectedSubAction())){
-                        processSelectedWorkflow(selectedWorkflow,loggingModel,edgeFormDatas,edgeNote,slvInterfaceLogEntity,idOnController);
                         logger.info("selected workflow is: "+gson.toJson(selectedWorkflow));
+                        return processSelectedWorkflow(selectedWorkflow,loggingModel,edgeFormDatas,edgeNote,slvInterfaceLogEntity,idOnController);
                     }
                 }
             }
@@ -362,11 +363,11 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
     }
 
     private String processSelectedWorkflow(SelectedWorkflow selectedWorkflow,InstallMaintenanceLogModel loggingModel,List<EdgeFormData> edgeFormDatas,EdgeNote edgeNote,SlvInterfaceLogEntity slvInterfaceLogEntity,String idOnController)  throws AlreadyUsedException{
-        String action = selectedWorkflow.getActualAction();
+        String action = selectedWorkflow.getSelectedAction();
         String subAction = selectedWorkflow.getSelectedSubAction();
         if(action.equals("Remove")){
             return "Remove";
-        }else if(action.equals("Repairs & Outages")){
+        }else if(action.equals("Repairs & Outages") || action.equals("Repairs \\u0026 Outages")){
             if(subAction.equals("Unable to Repair(CDOT Issue)")){
                 loggingModel.setRepairsOption("Unable to Repair(CDOT Issue)");
                 return "Repairs & Outages";
