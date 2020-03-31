@@ -240,6 +240,8 @@ public class RestService {
 
 		uriBuilder.queryParams(params);
 
+
+
 		ResponseEntity<String> response = restTemplate.exchange(uriBuilder.toUriString(), httpMethod, request, String.class);
 		logger.info("------------ Response ------------------");
 		logger.info("Response Code:" + response.getStatusCode().toString());
@@ -250,29 +252,40 @@ public class RestService {
 	}
 
 
-    public ResponseEntity<String> callPostMethod(String httpUrl,  HttpMethod httpMethod,String requestData){
-        String url = PropertiesReader.getProperties().getProperty("streetlight.edge.url.main");
-        url = url + httpUrl;
-	    logger.info("Url:"+url);
-        logger.info("Request Data:"+requestData);
-	    HttpHeaders headers = getEdgeHeaders();
-        RestTemplate restTemplate = getRestTemplate();
-        HttpEntity request = new HttpEntity<>(requestData,headers);
-        logger.info("Server Call....");
-        ResponseEntity<String> response = restTemplate.exchange(url, httpMethod, request, String.class);
-        logger.info("------------ Response ------------------");
-        logger.info("Response Code:" + response.getStatusCode().toString());
-        String responseBody = response.getBody();
-        logger.info(responseBody);
-        logger.info("------------ Response End ------------------");
-        return response;
-    }
+	public ResponseEntity<String> callPostMethod(String httpUrl, HttpMethod httpMethod, String requestData,boolean isEdgeSlvServer) {
+		String url = null;
+		if(isEdgeSlvServer){
+			url = PropertiesReader.getProperties().getProperty("streetlight.edge.slvserver.url");
+		}else {
+			url = PropertiesReader.getProperties().getProperty("streetlight.edge.url.main");
+		}
+
+		url = url + httpUrl;
+		logger.info("Url:" + url);
+		logger.info("Request Data:" + requestData);
+		HttpHeaders headers = getEdgeHeaders();
+		RestTemplate restTemplate = getRestTemplate();
+		HttpEntity request = null;
+		if (requestData != null) {
+			request = new HttpEntity<>(requestData, headers);
+		} else {
+			request = new HttpEntity<>(headers);
+		}
+		logger.info("Server Call....");
+		ResponseEntity<String> response = restTemplate.exchange(url, httpMethod, request, String.class);
+		logger.info("------------ Response ------------------");
+		logger.info("Response Code:" + response.getStatusCode().toString());
+		String responseBody = response.getBody();
+		logger.info(responseBody);
+		logger.info("------------ Response End ------------------");
+		return response;
+	}
 
     public  RestTemplate getRestTemplate(){
-		SimpleClientHttpRequestFactory simpleClientHttpRequestFactory = new SimpleClientHttpRequestFactory();
-		simpleClientHttpRequestFactory.setConnectTimeout(1000 * 60 * 5);
-		simpleClientHttpRequestFactory.setReadTimeout(1000 * 60 * 5);
-		RestTemplate restTemplate = new RestTemplate(simpleClientHttpRequestFactory);
-		return restTemplate;
-	}
+        SimpleClientHttpRequestFactory simpleClientHttpRequestFactory = new SimpleClientHttpRequestFactory();
+        simpleClientHttpRequestFactory.setConnectTimeout(1000 * 60 * 5);
+        simpleClientHttpRequestFactory.setReadTimeout(1000 * 60 * 5);
+        RestTemplate restTemplate = new RestTemplate(simpleClientHttpRequestFactory);
+        return restTemplate;
+    }
 }

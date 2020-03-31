@@ -160,7 +160,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
         }
     }
 
-    public void processNewAction(EdgeNote edgeNote, InstallMaintenanceLogModel installMaintenanceLogModel, boolean isReSync, String utilLocId, SlvInterfaceLogEntity slvInterfaceLogEntity,WorkflowConfig workflowConfig) {
+    public void processNewAction(EdgeNote edgeNote, InstallMaintenanceLogModel installMaintenanceLogModel, boolean isReSync, String utilLocId, SlvInterfaceLogEntity slvInterfaceLogEntity,WorkflowConfig workflowConfig,String notesData) {
         slvInterfaceLogEntity.setParentnoteid((edgeNote.getBaseParentNoteId() == null) ? edgeNote.getNoteGuid() : edgeNote.getBaseParentNoteId());
         logger.info("processNewAction");
         slvInterfaceLogEntity.setIdOnController(edgeNote.getTitle());
@@ -216,7 +216,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
                             case "Remove":
                                 slvInterfaceLogEntity.setSelectedAction("Remove");
                                 logger.info("entered remove action");
-                                processRemoveAction(edgeFormDatas, utilLocId, installMaintenanceLogModel, slvInterfaceLogEntity,edgeNote);
+                                processRemoveAction(edgeFormDatas, utilLocId, installMaintenanceLogModel, slvInterfaceLogEntity,edgeNote,notesData);
                                 break;
                             case "Other Task":
                                 slvInterfaceLogEntity.setSelectedAction("Other Task");
@@ -931,8 +931,10 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
                 logger.info("New :" + isNew + " \nmacAddress :" + macAddress);
                 if (macAddress == null || macAddress.isEmpty()) {
                     loggingModel.setStatus(MessageConstants.SUCCESS);
+                    removeSwapPromotedData(loggingModel.getIdOnController());
                     return;
                 } else {
+                    removeSwapPromotedData(loggingModel.getIdOnController());
                     if (!loggingModel.isMacAddressUsed()) {
                         slvTransactionLogs = getSLVTransactionLogs(loggingModel);
                         replaceOLC(controllerStrIdValue, idOnController, macAddress, slvTransactionLogs, slvInterfaceLogEntity,loggingModel.getAtlasPhysicalPage(),loggingModel,edgeNote);// insert mac address
@@ -1522,7 +1524,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
         }
     }
 
-    private void processRemoveAction(List<EdgeFormData> edgeFormDatas, String utilLocId, InstallMaintenanceLogModel installMaintenanceLogModel, SlvInterfaceLogEntity slvInterfaceLogEntity,EdgeNote edgeNote) {
+    private void processRemoveAction(List<EdgeFormData> edgeFormDatas, String utilLocId, InstallMaintenanceLogModel installMaintenanceLogModel, SlvInterfaceLogEntity slvInterfaceLogEntity,EdgeNote edgeNote,String notesData) {
         String removeReason = null;
         try {
             removeReason = valueById(edgeFormDatas, 35);
@@ -1604,9 +1606,12 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
                             connectionDAO.removeEdgeAllMAC(installMaintenanceLogModel.getIdOnController(),macaddress);
                         }
 
+                        slv2EdgeService.removeSwapForm(edgeNote,notesData);
+                        removeSwapPromotedData(installMaintenanceLogModel.getIdOnController());
                         connectionDAO.removeEdgeAllFixture(installMaintenanceLogModel.getIdOnController());
                         installMaintenanceLogModel.setInstallOnWrongFix(true);
                         removeEdgeSLVMacAddress(installMaintenanceLogModel.getIdOnController());
+
                         connectionDAO.removeAllEdgeFormDates(installMaintenanceLogModel.getIdOnController());
 
                         logger.info("Luminaire Serial Number going to clear.");
@@ -1646,6 +1651,8 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
                         clearDeviceValues(installMaintenanceLogModel.getIdOnController(), installMaintenanceLogModel.getControllerSrtId(), "Pole Removed", installMaintenanceLogModel,false);
                         slvInterfaceLogEntity.setStatus(MessageConstants.SUCCESS);
                         connectionDAO.removeCurrentEdgeFormDates(installMaintenanceLogModel.getIdOnController());
+                        slv2EdgeService.removeSwapForm(edgeNote,notesData);
+                        removeSwapPromotedData(installMaintenanceLogModel.getIdOnController());
                         installMaintenanceLogModel.setPoleKnockDown(true);
                     } catch (Exception e) {
                         logger.error("Error in processRemoveAction", e);
@@ -1690,6 +1697,8 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
                         clearDeviceValues(installMaintenanceLogModel.getIdOnController(), installMaintenanceLogModel.getControllerSrtId(), "Pole Knocked-Down", installMaintenanceLogModel,isMacRemoved);
                         slvInterfaceLogEntity.setStatus(MessageConstants.SUCCESS);
                         installMaintenanceLogModel.setPoleKnockDown(true);
+                        slv2EdgeService.removeSwapForm(edgeNote,notesData);
+                        removeSwapPromotedData(installMaintenanceLogModel.getIdOnController());
 
                     } catch (Exception e) {
                         logger.error("Error in processRemoveAction", e);
@@ -2206,6 +2215,8 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
         MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
         params.add("slvIdOnController",idOnController);
         restService.slv2Edge("/rest/validation/removeSLVMacAddress", HttpMethod.GET,params);
+        syncMacAddress2Promoted(idOnController,null);
+
     }
 
     private String addUserToLuminaireSerialNumber(String luminaireSerialNumber,String user){
