@@ -252,7 +252,8 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
         DataComparatorConfig dataComparatorConfig = new DataComparatorConfig();
         dataComparatorConfig.setFormTemplateGuid(properties.getProperty("amerescousa.edge.formtemplateGuid"));
         dataComparatorConfig.setNoteGuid(edgeNote.getNoteGuid());
-        dataComparatorConfig.setRevisionFromNoteId(edgeNote.getRevisionfromNoteid() == null ? edgeNote.getNoteGuid() : edgeNote.getRevisionfromNoteid());
+//        dataComparatorConfig.setRevisionFromNoteId(edgeNote.getRevisionfromNoteid() == null ? edgeNote.getNoteGuid() : edgeNote.getRevisionfromNoteid());
+        dataComparatorConfig.setRevisionFromNoteId("");
         List<Integer> ids = dataComparatorConfig.getIds();
         addIds(ids,workflowConfig.getAction());
         NewAction newAction = workflowConfig.getNewAction();
@@ -270,7 +271,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
         ids.addAll(replaceAction.getUnableToRepairIds());
         ids.addAll(workflowConfig.getRemoveAction());
         List<SelectedWorkflow> selectedWorkflows = new ArrayList<>();
-        ResponseEntity<String> responseEntity = restService.callPostMethod("/note/revision/dataAnalyzer",HttpMethod.POST,gson.toJson(dataComparatorConfig));
+        ResponseEntity<String> responseEntity = restService.callPostMethod("/note/revision/dataAnalyzer",HttpMethod.POST,gson.toJson(dataComparatorConfig),false);
         String body = responseEntity.getBody();
         DataDiffResponse dataDiffResponse = gson.fromJson(body,DataDiffResponse.class);
         if(dataDiffResponse.isChanged()){
