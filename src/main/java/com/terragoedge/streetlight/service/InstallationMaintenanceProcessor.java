@@ -329,7 +329,29 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
             }
             logger.info("Selected workflows: "+gson.toJson(selectedWorkflows));
             if(selectedWorkflows.size() == 0){
-                return "New";
+                String changedAction = getDataDiffValue(dataDiffValueHolders,workflowConfig.getAction());
+                String changedNewSubAction = getDataDiffValue(dataDiffValueHolders,newAction.getInstallStatus());
+                String changedReplaceSubAction = getDataDiffValue(dataDiffValueHolders,replaceAction.getRepairAndOutages());
+                if(changedAction.equals("") && changedNewSubAction.equals("") && changedReplaceSubAction.equals("")) {
+                    return "New";
+                }else{
+                    if(changedAction.equals("")){
+                        changedAction = getFormValue(edgeFormDatas,workflowConfig.getAction());
+                    }
+                    if(changedAction.equals("New")){
+                        changedNewSubAction = getFormValue(edgeFormDatas,newAction.getInstallStatus());
+                        SelectedWorkflow selectedWorkflow = getSelectWorkflow(changedAction,changedNewSubAction);
+                        processSelectedWorkflow(selectedWorkflow,loggingModel,edgeFormDatas,edgeNote,slvInterfaceLogEntity,idOnController);
+                    }else if(changedAction.equals("Repairs & Outages") || changedAction.equals("Repairs \\u0026 Outages")){
+                        SelectedWorkflow selectedWorkflow = getSelectWorkflow(changedAction,changedReplaceSubAction);
+                        processSelectedWorkflow(selectedWorkflow,loggingModel,edgeFormDatas,edgeNote,slvInterfaceLogEntity,idOnController);
+                    }else if(changedAction.equals("Remove")){
+                        SelectedWorkflow selectedWorkflow  = getSelectWorkflow("Remove","Remove");
+                        processSelectedWorkflow(selectedWorkflow,loggingModel,edgeFormDatas,edgeNote,slvInterfaceLogEntity,idOnController);
+                    }else{
+                        return "New";
+                    }
+                }
             }else if(selectedWorkflows.size() == 1){
                 SelectedWorkflow selectedWorkflow = selectedWorkflows.get(0);
                 return processSelectedWorkflow(selectedWorkflow,loggingModel,edgeFormDatas,edgeNote,slvInterfaceLogEntity,idOnController);
@@ -345,6 +367,13 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
             return "New";
         }
         return "New";
+    }
+
+    private SelectedWorkflow getSelectWorkflow(String changedAction,String changedSubAction){
+        SelectedWorkflow selectedWorkflow = new SelectedWorkflow();
+        selectedWorkflow.setSelectedAction(changedAction);
+        selectedWorkflow.setSelectedSubAction(changedSubAction);
+        return selectedWorkflow;
     }
 
     private boolean iscompleteOrPhotocell(List<DataDiffValueHolder> dataDiffValueHolders,List<EdgeFormData> edgeFormDatas){
