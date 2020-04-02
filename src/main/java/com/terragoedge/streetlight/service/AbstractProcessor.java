@@ -41,15 +41,16 @@ public abstract class AbstractProcessor {
 
     final Logger logger = Logger.getLogger(AbstractProcessor.class);
 
-    StreetlightDao streetlightDao = null;
-    RestService restService = null;
-    Properties properties = null;
-    Gson gson = null;
-    JsonParser jsonParser = null;
-    ConnectionDAO connectionDAO;
+    protected StreetlightDao streetlightDao = null;
+    protected  RestService restService = null;
+    protected Properties properties = null;
+    protected  Gson gson = null;
+    protected  JsonParser jsonParser = null;
+    protected ConnectionDAO connectionDAO;
+    protected SLV2EdgeService slv2EdgeService;
 
-    WeakHashMap<String, String> contextListHashMap = new WeakHashMap<>();
-    HashMap<String, SLVDates> cslpDateHashMap = new HashMap<>();
+   protected WeakHashMap<String, String> contextListHashMap = new WeakHashMap<>();
+    protected  HashMap<String, SLVDates> cslpDateHashMap = new HashMap<>();
     HashMap<String, String> macHashMap = new HashMap<>();
     protected String droppedPinTag;
 
@@ -63,6 +64,7 @@ public abstract class AbstractProcessor {
         this.properties = PropertiesReader.getProperties();
         this.gson = new Gson();
         this.jsonParser = new JsonParser();
+        this.slv2EdgeService = new SLV2EdgeService();
         droppedPinTag = properties.getProperty("com.droppedpin.tag");
     }
 
@@ -628,7 +630,7 @@ public abstract class AbstractProcessor {
         }catch (Exception e){
             logger.error("Error in addStreetLightData",e);
         }
-        if(value != null){
+        if(value != null && edgeNoteCreatedDateTime != null){
             switch (key.trim()){
                 case "install.date":
                     edgeNoteCreatedDateTime.setNodeInstallDate(value);
@@ -1684,6 +1686,25 @@ public boolean checkExistingMacAddressValid(EdgeNote edgeNote, InstallMaintenanc
             }
 
             restService.slv2Edge("/rest/validation/updateSLVSyncedMAC", HttpMethod.GET,params);
+
+            syncMacAddress2Promoted(idOnController,macAddress);
+        }
+    }
+
+
+    protected void syncMacAddress2Promoted(String idOnController,String macAddress){
+        // Remove MAC Address from the Promoted Data.
+        logger.info("Remove MAC Address from the Promoted Data.");
+        try {
+            String url = "/promoted/updateSLVMacAddress?idOnController="+idOnController;
+            if(macAddress != null && !macAddress.trim().isEmpty()){
+                url = url + "&slvMacAddress="+macAddress;
+            }
+
+            restService.callPostMethod(url,HttpMethod.GET,null,true);
+            logger.info("Remove MAC Address from the Promoted Data End.");
+        }catch (Exception e){
+            logger.error("Error in removeEdgeSLVMacAddress",e);
         }
     }
 
@@ -1923,6 +1944,19 @@ public boolean checkExistingMacAddressValid(EdgeNote edgeNote, InstallMaintenanc
         simpleClientHttpRequestFactory.setConnectTimeout(1000 * 60 * 5);
         RestTemplate restTemplate = new RestTemplate(simpleClientHttpRequestFactory);
         return restTemplate;
+    }
+
+
+    public void removeSwapPromotedData(String idOnController){
+        try{
+            logger.info("removeSwapPromotedData Called.....");
+            String httpUrl = "/promoted/removeSwapPromoted.html?idOnController="+idOnController;
+            logger.info("httpUrl"+httpUrl);
+            restService.callPostMethod(httpUrl,HttpMethod.GET,null,true);
+            logger.info("removeSwapPromotedData Done.");
+        }catch (Exception e){
+            logger.error("Error in removeSwapPromotedData",e);
+        }
     }
 
 }
