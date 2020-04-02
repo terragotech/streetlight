@@ -19,7 +19,7 @@ public class EdgeService {
     protected  Gson gson = new Gson();
     protected JsonParser jsonParser = new JsonParser();
 
-    protected ResponseEntity<String> serverCall(String url, HttpMethod httpMethod, String body) {
+    public ResponseEntity<String> serverCall(String url, HttpMethod httpMethod, String body) {
         logger.info("------------ Request ------------------");
         logger.info("Request Url:" + url);
         logger.info("------------ input data ------------------");
