@@ -11,7 +11,7 @@ public class SlvInterfaceApp {
 
     private static boolean isReportSent = false;
 
-    public static void main(String[] args) {
+    public static void main1(String[] args) {
         try {
             SlvInterfaceService slvInterfaceService = new SlvInterfaceService();
 //            slvInterfaceService.start();
