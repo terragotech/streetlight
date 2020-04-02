@@ -51,6 +51,8 @@ public class MaintenanceWorkflowService extends AbstractSlvService {
 
             Map<String, List<Integer>> listMap = null; // TODO
 
+            String idOnController = edgeNote.getTitle();
+
             String formTemplateGuid = PropertiesReader.getProperties().getProperty("streetlight.edge.Maintenance.formtemplate.guid");
             logger.info("Swap Form Template Guid:" + formTemplateGuid);
             for (FormData formData : formDataListTemp) {
@@ -76,21 +78,22 @@ public class MaintenanceWorkflowService extends AbstractSlvService {
                                 break;
 
                             case "replace_led_light":
-                                if(isDevicePresent()){
-                                    processLedLight();
+                                if(isDevicePresent(idOnController)){
+                                    //New Lamp Serial Number = 283
+                                    processLedLight(283,edgeFormDataList,idOnController);
                                 }
 
                                 break;
                             case "replace_smart_controller":
-                                if(isDevicePresent()){
-                                    processReplaceSmartController();
+                                if(isDevicePresent(idOnController)){
+                                    processReplaceSmartController(271,edgeFormDataList,idOnController);
                                 }
 
                                 break;
                             case "replace_led_smart_controller":
-                                if(isDevicePresent()){
-                                    processLedLight();
-                                    processReplaceSmartController();
+                                if(isDevicePresent(idOnController)){
+                                    processLedLight(10102,edgeFormDataList,idOnController);
+                                    processReplaceSmartController(10096,edgeFormDataList,idOnController);
                                 }
 
 
@@ -140,6 +143,7 @@ public class MaintenanceWorkflowService extends AbstractSlvService {
 
     private void processLedLight(int formId, List<EdgeFormData> edgeFormDataList, String idOnController){
         String serialNumber = valueById(edgeFormDataList, formId);
+        //device.node.serialnumber
     }
 
 
