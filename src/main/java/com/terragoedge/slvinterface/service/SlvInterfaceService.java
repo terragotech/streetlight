@@ -43,9 +43,11 @@ public class SlvInterfaceService extends AbstractSlvService {
         //  List<String> noteGuids = slvInterfaceDAO.getNoteGuids();
         WorkFlowFormId installworkFlowFormId = null;
         WorkFlowFormId newFixtureworkFlowFormId = null;
+        WorkFlowFormId maintenanceInstallFormId = null;
         try {
                 installworkFlowFormId = getConfigData("./resources/installWorkflow.json");
                 newFixtureworkFlowFormId = getConfigData("./resources/newFixtureWorkflow.json");
+                maintenanceInstallFormId = getConfigData("./resources/maintenanceInstallWorkflow.json");
         }catch (Exception e){
             e.printStackTrace();
             logger.error("Error while reading configuration file for form ids");
@@ -407,5 +409,16 @@ public class SlvInterfaceService extends AbstractSlvService {
             logger.error("Unable to get message from EdgeServer. Response Code is :" + edgeSlvServerResponse.getStatusCode());
         }
         return noteguids;
+    }
+
+    private void processMaintenanceInstallForm(List<FormData> formDatasList,EdgeNote edgeNote,WorkFlowFormId installWorkflowFormId){
+        try {
+            // List<FormData> formDatasList should have maintenance forms only
+            JPSWorkflowModel jpsWorkflowModel = processWorkFlowForm(formDatasList, edgeNote, installWorkflowFormId);
+            jpsWorkflowModel.setInstallStatus("CONVERTED");
+            slvService.processSlv(jpsWorkflowModel, edgeNote);
+        }catch (Exception e){
+            logger.error("Error in processMaintenanceInstallForm : ",e);
+        }
     }
 }
