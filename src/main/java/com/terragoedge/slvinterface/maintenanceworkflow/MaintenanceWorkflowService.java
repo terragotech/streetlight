@@ -1,18 +1,18 @@
 package com.terragoedge.slvinterface.maintenanceworkflow;
 
-import com.google.gson.Gson;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
+import com.google.gson.*;
+import com.google.gson.reflect.TypeToken;
 import com.terragoedge.slvinterface.exception.InValidBarCodeException;
 import com.terragoedge.slvinterface.exception.NoDataChangeException;
 import com.terragoedge.slvinterface.exception.NoValueException;
 import com.terragoedge.slvinterface.exception.SkipNoteException;
+import com.terragoedge.slvinterface.maintenanceworkflow.model.ActionTypeJson;
 import com.terragoedge.slvinterface.maintenanceworkflow.model.DataDiffResponse;
 import com.terragoedge.slvinterface.maintenanceworkflow.model.DataDiffValueHolder;
 import com.terragoedge.slvinterface.model.*;
 import com.terragoedge.slvinterface.service.AbstractSlvService;
 import com.terragoedge.slvinterface.service.EdgeService;
+import com.terragoedge.slvinterface.service.SlvService;
 import com.terragoedge.slvinterface.utils.PropertiesReader;
 import com.terragoedge.slvinterface.utils.Utils;
 import org.apache.log4j.Logger;
@@ -43,17 +43,31 @@ public class MaintenanceWorkflowService extends AbstractSlvService {
 
     final Logger logger = Logger.getLogger(MaintenanceWorkflowService.class);
 
-    public void processMaintenanceWorkflow(EdgeNote edgeNote) throws NoDataChangeException, SkipNoteException {
+    public void processMaintenanceWorkflow(EdgeNote edgeNote,WorkFlowFormId maintenanceInstallFormId) throws NoDataChangeException, SkipNoteException {
         try {
+            logger.info("******* processMaintenanceWorkflow **********");
             List<FormData> formDataListTemp = edgeNote.getFormData();
             List<FormData> formDataList = new ArrayList<>();
 
-            Map<String, List<Integer>> listMap = null; // TODO
+            String actionTypeJson = properties.getProperty("streetlight.edge.actiontype");
+            if(actionTypeJson == null || actionTypeJson.trim().isEmpty()){
+                logger.info("Action Type config is not present.");
+                throw  new SkipNoteException("Action Type config is not present.");
+            }
+
+           List<ActionTypeJson> actionTypeJsonList = gson.fromJson(actionTypeJson, new TypeToken<List<ActionTypeJson>>() {
+            }.getType());
+
+            Map<String, List<Integer>> listMap =new HashMap<>();
+
+            for(ActionTypeJson actionTypeJson1 : actionTypeJsonList){
+                listMap.put(actionTypeJson1.getActionType(),actionTypeJson1.getIds());
+            }
 
             String idOnController = edgeNote.getTitle();
 
             String formTemplateGuid = PropertiesReader.getProperties().getProperty("streetlight.edge.Maintenance.formtemplate.guid");
-            logger.info("Swap Form Template Guid:" + formTemplateGuid);
+            logger.info("Maintenance Form Template Guid:" + formTemplateGuid);
             for (FormData formData : formDataListTemp) {
                 if (formData.getFormTemplateGuid().equals(formTemplateGuid)) {
                     formDataList.add(formData);
@@ -72,37 +86,55 @@ public class MaintenanceWorkflowService extends AbstractSlvService {
                     for (FormData formData : formDataList) {
                         List<EdgeFormData> edgeFormDataList = formData.getFormDef();
                         String actionType = getActionType(dataDiffResponse,listMap);
+                        logger.info("Action Type:"+actionType);
+                        if(actionType == null){
+                            throw  new NoDataChangeException("Action Type");
+                        }
                         switch (actionType){
                             case "install":
+                                logger.info("Install Action....");
+                                processMaintenanceInstallForm(formDataList,edgeNote,maintenanceInstallFormId);
                                 break;
 
                             case "replace_led_light":
+                                logger.info("serialnumber Action....");
                                 if(isDevicePresent(idOnController)){
                                     JPSWorkflowModel jpsWorkflowModel = getJPSWorkflowModel(edgeNote,idOnController);
                                     processLedLight(283,edgeFormDataList,idOnController,jpsWorkflowModel);
+                                }else {
+                                    logger.info("Device not present.");
                                 }
 
                                 break;
                             case "replace_smart_controller":
+                                logger.info("ReplaceOLC Action....");
                                 if(isDevicePresent(idOnController)){
                                     JPSWorkflowModel jpsWorkflowModel = getJPSWorkflowModel(edgeNote,idOnController);
                                     processReplaceSmartController(271,edgeFormDataList,idOnController,edgeNote,jpsWorkflowModel);
+                                }else {
+                                    logger.info("Device not present.");
                                 }
 
                                 break;
                             case "replace_led_smart_controller":
+                                logger.info("serialnumber and ReplaceOLC Action....");
                                 if(isDevicePresent(idOnController)){
                                     JPSWorkflowModel jpsWorkflowModel = getJPSWorkflowModel(edgeNote,idOnController);
                                     processLedLight(10102,edgeFormDataList,idOnController,jpsWorkflowModel);
                                     processReplaceSmartController(10096,edgeFormDataList,idOnController,edgeNote,jpsWorkflowModel);
+                                }else {
+                                    logger.info("Device not present.");
                                 }
 
 
                                 break;
                             case "remove":
+                                logger.info("Remove Action....");
                                 if(isDevicePresent(idOnController)){
                                     JPSWorkflowModel jpsWorkflowModel = getJPSWorkflowModel(edgeNote,idOnController);
                                     processRemoveWorkFlow(idOnController,edgeNote,jpsWorkflowModel);
+                                }else {
+                                    logger.info("Device not present.");
                                 }
                                 break;
                         }
@@ -110,9 +142,16 @@ public class MaintenanceWorkflowService extends AbstractSlvService {
 
                 }
 
+            }else{
+                throw new  NoDataChangeException("");
             }
         } catch (Exception e) {
             logger.error("Error in processMaintenanceWorkflow", e);
+            if(e instanceof NoDataChangeException){
+                throw new NoDataChangeException(e.getMessage());
+            }
+            throw new SkipNoteException(e.getMessage());
+
         }
     }
 
@@ -123,8 +162,16 @@ public class MaintenanceWorkflowService extends AbstractSlvService {
     }
 
 
-    private void processInstall(){
-
+    private void processMaintenanceInstallForm(List<FormData> formDatasList,EdgeNote edgeNote,WorkFlowFormId installWorkflowFormId){
+        try {
+            // List<FormData> formDatasList should have maintenance forms only
+            JPSWorkflowModel jpsWorkflowModel = processWorkFlowForm(formDatasList, edgeNote, installWorkflowFormId);
+            jpsWorkflowModel.setInstallStatus("CONVERTED");
+            SlvService slvService = new SlvService();
+            slvService.processSlv(jpsWorkflowModel, edgeNote);
+        }catch (Exception e){
+            logger.error("Error in processMaintenanceInstallForm : ",e);
+        }
     }
 
     private void processReplaceSmartController(int formId, List<EdgeFormData> edgeFormDataList, String idOnController,EdgeNote edgeNote,JPSWorkflowModel jpsWorkflowModel) throws NoValueException {
@@ -204,8 +251,8 @@ public class MaintenanceWorkflowService extends AbstractSlvService {
      */
     private DataDiffResponse compareRevisionData(String noteGuid) throws NoDataChangeException, SkipNoteException {
         logger.info("Comparing data from the Previous Revision.");
-        String url = PropertiesReader.getProperties().getProperty("streetlight.edge.coc.url.checkrevisiondata");
-        String config = PropertiesReader.getProperties().getProperty("streetlight.edge.coc.url.checkrevisiondata.config");
+        String url = PropertiesReader.getProperties().getProperty("streetlight.edge.url.checkrevisiondata");
+        String config = PropertiesReader.getProperties().getProperty("streetlight.edge.checkrevisiondata.config");
         JsonObject configJson = (JsonObject) jsonParser.parse(config);
         configJson.addProperty("noteGuid", noteGuid);
         logger.info("Given url is :" + url);
@@ -241,6 +288,7 @@ public class MaintenanceWorkflowService extends AbstractSlvService {
     private String getActionType(DataDiffResponse dataDiffResponse, Map<String, List<Integer>> listMap) {
         Set<String> keySets = listMap.keySet();
         List<DataDiffValueHolder> dataDiff = dataDiffResponse.getDataDiff();
+        logger.info("Check Data change Action.....");
         for (String actionType : keySets) {
             List<Integer> idList = listMap.get(actionType);
             for (Integer ids : idList) {
@@ -248,6 +296,7 @@ public class MaintenanceWorkflowService extends AbstractSlvService {
                 temp.setId(ids);
                 int pos = dataDiff.indexOf(temp);
                 if (pos != -1) {
+                    logger.info("Action Type....."+actionType);
                     return actionType;
                 }
             }

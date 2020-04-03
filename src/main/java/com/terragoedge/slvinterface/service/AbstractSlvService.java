@@ -9,6 +9,7 @@ import com.terragoedge.slvinterface.enumeration.Status;
 import com.terragoedge.slvinterface.exception.*;
 import com.terragoedge.slvinterface.model.*;
 import com.terragoedge.slvinterface.utils.PropertiesReader;
+import com.terragoedge.slvinterface.utils.Utils;
 import com.vividsolutions.jts.geom.Geometry;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
@@ -20,6 +21,8 @@ import org.wololo.jts2geojson.GeoJSONReader;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public abstract class AbstractSlvService extends EdgeService {
     private Properties properties = null;
@@ -435,4 +438,154 @@ public abstract class AbstractSlvService extends EdgeService {
         }
 
     }
+
+    public JPSWorkflowModel processWorkFlowForm(List<FormData> formDataList, EdgeNote edgeNote, WorkFlowFormId installWorkflowFormId) {
+        JPSWorkflowModel jpsWorkflowModel = new JPSWorkflowModel();
+        if (edgeNote.getEdgeNotebook() != null) {
+            jpsWorkflowModel.setNotebookName(edgeNote.getEdgeNotebook().getNotebookName());
+            jpsWorkflowModel.setDimmingGroupName(edgeNote.getEdgeNotebook().getNotebookName());
+        }
+        String categoryStrId = properties.getProperty("streetlight.categorystr.id");
+        String controllerStrId = properties.getProperty("streetlight.controller.str.id");
+
+        String nodeTypeStrId = properties.getProperty("streetlight.slv.equipment.type");
+        Feature feature = (Feature) GeoJSONFactory.create(edgeNote.getGeometry());
+        // parse Geometry from Feature
+        GeoJSONReader reader = new GeoJSONReader();
+        Geometry geom = reader.read(feature.getGeometry());
+        if (edgeNote.getGeometry() != null) {
+            jpsWorkflowModel.setLat(String.valueOf(geom.getCoordinate().y));
+            jpsWorkflowModel.setLng(String.valueOf(geom.getCoordinate().x));
+        } else {
+            logger.info("There is no location given note :" + edgeNote.getTitle());
+        }
+        jpsWorkflowModel.setControllerStrId(controllerStrId);
+        jpsWorkflowModel.setEquipmentType(nodeTypeStrId);
+        jpsWorkflowModel.setProvider_name(properties.getProperty("jps.provider.name"));
+        jpsWorkflowModel.setLowvoltagethreshold(Integer.valueOf(properties.getProperty("jps.low.voltage.thershold")));
+        jpsWorkflowModel.setHighvoltagethreshold(Integer.valueOf(properties.getProperty("jps.high.voltage.thershold")));
+        jpsWorkflowModel.setCategoryStrId(categoryStrId);
+        jpsWorkflowModel.setLocationtype(properties.getProperty("jps.location.type"));
+        jpsWorkflowModel.setModel(properties.getProperty("jps.model"));
+        for (FormData formData : formDataList) {
+            List<EdgeFormData> edgeFormDataList = formData.getFormDef();
+
+            String feederName = getFormValue(edgeFormDataList,installWorkflowFormId.getFeederName());
+            if (nullCheck(feederName))
+                jpsWorkflowModel.setStreetdescription(feederName);
+
+            String streetName = getFormValue(edgeFormDataList,installWorkflowFormId.getStreetName());
+            if (nullCheck(streetName))
+                jpsWorkflowModel.setAddress1(streetName);
+
+            String parrish = getFormValue(edgeFormDataList,installWorkflowFormId.getParrish());
+            if (nullCheck(parrish))
+                jpsWorkflowModel.setCity(parrish);
+
+            String division = getFormValue(edgeFormDataList,installWorkflowFormId.getDivision());
+            if (nullCheck(division))
+                jpsWorkflowModel.setDivision(division);
+
+            String newPoleNumber = getFormValue(edgeFormDataList,installWorkflowFormId.getNewPoleNumber());
+            if (nullCheck(newPoleNumber)) {
+                jpsWorkflowModel.setIdOnController(newPoleNumber);
+                jpsWorkflowModel.setName(newPoleNumber);
+                jpsWorkflowModel.setUtillocationid(newPoleNumber);
+            }
+
+            String retrofitStatus = getFormValue(edgeFormDataList,installWorkflowFormId.getRetrofitStatus());
+            if (nullCheck(retrofitStatus))
+                jpsWorkflowModel.setInstallStatus(retrofitStatus);
+
+            String newLampWattage = getFormValue(edgeFormDataList,installWorkflowFormId.getNewLampWatage());
+            if (nullCheck(newLampWattage)) {
+                String lampType = newLampWattage;
+                if (lampType.equals("Other")) {
+                    processLampType(edgeFormDataList, jpsWorkflowModel);
+                } else {
+                    Pattern pattern = Pattern.compile("\\d+");
+                    Matcher matcher = pattern.matcher(newLampWattage);
+                    if (matcher != null && matcher.find()) {
+                        jpsWorkflowModel.setPower(matcher.group(0).trim());
+                    }
+                    jpsWorkflowModel.setLampType(newLampWattage);
+                }
+            }
+
+            String oldPoleNumber = getFormValue(edgeFormDataList,installWorkflowFormId.getOldPoleNumber());
+            if (nullCheck(oldPoleNumber))
+                jpsWorkflowModel.setOldPoleNumber(oldPoleNumber);
+
+            String poleType = getFormValue(edgeFormDataList,installWorkflowFormId.getPoleType());
+            if (nullCheck(poleType))
+                jpsWorkflowModel.setPole_type(poleType);
+
+            String macaddress = getFormValue(edgeFormDataList,installWorkflowFormId.getMacAddress());
+            if (nullCheck(macaddress))
+                if (macaddress != null && macaddress.startsWith("00135"))
+                    jpsWorkflowModel.setMacAddress(macaddress);
+
+            String mastArmLength = getFormValue(edgeFormDataList,installWorkflowFormId.getMastArmLength());
+            if (nullCheck(mastArmLength))
+                jpsWorkflowModel.setFixing_type(mastArmLength);
+
+            String mastArmLengthOther = getFormValue(edgeFormDataList,installWorkflowFormId.getMastArmLengthOther());
+            if (nullCheck(mastArmLengthOther))
+                jpsWorkflowModel.setOtherFixtureType(mastArmLengthOther);
+
+            String conversionDate = getFormValue(edgeFormDataList,installWorkflowFormId.getConversionDate());
+            if (nullCheck(conversionDate)) {
+                jpsWorkflowModel.setInstall_date(Utils.installDateFormat(Long.valueOf(conversionDate)));
+            }
+
+            String feed = getFormValue(edgeFormDataList,installWorkflowFormId.getFeed());
+            if (nullCheck(feed))
+                jpsWorkflowModel.setNetwork_type(feed);
+
+            String poleShape = getFormValue(edgeFormDataList,installWorkflowFormId.getPoleShape());
+            if (nullCheck(poleShape))
+                jpsWorkflowModel.setPole_shape(poleShape);
+
+            String condition = getFormValue(edgeFormDataList,installWorkflowFormId.getCondition());
+            if (nullCheck(condition))
+                jpsWorkflowModel.setPole_status(condition);
+
+            String poleNumber = getFormValue(edgeFormDataList,installWorkflowFormId.getPoleNumber());
+            if (nullCheck(poleNumber))
+                jpsWorkflowModel.setLocation_zipcode(poleNumber);
+        }
+        String geozonePaths = "/" + jpsWorkflowModel.getNotebookName() + "/" + jpsWorkflowModel.getAddress1();
+        jpsWorkflowModel.setGeozonePath(geozonePaths);
+        return jpsWorkflowModel;
+    }
+
+
+    private boolean nullCheck(String data) {
+        return (data != null && data.length() > 0 && !data.contains("null")) ? true : false;
+    }
+
+    private String getFormValue(List<EdgeFormData> edgeFormDatas,int id){
+        EdgeFormData edgeFormData = new EdgeFormData();
+        edgeFormData.setId(id);
+        int pos = edgeFormDatas.indexOf(edgeFormData);
+        if(pos > -1){
+            return edgeFormDatas.get(pos).getValue();
+        }
+        return "";
+    }
+
+
+
+    public void processLampType(List<EdgeFormData> edgeFormDataList, JPSWorkflowModel jpsWorkflowModel) {
+        String otherLampId = properties.getProperty("jps.edge.otherlamptype");//201
+        String otherWattage = properties.getProperty("jps.edge.otherwattage");//188
+        String otherNewLampModel = valueById(edgeFormDataList, Integer.parseInt(otherLampId));
+        String lampWattage = valueById(edgeFormDataList, Integer.parseInt(otherWattage));
+        jpsWorkflowModel.setLampType(otherNewLampModel);
+        if(lampWattage != null){
+            jpsWorkflowModel.setPower(lampWattage);
+        }
+
+    }
+
 }

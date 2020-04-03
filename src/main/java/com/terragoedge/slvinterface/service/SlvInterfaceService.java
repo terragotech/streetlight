@@ -5,6 +5,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
 import com.terragoedge.slvinterface.dao.tables.SlvSyncDetail;
 import com.terragoedge.slvinterface.exception.*;
+import com.terragoedge.slvinterface.maintenanceworkflow.MaintenanceWorkflowService;
 import com.terragoedge.slvinterface.model.*;
 import com.terragoedge.slvinterface.utils.PropertiesReader;
 import com.terragoedge.slvinterface.utils.Utils;
@@ -29,12 +30,14 @@ public class SlvInterfaceService extends AbstractSlvService {
     private String installFormtemplateGuid = null;
     private String newFixtureFormtemplateGuid = null;
     private JsonParser jsonParser;
+    MaintenanceWorkflowService maintenanceWorkflowService;
 
     public SlvInterfaceService() {
         super();
         jsonParser = new JsonParser();
         slvService = new SlvService();
         this.properties = PropertiesReader.getProperties();
+        maintenanceWorkflowService = new MaintenanceWorkflowService();
     }
 
     public void start() {
@@ -45,9 +48,12 @@ public class SlvInterfaceService extends AbstractSlvService {
         WorkFlowFormId newFixtureworkFlowFormId = null;
         WorkFlowFormId maintenanceInstallFormId = null;
         try {
-                installworkFlowFormId = getConfigData("./resources/installWorkflow.json");
-                newFixtureworkFlowFormId = getConfigData("./resources/newFixtureWorkflow.json");
-                maintenanceInstallFormId = getConfigData("./resources/maintenanceInstallWorkflow.json");
+            installworkFlowFormId = getConfigData("./src/main/resources/installWorkflow.json"); // TODO
+            newFixtureworkFlowFormId = getConfigData("./src/main/resources/newFixtureWorkflow.json");
+            maintenanceInstallFormId = getConfigData("./src/main/resources/maintenanceInstallWorkflow.json");
+               // installworkFlowFormId = getConfigData("./resources/installWorkflow.json");
+               // newFixtureworkFlowFormId = getConfigData("./resources/newFixtureWorkflow.json");
+               // maintenanceInstallFormId = getConfigData("./resources/maintenanceInstallWorkflow.json");
         }catch (Exception e){
             e.printStackTrace();
             logger.error("Error while reading configuration file for form ids");
@@ -74,6 +80,7 @@ public class SlvInterfaceService extends AbstractSlvService {
 //        List<String> noteGuidsList = new ArrayList<>();
         String resync = properties.getProperty("com.slv.resync");
         List<String> noteGuidsList = new ArrayList<>();
+        noteGuidsList.add("");
         if(resync.equals("true")){
             String reSyncData = getResyncData("./resources/input.txt");
             if(reSyncData == null){
@@ -83,9 +90,10 @@ public class SlvInterfaceService extends AbstractSlvService {
                 noteGuidsList = Arrays.asList(resyncItems);
             }
         }else {
-            noteGuidsList = getNoteGuids(maxSyncTime,edgeToken);
+           // noteGuidsList = getNoteGuids(maxSyncTime,edgeToken); // -- TODO
 //            noteGuidsList = connectionDAO.getEdgeNoteGuid(installFormtemplateGuid, newFixtureFormtemplateGuid, maxSyncTime);
         }
+
         /*List<String> noteGuidsList = new ArrayList<>();
         noteGuidsList.clear();
         noteGuidsList.add(properties.getProperty("noteguid"));*/
@@ -105,20 +113,7 @@ public class SlvInterfaceService extends AbstractSlvService {
                         ResponseEntity<String> responseEntity = slvRestService.getRequest(restUrl, false, accessToken);
                         if (responseEntity.getStatusCode().is2xxSuccessful()) {
                             String notesData = responseEntity.getBody();
-                            EdgeNote edgeNote = gson.fromJson(notesData, EdgeNote.class);
-                            logger.info("Processed Note title size :" + gson.toJson(edgeNote));
-                            logger.info("ProcessNoteGuid is :" + edgenoteGuid);
-                            logger.info("ProcessNoteTitle is :" + edgeNote.getTitle());
-                            List<String> formTemplateGuids = getProcessingFormTemplateGuids(edgeNote);
-                            if(formTemplateGuids.size() == 0){
-                                logger.error("There is no processing form attached to this note. So skipping."+edgeNote.getNoteGuid());
-                            }else if(formTemplateGuids.size() > 1){
-                                logger.error("There are more processing form attached to this note. So skipping."+edgeNote.getNoteGuid());
-                            }else {
-                                logger.error("There is only one processing form attached to this note. So continuing process."+edgeNote.getNoteGuid());
-                                String formTemplateGuid = formTemplateGuids.get(0);
-                                processEdgeNote(edgeNote, formTemplateGuid, false, formTemplateGuid.equals(installFormtemplateGuid) ? installworkFlowFormId : newFixtureworkFlowFormId);
-                            }
+                            doProcess(notesData,edgenoteGuid,installworkFlowFormId,newFixtureworkFlowFormId,maintenanceInstallFormId);
                         }else{
                             logger.info("getting edge note from rest call is failed noteguid: "+edgenoteGuid);
                         }
@@ -131,6 +126,37 @@ public class SlvInterfaceService extends AbstractSlvService {
             }
         }
         logger.info("Process End :");
+    }
+
+
+    private void doProcess(String notesData,String edgenoteGuid ,WorkFlowFormId installworkFlowFormId ,
+            WorkFlowFormId newFixtureworkFlowFormId ,
+            WorkFlowFormId maintenanceInstallFormId ){
+        EdgeNote edgeNote = gson.fromJson(notesData, EdgeNote.class);
+        logger.info("Processed Note title size :" + gson.toJson(edgeNote));
+        logger.info("ProcessNoteGuid is :" + edgenoteGuid);
+        logger.info("ProcessNoteTitle is :" + edgeNote.getTitle());
+
+        try {
+            maintenanceWorkflowService.processMaintenanceWorkflow(edgeNote,maintenanceInstallFormId);
+            return;
+        }catch (NoDataChangeException e){
+            logger.info("No Data change in Maintenance Workflow, so continue the old process...");
+        }catch (SkipNoteException e){
+            return;
+        }
+
+
+        List<String> formTemplateGuids = getProcessingFormTemplateGuids(edgeNote);
+        if(formTemplateGuids.size() == 0){
+            logger.error("There is no processing form attached to this note. So skipping."+edgeNote.getNoteGuid());
+        }else if(formTemplateGuids.size() > 1){
+            logger.error("There are more processing form attached to this note. So skipping."+edgeNote.getNoteGuid());
+        }else {
+            logger.error("There is only one processing form attached to this note. So continuing process."+edgeNote.getNoteGuid());
+            String formTemplateGuid = formTemplateGuids.get(0);
+            processEdgeNote(edgeNote, formTemplateGuid, false, formTemplateGuid.equals(installFormtemplateGuid) ? installworkFlowFormId : newFixtureworkFlowFormId);
+        }
     }
 
     public void startReport() {
@@ -185,156 +211,16 @@ public class SlvInterfaceService extends AbstractSlvService {
 
     //streetlight.controller.str.id
     //
-    public JPSWorkflowModel processWorkFlowForm(List<FormData> formDataList, EdgeNote edgeNote, WorkFlowFormId installWorkflowFormId) {
-        JPSWorkflowModel jpsWorkflowModel = new JPSWorkflowModel();
-        if (edgeNote.getEdgeNotebook() != null) {
-            jpsWorkflowModel.setNotebookName(edgeNote.getEdgeNotebook().getNotebookName());
-            jpsWorkflowModel.setDimmingGroupName(edgeNote.getEdgeNotebook().getNotebookName());
-        }
-        String categoryStrId = properties.getProperty("streetlight.categorystr.id");
-        String controllerStrId = properties.getProperty("streetlight.controller.str.id");
 
-        String nodeTypeStrId = properties.getProperty("streetlight.slv.equipment.type");
-        Feature feature = (Feature) GeoJSONFactory.create(edgeNote.getGeometry());
-        // parse Geometry from Feature
-        GeoJSONReader reader = new GeoJSONReader();
-        Geometry geom = reader.read(feature.getGeometry());
-        if (edgeNote.getGeometry() != null) {
-            jpsWorkflowModel.setLat(String.valueOf(geom.getCoordinate().y));
-            jpsWorkflowModel.setLng(String.valueOf(geom.getCoordinate().x));
-        } else {
-            logger.info("There is no location given note :" + edgeNote.getTitle());
-        }
-        jpsWorkflowModel.setControllerStrId(controllerStrId);
-        jpsWorkflowModel.setEquipmentType(nodeTypeStrId);
-        jpsWorkflowModel.setProvider_name(properties.getProperty("jps.provider.name"));
-        jpsWorkflowModel.setLowvoltagethreshold(Integer.valueOf(properties.getProperty("jps.low.voltage.thershold")));
-        jpsWorkflowModel.setHighvoltagethreshold(Integer.valueOf(properties.getProperty("jps.high.voltage.thershold")));
-        jpsWorkflowModel.setCategoryStrId(categoryStrId);
-        jpsWorkflowModel.setLocationtype(properties.getProperty("jps.location.type"));
-        jpsWorkflowModel.setModel(properties.getProperty("jps.model"));
-        for (FormData formData : formDataList) {
-            List<EdgeFormData> edgeFormDataList = formData.getFormDef();
 
-            String feederName = getFormValue(edgeFormDataList,installWorkflowFormId.getFeederName());
-            if (nullCheck(feederName))
-                jpsWorkflowModel.setStreetdescription(feederName);
 
-            String streetName = getFormValue(edgeFormDataList,installWorkflowFormId.getStreetName());
-            if (nullCheck(streetName))
-                jpsWorkflowModel.setAddress1(streetName);
-
-            String parrish = getFormValue(edgeFormDataList,installWorkflowFormId.getParrish());
-            if (nullCheck(parrish))
-                jpsWorkflowModel.setCity(parrish);
-
-            String division = getFormValue(edgeFormDataList,installWorkflowFormId.getDivision());
-            if (nullCheck(division))
-                jpsWorkflowModel.setDivision(division);
-
-            String newPoleNumber = getFormValue(edgeFormDataList,installWorkflowFormId.getNewPoleNumber());
-            if (nullCheck(newPoleNumber)) {
-                jpsWorkflowModel.setIdOnController(newPoleNumber);
-                jpsWorkflowModel.setName(newPoleNumber);
-                jpsWorkflowModel.setUtillocationid(newPoleNumber);
-            }
-
-            String retrofitStatus = getFormValue(edgeFormDataList,installWorkflowFormId.getRetrofitStatus());
-            if (nullCheck(retrofitStatus))
-                jpsWorkflowModel.setInstallStatus(retrofitStatus);
-
-            String newLampWattage = getFormValue(edgeFormDataList,installWorkflowFormId.getNewLampWatage());
-            if (nullCheck(newLampWattage)) {
-                String lampType = newLampWattage;
-                if (lampType.equals("Other")) {
-                    processLampType(edgeFormDataList, jpsWorkflowModel);
-                } else {
-                    Pattern pattern = Pattern.compile("\\d+");
-                    Matcher matcher = pattern.matcher(newLampWattage);
-                    if (matcher != null && matcher.find()) {
-                        jpsWorkflowModel.setPower(matcher.group(0).trim());
-                    }
-                    jpsWorkflowModel.setLampType(newLampWattage);
-                }
-            }
-
-            String oldPoleNumber = getFormValue(edgeFormDataList,installWorkflowFormId.getOldPoleNumber());
-            if (nullCheck(oldPoleNumber))
-                jpsWorkflowModel.setOldPoleNumber(oldPoleNumber);
-
-            String poleType = getFormValue(edgeFormDataList,installWorkflowFormId.getPoleType());
-            if (nullCheck(poleType))
-                jpsWorkflowModel.setPole_type(poleType);
-
-            String macaddress = getFormValue(edgeFormDataList,installWorkflowFormId.getMacAddress());
-            if (nullCheck(macaddress))
-                if (macaddress != null && macaddress.startsWith("00135"))
-                    jpsWorkflowModel.setMacAddress(macaddress);
-
-            String mastArmLength = getFormValue(edgeFormDataList,installWorkflowFormId.getMastArmLength());
-            if (nullCheck(mastArmLength))
-                jpsWorkflowModel.setFixing_type(mastArmLength);
-
-            String mastArmLengthOther = getFormValue(edgeFormDataList,installWorkflowFormId.getMastArmLengthOther());
-            if (nullCheck(mastArmLengthOther))
-                jpsWorkflowModel.setOtherFixtureType(mastArmLengthOther);
-
-            String conversionDate = getFormValue(edgeFormDataList,installWorkflowFormId.getConversionDate());
-            if (nullCheck(conversionDate)) {
-                jpsWorkflowModel.setInstall_date(Utils.installDateFormat(Long.valueOf(conversionDate)));
-            }
-
-            String feed = getFormValue(edgeFormDataList,installWorkflowFormId.getFeed());
-            if (nullCheck(feed))
-                jpsWorkflowModel.setNetwork_type(feed);
-
-            String poleShape = getFormValue(edgeFormDataList,installWorkflowFormId.getPoleShape());
-            if (nullCheck(poleShape))
-                jpsWorkflowModel.setPole_shape(poleShape);
-
-            String condition = getFormValue(edgeFormDataList,installWorkflowFormId.getCondition());
-            if (nullCheck(condition))
-                jpsWorkflowModel.setPole_status(condition);
-
-            String poleNumber = getFormValue(edgeFormDataList,installWorkflowFormId.getPoleNumber());
-            if (nullCheck(poleNumber))
-                jpsWorkflowModel.setLocation_zipcode(poleNumber);
-        }
-        String geozonePaths = "/" + jpsWorkflowModel.getNotebookName() + "/" + jpsWorkflowModel.getAddress1();
-        jpsWorkflowModel.setGeozonePath(geozonePaths);
-        return jpsWorkflowModel;
-    }
-
-    public void processLampType(List<EdgeFormData> edgeFormDataList, JPSWorkflowModel jpsWorkflowModel) {
-        String otherLampId = properties.getProperty("jps.edge.otherlamptype");//201
-        String otherWattage = properties.getProperty("jps.edge.otherwattage");//188
-        String otherNewLampModel = valueById(edgeFormDataList, Integer.parseInt(otherLampId));
-        String lampWattage = valueById(edgeFormDataList, Integer.parseInt(otherWattage));
-        jpsWorkflowModel.setLampType(otherNewLampModel);
-        if(lampWattage != null){
-            jpsWorkflowModel.setPower(lampWattage);
-        }
-
-    }
-
-    private boolean nullCheck(String data) {
-        return (data != null && data.length() > 0 && !data.contains("null")) ? true : false;
-    }
 
     @Override
     public void buildFixtureStreetLightData(String data, List<Object> paramsList, EdgeNote edgeNote) throws InValidBarCodeException {
 
     }
 
-    private String getFormValue(List<EdgeFormData> edgeFormDatas,int id){
-        EdgeFormData edgeFormData = new EdgeFormData();
-        edgeFormData.setId(id);
-        int pos = edgeFormDatas.indexOf(edgeFormData);
-        if(pos > -1){
-            return edgeFormDatas.get(pos).getValue();
-        }
-        return "";
-    }
+
 
     private WorkFlowFormId getConfigData(String path){
         try {
@@ -411,14 +297,5 @@ public class SlvInterfaceService extends AbstractSlvService {
         return noteguids;
     }
 
-    private void processMaintenanceInstallForm(List<FormData> formDatasList,EdgeNote edgeNote,WorkFlowFormId installWorkflowFormId){
-        try {
-            // List<FormData> formDatasList should have maintenance forms only
-            JPSWorkflowModel jpsWorkflowModel = processWorkFlowForm(formDatasList, edgeNote, installWorkflowFormId);
-            jpsWorkflowModel.setInstallStatus("CONVERTED");
-            slvService.processSlv(jpsWorkflowModel, edgeNote);
-        }catch (Exception e){
-            logger.error("Error in processMaintenanceInstallForm : ",e);
-        }
-    }
+
 }
