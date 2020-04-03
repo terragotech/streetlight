@@ -424,4 +424,15 @@ public abstract class AbstractSlvService extends EdgeService {
         }
         return "";
     }
+
+    protected void addStreetLightData(String key, String value, List<Object> paramsList) {
+        paramsList.add("valueName=" + key.trim());
+        if(value != null && !value.trim().isEmpty()){
+            value = encode(value);
+            paramsList.add("value=" + value);
+        }else{
+            paramsList.add("value=");
+        }
+
+    }
 }

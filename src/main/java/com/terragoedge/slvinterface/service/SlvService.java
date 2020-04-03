@@ -218,16 +218,7 @@ public class SlvService extends AbstractSlvService {
         }
     }
 
-    protected void addStreetLightData(String key, String value, List<Object> paramsList) {
-        paramsList.add("valueName=" + key.trim());
-        if(value != null && !value.trim().isEmpty()){
-            value = encode(value);
-            paramsList.add("value=" + value);
-        }else{
-            paramsList.add("value=");
-        }
 
-    }
 
     private ResponseEntity<String> callSetDeviceValues(JPSWorkflowModel jpsWorkflowModel) {
         List<Object> paramList = new ArrayList<>();

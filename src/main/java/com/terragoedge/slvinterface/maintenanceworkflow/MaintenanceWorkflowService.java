@@ -10,21 +10,18 @@ import com.terragoedge.slvinterface.exception.NoValueException;
 import com.terragoedge.slvinterface.exception.SkipNoteException;
 import com.terragoedge.slvinterface.maintenanceworkflow.model.DataDiffResponse;
 import com.terragoedge.slvinterface.maintenanceworkflow.model.DataDiffValueHolder;
-import com.terragoedge.slvinterface.model.EdgeFormData;
-import com.terragoedge.slvinterface.model.EdgeNote;
-import com.terragoedge.slvinterface.model.FormData;
-import com.terragoedge.slvinterface.model.Value;
+import com.terragoedge.slvinterface.model.*;
 import com.terragoedge.slvinterface.service.AbstractSlvService;
 import com.terragoedge.slvinterface.service.EdgeService;
 import com.terragoedge.slvinterface.utils.PropertiesReader;
+import com.terragoedge.slvinterface.utils.Utils;
 import org.apache.log4j.Logger;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /*
 
@@ -36,10 +33,12 @@ public class MaintenanceWorkflowService extends AbstractSlvService {
 
     private Gson gson;
     private JsonParser jsonParser;
+    private Properties properties;
 
     public MaintenanceWorkflowService() {
         gson = new Gson();
         jsonParser = new JsonParser();
+        this.properties = PropertiesReader.getProperties();
     }
 
     final Logger logger = Logger.getLogger(MaintenanceWorkflowService.class);
@@ -79,27 +78,32 @@ public class MaintenanceWorkflowService extends AbstractSlvService {
 
                             case "replace_led_light":
                                 if(isDevicePresent(idOnController)){
-                                    //New Lamp Serial Number = 283
-                                    processLedLight(283,edgeFormDataList,idOnController);
+                                    JPSWorkflowModel jpsWorkflowModel = getJPSWorkflowModel(edgeNote,idOnController);
+                                    processLedLight(283,edgeFormDataList,idOnController,jpsWorkflowModel);
                                 }
 
                                 break;
                             case "replace_smart_controller":
                                 if(isDevicePresent(idOnController)){
-                                    processReplaceSmartController(271,edgeFormDataList,idOnController);
+                                    JPSWorkflowModel jpsWorkflowModel = getJPSWorkflowModel(edgeNote,idOnController);
+                                    processReplaceSmartController(271,edgeFormDataList,idOnController,edgeNote,jpsWorkflowModel);
                                 }
 
                                 break;
                             case "replace_led_smart_controller":
                                 if(isDevicePresent(idOnController)){
-                                    processLedLight(10102,edgeFormDataList,idOnController);
-                                    processReplaceSmartController(10096,edgeFormDataList,idOnController);
+                                    JPSWorkflowModel jpsWorkflowModel = getJPSWorkflowModel(edgeNote,idOnController);
+                                    processLedLight(10102,edgeFormDataList,idOnController,jpsWorkflowModel);
+                                    processReplaceSmartController(10096,edgeFormDataList,idOnController,edgeNote,jpsWorkflowModel);
                                 }
 
 
                                 break;
                             case "remove":
-
+                                if(isDevicePresent(idOnController)){
+                                    JPSWorkflowModel jpsWorkflowModel = getJPSWorkflowModel(edgeNote,idOnController);
+                                    processRemoveWorkFlow(idOnController,edgeNote,jpsWorkflowModel);
+                                }
                                 break;
                         }
                     }
@@ -123,7 +127,7 @@ public class MaintenanceWorkflowService extends AbstractSlvService {
 
     }
 
-    private void processReplaceSmartController(int formId, List<EdgeFormData> edgeFormDataList, String idOnController) throws NoValueException {
+    private void processReplaceSmartController(int formId, List<EdgeFormData> edgeFormDataList, String idOnController,EdgeNote edgeNote,JPSWorkflowModel jpsWorkflowModel) throws NoValueException {
         String macAddress = valueById(edgeFormDataList, formId);
         List<Value> valueList = checkMacAddressExists(macAddress);
         if (valueList != null && valueList.size() > 0) {
@@ -134,16 +138,58 @@ public class MaintenanceWorkflowService extends AbstractSlvService {
                 }
             }
         }
-        replaceOLC();
+
+        try{
+            replaceOLC(jpsWorkflowModel.getControllerStrId(), idOnController, "", edgeNote, jpsWorkflowModel);
+        }catch (Exception e){
+            logger.error("Error in processReplaceSmartController",e);
+        }
+
+        try{
+            replaceOLC(jpsWorkflowModel.getControllerStrId(), idOnController, macAddress, edgeNote, jpsWorkflowModel);
+        }catch (Exception e){
+            logger.error("Error in processReplaceSmartController",e);
+        }
+
+
+    }
+
+
+    private void processRemoveWorkFlow( String idOnController,EdgeNote edgeNote,JPSWorkflowModel jpsWorkflowModel){
+        try{
+            replaceOLC(jpsWorkflowModel.getControllerStrId(), idOnController, "", edgeNote, jpsWorkflowModel);
+        }catch (Exception e){
+            logger.error("Error in processReplaceSmartController",e);
+        }
+
+        List<Object> paramList = new ArrayList<>();
+        paramList.add("idOnController=" + encode(idOnController));
+        paramList.add("controllerStrId=" + jpsWorkflowModel.getControllerStrId());
+        addStreetLightData("idOnController", idOnController, paramList);
+        addStreetLightData("installStatus", "Removed", paramList);
+        ResponseEntity<String> responseEntity = setDeviceValues(paramList);
+        logger.info("********************** set device values reponse code: " + responseEntity.getStatusCode());
+        logger.info("set device values response: " + responseEntity.getBody());
+        logger.info("********************** set device values reponse end *********");
     }
 
 
 
 
+    private void processLedLight(int formId, List<EdgeFormData> edgeFormDataList, String idOnController,JPSWorkflowModel jpsWorkflowModel){
+            String serialNumber = valueById(edgeFormDataList, formId);
+            if(!serialNumber.trim().isEmpty()){
+                List<Object> paramList = new ArrayList<>();
+                paramList.add("idOnController=" + encode(idOnController));
+                paramList.add("controllerStrId=" + jpsWorkflowModel.getControllerStrId());
+                addStreetLightData("idOnController", idOnController, paramList);
+                addStreetLightData("device.node.serialnumber", serialNumber, paramList);
+                ResponseEntity<String> responseEntity = setDeviceValues(paramList);
+                logger.info("********************** set device values reponse code: " + responseEntity.getStatusCode());
+                logger.info("set device values response: " + responseEntity.getBody());
+                logger.info("********************** set device values reponse end *********");
+            }
 
-    private void processLedLight(int formId, List<EdgeFormData> edgeFormDataList, String idOnController){
-        String serialNumber = valueById(edgeFormDataList, formId);
-        //device.node.serialnumber
     }
 
 
@@ -213,5 +259,31 @@ public class MaintenanceWorkflowService extends AbstractSlvService {
     @Override
     public void buildFixtureStreetLightData(String data, List<Object> paramsList, EdgeNote edgeNote) throws InValidBarCodeException {
 
+    }
+
+
+
+    public JPSWorkflowModel getJPSWorkflowModel( EdgeNote edgeNote,String idOnController) {
+        JPSWorkflowModel jpsWorkflowModel = new JPSWorkflowModel();
+        jpsWorkflowModel.setIdOnController(idOnController);
+        if (edgeNote.getEdgeNotebook() != null) {
+            jpsWorkflowModel.setNotebookName(edgeNote.getEdgeNotebook().getNotebookName());
+            jpsWorkflowModel.setDimmingGroupName(edgeNote.getEdgeNotebook().getNotebookName());
+        }
+        String categoryStrId = properties.getProperty("streetlight.categorystr.id");
+        String controllerStrId = properties.getProperty("streetlight.controller.str.id");
+
+        String nodeTypeStrId = properties.getProperty("streetlight.slv.equipment.type");
+        jpsWorkflowModel.setControllerStrId(controllerStrId);
+        jpsWorkflowModel.setEquipmentType(nodeTypeStrId);
+        jpsWorkflowModel.setProvider_name(properties.getProperty("jps.provider.name"));
+        jpsWorkflowModel.setLowvoltagethreshold(Integer.valueOf(properties.getProperty("jps.low.voltage.thershold")));
+        jpsWorkflowModel.setHighvoltagethreshold(Integer.valueOf(properties.getProperty("jps.high.voltage.thershold")));
+        jpsWorkflowModel.setCategoryStrId(categoryStrId);
+        jpsWorkflowModel.setLocationtype(properties.getProperty("jps.location.type"));
+        jpsWorkflowModel.setModel(properties.getProperty("jps.model"));
+        String geozonePaths = "/" + jpsWorkflowModel.getNotebookName() + "/" + jpsWorkflowModel.getAddress1();
+        jpsWorkflowModel.setGeozonePath(geozonePaths);
+        return jpsWorkflowModel;
     }
 }
