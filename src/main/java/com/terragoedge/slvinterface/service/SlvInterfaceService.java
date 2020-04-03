@@ -48,12 +48,9 @@ public class SlvInterfaceService extends AbstractSlvService {
         WorkFlowFormId newFixtureworkFlowFormId = null;
         WorkFlowFormId maintenanceInstallFormId = null;
         try {
-            installworkFlowFormId = getConfigData("./src/main/resources/installWorkflow.json"); // TODO
-            newFixtureworkFlowFormId = getConfigData("./src/main/resources/newFixtureWorkflow.json");
-            maintenanceInstallFormId = getConfigData("./src/main/resources/maintenanceInstallWorkflow.json");
-               // installworkFlowFormId = getConfigData("./resources/installWorkflow.json");
-               // newFixtureworkFlowFormId = getConfigData("./resources/newFixtureWorkflow.json");
-               // maintenanceInstallFormId = getConfigData("./resources/maintenanceInstallWorkflow.json");
+               installworkFlowFormId = getConfigData("./resources/installWorkflow.json");
+               newFixtureworkFlowFormId = getConfigData("./resources/newFixtureWorkflow.json");
+               maintenanceInstallFormId = getConfigData("./resources/maintenanceInstallWorkflow.json");
         }catch (Exception e){
             e.printStackTrace();
             logger.error("Error while reading configuration file for form ids");
@@ -80,7 +77,6 @@ public class SlvInterfaceService extends AbstractSlvService {
 //        List<String> noteGuidsList = new ArrayList<>();
         String resync = properties.getProperty("com.slv.resync");
         List<String> noteGuidsList = new ArrayList<>();
-        noteGuidsList.add("");
         if(resync.equals("true")){
             String reSyncData = getResyncData("./resources/input.txt");
             if(reSyncData == null){
@@ -90,7 +86,7 @@ public class SlvInterfaceService extends AbstractSlvService {
                 noteGuidsList = Arrays.asList(resyncItems);
             }
         }else {
-           // noteGuidsList = getNoteGuids(maxSyncTime,edgeToken); // -- TODO
+            noteGuidsList = getNoteGuids(maxSyncTime,edgeToken);
 //            noteGuidsList = connectionDAO.getEdgeNoteGuid(installFormtemplateGuid, newFixtureFormtemplateGuid, maxSyncTime);
         }
 
@@ -133,6 +129,15 @@ public class SlvInterfaceService extends AbstractSlvService {
             WorkFlowFormId newFixtureworkFlowFormId ,
             WorkFlowFormId maintenanceInstallFormId ){
         EdgeNote edgeNote = gson.fromJson(notesData, EdgeNote.class);
+
+        String skippingUserStr = properties.getProperty("com.edge.skipping.users");
+        String[] skippingUserArr = skippingUserStr.split(",",-1);
+        List<String> skippingUsers = Arrays.asList(skippingUserArr);
+        if(skippingUsers.contains(edgeNote.getCreatedBy())){
+            logger.error("This note skipped due to it's created by skipping user");
+            return;
+        }
+
         logger.info("Processed Note title size :" + gson.toJson(edgeNote));
         logger.info("ProcessNoteGuid is :" + edgenoteGuid);
         logger.info("ProcessNoteTitle is :" + edgeNote.getTitle());

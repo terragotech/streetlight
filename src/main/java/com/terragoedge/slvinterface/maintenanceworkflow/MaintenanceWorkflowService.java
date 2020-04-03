@@ -251,8 +251,10 @@ public class MaintenanceWorkflowService extends AbstractSlvService {
      */
     private DataDiffResponse compareRevisionData(String noteGuid) throws NoDataChangeException, SkipNoteException {
         logger.info("Comparing data from the Previous Revision.");
+        String baseUrl = properties.getProperty("streetlight.edge.url.main");
         String url = PropertiesReader.getProperties().getProperty("streetlight.edge.url.checkrevisiondata");
         String config = PropertiesReader.getProperties().getProperty("streetlight.edge.checkrevisiondata.config");
+        url = baseUrl+url;
         JsonObject configJson = (JsonObject) jsonParser.parse(config);
         configJson.addProperty("noteGuid", noteGuid);
         logger.info("Given url is :" + url);
