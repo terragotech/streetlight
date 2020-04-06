@@ -763,7 +763,7 @@ public abstract class AbstractProcessor {
 
     private void processExistingFixtureQRScan(String data,List<Object> paramsList,SlvServerData slvServerData,InstallMaintenanceLogModel loggingModel,ProContextLookupData proContextLookupData){
         if(data != null && !data.trim().isEmpty()){
-            String[] fixtureQrScan =  data.split(",");
+            String[] fixtureQrScan =  parseFixtureQRScan(data);
             String lumBrand =  addExistingFixtureQRScan(fixtureQrScan,paramsList,0,"Existing LED","luminaire.brand",loggingModel,proContextLookupData);
             if(lumBrand != null){
                 slvServerData.setLuminaireBrand(lumBrand);
@@ -854,6 +854,14 @@ public abstract class AbstractProcessor {
     }
 
 
+    private String[] parseFixtureQRScan(String fixtureQRScan) {
+        logger.info("Fixture QR Scan:" + fixtureQRScan);
+        String[] res = StringUtils.splitPreserveAllTokens(fixtureQRScan, ",");
+        logger.info("Fixture QR Scan length:" + res.length);
+        return res;
+    }
+
+
 
 
     public void buildFixtureStreetLightData(String data, List<Object> paramsList, EdgeNote edgeNote, SlvServerData slvServerData, InstallMaintenanceLogModel loggingModel)
@@ -878,7 +886,7 @@ public abstract class AbstractProcessor {
             addProContextLookupData(proContextLookupData,slvServerData,paramsList,loggingModel);
             return;
         }
-        String[] fixtureInfo = data.split(",");
+        String[] fixtureInfo = parseFixtureQRScan(data);
         logger.info("Fixture QR Scan Val length" + fixtureInfo.length);
         // The highlighted sections are where it look like Philips replaced a “-“ with a “,” causing a single field to become 2 fields. I can have Dan contact the manufacturer but we won’t be able to change any of the QR codes on the fixtures already delivered.
         if (fixtureInfo.length >= 15) {
