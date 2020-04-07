@@ -267,7 +267,7 @@ public class SlvInterfaceService extends AbstractSlvService {
     private List<String> getNoteGuids(long lastSyncTime,String accessToken){
         List<String> noteguids = new ArrayList<>();
         String edgeSlvUrl =  PropertiesReader.getProperties().getProperty("streetlight.edge.slvserver.url");
-        edgeSlvUrl = edgeSlvUrl+"/notesGuid?lastSyncTime=";
+        edgeSlvUrl = edgeSlvUrl+"/notesGuid?withRevision=true&lastSyncTime=";
 
         if(lastSyncTime > 0){
             edgeSlvUrl = edgeSlvUrl + lastSyncTime;
