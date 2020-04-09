@@ -299,7 +299,14 @@ public class MaintenanceWorkflowService extends AbstractSlvService {
                 int pos = dataDiff.indexOf(temp);
                 if (pos != -1) {
                     logger.info("Action Type....."+actionType);
-                    return actionType;
+                    if(actionType.equals("remove")){
+                        if(temp.getId() == 10081 && temp.getValue().startsWith("Decommission Light")){
+                            return actionType;
+                        }
+                    }else{
+                        return actionType;
+                    }
+
                 }
             }
         }
