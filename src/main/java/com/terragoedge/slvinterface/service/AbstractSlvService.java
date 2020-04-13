@@ -564,7 +564,7 @@ public abstract class AbstractSlvService extends EdgeService {
         return (data != null && data.length() > 0 && !data.contains("null")) ? true : false;
     }
 
-    private String getFormValue(List<EdgeFormData> edgeFormDatas,int id){
+    protected String getFormValue(List<EdgeFormData> edgeFormDatas,int id){
         EdgeFormData edgeFormData = new EdgeFormData();
         edgeFormData.setId(id);
         int pos = edgeFormDatas.indexOf(edgeFormData);

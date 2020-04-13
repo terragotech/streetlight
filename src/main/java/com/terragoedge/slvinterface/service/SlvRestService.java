@@ -142,6 +142,31 @@ public class SlvRestService {
         return headers;
     }
 
+    private HttpHeaders getHeaders(String accessToken,boolean isSlv) {
+        String userName = null;
+        String password = null;
+        HttpHeaders headers = new HttpHeaders();
+        if (accessToken != null) {
+            headers.add("Authorization", "Bearer " + accessToken);
+            return headers;
+        } else {
+            if(isSlv) {
+                userName = properties.getProperty("streetlight.slv.username");
+                password = properties.getProperty("streetlight.slv.password");
+            }else{
+                userName = properties.getProperty("streetlight.edge.username1");
+                password = properties.getProperty("streetlight.edge.password1");
+            }
+        }
+        String plainCreds = userName + ":" + password;
+
+        byte[] plainCredsBytes = plainCreds.getBytes();
+        byte[] base64CredsBytes = Base64.encodeBase64(plainCredsBytes);
+        String base64Creds = new String(base64CredsBytes);
+        headers.add("Authorization", "Basic " + base64Creds);
+        return headers;
+    }
+
 
     public ResponseEntity<String> getRequest(String url) {
         logger.info("------------ Request ------------------");
@@ -228,5 +253,23 @@ public class SlvRestService {
             }
         }
         return HttpStatus.NOT_FOUND;
+    }
+
+    public ResponseEntity<String> serverCall(String url, HttpMethod httpMethod, String body,boolean isSlv){
+        RestTemplate restTemplate = new RestTemplate();
+        HttpHeaders headers = getHeaders(null,isSlv);
+        HttpEntity request = null;
+        if(body != null){
+            headers.add("Content-Type", "application/json");
+            request = new HttpEntity<String>(body, headers);
+        }else{
+            request = new HttpEntity<>(headers);
+        }
+        logger.info("Request url: "+url);
+        logger.info("Request body: "+body);
+        ResponseEntity<String> responseEntity = restTemplate.exchange(url, httpMethod, request, String.class);
+        logger.info("Response code: "+responseEntity.getStatusCode());
+        logger.info("Response body: "+responseEntity.getBody());
+        return responseEntity;
     }
 }

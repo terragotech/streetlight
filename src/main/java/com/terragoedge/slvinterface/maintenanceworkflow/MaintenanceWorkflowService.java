@@ -12,6 +12,7 @@ import com.terragoedge.slvinterface.maintenanceworkflow.model.DataDiffValueHolde
 import com.terragoedge.slvinterface.model.*;
 import com.terragoedge.slvinterface.service.AbstractSlvService;
 import com.terragoedge.slvinterface.service.EdgeService;
+import com.terragoedge.slvinterface.service.PromotedDataService;
 import com.terragoedge.slvinterface.service.SlvService;
 import com.terragoedge.slvinterface.utils.PropertiesReader;
 import com.terragoedge.slvinterface.utils.Utils;
@@ -34,11 +35,13 @@ public class MaintenanceWorkflowService extends AbstractSlvService {
     private Gson gson;
     private JsonParser jsonParser;
     private Properties properties;
+    private PromotedDataService promotedDataService;
 
     public MaintenanceWorkflowService() {
         gson = new Gson();
         jsonParser = new JsonParser();
         this.properties = PropertiesReader.getProperties();
+        promotedDataService = new PromotedDataService();
     }
 
     final Logger logger = Logger.getLogger(MaintenanceWorkflowService.class);
@@ -93,7 +96,9 @@ public class MaintenanceWorkflowService extends AbstractSlvService {
                         switch (actionType){
                             case "install":
                                 logger.info("Install Action....");
-                                processMaintenanceInstallForm(formDataList,edgeNote,maintenanceInstallFormId);
+                                JPSWorkflowModel jpsWorkflowModel1 = processWorkFlowForm(formDataList, edgeNote, maintenanceInstallFormId);
+                                processMaintenanceInstallForm(jpsWorkflowModel1,edgeNote);
+                                promotedDataService.updatePromotedData(jpsWorkflowModel1,edgeNote);
                                 break;
 
                             case "replace_led_light":
@@ -101,6 +106,7 @@ public class MaintenanceWorkflowService extends AbstractSlvService {
                                 if(isDevicePresent(idOnController)){
                                     JPSWorkflowModel jpsWorkflowModel = getJPSWorkflowModel(edgeNote,idOnController);
                                     processLedLight(283,edgeFormDataList,idOnController,jpsWorkflowModel);
+                                    promotedDataService.updatePromotedData(jpsWorkflowModel,edgeNote);
                                 }else {
                                     logger.info("Device not present.");
                                 }
@@ -111,6 +117,7 @@ public class MaintenanceWorkflowService extends AbstractSlvService {
                                 if(isDevicePresent(idOnController)){
                                     JPSWorkflowModel jpsWorkflowModel = getJPSWorkflowModel(edgeNote,idOnController);
                                     processReplaceSmartController(271,edgeFormDataList,idOnController,edgeNote,jpsWorkflowModel);
+                                    promotedDataService.updatePromotedData(jpsWorkflowModel,edgeNote);
                                 }else {
                                     logger.info("Device not present.");
                                 }
@@ -122,6 +129,7 @@ public class MaintenanceWorkflowService extends AbstractSlvService {
                                     JPSWorkflowModel jpsWorkflowModel = getJPSWorkflowModel(edgeNote,idOnController);
                                     processLedLight(10102,edgeFormDataList,idOnController,jpsWorkflowModel);
                                     processReplaceSmartController(10096,edgeFormDataList,idOnController,edgeNote,jpsWorkflowModel);
+                                    promotedDataService.updatePromotedData(jpsWorkflowModel,edgeNote);
                                 }else {
                                     logger.info("Device not present.");
                                 }
@@ -133,6 +141,7 @@ public class MaintenanceWorkflowService extends AbstractSlvService {
                                 if(isDevicePresent(idOnController)){
                                     JPSWorkflowModel jpsWorkflowModel = getJPSWorkflowModel(edgeNote,idOnController);
                                     processRemoveWorkFlow(idOnController,edgeNote,jpsWorkflowModel);
+                                    promotedDataService.updatePromotedData(jpsWorkflowModel,edgeNote);
                                 }else {
                                     logger.info("Device not present.");
                                 }
@@ -162,10 +171,9 @@ public class MaintenanceWorkflowService extends AbstractSlvService {
     }
 
 
-    private void processMaintenanceInstallForm(List<FormData> formDatasList,EdgeNote edgeNote,WorkFlowFormId installWorkflowFormId){
+    private void processMaintenanceInstallForm(JPSWorkflowModel jpsWorkflowModel,EdgeNote edgeNote){
         try {
             // List<FormData> formDatasList should have maintenance forms only
-            JPSWorkflowModel jpsWorkflowModel = processWorkFlowForm(formDatasList, edgeNote, installWorkflowFormId);
             jpsWorkflowModel.setInstallStatus("CONVERTED");
             SlvService slvService = new SlvService();
             slvService.processSlv(jpsWorkflowModel, edgeNote);

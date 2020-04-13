@@ -35,9 +35,19 @@ public class EdgeNote {
 	private EdgeNotebook edgeNotebook = null;
 	private String altitudeAccuracy = null;
 	private Long syncTime;
+	private String baseParentNoteId;
 
 	public EdgeNote() {
 
+	}
+
+
+	public String getBaseParentNoteId() {
+		return baseParentNoteId;
+	}
+
+	public void setBaseParentNoteId(String baseParentNoteId) {
+		this.baseParentNoteId = baseParentNoteId;
 	}
 
 	public String getPDOP() {

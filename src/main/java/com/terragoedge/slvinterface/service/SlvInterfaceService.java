@@ -31,6 +31,7 @@ public class SlvInterfaceService extends AbstractSlvService {
     private String newFixtureFormtemplateGuid = null;
     private JsonParser jsonParser;
     MaintenanceWorkflowService maintenanceWorkflowService;
+    private PromotedDataService promotedDataService;
 
     public SlvInterfaceService() {
         super();
@@ -38,6 +39,7 @@ public class SlvInterfaceService extends AbstractSlvService {
         slvService = new SlvService();
         this.properties = PropertiesReader.getProperties();
         maintenanceWorkflowService = new MaintenanceWorkflowService();
+        promotedDataService = new PromotedDataService();
     }
 
     public void start() {
@@ -89,11 +91,10 @@ public class SlvInterfaceService extends AbstractSlvService {
             noteGuidsList = getNoteGuids(maxSyncTime,edgeToken);
 //            noteGuidsList = connectionDAO.getEdgeNoteGuid(installFormtemplateGuid, newFixtureFormtemplateGuid, maxSyncTime);
         }
-
         /*List<String> noteGuidsList = new ArrayList<>();
         noteGuidsList.clear();
-        noteGuidsList.add(properties.getProperty("noteguid"));*/
-        System.out.println("Processed NoteList: " + noteGuidsList);
+        noteGuidsList.add(properties.getProperty("noteguid"));
+        System.out.println("Processed NoteList: " + noteGuidsList);*/
         //end
         for (String edgenoteGuid : noteGuidsList) {
             try {
@@ -197,6 +198,7 @@ public class SlvInterfaceService extends AbstractSlvService {
                     logger.info("JspWorkmodel json :" + gson.toJson(jpsWorkflowModel));
                     if(jpsWorkflowModel.getInstallStatus().equals("CONVERTED")){//CONVERTED
                         slvService.processSlv(jpsWorkflowModel, edgeNote);
+                        promotedDataService.updatePromotedData(jpsWorkflowModel,edgeNote);
                     }else{
                         logger.error("Install status is not CONVERTED. So skipping this note: "+edgeNote.getNoteGuid());
                     }
@@ -301,6 +303,5 @@ public class SlvInterfaceService extends AbstractSlvService {
         }
         return noteguids;
     }
-
 
 }
