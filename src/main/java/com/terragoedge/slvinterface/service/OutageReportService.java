@@ -52,6 +52,13 @@ public class OutageReportService {
         {
             e.printStackTrace();
         }
+        try{
+            TableUtils.clearTable(connectionSource,OutageEntity.class);
+        }
+        catch (Exception e)
+        {
+            e.printStackTrace();
+        }
     }
     private void addOutageData(OutageEntity outageEntity) throws SQLException
     {
@@ -164,6 +171,7 @@ public class OutageReportService {
                     FailureReportModel failureReportModel = new FailureReportModel();
                     failureReportModelList.add(failureReportModel);
                     JsonObject failureObject = jsonElementObject.getAsJsonObject();
+                    logger.info(failureObject.toString());
                     String title = null;
                     String properties = null;
                     if (failureObject.get("label") != null) {
@@ -322,9 +330,11 @@ public class OutageReportService {
                 "failedSince",
                 "burningHours",
                 "lifeTime"};
+        FileWriter outputfile = null;
+        CSVWriter writer = null;
         try {
-            FileWriter outputfile = new FileWriter(file);
-            CSVWriter writer = new CSVWriter(outputfile);
+            outputfile = new FileWriter(file);
+            writer = new CSVWriter(outputfile);
             writer.writeNext(headerValues);
 
             for (GeozoneModel geozoneModel : geozoneModelList) {
@@ -413,6 +423,18 @@ public class OutageReportService {
         catch (Exception e)
         {
             logger.error(e);
+        }
+        finally {
+            if(writer != null)
+            {
+                try {
+                    writer.close();
+                }
+                catch (Exception e)
+                {
+                    logger.error(e);
+                }
+            }
         }
         ////////////////////////////////////////////
 
