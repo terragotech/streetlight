@@ -99,7 +99,7 @@ public class PromotedDataService extends AbstractSlvService {
             params.add("valueName=CommunicationStatus");
             params.add("valueName=location.zipcode");
             params.add("param0="+deviceId);
-            ResponseEntity<String> responseEntity = slvRestService.getRequest(mainUrl+"reports/api/logging/getDeviceLastValues?"+ StringUtils.join(params,"&"),true,null);
+            ResponseEntity<String> responseEntity = slvRestService.getRequest(mainUrl+"/reports/api/logging/getDeviceLastValues?"+ StringUtils.join(params,"&"),true,null);
             String body = responseEntity.getBody();
             if(responseEntity.getStatusCode() == HttpStatus.OK){
                 JsonArray slvdatas = new JsonArray();
