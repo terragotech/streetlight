@@ -1315,6 +1315,8 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
 
             case "Resolved (Other)":
                 loggingModel.setStatus(MessageConstants.ERROR);
+                // To avoid sync date to SLV.
+                loggingModel.setDatesHolder(null);
                 loggingModel.setErrorDetails("SLV Interface Doest not support this(Power Issue option is selected).");
                 slvInterfaceLogEntity.setErrorcategory(MessageConstants.EDGE_VALIDATION_ERROR);
                 slvInterfaceLogEntity.setSelectedReplace("Power Issue");
