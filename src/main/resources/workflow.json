@@ -1,0 +1,19 @@
+{
+  "action": 17,
+  "newAction": {
+    "installStatus": 22,
+    "completeIds": [19,20],
+    "photocellIds": [20],
+    "couldNotCompleteIds": [23,42]
+  },
+  "replaceAction": {
+    "repairAndOutages": 24,
+    "RNFIds": [26,38],
+    "RNIds": [30],
+    "RFIds": [39,40,120],
+    "resolvedIds": [102,103],
+    "unableToRepairIds": [106,121],
+    "CIMCONIds": [180]
+  },
+  "removeAction": [35,119]
+}

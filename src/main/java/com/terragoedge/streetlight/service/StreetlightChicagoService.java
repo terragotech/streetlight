@@ -32,6 +32,7 @@ public class StreetlightChicagoService extends AbstractProcessor {
 
     final Logger logger = Logger.getLogger(StreetlightChicagoService.class);
     InstallationMaintenanceProcessor installationMaintenanceProcessor;
+    private WorkflowConfig workflowConfig;
     SwapTemplateProcessor swapTemplateProcessor;
 
     public StreetlightChicagoService() {
@@ -40,6 +41,7 @@ public class StreetlightChicagoService extends AbstractProcessor {
         installationMaintenanceProcessor = new InstallationMaintenanceProcessor(contextListHashMap,cslpDateHashMap,macHashMap);
         swapTemplateProcessor = new SwapTemplateProcessor(contextListHashMap,cslpDateHashMap);
         System.out.println("Object Created.");
+        workflowConfig = getWorkflowConfig();
     }
 
 
@@ -266,18 +268,18 @@ public class StreetlightChicagoService extends AbstractProcessor {
                         // Check whether the current note
                         isBulkImport(edgeNote, accessToken, installMaintenanceLogModel);
 
-                        installationMaintenanceProcessor.processNewAction(edgeNote, installMaintenanceLogModel, false, utilLocId, slvInterfaceLogEntity,notesData);
-                        // updateSlvStatusToEdge(installMaintenanceLogModel, edgeNote);
-                        LoggingModel loggingModel = installMaintenanceLogModel;
-                        streetlightDao.insertProcessedNotes(loggingModel, installMaintenanceLogModel);
+                            installationMaintenanceProcessor.processNewAction(edgeNote, installMaintenanceLogModel, false, utilLocId, slvInterfaceLogEntity,workflowConfig,notesData);
+                            // updateSlvStatusToEdge(installMaintenanceLogModel, edgeNote);
+                            LoggingModel loggingModel = installMaintenanceLogModel;
+                            streetlightDao.insertProcessedNotes(loggingModel, installMaintenanceLogModel);
+                        }
                     }
+                }catch (Exception e){
+                    logger.error("Error in run",e);
+                }finally {
+                    connectionDAO.saveSlvInterfaceLog(slvInterfaceLogEntity);
                 }
-            } catch (Exception e) {
-                logger.error("Error in run", e);
-            } finally {
-                connectionDAO.saveSlvInterfaceLog(slvInterfaceLogEntity);
-            }
-            // Get Response String
+                // Get Response String
 
         }
 
@@ -694,6 +696,16 @@ public class StreetlightChicagoService extends AbstractProcessor {
     }
 
 
+    private WorkflowConfig getWorkflowConfig(){
+        try {
+            File file = new File("./resources/workflow.json");
+            WorkflowConfig workflowConfig = gson.fromJson(new FileReader(file), WorkflowConfig.class);
+            return workflowConfig;
+        }catch (Exception e){
+            logger.error("Error while processing workflow config: ",e);
+        }
+        return null;
+    }
 
     // http://192.168.1.9:8080/edgeServer/oauth/token?grant_type=password&username=admin&password=admin&client_id=edgerestapp
 }

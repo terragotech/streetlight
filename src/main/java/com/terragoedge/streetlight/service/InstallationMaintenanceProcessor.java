@@ -160,7 +160,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
         }
     }
 
-    public void processNewAction(EdgeNote edgeNote, InstallMaintenanceLogModel installMaintenanceLogModel, boolean isReSync, String utilLocId, SlvInterfaceLogEntity slvInterfaceLogEntity,String notesData) {
+    public void processNewAction(EdgeNote edgeNote, InstallMaintenanceLogModel installMaintenanceLogModel, boolean isReSync, String utilLocId, SlvInterfaceLogEntity slvInterfaceLogEntity,WorkflowConfig workflowConfig,String notesData) {
         slvInterfaceLogEntity.setParentnoteid((edgeNote.getBaseParentNoteId() == null) ? edgeNote.getNoteGuid() : edgeNote.getBaseParentNoteId());
         logger.info("processNewAction");
         slvInterfaceLogEntity.setIdOnController(edgeNote.getTitle());
@@ -187,7 +187,8 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
                     logger.info("before Action Val");
 
                     try {
-                        value = getAction(edgeFormDatas, edgeNote.getTitle(), installMaintenanceLogModel, edgeNote, slvInterfaceLogEntity);
+                        value = getActionFromConfig(edgeFormDatas, edgeNote.getTitle(), installMaintenanceLogModel, edgeNote, slvInterfaceLogEntity,workflowConfig);
+                        logger.info("changed Action value is "+value);
                         logger.info("After Action Val");
                     } catch (AlreadyUsedException w) {
                         if (installMaintenanceLogModel.isNigthRideSame()) {
@@ -247,6 +248,289 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
         }
     }
 
+    public String getActionFromConfig(List<EdgeFormData> edgeFormDatas, String idOnController, InstallMaintenanceLogModel loggingModel, EdgeNote edgeNote, SlvInterfaceLogEntity slvInterfaceLogEntity,WorkflowConfig workflowConfig) throws AlreadyUsedException {
+        DataComparatorConfig dataComparatorConfig = new DataComparatorConfig();
+        dataComparatorConfig.setFormTemplateGuid(properties.getProperty("amerescousa.edge.formtemplateGuid"));
+        dataComparatorConfig.setNoteGuid(edgeNote.getNoteGuid());
+//        dataComparatorConfig.setRevisionFromNoteId(edgeNote.getRevisionfromNoteid() == null ? edgeNote.getNoteGuid() : edgeNote.getRevisionfromNoteid());
+        dataComparatorConfig.setRevisionFromNoteId("");
+        List<Integer> ids = dataComparatorConfig.getIds();
+        addIds(ids,workflowConfig.getAction());
+        NewAction newAction = workflowConfig.getNewAction();
+        ReplaceAction replaceAction = workflowConfig.getReplaceAction();
+        addIds(ids,newAction.getInstallStatus());
+        ids.addAll(newAction.getCompleteIds());
+        ids.addAll(newAction.getCouldNotCompleteIds());
+        ids.addAll(newAction.getPhotocellIds());
+        addIds(ids,replaceAction.getRepairAndOutages());
+        ids.addAll(replaceAction.getCIMCONIds());
+        ids.addAll(replaceAction.getResolvedIds());
+        ids.addAll(replaceAction.getRFIds());
+        ids.addAll(replaceAction.getRNFIds());
+        ids.addAll(replaceAction.getRNIds());
+        ids.addAll(replaceAction.getUnableToRepairIds());
+        ids.addAll(workflowConfig.getRemoveAction());
+        List<SelectedWorkflow> selectedWorkflows = new ArrayList<>();
+        ResponseEntity<String> responseEntity = restService.callPostMethod("/note/revision/dataAnalyzer",HttpMethod.POST,gson.toJson(dataComparatorConfig),false);
+        String body = responseEntity.getBody();
+        DataDiffResponse dataDiffResponse = gson.fromJson(body,DataDiffResponse.class);
+        if(dataDiffResponse.isChanged()){
+            List<DataDiffValueHolder> dataDiffValueHolders = dataDiffResponse.getDataDiff();
+            for(DataDiffValueHolder dataDiffValueHolder : dataDiffValueHolders){
+                String value = getValidValue(dataDiffValueHolder.getValue());
+                int id = dataDiffValueHolder.getId();
+                String selectedAction = getDataDiffValue(dataDiffValueHolders,workflowConfig.getAction());
+                String formAction = getFormValue(edgeFormDatas,workflowConfig.getAction());
+                selectedAction = selectedAction.equals("") ? formAction : selectedAction;
+                selectedAction = selectedAction.equals("") ? "New" : selectedAction;
+                //Remove
+                if(workflowConfig.getRemoveAction().contains(id)){
+                    addSelectedWorkflow(selectedWorkflows,selectedAction,"Remove","Remove","Remove",value,id);
+                }
+                //New
+                if(newAction.getCompleteIds().contains(id)){
+                    boolean isComplete = iscompleteOrPhotocell(dataDiffValueHolders,edgeFormDatas);
+                    String selectedSubAction = getActionValue(dataDiffValueHolders,edgeFormDatas,newAction.getInstallStatus());
+                    if(isComplete) {
+                        addSelectedWorkflow(selectedWorkflows, selectedAction, selectedSubAction, "New", "Complete", value, id);
+                    }else{
+                        addSelectedWorkflow(selectedWorkflows,selectedAction,selectedSubAction,"New","Button Photocell Installation",value,id);
+                    }
+                }
+                if(newAction.getCouldNotCompleteIds().contains(id)){
+                    String selectedSubAction = getActionValue(dataDiffValueHolders,edgeFormDatas,newAction.getInstallStatus());
+                    addSelectedWorkflow(selectedWorkflows,selectedAction,selectedSubAction,"New","Could not complete",value,id);
+                }
+                //Replace
+                if(replaceAction.getCIMCONIds().contains(id)){
+                    String selectedSubAction = getActionValue(dataDiffValueHolders,edgeFormDatas,replaceAction.getRepairAndOutages());
+                    addSelectedWorkflow(selectedWorkflows,selectedAction,selectedSubAction,"Repairs & Outages","CIMCON Node Replacements JBCC Only",value,id);
+                }
+                if(replaceAction.getResolvedIds().contains(id)){
+                    String selectedSubAction = getActionValue(dataDiffValueHolders,edgeFormDatas,replaceAction.getRepairAndOutages());
+                    addSelectedWorkflow(selectedWorkflows,selectedAction,selectedSubAction,"Repairs & Outages","Resolved (Other)",value,id);
+                }
+                if(replaceAction.getRFIds().contains(id)){
+                    String selectedSubAction = getActionValue(dataDiffValueHolders,edgeFormDatas,replaceAction.getRepairAndOutages());
+                    addSelectedWorkflow(selectedWorkflows,selectedAction,selectedSubAction,"Repairs & Outages","Replace Fixture only",value,id);
+                }
+                if(replaceAction.getRNFIds().contains(id)){
+                    String selectedSubAction = getActionValue(dataDiffValueHolders,edgeFormDatas,replaceAction.getRepairAndOutages());
+                    selectedSubAction = selectedSubAction.equals("") ? "Replace Node and Fixture" : selectedSubAction;
+                    addSelectedWorkflow(selectedWorkflows,selectedAction,selectedSubAction,"Repairs & Outages","Replace Node and Fixture",value,id);
+                }
+                if(replaceAction.getRNIds().contains(id)){
+                    String selectedSubAction = getActionValue(dataDiffValueHolders,edgeFormDatas,replaceAction.getRepairAndOutages());
+                    addSelectedWorkflow(selectedWorkflows,selectedAction,selectedSubAction,"Repairs & Outages","Replace Node only",value,id);
+                }
+                if(replaceAction.getUnableToRepairIds().contains(id)){
+                    String selectedSubAction = getActionValue(dataDiffValueHolders,edgeFormDatas,replaceAction.getRepairAndOutages());
+                    addSelectedWorkflow(selectedWorkflows,selectedAction,selectedSubAction,"Repairs & Outages","Unable to Repair(CDOT Issue)",value,id);
+                }
+            }
+            logger.info("Selected workflows: "+gson.toJson(selectedWorkflows));
+            if(selectedWorkflows.size() == 0){
+                String changedAction = getDataDiffValue(dataDiffValueHolders,workflowConfig.getAction());
+                String changedNewSubAction = getDataDiffValue(dataDiffValueHolders,newAction.getInstallStatus());
+                String changedReplaceSubAction = getDataDiffValue(dataDiffValueHolders,replaceAction.getRepairAndOutages());
+                if(changedAction.equals("") && changedNewSubAction.equals("") && changedReplaceSubAction.equals("")) {
+                    return "New";
+                }else{
+                    if(changedAction.equals("")){
+                        changedAction = getFormValue(edgeFormDatas,workflowConfig.getAction());
+                    }
+                    if(changedAction.equals("New")){
+                        changedNewSubAction = getFormValue(edgeFormDatas,newAction.getInstallStatus());
+                        SelectedWorkflow selectedWorkflow = getSelectWorkflow(changedAction,changedNewSubAction);
+                        processSelectedWorkflow(selectedWorkflow,loggingModel,edgeFormDatas,edgeNote,slvInterfaceLogEntity,idOnController);
+                    }else if(changedAction.equals("Repairs & Outages") || changedAction.equals("Repairs \\u0026 Outages")){
+                        SelectedWorkflow selectedWorkflow = getSelectWorkflow(changedAction,changedReplaceSubAction);
+                        processSelectedWorkflow(selectedWorkflow,loggingModel,edgeFormDatas,edgeNote,slvInterfaceLogEntity,idOnController);
+                    }else if(changedAction.equals("Remove")){
+                        SelectedWorkflow selectedWorkflow  = getSelectWorkflow("Remove","Remove");
+                        processSelectedWorkflow(selectedWorkflow,loggingModel,edgeFormDatas,edgeNote,slvInterfaceLogEntity,idOnController);
+                    }else{
+                        return "New";
+                    }
+                }
+            }else if(selectedWorkflows.size() == 1){
+                SelectedWorkflow selectedWorkflow = selectedWorkflows.get(0);
+                return processSelectedWorkflow(selectedWorkflow,loggingModel,edgeFormDatas,edgeNote,slvInterfaceLogEntity,idOnController);
+            }else{
+                for(SelectedWorkflow selectedWorkflow : selectedWorkflows){
+                    if(selectedWorkflow.getActualSubaction().equals(selectedWorkflow.getSelectedSubAction())){
+                        logger.info("selected workflow is: "+gson.toJson(selectedWorkflow));
+                        return processSelectedWorkflow(selectedWorkflow,loggingModel,edgeFormDatas,edgeNote,slvInterfaceLogEntity,idOnController);
+                    }
+                }
+            }
+        }else{
+            return "New";
+        }
+        return "New";
+    }
+
+    private SelectedWorkflow getSelectWorkflow(String changedAction,String changedSubAction){
+        SelectedWorkflow selectedWorkflow = new SelectedWorkflow();
+        selectedWorkflow.setSelectedAction(changedAction);
+        selectedWorkflow.setSelectedSubAction(changedSubAction);
+        return selectedWorkflow;
+    }
+
+    private boolean iscompleteOrPhotocell(List<DataDiffValueHolder> dataDiffValueHolders,List<EdgeFormData> edgeFormDatas){
+        boolean isComplete = true;
+        String installStatusValue = getValidValue(getDataDiffValue(dataDiffValueHolders,22));
+        if(installStatusValue.equals("")){
+            installStatusValue = getFormValue(edgeFormDatas,22);
+        }
+        if(installStatusValue.equals("Button Photocell Installation")){
+            isComplete = false;
+        }
+        return isComplete;
+    }
+
+    private String getActionValue(List<DataDiffValueHolder> dataDiffValueHolders,List<EdgeFormData> edgeFormDatas,int compId){
+        String action = getDataDiffValue(dataDiffValueHolders,compId);
+        action = action.equals("") ? getFormValue(edgeFormDatas,compId) : action;
+        return action;
+    }
+
+    private String processSelectedWorkflow(SelectedWorkflow selectedWorkflow,InstallMaintenanceLogModel loggingModel,List<EdgeFormData> edgeFormDatas,EdgeNote edgeNote,SlvInterfaceLogEntity slvInterfaceLogEntity,String idOnController)  throws AlreadyUsedException{
+        String action = selectedWorkflow.getSelectedAction();
+        String subAction = selectedWorkflow.getSelectedSubAction();
+        if(action.equals("Remove")){
+            return "Remove";
+        }else if(action.equals("Repairs & Outages") || action.equals("Repairs \\u0026 Outages")){
+            if(subAction.equals("Unable to Repair(CDOT Issue)")){
+                loggingModel.setRepairsOption("Unable to Repair(CDOT Issue)");
+                return "Repairs & Outages";
+            }else if (subAction.contains("CIMCON Node Replacements")) {
+                loggingModel.setRepairsOption("CNR");
+                return "Repairs & Outages";
+            }else if(subAction.equals("Resolved (Other)")){
+                loggingModel.setRepairsOption("Resolved (Other)");
+                return "Repairs & Outages";
+            }else if(subAction.equals("Replace Fixture only")){
+                String newFixtureQrScanValue = null;
+                try {
+                    newFixtureQrScanValue = valueById(edgeFormDatas, 39);
+                    checkFixtureQrScan(newFixtureQrScanValue, edgeNote, loggingModel, slvInterfaceLogEntity);
+                } catch (NoValueException e) {
+                    if (newFixtureQrScanValue != null) {
+                        if (loggingModel.isFixtureQRSame()) {
+                            throw new AlreadyUsedException("QR Scan Already Used");
+                        }
+                        loggingModel.setRepairsOption("Replace Fixture only");
+                        return "Repairs & Outages";
+                    }
+                } catch (InValidBarCodeException e) {
+                    // Replace Fixture Only, If QR Code is invalid, then no need to process.
+                    loggingModel.setFixtureQRSame(true);
+                    // No need to worry, crew may be node replaced.
+                }
+                if (loggingModel.isFixtureQRSame()) {
+                    slvInterfaceLogEntity.setErrorcategory(MessageConstants.SLV_VALIDATION_ERROR);
+                    slvInterfaceLogEntity.setErrordetails("Given fixtureQrScan Already exist in slv server");
+                }
+                if (newFixtureQrScanValue != null) {
+                    if (loggingModel.isFixtureQRSame()) {
+                        throw new AlreadyUsedException("QR Scan Already Used");
+                    }
+                    loggingModel.setRepairsOption("Replace Fixture only");
+                    return "Repairs & Outages";
+                }
+                throw new AlreadyUsedException("Fixture qrscan already used");
+            }else if(subAction.equals("Replace Node only")){
+                try {
+                    String newNodeMacAddress = valueById(edgeFormDatas, 30);
+                    checkMacAddressExists(newNodeMacAddress, idOnController, null, null, loggingModel, slvInterfaceLogEntity);
+                    loggingModel.setRepairsOption("Replace Node only");
+                    return "Repairs & Outages";
+                }catch (Exception e){
+                    logger.error("Error while processing replace node only in processSelectedWorkflow: ",e);
+                }
+            }else if(subAction.equals("Replace Node and Fixture")){
+                loggingModel.setMacAddressUsed(false);
+                loggingModel.setFixtureQRSame(false);
+                try {
+                    validateValue(edgeFormDatas, idOnController, loggingModel, edgeNote, 26, 38, slvInterfaceLogEntity);
+                    loggingModel.setRepairsOption("Replace Node and Fixture");
+                    return "Repairs & Outages";
+                } catch (AlreadyUsedException e) {
+                    throw new AlreadyUsedException(e.getMessage());
+                } catch (NoValueException e) {
+
+                }
+            }
+        }else if(action.equals("New")){
+            if(subAction.equals("Could not complete")){
+                DeviceAttributes deviceAttributes = getDeviceValues(loggingModel);
+                String installStatus = properties.getProperty("could_note_complete_install_status");
+                if (deviceAttributes != null && deviceAttributes.getInstallStatus() != null && deviceAttributes.getInstallStatus().equals(installStatus)) {
+                    logger.info("Current edge and SLV Install Status is same (Could not be installed)");
+                    loggingModel.setCouldNotComplete(true);
+                }
+                return "New";
+            }else if(subAction.equals("Button Photocell Installation")){
+                DeviceAttributes deviceAttributes = getDeviceValues(loggingModel);
+                loggingModel.setButtonPhotoCell(true);
+                if (deviceAttributes != null && deviceAttributes.getInstallStatus() != null && (deviceAttributes.getInstallStatus().equals(InstallStatus.Verified.getValue()) || deviceAttributes.getInstallStatus().equals(InstallStatus.Photocell_Only.getValue()))) {
+                    loggingModel.setFixtureQRSame(true);
+                }
+                return "New";
+            }else{//complete
+                try {
+                    validateValue(edgeFormDatas, idOnController, loggingModel, edgeNote, 19, 20, slvInterfaceLogEntity);
+                    return "New";
+                } catch (AlreadyUsedException e) {
+                    throw new AlreadyUsedException(e.getMessage());
+                } catch (NoValueException e) {
+                    return "New";
+                }
+            }
+        }
+        return "New";
+    }
+
+    private String getDataDiffValue(List<DataDiffValueHolder> dataDiffValueHolders,int componentId){
+        DataDiffValueHolder dataDiffValueHolder = new DataDiffValueHolder();
+        dataDiffValueHolder.setId(componentId);
+        int pos  = dataDiffValueHolders.indexOf(dataDiffValueHolder);
+        if(pos != -1){
+            String value = dataDiffValueHolders.get(pos).getValue();
+            return getValidValue(value);
+        }
+        return "";
+    }
+
+    private String getFormValue(List<EdgeFormData> edgeFormDatas,int componentId){
+        for(EdgeFormData edgeFormData : edgeFormDatas){
+            if(edgeFormData.getId() == componentId){
+                return getValidValue(edgeFormData.getValue());
+            }
+        }
+        return "";
+    }
+    private String getValidValue(String value){
+        value = value == null ? "" : value;
+        value = value.contains("#") ? value.split("#",-1)[1] : value;
+        value = value.contains("null") ? "" : value;
+        return value;
+    }
+    private void addSelectedWorkflow(List<SelectedWorkflow> list,String selectedAction,String selectedSubAction,String actualAction,String actualSubAction,String value,int id){
+        SelectedWorkflow selectedWorkflow = new SelectedWorkflow();
+        selectedWorkflow.setSelectedAction(selectedAction);
+        selectedWorkflow.setSelectedSubAction(selectedSubAction);
+        selectedWorkflow.setActualAction(actualAction);
+        selectedWorkflow.setActualSubaction(actualSubAction);
+        selectedWorkflow.setId(id);
+        selectedWorkflow.setValue(value);
+        list.add(selectedWorkflow);
+    }
+
+    private void addIds(List<Integer> list, int id){
+        list.add(id);
+    }
 
     private String getAction(List<EdgeFormData> edgeFormDatas, String idOnController, InstallMaintenanceLogModel loggingModel, EdgeNote edgeNote, SlvInterfaceLogEntity slvInterfaceLogEntity) throws AlreadyUsedException {
         try {
