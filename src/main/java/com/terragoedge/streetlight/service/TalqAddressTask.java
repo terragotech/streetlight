@@ -38,25 +38,28 @@ public class TalqAddressTask extends AbstractService implements Runnable {
         String emptyTalqAddressGuid = PropertiesReader.getProperties().getProperty("empty.talkaddress.layerguid");
         String completeLayerGuid = PropertiesReader.getProperties().getProperty("talkaddress.complete.layerguid");
         String mainUrl = PropertiesReader.getProperties().getProperty("streetlight.edge.url.main");
-        String locationDescKeyword = PropertiesReader.getProperties().getProperty("edge.locationdesc.keyword");
         try {
             String notesJson = geTalqNoteDetails(mainUrl, loggingModel.getNoteName());
             if (notesJson == null) {
                 logger.info("Note not in Edge.");
                 throw new NotesNotFoundException("Note [" + loggingModel.getNoteName() + "] not in Edge.");
             }
-            Type listType = new TypeToken<ArrayList<EdgeNote>>() {
-            }.getType();
-            List<EdgeNote> edgeNoteList = gson.fromJson(notesJson, listType);
-            for (EdgeNote edgeNote : edgeNoteList) {
-                String locationDesc = edgeNote.getLocationDescription();
-                System.out.println("locationDescription is : " + locationDesc);
-                if (locationDesc != null && !locationDesc.contains(locationDescKeyword)) {
-                    logger.info("Current Location Description :" + locationDesc);
-                    String oldNoteGuid = edgeNote.getNoteGuid();
-                    String notebookGuid = edgeNote.getEdgeNotebook().getNotebookGuid();
-                    JsonObject jsonObject = processEdgeForms(gson.toJson(edgeNote));
-                    boolean isProcess = isProcessNoteLayer(edgeNote, jsonObject, emptyTalqAddressGuid, completeLayerGuid, loggingModel);
+            JsonArray jsonArray = jsonParser.parse(notesJson).getAsJsonArray();
+            for(JsonElement jsonElement : jsonArray){
+                JsonObject edgeJsonObject = jsonElement.getAsJsonObject();
+                String oldNoteGuid = edgeJsonObject.get("noteGuid").getAsString();
+                String parentNoteGuid = edgeJsonObject.get("baseParentNoteId").isJsonNull() ? null : edgeJsonObject.get("baseParentNoteId").getAsString();
+
+                parentNoteGuid = (parentNoteGuid == null || parentNoteGuid.equals("")) ? oldNoteGuid : parentNoteGuid;
+                if(parentNoteGuid.equals(loggingModel.getParentNoteId())){
+                    JsonElement notebookElement = edgeJsonObject.get("edgeNotebook");
+                    if(notebookElement == null || notebookElement.isJsonNull()){
+                        logger.error("this note is unassigned !");
+                        throw new NotesNotFoundException("this note is unassigned !");
+                    }
+                    String notebookGuid = edgeJsonObject.get("edgeNotebook").getAsJsonObject().get("notebookGuid").getAsString();
+                    JsonObject jsonObject = processEdgeForms(edgeJsonObject);
+                    boolean isProcess = isProcessNoteLayer( jsonObject, emptyTalqAddressGuid, completeLayerGuid, loggingModel);
                     if (isProcess) {
                         logger.info("-------------------request json--------------- ");
                         logger.info(jsonObject.toString());
@@ -68,10 +71,12 @@ public class TalqAddressTask extends AbstractService implements Runnable {
                         streetlightDao.insertTalqSync(loggingModel);
                         logger.info("edgenote update to server: " + responseEntity.getBody());
                     }
-                } else {
-                    logger.info("There is no valid location description, its not processed:" + locationDesc);
+                }else{
+                    logger.info("parent noteguid mismatched");
                 }
+
             }
+
         } catch (Exception e) {
             e.printStackTrace();
             logger.info("Error: " + e);
@@ -79,11 +84,19 @@ public class TalqAddressTask extends AbstractService implements Runnable {
 
     }
 
-    public boolean isProcessNoteLayer(EdgeNote edgeNote, JsonObject jsonObject, String talqAddressGuid, String completeLayerGuid, LoggingModel loggingModel) {
-        List<Dictionary> dictionaryList = edgeNote.getDictionary();
+    public boolean isProcessNoteLayer(JsonObject jsonObject, String talqAddressGuid, String completeLayerGuid, LoggingModel loggingModel) {
+        JsonArray jsonArray = jsonObject.get("dictionary").getAsJsonArray();
+        List<Dictionary> dictionaryList = new ArrayList<>();
+        for(JsonElement jsonElement : jsonArray){
+            JsonObject dicObj = jsonElement.getAsJsonObject();
+            Dictionary dictionary = new Dictionary();
+            dictionary.setKey(dicObj.get("key").getAsString());
+            dictionary.setValue(dicObj.get("value").getAsString());
+            dictionaryList.add(dictionary);
+        }
         jsonObject.addProperty("createdDateTime", System.currentTimeMillis());
         jsonObject.addProperty("noteGuid", UUID.randomUUID().toString());
-        jsonObject.addProperty("createdBy","slvinterface");
+        jsonObject.addProperty("createdBy","terragointerface");
         jsonObject.remove("dictionary");
         if (loggingModel != null) {
             if (loggingModel.getLayerType().equals("No data ever received")) {
@@ -116,7 +129,7 @@ public class TalqAddressTask extends AbstractService implements Runnable {
         }else{
             boolean isLayerUpdated= false;
             for (Dictionary dictionary : dictionaryList) {
-                if (dictionary.getKey().equals("groupGuid") && !dictionary.getValue().equals(value)) {
+                if (dictionary.getKey().equals("groupGuid")) {
                     isLayerUpdated = true;
                     dictionary.setValue(value);
                 }
@@ -131,8 +144,7 @@ public class TalqAddressTask extends AbstractService implements Runnable {
         notesJson.add("dictionary", gson.toJsonTree(dictionaryList));
     }
 
-    public JsonObject processEdgeForms(String edgenoteJson) {
-        JsonObject edgeJsonObject = (JsonObject) jsonParser.parse(edgenoteJson);
+    public JsonObject processEdgeForms(JsonObject edgeJsonObject) {
         JsonArray serverEdgeFormJsonArray = edgeJsonObject.get("formData").getAsJsonArray();
         int size = serverEdgeFormJsonArray.size();
         for (int i = 0; i < size; i++) {

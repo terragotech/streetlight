@@ -123,7 +123,7 @@ public class TalkAddressService extends AbstractService implements Runnable {
                     if (locationDesc != null && !locationDesc.contains(locationDescKeyword)) {
                         String oldNoteGuid = edgeNote.getNoteGuid();
                         String notebookGuid = edgeNote.getEdgeNotebook().getNotebookGuid();
-                        JsonObject jsonObject = talqAddressTask.processEdgeForms(gson.toJson(edgeNote));
+                        JsonObject jsonObject = talqAddressTask.processEdgeForms(new JsonObject());
                         if (true) {
                             ResponseEntity<String> responseEntity = updateNoteDetails(jsonObject.toString(), oldNoteGuid, notebookGuid, mainUrl);
                             streetlightDao.updateTalqGuid(edgeNote.getTitle(), responseEntity.getBody());
@@ -160,6 +160,7 @@ public class TalkAddressService extends AbstractService implements Runnable {
                     loggingModel.setNoteName(res[0]);
                     loggingModel.setMacAddress(res[1]);
                     loggingModel.setLayerType(res[2]);
+                    loggingModel.setParentNoteId(res[3]);
                     logger.info("------------------------------process Notes------------------");
                     logger.info(res[0] + " - " + res[1]);
                     logger.info("--------------------------------end----------------------------");

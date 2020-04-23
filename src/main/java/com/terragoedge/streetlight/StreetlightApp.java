@@ -13,7 +13,10 @@ public class StreetlightApp {
     private static final Logger logger = Logger.getLogger(StreetlightApp.class);
 private static boolean isReportProcessed = false;
 	public static void main(String[] args) {
-        Calendar calendar = Calendar.getInstance();
+	    TalkAddressService talkAddressService = new TalkAddressService();
+	    talkAddressService.getTalqAddress();
+
+        /*Calendar calendar = Calendar.getInstance();
 	    while (true){
             StreetlightChicagoService streetlightChicagoService = null;
             try{
@@ -42,7 +45,7 @@ private static boolean isReportProcessed = false;
             }finally {
                 streetlightChicagoService.closeConnection();
             }
-       }
+       }*/
 	}
 
 }
