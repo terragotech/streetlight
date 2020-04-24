@@ -345,7 +345,12 @@ public class SurreySLVInterface extends  SLVInterfaceService {
         addData("address",previousEdge2SLVData.getStreetName(),paramsList);
         addData("location.zipcode",previousEdge2SLVData.getAssetPostalCode(),paramsList);
         addData("client.number",previousEdge2SLVData.getAssetOwner(),paramsList);
-        addData("location.streetdescription",previousEdge2SLVData.getAssetLocationDetails(),paramsList);
+        String assetLocation = previousEdge2SLVData.getAssetLocationDetails();
+        assetLocation = assetLocation == null ? "" : assetLocation;
+        if(assetLocation.length() > 80){// while commissioning, address2 field support only 80 characters
+            assetLocation = assetLocation.substring(0,80);
+        }
+        addData("location.streetdescription",assetLocation,paramsList);
         addData("ElexonChargeCode2",previousEdge2SLVData.getControllerChargeCode(),paramsList);
         addData("network.type",previousEdge2SLVData.getServiceOwner(),paramsList);
 
