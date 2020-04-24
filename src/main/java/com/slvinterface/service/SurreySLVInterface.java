@@ -198,7 +198,12 @@ public class SurreySLVInterface extends  SLVInterfaceService {
         addStreetLightData("client.name",previousEdge2SLVData.getCentralAssetId(),paramsList);
         addStreetLightData("device.premise",previousEdge2SLVData.getFeatureId(),paramsList);
         addStreetLightData("address",previousEdge2SLVData.getSiteName(),paramsList);
-        addStreetLightData("location.streetdescription",previousEdge2SLVData.getFeatureLocation(),paramsList);
+        String featureLocation = previousEdge2SLVData.getFeatureLocation();
+        featureLocation = featureLocation == null ? "" : featureLocation;
+        if(featureLocation.length()>80){// while commissioning, address2 field supports only upto 80 chars
+            featureLocation = featureLocation.substring(0,80);
+        }
+        addStreetLightData("location.streetdescription",featureLocation,paramsList);
 
         String slvCalender = PropertiesReader.getProperties().getProperty("streetlight.calendar");
         if(slvCalender != null && !slvCalender.trim().isEmpty()){
