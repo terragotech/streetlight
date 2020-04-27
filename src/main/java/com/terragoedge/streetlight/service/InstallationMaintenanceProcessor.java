@@ -199,6 +199,8 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
                         }
                     }catch (NoDataChangeException e){
                         logger.info("No Data Change.......Skip this");
+                        logger.info("There may be date change. Sync date changes.");
+                        syncEdgeDates(installMaintenanceLogModel);
                         if (installMaintenanceLogModel.isNigthRideSame()) {
                             installMaintenanceLogModel.setStatus(MessageConstants.ERROR);
                             continue;
