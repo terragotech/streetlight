@@ -9,6 +9,7 @@ import com.terragoedge.streetlight.exception.*;
 import com.terragoedge.streetlight.json.model.*;
 import com.terragoedge.streetlight.logging.InstallMaintenanceLogModel;
 import com.terragoedge.streetlight.logging.LoggingModel;
+import com.terragoedge.streetlight.swap.exception.NoDataChangeException;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
@@ -187,10 +188,17 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
                     logger.info("before Action Val");
 
                     try {
-                        value = getActionFromConfig(edgeFormDatas, edgeNote.getTitle(), installMaintenanceLogModel, edgeNote, slvInterfaceLogEntity,workflowConfig);
+                        value =  getFormAction(edgeFormDatas,edgeNote,installMaintenanceLogModel,edgeNote.getTitle(),slvInterfaceLogEntity,workflowConfig);
+                       // value = getActionFromConfig(edgeFormDatas, edgeNote.getTitle(), installMaintenanceLogModel, edgeNote, slvInterfaceLogEntity,workflowConfig);
                         logger.info("changed Action value is "+value);
                         logger.info("After Action Val");
-                    } catch (AlreadyUsedException w) {
+                    } catch (AlreadyUsedException w ) {
+                        if (installMaintenanceLogModel.isNigthRideSame()) {
+                            installMaintenanceLogModel.setStatus(MessageConstants.ERROR);
+                            continue;
+                        }
+                    }catch (NoDataChangeException e){
+                        logger.info("No Data Change.......Skip this");
                         if (installMaintenanceLogModel.isNigthRideSame()) {
                             installMaintenanceLogModel.setStatus(MessageConstants.ERROR);
                             continue;
@@ -252,7 +260,6 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
         DataComparatorConfig dataComparatorConfig = new DataComparatorConfig();
         dataComparatorConfig.setFormTemplateGuid(properties.getProperty("amerescousa.edge.formtemplateGuid"));
         dataComparatorConfig.setNoteGuid(edgeNote.getNoteGuid());
-//        dataComparatorConfig.setRevisionFromNoteId(edgeNote.getRevisionfromNoteid() == null ? edgeNote.getNoteGuid() : edgeNote.getRevisionfromNoteid());
         dataComparatorConfig.setRevisionFromNoteId("");
         List<Integer> ids = dataComparatorConfig.getIds();
         addIds(ids,workflowConfig.getAction());
@@ -285,7 +292,10 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
                 selectedAction = selectedAction.equals("") ? "New" : selectedAction;
                 //Remove
                 if(workflowConfig.getRemoveAction().contains(id)){
-                    addSelectedWorkflow(selectedWorkflows,selectedAction,"Remove","Remove","Remove",value,id);
+                    if(!value.equals("Choose Value")){
+                        addSelectedWorkflow(selectedWorkflows,selectedAction,"Remove","Remove","Remove",value,id);
+                    }
+
                 }
                 //New
                 if(newAction.getCompleteIds().contains(id)){
@@ -635,7 +645,6 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
         } catch (NoValueException e) {
             logger.error("Error in while getting installStatusValue", e);
         }
-
 
         if (installStatusValue != null && installStatusValue.equals("Button Photocell Installation")) {
             DeviceAttributes deviceAttributes = getDeviceValues(loggingModel);
@@ -2416,6 +2425,258 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
         }
 
     }
+
+
+    public String getFormAction(List<EdgeFormData> edgeFormDataList,EdgeNote edgeNote,
+                                InstallMaintenanceLogModel loggingModel,
+                                String idOnController,SlvInterfaceLogEntity slvInterfaceLogEntity,WorkflowConfig workflowConfig)throws NoDataChangeException,AlreadyUsedException,QRCodeAlreadyUsedException{
+        try {
+            loadDateValFromEdge(edgeFormDataList,loggingModel);
+            DataDiffResponse dataDiffResponse =  getDataDiffResponse(edgeNote,workflowConfig);
+            if(dataDiffResponse.isChanged()){
+                logger.info("There is an data change with previous revision.");
+                List<DataDiffValueHolder> dataDiffValueHolderList = dataDiffResponse.getDataDiff();
+                String mainAction = valueById(edgeFormDataList, 17);
+                logger.info("Form Action Value" + mainAction);
+                if(mainAction.trim().equals("New")){
+                    return checkNewOptions(edgeFormDataList,loggingModel,dataDiffValueHolderList,idOnController,edgeNote,slvInterfaceLogEntity,workflowConfig);
+
+                }else if(mainAction.trim().startsWith("Repairs")){
+                  return  checkRepairOptions(edgeFormDataList,loggingModel,dataDiffValueHolderList,idOnController,edgeNote,slvInterfaceLogEntity,workflowConfig);
+
+                }else if(mainAction.trim().startsWith("Remove")){
+                    return "Remove";
+                }
+            }
+
+        } catch (NoValueException e) {
+            logger.error("Error in while getting installStatusValue", e);
+        }
+        throw new NoDataChangeException("No Data Change");
+    }
+
+
+    private String checkNewOptions(List<EdgeFormData> edgeFormDataList,InstallMaintenanceLogModel loggingModel,
+                                   List<DataDiffValueHolder> dataDiffValueHolderList,
+                                   String idOnController,EdgeNote edgeNote,
+                                   SlvInterfaceLogEntity slvInterfaceLogEntity,
+                                   WorkflowConfig workflowConfig)throws AlreadyUsedException,NoDataChangeException{
+        try{
+            String installStatus = valueById(edgeFormDataList, 22);
+            logger.info("Form Install Status :"+installStatus);
+            if(installStatus.equals("Complete")){
+                List<Integer> completeIds =  workflowConfig.getNewAction().getCompleteIds();
+                logger.info("Checking data analyser has complete data set...");
+                boolean result = isDataChanged(completeIds,dataDiffValueHolderList);
+                logger.info("Checking data analyser has complete data set. Result:"+result);
+                if(result){
+                    try {
+                        validateValue(edgeFormDataList, idOnController, loggingModel, edgeNote, 19, 20, slvInterfaceLogEntity);
+                        return "New";
+                    } catch (AlreadyUsedException e) {
+                        throw new AlreadyUsedException(e.getMessage());
+                    } catch (NoValueException e) {
+                        return "New";
+                    }
+                }
+            }else if(installStatus.equals("Could not complete")){
+                logger.info("Checking data analyser has Could not complete data set...");
+                List<Integer> couldNotCompleteIds =  workflowConfig.getNewAction().getCouldNotCompleteIds();
+                boolean result = isDataChanged(couldNotCompleteIds,dataDiffValueHolderList);
+                logger.info("Checking data analyser has Could not complete data set. Result:"+result);
+                if(result){
+                    DeviceAttributes deviceAttributes = getDeviceValues(loggingModel);
+                    String installStatusProValue = properties.getProperty("could_note_complete_install_status");
+                    if (deviceAttributes != null && deviceAttributes.getInstallStatus() != null && deviceAttributes.getInstallStatus().equals(installStatusProValue)) {
+                        logger.info("Current edge and SLV Install Status is same (Could not be installed)");
+                        loggingModel.setCouldNotComplete(true);
+                    }
+                    return "New";
+                }
+
+            }else if(installStatus.equals("Button Photocell Installation")){
+                logger.info("Checking data analyser has Button Photocell Installation data set...");
+                List<Integer> photocellIds =  workflowConfig.getNewAction().getPhotocellIds();
+                boolean result = isDataChanged(photocellIds,dataDiffValueHolderList);
+                logger.info("Checking data analyser has Button Photocell Installation data set. Result:"+result);
+                if(result){
+                    DeviceAttributes deviceAttributes = getDeviceValues(loggingModel);
+                    loggingModel.setButtonPhotoCell(true);
+                    if (deviceAttributes != null && deviceAttributes.getInstallStatus() != null && (deviceAttributes.getInstallStatus().equals(InstallStatus.Verified.getValue()) || deviceAttributes.getInstallStatus().equals(InstallStatus.Photocell_Only.getValue()))) {
+                        loggingModel.setFixtureQRSame(true);
+                    }
+                    return "New";
+                }
+            }
+        }catch (NoValueException e){
+            logger.error("Error ",e);
+        }
+        throw  new NoDataChangeException("No Value change");
+
+    }
+
+   public DataDiffResponse getDataDiffResponse(EdgeNote edgeNote,WorkflowConfig workflowConfig){
+       DataComparatorConfig dataComparatorConfig = new DataComparatorConfig();
+       dataComparatorConfig.setFormTemplateGuid(properties.getProperty("amerescousa.edge.formtemplateGuid"));
+       dataComparatorConfig.setNoteGuid(edgeNote.getNoteGuid());
+       dataComparatorConfig.setRevisionFromNoteId("");
+       List<Integer> ids = dataComparatorConfig.getIds();
+       addIds(ids,workflowConfig.getAction());
+       NewAction newAction = workflowConfig.getNewAction();
+       ReplaceAction replaceAction = workflowConfig.getReplaceAction();
+       addIds(ids,newAction.getInstallStatus());
+       ids.addAll(newAction.getCompleteIds());
+       ids.addAll(newAction.getCouldNotCompleteIds());
+       ids.addAll(newAction.getPhotocellIds());
+       addIds(ids,replaceAction.getRepairAndOutages());
+       ids.addAll(replaceAction.getCIMCONIds());
+       ids.addAll(replaceAction.getResolvedIds());
+       ids.addAll(replaceAction.getRFIds());
+       ids.addAll(replaceAction.getRNFIds());
+       ids.addAll(replaceAction.getRNIds());
+       ids.addAll(replaceAction.getUnableToRepairIds());
+       ids.addAll(workflowConfig.getRemoveAction());
+       ResponseEntity<String> responseEntity = restService.callPostMethod("/note/revision/dataAnalyzer",HttpMethod.POST,gson.toJson(dataComparatorConfig),false);
+       String body = responseEntity.getBody();
+       logger.info("------------Data Analyzer Response----------------");
+       logger.info(body);
+       logger.info("------------Data Analyzer Response End----------------");
+       DataDiffResponse dataDiffResponse = gson.fromJson(body,DataDiffResponse.class);
+       return  dataDiffResponse;
+   }
+
+
+
+   public boolean isDataChanged(List<Integer> ids,List<DataDiffValueHolder> dataDiffValueHolderList)throws  NoDataChangeException{
+       logger.info("ids:"+ids);
+        for(Integer completeId : ids){
+           DataDiffValueHolder dataDiffValueHolder = new DataDiffValueHolder();
+           dataDiffValueHolder.setId(completeId);
+           int pos =  dataDiffValueHolderList.indexOf(dataDiffValueHolder);
+           if(pos != -1){
+               dataDiffValueHolder = dataDiffValueHolderList.get(pos);
+               logger.info("Data Changed, Id:"+completeId+",Value:"+dataDiffValueHolder.getValue());
+               return true;
+           }
+       }
+       logger.info("No Data Change with previous revision");
+       throw new NoDataChangeException("No Data Change with previous revision");
+   }
+
+
+   private String checkRepairOptions(List<EdgeFormData> edgeFormDataList,InstallMaintenanceLogModel loggingModel,
+                                     List<DataDiffValueHolder> dataDiffValueHolderList,
+                                     String idOnController,EdgeNote edgeNote,
+                                     SlvInterfaceLogEntity slvInterfaceLogEntity,
+                                     WorkflowConfig workflowConfig)throws NoDataChangeException,QRCodeAlreadyUsedException,AlreadyUsedException{
+       try {
+           String  repairsOutagesValue = valueById(edgeFormDataList, 24);
+           logger.info("Repairs and Outage Value:"+repairsOutagesValue);
+           if(repairsOutagesValue.equals("Replace Node only")){
+               logger.info("Checking Replace Node Data based on Data Analyser Result.");
+               List<Integer> replaceNodeIds =   workflowConfig.getReplaceAction().getRNIds();
+               boolean isDataChanged = isDataChanged(replaceNodeIds,dataDiffValueHolderList);
+               logger.info("IsData changed:"+isDataChanged);
+               if(isDataChanged){
+                   String newNodeMacAddress = valueById(edgeFormDataList, 30);
+                   try {
+                       checkMacAddressExists(newNodeMacAddress, idOnController, null, null, loggingModel, slvInterfaceLogEntity);
+                   }catch (Exception e){
+                       logger.error("Error in checkRepairOptions",e);
+                   }
+                   if (loggingModel.isMacAddressUsed()) {
+                       throw new QRCodeAlreadyUsedException("QR Code is already used.",newNodeMacAddress);
+                   }
+                   loggingModel.setRepairsOption("Replace Node only");
+                   return "Repairs & Outages";
+               }
+           }else if(repairsOutagesValue.equals("Replace Fixture only")){
+               logger.info("Checking Replace Fixture Data based on Data Analyser Result.");
+               List<Integer> replaceFixtureIds =   workflowConfig.getReplaceAction().getRFIds();
+               boolean isDataChanged = isDataChanged(replaceFixtureIds,dataDiffValueHolderList);
+               logger.info("IsData changed:"+isDataChanged);
+               if(isDataChanged){
+                   String newFixtureQrScanValue = null;
+                   try {
+                       newFixtureQrScanValue = valueById(edgeFormDataList, 39);
+                       checkFixtureQrScan(newFixtureQrScanValue, edgeNote, loggingModel, slvInterfaceLogEntity);
+
+                   } catch (NoValueException e) {
+
+                   } catch (InValidBarCodeException e) {
+
+                   }
+                   if (loggingModel.isFixtureQRSame()) {
+                       throw new AlreadyUsedException("Fixture QR Scan already used.");
+                   }
+                   loggingModel.setRepairsOption("Replace Fixture only");
+                   return "Repairs & Outages";
+               }
+
+
+           }else if(repairsOutagesValue.startsWith("Replace Node") && repairsOutagesValue.endsWith("Fixture")){
+               logger.info("Checking Replace Node and Fixture Data based on Data Analyser Result.");
+               loggingModel.setMacAddressUsed(false);
+               loggingModel.setFixtureQRSame(false);
+
+               List<Integer> replaceNodeFixtureIds =   workflowConfig.getReplaceAction().getRNFIds();
+               boolean isDataChanged = isDataChanged(replaceNodeFixtureIds,dataDiffValueHolderList);
+               logger.info("IsData changed:"+isDataChanged);
+               if(isDataChanged){
+                   try {
+                       validateValue(edgeFormDataList, idOnController, loggingModel, edgeNote, 26, 38, slvInterfaceLogEntity);
+                       loggingModel.setRepairsOption("Replace Node and Fixture");
+                       return "Repairs & Outages";
+                   } catch (AlreadyUsedException e) {
+                       throw new AlreadyUsedException(e.getMessage());
+                   } catch (NoValueException e) {
+
+                   }
+               }
+
+
+           }
+            else if (repairsOutagesValue.equals("Unable to Repair(CDOT Issue)")) {
+               logger.info("Checking Unable to Repair(CDOT Issue) Data based on Data Analyser Result.");
+              List<Integer> unableToRepairIds =   workflowConfig.getReplaceAction().getUnableToRepairIds();
+              boolean isDataChanged = isDataChanged(unableToRepairIds,dataDiffValueHolderList);
+               logger.info("IsData changed:"+isDataChanged);
+              if(isDataChanged){
+                  loggingModel.setRepairsOption("Unable to Repair(CDOT Issue)");
+                  return "Repairs & Outages";
+              }
+
+           }
+           else if (repairsOutagesValue.contains("CIMCON Node Replacements")) {
+               logger.info("Checking CIMCON Node Replacements Data based on Data Analyser Result.");
+               List<Integer> cnrIds =   workflowConfig.getReplaceAction().getCIMCONIds();
+               boolean isDataChanged = isDataChanged(cnrIds,dataDiffValueHolderList);
+               logger.info("IsData changed:"+isDataChanged);
+               if(isDataChanged){
+                   loggingModel.setRepairsOption("CNR");
+                   return "Repairs & Outages";
+               }
+
+           }else if(repairsOutagesValue.equals("Resolved (Other)")){
+               logger.info("Checking  Resolved (Other) Data based on Data Analyser Result.");
+               List<Integer> resolvedIds =   workflowConfig.getReplaceAction().getResolvedIds();
+               boolean isDataChanged = isDataChanged(resolvedIds,dataDiffValueHolderList);
+               logger.info("IsData changed:"+isDataChanged);
+               if(isDataChanged){
+                   loggingModel.setRepairsOption("Resolved (Other)");
+                   return "Repairs & Outages";
+               }
+
+
+           }
+
+
+       } catch (NoValueException e) {
+           loggingModel.setStatus(MessageConstants.ERROR);
+           loggingModel.setErrorDetails("Repairs & Outages options are not selected.");
+       }
+       throw new NoDataChangeException("No Data change");
+   }
 
 
 
