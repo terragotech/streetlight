@@ -578,15 +578,28 @@ public abstract class AbstractProcessor {
     }
 
     protected void addFixtureQrScanData(String key, String value, List<Object> paramsList) {
-        paramsList.add("attribute=" + key.trim());
-        if(value != null){
-            try{
-                paramsList.add("value=" + URLEncoder.encode(value.trim(), "UTF-8"));
-            }catch (Exception e){
-                logger.error("Error in addFixtureQrScanData",e);
+        try{
+            /* The following code for changing ";" to "."  based on the request of the customer */
+            if(value != null)
+            {
+                if(!value.equals("")) {
+                    value = value.replaceAll (";",".");
+                    value = value.replaceAll("'","");
+                    value = value.replaceAll("[^\\p{ASCII}]", "");
+                }
             }
-        }else{
+            if(key.equals("power")){
+                value = isNumber(value);
+                if(value == null){
+                    logger.info("Power value is not Present.");
+                    return;
+                }
+            }
+            paramsList.add("attribute=" + key.trim());
+            //paramsList.add("value=" + URLEncoder.encode(value.trim(), "UTF-8"));
             paramsList.add("value=" + value.trim());
+        }catch (Exception e){
+            logger.error("Error in addStreetLightData",e);
         }
     }
 
