@@ -204,12 +204,17 @@ public class KingCityEdgeInterface extends SlvInterfaceService{
         DefaultData defaultData = new DefaultData();
         defaultData.setIdOnController(title);
         int pos = defaultDataHashMap.indexOf(defaultData);
+        logger.info("DefaultData:"+gson.toJson(defaultData));
+        logger.info("CSV pos:"+pos);
         if(pos != -1) {
             defaultData = defaultDataHashMap.get(pos);
+            logger.info("DefaultData In CSV:"+gson.toJson(defaultData));
             String geoZoneVal =  defaultData.getGeoZoneValue();
+            logger.info("CSV geoZoneVal:"+geoZoneVal);
             GeoZoneDetails geoZoneDetails = new GeoZoneDetails();
             geoZoneDetails.setName(geoZoneVal);
             pos =  geoZoneDetailsList.indexOf(geoZoneDetails);
+            logger.info("GeoZoneDetails pos:"+pos);
             if(pos != -1){
                 geoZoneDetails = geoZoneDetailsList.get(pos);
                return geoZoneDetails.getId();

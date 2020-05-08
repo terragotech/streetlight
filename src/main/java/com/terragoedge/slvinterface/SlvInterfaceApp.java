@@ -7,6 +7,7 @@ import com.report.automation.service.ReportAutomationService;
 import com.terragoedge.slvinterface.json.slvInterface.ConfigurationJson;
 import com.terragoedge.slvinterface.service.*;
 import com.terragoedge.slvinterface.utils.PropertiesReader;
+import org.apache.log4j.Logger;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
 
@@ -17,18 +18,18 @@ import java.util.Properties;
 
 public class SlvInterfaceApp {
 
+    final static  Logger logger = Logger.getLogger(SlvInterfaceApp.class);
     public static void main(String[] args) {
-
+        SlvInterfaceService slvInterfaceService = new KingCityEdgeInterface();
       while (true) {
             try {
-                SlvInterfaceService slvInterfaceService = new CanadaEdgeInterface();
-               // slvInterfaceService.loadDevices();
+                slvInterfaceService.loadDevices();
                 while (true) {
                     slvInterfaceService.start();
                     Thread.sleep(60000);
                 }
             } catch (Exception e) {
-                e.printStackTrace();
+                logger.error("Error in main",e);
             }
         }
 

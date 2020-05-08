@@ -132,6 +132,7 @@ public abstract class SlvInterfaceService extends AbstractSlvService {
                         for (EdgeNote edgenote : edgeNoteList) {
                             logger.info("ProcessNoteTitle is :" + edgenote.getTitle());
                             String geozoneId = getGeoZoneValue(edgenote.getTitle());
+                            logger.info("geozoneId"+geozoneId);
                             processEdgeNote(edgenote, noteGuids, formTemplateGuid, geozoneId, controllerStrIdValue, false);
                         }
                     }
@@ -148,6 +149,7 @@ public abstract class SlvInterfaceService extends AbstractSlvService {
     private void processEdgeNote(EdgeNote edgeNote, List<String> noteGuids, String formTemplateGuid, String geozoneId, String controllerStrid, boolean isResync) {
         System.out.println("processEdgeNote :" + edgeNote.getTitle());
         try {
+            Thread.sleep(30000);
             // Check whether this note is already processed or not.
             if (!noteGuids.contains(edgeNote.getNoteGuid())) {
                 logger.info("going to sync given note");
@@ -271,14 +273,18 @@ public abstract class SlvInterfaceService extends AbstractSlvService {
             }
 
         } catch (ReplaceOLCFailedException | NoValueException | QRCodeAlreadyUsedException e) {
+            logger.error(e.getMessage(),e);
             slvSyncDetail.setErrorDetails(e.getMessage());
             slvSyncDetail.setStatus(Status.Failure.toString());
         } catch (DeviceUpdationFailedException | DeviceCreationFailedException e) {
+            logger.error(e.getMessage(),e);
             slvSyncDetail.setStatus(Status.Failure.toString());
         } catch (MacAddressProcessedException macException) {
+            logger.error(macException.getMessage(),macException);
             slvSyncDetail.setErrorDetails(macException.getMessage());
             slvSyncDetail.setStatus(Status.Failure.toString());
         } catch (QRCodeNotMatchedException e) {
+            logger.error(e.getMessage(),e);
             slvSyncDetail.setErrorDetails("Existing QR Code [" + e.getMacAddress() + "] is not matched with SVL.");
             slvSyncDetail.setStatus(Status.Failure.toString());
         }
@@ -623,8 +629,9 @@ public abstract class SlvInterfaceService extends AbstractSlvService {
             //  List<EdgeNote> edgeNoteList = gson.fromJson(notesData, listType);
             for (EdgeNote edgenote : edgeNoteList) {
                 logger.info("ProcessNoteTitle is :" + edgenote.getTitle());
-                // geozoneId = getGeoZoneValue(edgenote.getTitle());
-                geozoneId = null;
+                 geozoneId = getGeoZoneValue(edgenote.getTitle());
+                logger.info("geozoneId"+geozoneId);
+                //geozoneId = null;
                 System.out.print("geozoneId :" + geozoneId);
                 processEdgeNote(edgenote, noteGuids, formTemplateGuid, geozoneId, controllerStrIdValue, isResync);
             }

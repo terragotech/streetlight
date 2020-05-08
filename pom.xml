@@ -139,7 +139,7 @@
                             <goal>single</goal>
                         </goals>
                         <configuration>
-                            <finalName>canada_slvinterface_parking_v26</finalName>
+                            <finalName>kingcity_slv_interface-v4</finalName>
                             <archive>
                                 <manifest>
                                     <mainClass>
