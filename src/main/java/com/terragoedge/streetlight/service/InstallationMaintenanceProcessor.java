@@ -2484,9 +2484,9 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
             }else if(installStatus.equals("Could not complete")){
                 logger.info("Checking data analyser has Could not complete data set...");
                 List<Integer> couldNotCompleteIds =  workflowConfig.getNewAction().getCouldNotCompleteIds();
-                boolean result = isDataChanged(couldNotCompleteIds,dataDiffValueHolderList);
-                logger.info("Checking data analyser has Could not complete data set. Result:"+result);
-                if(result){
+                //boolean result = isDataChanged(couldNotCompleteIds,dataDiffValueHolderList);
+                //logger.info("Checking data analyser has Could not complete data set. Result:"+result);
+                //if(result){
                     DeviceAttributes deviceAttributes = getDeviceValues(loggingModel);
                     String installStatusProValue = properties.getProperty("could_note_complete_install_status");
                     if (deviceAttributes != null && deviceAttributes.getInstallStatus() != null && deviceAttributes.getInstallStatus().equals(installStatusProValue)) {
@@ -2494,7 +2494,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
                         loggingModel.setCouldNotComplete(true);
                     }
                     return "New";
-                }
+                //}
 
             }else if(installStatus.equals("Button Photocell Installation")){
                 logger.info("Checking data analyser has Button Photocell Installation data set...");
