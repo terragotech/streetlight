@@ -36,6 +36,16 @@ public class InstallMaintenanceModel {
     private String action;
     private String headToHead;
 
+    private String cnrMACAddress;
+
+    public String getCnrMACAddress() {
+        return cnrMACAddress;
+    }
+
+    public void setCnrMACAddress(String cnrMACAddress) {
+        this.cnrMACAddress = cnrMACAddress;
+    }
+
     public String getHeadToHead() {
         return headToHead;
     }
@@ -348,6 +358,7 @@ public class InstallMaintenanceModel {
                 Objects.equals(unableToRepairIssue, that.unableToRepairIssue) &&
                 Objects.equals(installStatus, that.installStatus) &&
                 Objects.equals(skippedFixtureReason, that.skippedFixtureReason) &&
+                Objects.equals(cnrMACAddress, that.cnrMACAddress) &&
                 Objects.equals(skippedReason, that.skippedReason);
     }
 
@@ -375,7 +386,14 @@ public class InstallMaintenanceModel {
                 ", resolvedComment='" + resolvedComment + '\'' +
                 ", existingMacIfWrong='" + existingMacIfWrong + '\'' +
                 ", unableToRepairIssue='" + unableToRepairIssue + '\'' +
+                ", unableToRepairComment='" + unableToRepairComment + '\'' +
                 ", installStatus='" + installStatus + '\'' +
+                ", skippedFixtureReason='" + skippedFixtureReason + '\'' +
+                ", skippedReason='" + skippedReason + '\'' +
+                ", reasonforReplacement='" + reasonforReplacement + '\'' +
+                ", action='" + action + '\'' +
+                ", headToHead='" + headToHead + '\'' +
+                ", cnrMACAddress='" + cnrMACAddress + '\'' +
                 '}';
     }
 }

@@ -105,7 +105,7 @@ public class InstallMaintenanceDao extends UtilDao {
                 List<FormData> formDatas = getCurrentNoteDetails(currentNoteGuid);
                 logger.info("current note forms count: " + formDatas.size());
                 InstallMaintenanceModel currentNoteInstallForm = getInstallMaintenanceModel(formDatas);
-                if (currentNoteInstallForm.hasVal()) {
+                if (currentNoteInstallForm.hasVal() || (currentNoteInstallForm.getAction() != null && currentNoteInstallForm.getAction().equals("CIMCON Node Replacements JBCC Only")) ) {
                     currentNoteData.setInstallMaintenanceModel(currentNoteInstallForm);
                     compareRevisionData(parentNoteId, currentNoteData, dailyCompletedCSVWriter, duplicateModelList);
                     logger.info("Processed item: " + i);
@@ -486,6 +486,11 @@ public class InstallMaintenanceDao extends UtilDao {
                                 installMaintenanceModel.setSkippedFixtureReason(setValue(installMaintenanceModel.getSkippedFixtureReason(), getValue(idsList.getSkippedfixtureReason(), edgeFormDatas)));
                                 installMaintenanceModel.setSkippedReason(setValue(installMaintenanceModel.getSkippedReason(), getValue(idsList.getSkippedReason(), edgeFormDatas)));
                                 break;
+
+                            case CNR:
+                                installMaintenanceModel.setCnrMACAddress(setValue(installMaintenanceModel.getCnrMACAddress(), getValue(idsList.getMac(), edgeFormDatas)));
+                                break;
+
                         }
                     }
                 }
