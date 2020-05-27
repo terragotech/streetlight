@@ -612,7 +612,7 @@ public abstract class SLVInterfaceService {
     protected String dateFormat(Long dateTime) {
         Date date = new Date(Long.valueOf(dateTime));
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
-        dateFormat.setTimeZone(TimeZone.getTimeZone("GMT"));
+        dateFormat.setTimeZone(TimeZone.getTimeZone("BST"));
         String dff = dateFormat.format(date);
         return dff;
     }
