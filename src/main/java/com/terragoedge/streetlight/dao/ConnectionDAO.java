@@ -39,6 +39,7 @@ public enum ConnectionDAO {
     public Dao<SlvInterfaceLogEntity, String> slvInterfaceLogDao = null;
     public Dao<ExistingMacValidationFailure, String> existingMacValidationFailureDao = null;
     public Dao<ClientAccountEntity, String> clientAccountEntityDao = null;
+    public Dao<CommissionFailureData, String> commissionFailureDataDao = null;
 
     public Dao<EdgeAllSerialNumber, String> edgeAllSerialNumbersDao = null;
 
@@ -133,6 +134,12 @@ public enum ConnectionDAO {
 
             }
 
+            try {
+                TableUtils.createTableIfNotExists(connectionSource, CommissionFailureData.class);
+            } catch (Exception e) {
+
+            }
+
             slvDeviceDao = DaoManager.createDao(connectionSource, SlvServerData.class);
             duplicateMacAddressDao = DaoManager.createDao(connectionSource, DuplicateMacAddress.class);
             deviceAttributeDao = DaoManager.createDao(connectionSource, DeviceAttributes.class);
@@ -152,7 +159,7 @@ public enum ConnectionDAO {
             droppedPinRemoveEventDao = DaoManager.createDao(connectionSource, DroppedPinRemoveEvent.class);
 
             installationRemovedExceptionReportStringDao = DaoManager.createDao(connectionSource,InstallationRemovedExceptionReport.class);
-
+            commissionFailureDataDao = DaoManager.createDao(connectionSource,CommissionFailureData.class);
             System.out.println("Connected.....");
         } catch (Exception e) {
             logger.error("Error in openConnection", e);
@@ -514,6 +521,48 @@ public enum ConnectionDAO {
             e.printStackTrace();
         }
         return new ArrayList<>();
+    }
+
+    public List<CommissionFailureData> getCommissionFailureDatas(){
+        try{
+            return   commissionFailureDataDao.queryForAll();
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+        return new ArrayList<>();
+    }
+
+    public void saveCommissionFailure(CommissionFailureData commissionFailureData){
+        try{
+            commissionFailureDataDao.create(commissionFailureData);
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+    }
+
+    public void updateCommissionFailure(CommissionFailureData commissionFailureData){
+        try{
+            commissionFailureDataDao.update(commissionFailureData);
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+    }
+
+    public CommissionFailureData getCommissionFailure(String parentnoteguid){
+        try{
+            return commissionFailureDataDao.queryBuilder().where().eq("parentnoteguid",parentnoteguid).queryForFirst();
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    public void deleteCommissionFailure(CommissionFailureData commissionFailureData){
+        try{
+            commissionFailureDataDao.delete(commissionFailureData);
+        }catch (Exception e){
+            e.printStackTrace();
+        }
     }
 
 

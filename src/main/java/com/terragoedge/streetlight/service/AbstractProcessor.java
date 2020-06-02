@@ -4,6 +4,7 @@ import com.google.gson.*;
 import com.terragoedge.edgeserver.*;
 import com.terragoedge.streetlight.PropertiesReader;
 import com.terragoedge.streetlight.Utils;
+import com.terragoedge.streetlight.dao.CommissionFailureData;
 import com.terragoedge.streetlight.dao.ConnectionDAO;
 import com.terragoedge.streetlight.dao.StreetlightDao;
 import com.terragoedge.streetlight.enumeration.CallType;
@@ -1234,6 +1235,8 @@ public abstract class AbstractProcessor {
                     createEdgeAllMac(idOnController, macAddress);
                     syncMacAddress2Edge(idOnController,macAddress,atlasPhysicalPage);
                     paramsList = new ArrayList<>();
+                    // If error occurs in commissioning, add it in table to re-commission it.
+                    saveCommissionFailure(idOnController,edgeNote,macAddress);
                     syncAccountNumber(paramsList,loggingModel,edgeNote,Utils.SUCCESSFUL,macAddress);
                 }
                 throw new ReplaceOLCFailedException(value);
@@ -1245,6 +1248,14 @@ public abstract class AbstractProcessor {
                     createEdgeAllMac(idOnController, macAddress);
                     syncMacAddress2Edge(idOnController,macAddress,atlasPhysicalPage);
                     paramsList = new ArrayList<>();
+
+                    // If this macaddress in commission failure list, then delete it. because it is commissioned successfully
+                    String parentnoteguid = edgeNote.getBaseParentNoteId() != null ? edgeNote.getBaseParentNoteId() : edgeNote.getNoteGuid();
+                    CommissionFailureData commissionFailureData = connectionDAO.getCommissionFailure(parentnoteguid);
+                    if(commissionFailureData != null){
+                        connectionDAO.deleteCommissionFailure(commissionFailureData);
+                    }
+
                     syncAccountNumber(paramsList,loggingModel,edgeNote,Utils.SUCCESSFUL,macAddress);
                     syncCustomerName(loggingModel);
                 }
@@ -1980,4 +1991,23 @@ public boolean checkExistingMacAddressValid(EdgeNote edgeNote, InstallMaintenanc
         }
     }
 
+    private void saveCommissionFailure(String idOnController,EdgeNote edgeNote,String macAddress){
+        String parentnoteguid = edgeNote.getBaseParentNoteId() != null ? edgeNote.getBaseParentNoteId() : edgeNote.getNoteGuid();
+        CommissionFailureData commissionFailureData = connectionDAO.getCommissionFailure(parentnoteguid);
+        if(commissionFailureData == null) {
+            commissionFailureData = new CommissionFailureData();
+        }
+        commissionFailureData.setIdoncontroller(idOnController);
+        commissionFailureData.setCreateddatetime(edgeNote.getCreatedDateTime());
+        commissionFailureData.setSynctime(edgeNote.getSyncTime());
+        commissionFailureData.setEventtime(System.currentTimeMillis());
+        commissionFailureData.setMacaddress(macAddress);
+        commissionFailureData.setParentnoteguid(parentnoteguid);
+        commissionFailureData.setNoteguid(edgeNote.getNoteGuid());
+        if(commissionFailureData.getId() == 0){
+            connectionDAO.saveCommissionFailure(commissionFailureData);
+        }else{
+            connectionDAO.updateCommissionFailure(commissionFailureData);
+        }
+    }
 }
