@@ -548,9 +548,9 @@ public enum ConnectionDAO {
         }
     }
 
-    public CommissionFailureData getCommissionFailure(String parentnoteguid){
+    public CommissionFailureData getCommissionFailure(String idoncontroller){
         try{
-            return commissionFailureDataDao.queryBuilder().where().eq("parentnoteguid",parentnoteguid).queryForFirst();
+            return commissionFailureDataDao.queryBuilder().where().eq("idoncontroller",idoncontroller).queryForFirst();
         }catch (Exception e){
             e.printStackTrace();
         }

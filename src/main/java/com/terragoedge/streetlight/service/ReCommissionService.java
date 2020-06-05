@@ -32,144 +32,20 @@ public class ReCommissionService extends AbstractProcessor {
     }
 
     public void start(){
-        String accessToken = getEdgeToken();
-        String url = properties.getProperty("streetlight.edge.url.main");
-
         List<CommissionFailureData> commissionFailureDatas = connectionDAO.getCommissionFailureDatas();
 
         for(CommissionFailureData commissionFailureData : commissionFailureDatas){
-            String idoncontroller = commissionFailureData.getIdoncontroller();
             try {
-                List<List<EdgeFormData>> formDefMaps = new ArrayList<>();
-                ResponseEntity<String> responseEntity = restService.getRequest(url + "/notesdata/" + idoncontroller, false, accessToken);
-                if (responseEntity.getStatusCode() == HttpStatus.OK) {
-                    String body = responseEntity.getBody();
-                    JsonArray notesArry = jsonParser.parse(body).getAsJsonArray();
-                    for (JsonElement noteElement : notesArry) {
-                        JsonObject edgeJsonObject = noteElement.getAsJsonObject();
-                        String parentNoteGuid = edgeJsonObject.get("baseParentNoteId").isJsonNull() ? null : edgeJsonObject.get("baseParentNoteId").getAsString();
-                        if (parentNoteGuid.equals(commissionFailureData.getParentnoteguid())) {
-                            JsonArray serverEdgeFormJsonArray = edgeJsonObject.get("formData").getAsJsonArray();
-                            int size = serverEdgeFormJsonArray.size();
-                            for (int i = 0; i < size; i++) {
-                                JsonObject serverEdgeForm = serverEdgeFormJsonArray.get(i).getAsJsonObject();
-                                if (serverEdgeForm.get("formTemplateGuid").equals(properties.getProperty("amerescousa.edge.formtemplateGuid"))) {
-                                    String formDefJson = serverEdgeForm.get("formDef").toString();
-                                    formDefJson = formDefJson.replaceAll("\\\\", "");
-                                    List<EdgeFormData> formDataList = getEdgeFormData(formDefJson);
-                                    formDefMaps.add(formDataList);
-                                }
-                            }
-                            reCommissionFailureData(formDefMaps, idoncontroller, commissionFailureData);
-                        }
-                    }
+                String idoncontroller = commissionFailureData.getIdoncontroller();
+                String macaddress = commissionFailureData.getMacaddress();
+                if (macaddress == null || macaddress.equals("")) {
+                    connectionDAO.deleteCommissionFailure(commissionFailureData);
                 } else {
-                    logger.error("Error while getting this fixture: " + commissionFailureData.getIdoncontroller());
+                    recommission(macaddress, idoncontroller, commissionFailureData);
                 }
             }catch (Exception e){
-                logger.error("Error while processing this fixture: "+idoncontroller, e);
+                logger.error("Error in processing recommission: ",e);
             }
-        }
-    }
-
-    private List<EdgeFormData> getEdgeFormData(String data) {
-        try {
-            List<EdgeFormData> edgeFormDatas = gson.fromJson(data, new TypeToken<List<EdgeFormData>>() {
-            }.getType());
-            return edgeFormDatas;
-        } catch (Exception e) {
-            data = data.substring(1, data.length() - 1);
-            List<EdgeFormData> edgeFormDatas = gson.fromJson(data, new TypeToken<List<EdgeFormData>>() {
-            }.getType());
-            return edgeFormDatas;
-        }
-    }
-    private String getFormValue(List<EdgeFormData> edgeFormDatas,int componentId){
-        for(EdgeFormData edgeFormData : edgeFormDatas){
-            if(edgeFormData.getId() == componentId){
-                return getValidValue(edgeFormData.getValue());
-            }
-        }
-        return "";
-    }
-    private String getValidValue(String value){
-        value = value == null ? "" : value;
-        value = value.contains("#") ? value.split("#",-1)[1] : value;
-        value = value.contains("null") ? "" : value;
-        return value;
-    }
-
-    private void reCommissionFailureData(List<List<EdgeFormData>> formDefMaps, String idoncontroller, CommissionFailureData commissionFailureData){
-        if(formDefMaps.size() > 1){
-            logger.error("There are one or more installtion forms: "+idoncontroller);
-            return;
-        }else if(formDefMaps.size() == 0){
-            logger.error("There are no installtion forms: "+idoncontroller);
-            return;
-        }
-        boolean removeCommissionFailureData =false;
-        String currentMacAddress = "";
-        List<EdgeFormData> formDataList = formDefMaps.get(0);
-        String action = getFormValue(formDataList,17);
-        if(action != null && !action.equals("")){
-            switch (action){
-                case "New":
-                    String installStatus = getFormValue(formDataList,22);
-                    if(installStatus != null && !installStatus.equals("")){
-                        if(installStatus.equals("Complete")) {
-                            currentMacAddress = getFormValue(formDataList, 19);
-                        } else if(installStatus.equals("Could not complete")){
-                            removeCommissionFailureData = true;
-                        }else if(installStatus.equals("Button Photocell Installation")){
-                            removeCommissionFailureData = true;
-                        }
-                    }else{
-                        logger.error("The fixture has new action but install status not selected: "+idoncontroller);
-                        return;
-                    }
-                    break;
-                case "Repairs & Outages":
-                    String replaceWorkflow = getFormValue(formDataList,24);
-                    if(replaceWorkflow != null && !replaceWorkflow.equals("")){
-                        switch (replaceWorkflow){
-                            case "Replace Node and Fixture":
-                                currentMacAddress = getFormValue(formDataList,26);
-                                break;
-                            case "Replace Node only":
-                                currentMacAddress = getFormValue(formDataList,30);
-                                break;
-                            case "CIMCON Node Replacements JBCC Only":
-                                currentMacAddress = getFormValue(formDataList,180);
-                                break;
-                            case "COC Replacement":
-                                currentMacAddress = getFormValue(formDataList,185);
-                                break;
-                        }
-                    }else{
-                        logger.error("the fixture has Repairs & Outages action but workflow is not selected: "+idoncontroller);
-                        return;
-                    }
-                    break;
-                case "Remove":
-                    removeCommissionFailureData = true;
-                    break;
-            }
-        }else{
-            logger.error("No action selected in this fixture: "+idoncontroller);
-            return;
-        }
-
-        if(removeCommissionFailureData && (currentMacAddress == null || currentMacAddress.equals(""))){
-            connectionDAO.deleteCommissionFailure(commissionFailureData);
-        } else if(currentMacAddress == null || currentMacAddress.equals("")){// ex: replace fixture only
-            //recommission here
-            recommission(commissionFailureData.getMacaddress(),idoncontroller,commissionFailureData);
-
-        } else if (currentMacAddress.equals(commissionFailureData.getMacaddress())){// same mac address
-            //recommission here
-            recommission(commissionFailureData.getMacaddress(),idoncontroller,commissionFailureData);
-        } else{// diff mac address
-            connectionDAO.deleteCommissionFailure(commissionFailureData);
         }
     }
 
@@ -226,7 +102,7 @@ public class ReCommissionService extends AbstractProcessor {
                 logger.info("check mac address exist values:" + values);
             } else {
                 values = null;
-                logger.error("Error while check mac address already used on not. Err: " + response.getBody());
+                logger.error("Error while check mac address already used or not. Err: " + response.getBody());
             }
         }catch (Exception e){
             values = null;

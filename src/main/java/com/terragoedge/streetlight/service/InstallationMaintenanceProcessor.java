@@ -3,6 +3,7 @@ package com.terragoedge.streetlight.service;
 import com.terragoedge.edgeserver.*;
 import com.terragoedge.streetlight.PropertiesReader;
 import com.terragoedge.streetlight.Utils;
+import com.terragoedge.streetlight.dao.CommissionFailureData;
 import com.terragoedge.streetlight.enumeration.InstallStatus;
 import com.terragoedge.streetlight.enumeration.DateType;
 import com.terragoedge.streetlight.exception.*;
@@ -227,6 +228,12 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
                                 slvInterfaceLogEntity.setSelectedAction("Remove");
                                 logger.info("entered remove action");
                                 processRemoveAction(edgeFormDatas, utilLocId, installMaintenanceLogModel, slvInterfaceLogEntity,edgeNote,notesData);
+
+                                //If any recommission list for this idoncontroller, then delete it from table. Because it is in remove state
+                                CommissionFailureData commissionFailureData = connectionDAO.getCommissionFailure(edgeNote.getTitle());
+                                if(commissionFailureData != null){
+                                    connectionDAO.deleteCommissionFailure(commissionFailureData);
+                                }
                                 break;
                             case "Other Task":
                                 slvInterfaceLogEntity.setSelectedAction("Other Task");

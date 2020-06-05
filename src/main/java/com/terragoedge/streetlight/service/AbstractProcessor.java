@@ -1250,8 +1250,7 @@ public abstract class AbstractProcessor {
                     paramsList = new ArrayList<>();
 
                     // If this macaddress in commission failure list, then delete it. because it is commissioned successfully
-                    String parentnoteguid = edgeNote.getBaseParentNoteId() != null ? edgeNote.getBaseParentNoteId() : edgeNote.getNoteGuid();
-                    CommissionFailureData commissionFailureData = connectionDAO.getCommissionFailure(parentnoteguid);
+                    CommissionFailureData commissionFailureData = connectionDAO.getCommissionFailure(edgeNote.getTitle());
                     if(commissionFailureData != null){
                         connectionDAO.deleteCommissionFailure(commissionFailureData);
                     }
@@ -1993,7 +1992,7 @@ public boolean checkExistingMacAddressValid(EdgeNote edgeNote, InstallMaintenanc
 
     private void saveCommissionFailure(String idOnController,EdgeNote edgeNote,String macAddress){
         String parentnoteguid = edgeNote.getBaseParentNoteId() != null ? edgeNote.getBaseParentNoteId() : edgeNote.getNoteGuid();
-        CommissionFailureData commissionFailureData = connectionDAO.getCommissionFailure(parentnoteguid);
+        CommissionFailureData commissionFailureData = connectionDAO.getCommissionFailure(edgeNote.getTitle());
         if(commissionFailureData == null) {
             commissionFailureData = new CommissionFailureData();
         }
