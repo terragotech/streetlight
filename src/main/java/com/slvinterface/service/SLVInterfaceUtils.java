@@ -116,8 +116,8 @@ public class SLVInterfaceUtils {
                         String geozoneNamePath = jsonObject.get("namesPath").getAsString();
                         geozoneNamePath = geozoneNamePath.replaceAll("\'","");
                         geozoneNamePath = URLEncoder.encode(geozoneNamePath,"UTF-8");
-                        String rootGeoZoneEncoded = URLEncoder.encode(rootGeoZone+"/","UTF-8");
-                        if(geozoneNamePath.endsWith(rootGeoZoneEncoded + geozone)){// inside unknown
+                        //String rootGeoZoneEncoded = URLEncoder.encode(rootGeoZone+"/","UTF-8");
+                        if(geozoneNamePath.equals(geozone)){// inside unknown
                             geozoneId = jsonObject.get("id").getAsInt();
                             return geozoneId;
                         }

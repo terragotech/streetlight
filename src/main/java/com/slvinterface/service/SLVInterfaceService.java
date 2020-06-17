@@ -670,8 +670,9 @@ public abstract class SLVInterfaceService {
                             try{
                                 String geoZone = valueById(formValuesList,id.getId());
                                 logger.info("Form GeoZone:"+geoZone);
-                               String[] geoZoneArray = geoZone.split("/");
-                                geoZone = geoZoneArray[geoZoneArray.length - 1];
+                              // String[] geoZoneArray = geoZone.split("/");
+                               // geoZone = geoZoneArray[geoZoneArray.length - 1];
+                                geoZone = geoZone.replaceAll("Urban Control/","");
                                 logger.info("Form GeoZone:"+geoZone);
                                 edge2SLVData.setCurrentGeoZone(geoZone);
                             }catch (NoValueException e){
