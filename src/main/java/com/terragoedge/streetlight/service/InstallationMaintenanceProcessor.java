@@ -2640,14 +2640,16 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
            }
             else if (repairsOutagesValue.equals("Unable to Repair(CDOT Issue)")) {
                logger.info("Checking Unable to Repair(CDOT Issue) Data based on Data Analyser Result.");
-              List<Integer> unableToRepairIds =   workflowConfig.getReplaceAction().getUnableToRepairIds();
+              /* List<Integer> unableToRepairIds =   workflowConfig.getReplaceAction().getUnableToRepairIds();
               boolean isDataChanged = isDataChanged(unableToRepairIds,dataDiffValueHolderList);
                logger.info("IsData changed:"+isDataChanged);
               if(isDataChanged){
                   loggingModel.setRepairsOption("Unable to Repair(CDOT Issue)");
                   return "Repairs & Outages";
-              }
+              }*/
 
+               loggingModel.setRepairsOption("Unable to Repair(CDOT Issue)");
+               return "Repairs & Outages";
            }
            else if (repairsOutagesValue.contains("CIMCON Node Replacements")) {
                logger.info("Checking CIMCON Node Replacements Data based on Data Analyser Result.");
