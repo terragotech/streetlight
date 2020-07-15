@@ -34,6 +34,8 @@ import java.sql.SQLException;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.Properties;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -56,6 +58,8 @@ public abstract class AbstractProcessor {
 
     protected SLVDates edgeNoteCreatedDateTime = null;
     protected String noteCreatedDateTime = null;
+
+    ExecutorService promotedSLVMACAddressExecutor = Executors.newCachedThreadPool();
 
     public AbstractProcessor() {
         this.connectionDAO = ConnectionDAO.INSTANCE;
@@ -1713,20 +1717,26 @@ public boolean checkExistingMacAddressValid(EdgeNote edgeNote, InstallMaintenanc
     }
 
 
-    protected void syncMacAddress2Promoted(String idOnController,String macAddress){
-        // Remove MAC Address from the Promoted Data.
-        logger.info("Remove MAC Address from the Promoted Data.");
-        try {
-            String url = "/promoted/updateSLVMacAddress?idOnController="+idOnController;
-            if(macAddress != null && !macAddress.trim().isEmpty()){
-                url = url + "&slvMacAddress="+macAddress;
-            }
+    protected void syncMacAddress2Promoted(final String idOnController,final String macAddress){
+        promotedSLVMACAddressExecutor.execute(new Runnable() {
+            @Override
+            public void run() {
+                // Remove MAC Address from the Promoted Data.
+                logger.info("Remove MAC Address from the Promoted Data.");
+                try {
+                    String url = "/promoted/updateSLVMacAddress?idOnController="+idOnController;
+                    if(macAddress != null && !macAddress.trim().isEmpty()){
+                        url = url + "&slvMacAddress="+macAddress;
+                    }
 
-            restService.callPostMethod(url,HttpMethod.GET,null,true);
-            logger.info("Remove MAC Address from the Promoted Data End.");
-        }catch (Exception e){
-            logger.error("Error in removeEdgeSLVMacAddress",e);
-        }
+                    restService.callPostMethod(url,HttpMethod.GET,null,true);
+                    logger.info("Remove MAC Address from the Promoted Data End.");
+                }catch (Exception e){
+                    logger.error("Error in removeEdgeSLVMacAddress",e);
+                }
+            }
+        });
+
     }
 
 

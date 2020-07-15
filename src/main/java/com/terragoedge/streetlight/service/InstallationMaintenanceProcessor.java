@@ -27,9 +27,12 @@ import org.springframework.web.client.RestTemplate;
 
 import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class InstallationMaintenanceProcessor extends AbstractProcessor {
 
+    ExecutorService promotedFormDatesExecutor = Executors.newCachedThreadPool();
 
     public InstallationMaintenanceProcessor(WeakHashMap<String, String> contextListHashMap, HashMap<String, SLVDates> cslpDateHashMap, HashMap<String, String> macHashMap) {
         super();
@@ -2197,29 +2200,35 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
     }
 
 
-    public ResponseEntity<String> serverCall(String url, HttpMethod httpMethod, String body) {
-        logger.info("Request Url : " + url);
-        logger.info("Request Data : " + body);
-        RestTemplate restTemplate = getRestTemplate();
-        HttpHeaders headers =new HttpHeaders();
+    public void serverCall(final String url,final HttpMethod httpMethod,final String body) {
+        promotedFormDatesExecutor.execute(new Runnable() {
+            @Override
+            public void run() {
+                logger.info("Request Url : " + url);
+                logger.info("Request Data : " + body);
+                RestTemplate restTemplate = getRestTemplate();
+                HttpHeaders headers =new HttpHeaders();
 
-        HttpEntity request = null;
-        if (body != null) {
-            headers.add("Content-Type", "application/json");
-            request = new HttpEntity<String>(body, headers);
-        } else {
-            request = new HttpEntity<>(headers);
-        }
+                HttpEntity request = null;
+                if (body != null) {
+                    headers.add("Content-Type", "application/json");
+                    request = new HttpEntity<String>(body, headers);
+                } else {
+                    request = new HttpEntity<>(headers);
+                }
 
-        ResponseEntity<String> responseEntity = restTemplate.exchange(url, httpMethod, request, String.class);
-        logger.info("------------ Response ------------------");
+                ResponseEntity<String> responseEntity = restTemplate.exchange(url, httpMethod, request, String.class);
+                logger.info("------------ Response ------------------");
 
-        logger.info("Response Code:" + responseEntity.getStatusCode().toString());
-        if (responseEntity.getBody() != null) {
-            logger.info("Response Data:" + responseEntity.getBody());
-        }
+                logger.info("Response Code:" + responseEntity.getStatusCode().toString());
+                if (responseEntity.getBody() != null) {
+                    logger.info("Response Data:" + responseEntity.getBody());
+                }
 
-        return responseEntity;
+              //  return responseEntity;
+            }
+        });
+
     }
 
 
