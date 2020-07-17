@@ -49,7 +49,10 @@ public class GenericSLVInterface extends  SLVInterfaceService {
                 previousEdge2SLVData.setControllerStrId(controllerStrId);
 
                 // Id On Controller
-                previousEdge2SLVData.setIdOnController(edgeNote.getTitle());
+                if(previousEdge2SLVData.getIdOnController() == null){
+                    previousEdge2SLVData.setIdOnController(edgeNote.getTitle());
+                }
+
                 previousEdge2SLVData.setTitle(edgeNote.getTitle());
 
 
@@ -131,7 +134,8 @@ public class GenericSLVInterface extends  SLVInterfaceService {
                     boolean result =  slvTools.deviceAlreadyExists(previousEdge2SLVData.getIdOnController());
                     if(!result){
                         SLVTransactionLogs slvTransactionLogs = new SLVTransactionLogs();
-                        slvTools.createNewDevice(previousEdge2SLVData,slvSyncTable,"274");
+                        String geoZoneID = properties.getProperty("streetlight.geozone.createdevice");
+                        slvTools.createNewDevice(previousEdge2SLVData,slvSyncTable,geoZoneID);
                     }
                     slvSyncTable.setSelectedAction("Install WorkFlow");
                     setDeviceVal(slvSyncTable,previousEdge2SLVData);
