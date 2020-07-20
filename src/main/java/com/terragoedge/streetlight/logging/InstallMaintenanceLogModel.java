@@ -41,6 +41,16 @@ public class InstallMaintenanceLogModel extends LoggingModel {
 
     private boolean isReSync = false;
 
+    private String installStatusFromConfig;
+
+
+    public String getInstallStatusFromConfig() {
+        return installStatusFromConfig;
+    }
+
+    public void setInstallStatusFromConfig(String installStatusFromConfig) {
+        this.installStatusFromConfig = installStatusFromConfig;
+    }
 
     private List unMatchedFormGuids = new ArrayList();
 
@@ -216,6 +226,11 @@ public class InstallMaintenanceLogModel extends LoggingModel {
                 ", proposedContext='" + proposedContext + '\'' +
                 ", atlasGroup='" + atlasGroup + '\'' +
                 ", isBulkImport=" + isBulkImport +
+                ", isMacRemoved=" + isMacRemoved +
+                ", isCNRNoMAC=" + isCNRNoMAC +
+                ", isReSync=" + isReSync +
+                ", installStatusFromConfig='" + installStatusFromConfig + '\'' +
+                ", unMatchedFormGuids=" + unMatchedFormGuids +
                 ", datesHolder=" + datesHolder +
                 '}';
     }

@@ -1106,6 +1106,9 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
             String installStatusValue = null;
             try {
                 installStatusValue = valueById(edgeFormDatas, 22);
+                if(installStatusValue != null && installStatusValue.equals("Select From Below")){
+                    installStatusValue = loggingModel.getInstallStatusFromConfig() == null ? installStatusValue : loggingModel.getInstallStatusFromConfig();
+                }
                 slvInterfaceLogEntity.setInstallStatus(installStatusValue);
                 logger.info("installStatus Val" + installStatusValue);
             } catch (NoValueException e) {
@@ -2475,6 +2478,12 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
         try{
             String installStatus = valueById(edgeFormDataList, 22);
             logger.info("Form Install Status :"+installStatus);
+
+            if(installStatus != null && installStatus.equals("Select From Below")){
+                installStatus = getInstallStatusValue(dataDiffValueHolderList, workflowConfig, installStatus);
+                loggingModel.setInstallStatusFromConfig(installStatus);
+            }
+
             if(installStatus.equals("Complete")){
                 List<Integer> completeIds =  workflowConfig.getNewAction().getCompleteIds();
                 logger.info("Checking data analyser has complete data set...");
@@ -2524,6 +2533,24 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
         }
         throw  new NoDataChangeException("No Value change");
 
+    }
+
+    private String getInstallStatusValue(List<DataDiffValueHolder> dataDiffValueHolders, WorkflowConfig workflowConfig, String installStatus){
+        NewAction newAction = workflowConfig.getNewAction();
+        try {
+            if (isDataChanged(newAction.getCompleteIds(), dataDiffValueHolders)) {
+                return "Complete";
+            }
+            if(isDataChanged(newAction.getPhotocellIds(),dataDiffValueHolders)){
+                return "Button Photocell Installation";
+            }
+            if(isDataChanged(newAction.getCouldNotCompleteIds(),dataDiffValueHolders)){
+                return "Could not complete";
+            }
+        }catch (Exception e){
+            logger.error("Error while getting install status value from changed value",e);
+        }
+        return installStatus;
     }
 
    public DataDiffResponse getDataDiffResponse(EdgeNote edgeNote,WorkflowConfig workflowConfig){
