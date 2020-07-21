@@ -651,6 +651,60 @@ public abstract class SLVInterfaceService {
                                 e.printStackTrace();
                             }
                             break;
+                        case FIXTURE_TYPE:
+                            try {
+                                String fixtureType = valueById(formValuesList, id.getId());
+                                edge2SLVData.setFixtureType(fixtureType);
+                            }
+                            catch (NoValueException e){
+                                e.printStackTrace();
+                            }
+                            break;
+                        case LAMP_TYPE:
+                            try {
+                                String lampType = valueById(formValuesList, id.getId());
+                                edge2SLVData.setLampType(lampType);
+                            }
+                            catch (NoValueException e){
+                                e.printStackTrace();
+                            }
+                            break;
+                        case LAMP_TYPE_OTHER:
+                            try {
+                                String lampTypeOther = valueById(formValuesList, id.getId());
+                                edge2SLVData.setLampTypeOther(lampTypeOther);
+                            }
+                            catch (NoValueException e){
+                                e.printStackTrace();
+                            }
+                            break;
+                        case WATTAGE:
+                            try {
+                                String wattage = valueById(formValuesList, id.getId());
+                                edge2SLVData.setWattage(wattage);
+                            }
+                            catch (NoValueException e){
+                                e.printStackTrace();
+                            }
+                            break;
+                        case WATTAGE_OTHER:
+                            try {
+                                String wattageOther = valueById(formValuesList, id.getId());
+                                edge2SLVData.setWattageOther(wattageOther);
+                            }
+                            catch (NoValueException e){
+                                e.printStackTrace();
+                            }
+                            break;
+                        case SUPPLY_TYPE:
+                            try {
+                                String supplyType = valueById(formValuesList, id.getId());
+                                edge2SLVData.setSupplyType(supplyType);
+                            }
+                            catch (NoValueException e){
+                                e.printStackTrace();
+                            }
+                            break;
 
                     }
                 }

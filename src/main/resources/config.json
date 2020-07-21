@@ -1,5 +1,5 @@
 {
-  "priority": [{"type":"REMOVE","order":1},{"type":"UPDATE_DEVICE","order":2},{"type":"NEW_DEVICE","order":3}],
+  "priority": [{"type":"REMOVE","order":1},{"type":"UPDATE_DEVICE","order":2},{"type":"NEW_DEVICE","order":3},{"type":"OPERATION","order":4}],
   "config": [
     {
       "type": "NEW_DEVICE",
@@ -13,6 +13,36 @@
           "id": 10076,
           "type": "FIXTURE",
           "isRequired": true
+        },
+        {
+          "id": 10109,
+          "type": "FIXTURE_TYPE",
+          "isRequired": true
+        },
+        {
+          "id": 10110,
+          "type": "LAMP_TYPE",
+          "isRequired": true
+        },
+        {
+          "id": 10112,
+          "type": "LAMP_TYPE_OTHER",
+          "isRequired": true
+        },
+        {
+          "id": 75,
+          "type": "WATTAGE",
+          "isRequired": true
+        },
+        {
+          "id": 10114,
+          "type": "WATTAGE_OTHER",
+          "isRequired": true
+        },
+        {
+          "id": 10115,
+          "type": "SUPPLY_TYPE",
+          "isRequired": true
         }
       ]
     },
@@ -22,6 +52,36 @@
         {
           "id": 10039,
           "type": "MAC",
+          "isRequired": true
+        },
+        {
+          "id": 10109,
+          "type": "FIXTURE_TYPE",
+          "isRequired": true
+        },
+        {
+          "id": 10110,
+          "type": "LAMP_TYPE",
+          "isRequired": true
+        },
+        {
+          "id": 10112,
+          "type": "LAMP_TYPE_OTHER",
+          "isRequired": true
+        },
+        {
+          "id": 75,
+          "type": "WATTAGE",
+          "isRequired": true
+        },
+        {
+          "id": 10114,
+          "type": "WATTAGE_OTHER",
+          "isRequired": true
+        },
+        {
+          "id": 10115,
+          "type": "SUPPLY_TYPE",
           "isRequired": true
         }
       ]
@@ -33,8 +93,74 @@
           "id": 10105,
           "type": "MAC",
           "isRequired": true
+        },
+        {
+          "id": 10109,
+          "type": "FIXTURE_TYPE",
+          "isRequired": true
+        },
+        {
+          "id": 10110,
+          "type": "LAMP_TYPE",
+          "isRequired": true
+        },
+        {
+          "id": 10112,
+          "type": "LAMP_TYPE_OTHER",
+          "isRequired": true
+        },
+        {
+          "id": 75,
+          "type": "WATTAGE",
+          "isRequired": true
+        },
+        {
+          "id": 10114,
+          "type": "WATTAGE_OTHER",
+          "isRequired": true
+        },
+        {
+          "id": 10115,
+          "type": "SUPPLY_TYPE",
+          "isRequired": true
+        }
+      ]
+    },
+    {
+      "type": "OPERATION",
+      "ids": [
+        {
+          "id": 10109,
+          "type": "FIXTURE_TYPE",
+          "isRequired": true
+        },
+        {
+          "id": 10110,
+          "type": "LAMP_TYPE",
+          "isRequired": true
+        },
+        {
+          "id": 10112,
+          "type": "LAMP_TYPE_OTHER",
+          "isRequired": true
+        },
+        {
+          "id": 75,
+          "type": "WATTAGE",
+          "isRequired": true
+        },
+        {
+          "id": 10114,
+          "type": "WATTAGE_OTHER",
+          "isRequired": true
+        },
+        {
+          "id": 10115,
+          "type": "SUPPLY_TYPE",
+          "isRequired": true
         }
       ]
     }
+
   ]
 }

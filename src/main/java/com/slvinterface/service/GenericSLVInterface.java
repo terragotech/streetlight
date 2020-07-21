@@ -148,7 +148,11 @@ public class GenericSLVInterface extends  SLVInterfaceService {
                 }
 
                 break;
-
+            case OPERATION:
+                slvSyncTable.setSelectedAction("update light inspection values");
+                setDeviceVal(slvSyncTable,previousEdge2SLVData);
+                slvSyncTable.setStatus("Success");
+                break;
 
         }
     }
@@ -161,6 +165,24 @@ public class GenericSLVInterface extends  SLVInterfaceService {
         addStreetLightData("installStatus","Installed",paramsList);
         addStreetLightData("MacAddress",previousEdge2SLVData.getMacAddress(),paramsList);
         addStreetLightData("install.date",previousEdge2SLVData.getInstallDate(),paramsList);
+        addStreetLightData("fixing.type",previousEdge2SLVData.getFixtureType(),paramsList);
+        if(previousEdge2SLVData.getLampTypeOther() != null && (!previousEdge2SLVData.getLampTypeOther().equals("")))
+        {
+            addStreetLightData("luminaire.type",previousEdge2SLVData.getLampTypeOther(),paramsList);
+        }
+        else
+        {
+            addStreetLightData("luminaire.type",previousEdge2SLVData.getLampType(),paramsList);
+        }
+        if(previousEdge2SLVData.getWattageOther() != null && (!previousEdge2SLVData.getWattageOther().equals("")))
+        {
+            addStreetLightData("power",previousEdge2SLVData.getWattageOther(),paramsList);
+        }
+        else
+        {
+            addStreetLightData("power",previousEdge2SLVData.getWattage(),paramsList);
+        }
+        addStreetLightData("luminaire.DistributionType",previousEdge2SLVData.getSupplyType(),paramsList);
 
         String slvCalender = PropertiesReader.getProperties().getProperty("streetlight.calendar");
         if(slvCalender != null && !slvCalender.trim().isEmpty()){

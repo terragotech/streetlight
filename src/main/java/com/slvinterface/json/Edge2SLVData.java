@@ -12,7 +12,60 @@ public class Edge2SLVData {
     private String existingMACAddress;
     private String fixtureQRScan;
     private String geometry = null;
+    private String fixtureType;
+    private String lampType;
+    private String lampTypeOther;
+    private String wattage;
+    private String wattageOther;
+    private String supplyType;
 
+    public String getFixtureType() {
+        return fixtureType;
+    }
+
+    public void setFixtureType(String fixtureType) {
+        this.fixtureType = fixtureType;
+    }
+
+    public String getLampType() {
+        return lampType;
+    }
+
+    public void setLampType(String lampType) {
+        this.lampType = lampType;
+    }
+
+    public String getLampTypeOther() {
+        return lampTypeOther;
+    }
+
+    public void setLampTypeOther(String lampTypeOther) {
+        this.lampTypeOther = lampTypeOther;
+    }
+
+    public String getWattage() {
+        return wattage;
+    }
+
+    public void setWattage(String wattage) {
+        this.wattage = wattage;
+    }
+
+    public String getWattageOther() {
+        return wattageOther;
+    }
+
+    public void setWattageOther(String wattageOther) {
+        this.wattageOther = wattageOther;
+    }
+
+    public String getSupplyType() {
+        return supplyType;
+    }
+
+    public void setSupplyType(String supplyType) {
+        this.supplyType = supplyType;
+    }
 
     public String getGeometry() {
         return geometry;
