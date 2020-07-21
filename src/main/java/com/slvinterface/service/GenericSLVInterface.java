@@ -117,15 +117,33 @@ public class GenericSLVInterface extends  SLVInterfaceService {
         switch (previousEdge2SLVData.getPriority().getType()){
             case REMOVE:
                 slvSyncTable.setSelectedAction("Remove WorkFlow");
-                replaceOLC(previousEdge2SLVData.getControllerStrId(),previousEdge2SLVData.getIdOnController(),"",slvSyncTable);
+                try {
+                    replaceOLC(previousEdge2SLVData.getControllerStrId(), previousEdge2SLVData.getIdOnController(), "", slvSyncTable);
+                }
+                catch (Exception e)
+                {
+                    logger.error("Remove replace OLC failed",e);
+                }
                 slvSyncTable.setStatus("Success");
                 break;
 
             case UPDATE_DEVICE:
                 slvSyncTable.setSelectedAction("Replace WorkFlow");
-                replaceOLC(previousEdge2SLVData.getControllerStrId(),previousEdge2SLVData.getIdOnController(),"",slvSyncTable);
+                try {
+                    replaceOLC(previousEdge2SLVData.getControllerStrId(), previousEdge2SLVData.getIdOnController(), "", slvSyncTable);
+                }
+                catch (Exception e)
+                {
+                    logger.error("Update Device empty replace OLC failed",e);
+                }
                 setDeviceVal(slvSyncTable,previousEdge2SLVData);
-                replaceOLC(previousEdge2SLVData.getControllerStrId(),previousEdge2SLVData.getIdOnController(),previousEdge2SLVData.getMacAddress(),slvSyncTable);
+                try {
+                    replaceOLC(previousEdge2SLVData.getControllerStrId(), previousEdge2SLVData.getIdOnController(), previousEdge2SLVData.getMacAddress(), slvSyncTable);
+                }
+                catch (Exception e)
+                {
+                    logger.error("Update Device new mac address replace OLC failed",e);
+                }
                 slvSyncTable.setStatus("Success");
                 break;
 
@@ -139,7 +157,13 @@ public class GenericSLVInterface extends  SLVInterfaceService {
                     }
                     slvSyncTable.setSelectedAction("Install WorkFlow");
                     setDeviceVal(slvSyncTable,previousEdge2SLVData);
-                    replaceOLC(previousEdge2SLVData.getControllerStrId(),previousEdge2SLVData.getIdOnController(),previousEdge2SLVData.getMacAddress(),slvSyncTable);
+                    try {
+                        replaceOLC(previousEdge2SLVData.getControllerStrId(), previousEdge2SLVData.getIdOnController(), previousEdge2SLVData.getMacAddress(), slvSyncTable);
+                    }
+                    catch (Exception e)
+                    {
+                        logger.error("New Device Install mac address replace OLC failed",e);
+                    }
                     slvSyncTable.setStatus("Success");
                 }catch (ErrorCheckDeviceExists e){
                     logger.error("Error",e);
