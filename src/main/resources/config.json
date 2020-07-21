@@ -11,8 +11,12 @@
         },
         {
           "id": 10076,
-          "type": "FIXTURE",
-          "isRequired": true
+          "type": "FIXTURE"
+        },
+	{
+          "id": 52,
+          "type": "IDONCONTROLLER",
+  	"isRequired": true
         },
         {
           "id": 10109,
@@ -54,6 +58,11 @@
           "type": "MAC",
           "isRequired": true
         },
+	{
+          "id": 52,
+          "type": "IDONCONTROLLER",
+  	  "isRequired": true
+        },	
         {
           "id": 10109,
           "type": "FIXTURE_TYPE",
@@ -94,34 +103,9 @@
           "type": "MAC",
           "isRequired": true
         },
-        {
-          "id": 10109,
-          "type": "FIXTURE_TYPE",
-          "isRequired": true
-        },
-        {
-          "id": 10110,
-          "type": "LAMP_TYPE",
-          "isRequired": true
-        },
-        {
-          "id": 10112,
-          "type": "LAMP_TYPE_OTHER",
-          "isRequired": true
-        },
-        {
-          "id": 75,
-          "type": "WATTAGE",
-          "isRequired": true
-        },
-        {
-          "id": 10114,
-          "type": "WATTAGE_OTHER",
-          "isRequired": true
-        },
-        {
-          "id": 10115,
-          "type": "SUPPLY_TYPE",
+	{
+          "id": 52,
+          "type": "IDONCONTROLLER",
           "isRequired": true
         }
       ]
@@ -129,6 +113,11 @@
     {
       "type": "OPERATION",
       "ids": [
+		{
+          "id": 52,
+          "type": "IDONCONTROLLER",
+          "isRequired": true
+        },
         {
           "id": 10109,
           "type": "FIXTURE_TYPE",
