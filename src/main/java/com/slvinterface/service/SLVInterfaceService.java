@@ -8,6 +8,7 @@ import com.slvinterface.entity.EdgeAllMac;
 import com.slvinterface.entity.SLVSyncTable;
 import com.slvinterface.entity.SLVTransactionLogs;
 import com.slvinterface.enumeration.CallType;
+import com.slvinterface.enumeration.SLVProcess;
 import com.slvinterface.exception.*;
 import com.slvinterface.json.*;
 import com.slvinterface.utils.PropertiesReader;
@@ -655,7 +656,9 @@ public abstract class SLVInterfaceService {
                             try {
                                 String fixtureType = valueById(formValuesList, id.getId());
                                 edge2SLVData.setFixtureType(fixtureType);
-                                edge2SLVData.setPriority(priority);
+                                if(priority.getType() == SLVProcess.OPERATION) {
+                                    edge2SLVData.setPriority(priority);
+                                }
                             }
                             catch (NoValueException e){
                                 e.printStackTrace();
@@ -665,7 +668,9 @@ public abstract class SLVInterfaceService {
                             try {
                                 String lampType = valueById(formValuesList, id.getId());
                                 edge2SLVData.setLampType(lampType);
-                                edge2SLVData.setPriority(priority);
+                                if(priority.getType() == SLVProcess.OPERATION) {
+                                    edge2SLVData.setPriority(priority);
+                                }
                             }
                             catch (NoValueException e){
                                 e.printStackTrace();
@@ -675,7 +680,9 @@ public abstract class SLVInterfaceService {
                             try {
                                 String lampTypeOther = valueById(formValuesList, id.getId());
                                 edge2SLVData.setLampTypeOther(lampTypeOther);
-                                edge2SLVData.setPriority(priority);
+                                if(priority.getType() == SLVProcess.OPERATION) {
+                                    edge2SLVData.setPriority(priority);
+                                }
                             }
                             catch (NoValueException e){
                                 e.printStackTrace();
@@ -685,7 +692,9 @@ public abstract class SLVInterfaceService {
                             try {
                                 String wattage = valueById(formValuesList, id.getId());
                                 edge2SLVData.setWattage(wattage);
-                                edge2SLVData.setPriority(priority);
+                                if(priority.getType() == SLVProcess.OPERATION) {
+                                    edge2SLVData.setPriority(priority);
+                                }
                             }
                             catch (NoValueException e){
                                 e.printStackTrace();
@@ -695,7 +704,9 @@ public abstract class SLVInterfaceService {
                             try {
                                 String wattageOther = valueById(formValuesList, id.getId());
                                 edge2SLVData.setWattageOther(wattageOther);
-                                edge2SLVData.setPriority(priority);
+                                if(priority.getType() == SLVProcess.OPERATION) {
+                                    edge2SLVData.setPriority(priority);
+                                }
                             }
                             catch (NoValueException e){
                                 e.printStackTrace();
@@ -705,7 +716,9 @@ public abstract class SLVInterfaceService {
                             try {
                                 String supplyType = valueById(formValuesList, id.getId());
                                 edge2SLVData.setSupplyType(supplyType);
-                                edge2SLVData.setPriority(priority);
+                                if(priority.getType() == SLVProcess.OPERATION) {
+                                    edge2SLVData.setPriority(priority);
+                                }
                             }
                             catch (NoValueException e){
                                 e.printStackTrace();
