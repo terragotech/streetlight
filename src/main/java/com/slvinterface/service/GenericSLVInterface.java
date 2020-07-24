@@ -229,7 +229,7 @@ public class GenericSLVInterface extends  SLVInterfaceService {
         //String modelFunctionId = "talq.streetlight.v1:lightNodeFunction6";
         if(modelFunctionId != null && !modelFunctionId.trim().isEmpty()){
             try {
-                modelFunctionId =  URLEncoder.encode(modelFunctionId,"UTF-8");
+               // modelFunctionId =  URLEncoder.encode(modelFunctionId,"UTF-8");
                 addStreetLightData("modelFunctionId",modelFunctionId,paramsList);
 
             }catch (Exception e){
