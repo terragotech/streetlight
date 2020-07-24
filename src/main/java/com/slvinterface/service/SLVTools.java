@@ -135,14 +135,14 @@ public class SLVTools {
         List<Object> paramsList = new ArrayList<>();
 
         paramsList.add("ser=json");
-        paramsList.add("userName="+previousEdge2SLVData.getTitle());
+        paramsList.add("userName="+previousEdge2SLVData.getIdOnController());
         paramsList.add("categoryStrId="+DataTools.URLEncoder(categoryStrId));
         paramsList.add("geozoneId="+geoZoneId);
         paramsList.add("controllerStrId="+DataTools.URLEncoder(controllerStrId));
-        paramsList.add("idOnController="+previousEdge2SLVData.getTitle());
+        paramsList.add("idOnController="+previousEdge2SLVData.getIdOnController());
         paramsList.add("lat="+String.valueOf(geom.getCoordinate().y));
         paramsList.add("lng="+String.valueOf(geom.getCoordinate().x));
-        paramsList.add("nodeTypeStrId="+DataTools.URLEncoder(nodeTypeStrId));
+        //paramsList.add("nodeTypeStrId="+DataTools.URLEncoder(nodeTypeStrId));
 
         String params = StringUtils.join(paramsList, "&");
         url = url + "?" + params;

@@ -189,14 +189,14 @@ public class GenericSLVInterface extends  SLVInterfaceService {
         addStreetLightData("installStatus","Installed",paramsList);
         addStreetLightData("MacAddress",previousEdge2SLVData.getMacAddress(),paramsList);
         addStreetLightData("install.date",previousEdge2SLVData.getInstallDate(),paramsList);
-        addStreetLightData("fixing.type",previousEdge2SLVData.getFixtureType(),paramsList);
+        addStreetLightData("luminaire.type",previousEdge2SLVData.getFixtureType(),paramsList);
         if(previousEdge2SLVData.getLampTypeOther() != null && (!previousEdge2SLVData.getLampTypeOther().equals("")))
         {
-            addStreetLightData("luminaire.type",previousEdge2SLVData.getLampTypeOther(),paramsList);
+            addStreetLightData("brandId",previousEdge2SLVData.getLampTypeOther(),paramsList);
         }
         else
         {
-            addStreetLightData("luminaire.type",previousEdge2SLVData.getLampType(),paramsList);
+            addStreetLightData("brandId",previousEdge2SLVData.getLampType(),paramsList);
         }
         if(previousEdge2SLVData.getWattageOther() != null && (!previousEdge2SLVData.getWattageOther().equals("")))
         {
@@ -206,7 +206,15 @@ public class GenericSLVInterface extends  SLVInterfaceService {
         {
             addStreetLightData("power",previousEdge2SLVData.getWattage(),paramsList);
         }
-        addStreetLightData("luminaire.DistributionType",previousEdge2SLVData.getSupplyType(),paramsList);
+        addStreetLightData("network.type",previousEdge2SLVData.getSupplyType(),paramsList);
+
+        if(previousEdge2SLVData.getLuminairePartNumber() != null){
+            addStreetLightData("luminaire.partnumber",previousEdge2SLVData.getLuminairePartNumber(),paramsList);
+        }
+
+        if(previousEdge2SLVData.getLuminaireSerialNumber() != null){
+            addStreetLightData("luminaire.serialnumber",previousEdge2SLVData.getLuminaireSerialNumber(),paramsList);
+        }
 
         String slvCalender = PropertiesReader.getProperties().getProperty("streetlight.calendar");
         if(slvCalender != null && !slvCalender.trim().isEmpty()){
@@ -223,6 +231,7 @@ public class GenericSLVInterface extends  SLVInterfaceService {
             try {
                 modelFunctionId =  URLEncoder.encode(modelFunctionId,"UTF-8");
                 addStreetLightData("modelFunctionId",modelFunctionId,paramsList);
+
             }catch (Exception e){
                 e.printStackTrace();
             }

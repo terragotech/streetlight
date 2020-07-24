@@ -18,6 +18,24 @@ public class Edge2SLVData {
     private String wattage;
     private String wattageOther;
     private String supplyType;
+    private String luminairePartNumber;
+    private String luminaireSerialNumber;
+
+    public String getLuminairePartNumber() {
+        return luminairePartNumber;
+    }
+
+    public void setLuminairePartNumber(String luminairePartNumber) {
+        this.luminairePartNumber = luminairePartNumber;
+    }
+
+    public String getLuminaireSerialNumber() {
+        return luminaireSerialNumber;
+    }
+
+    public void setLuminaireSerialNumber(String luminaireSerialNumber) {
+        this.luminaireSerialNumber = luminaireSerialNumber;
+    }
 
     public String getFixtureType() {
         return fixtureType;

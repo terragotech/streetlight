@@ -466,7 +466,7 @@ public abstract class SLVInterfaceService {
             logger.info("SetDevice method called");
             logger.info("SetDevice url:" + url);
             setSLVTransactionLogs(slvTransactionLogs, url, CallType.SET_DEVICE);
-            HttpResponse response = slvRestService.callGetMethod(url);
+            HttpResponse response = slvRestService.callPostMethod(url);
             String responseString =  slvRestService.getResponseBody(response);
             setResponseDetails(slvTransactionLogs, responseString);
             JsonObject replaceOlcResponse = (JsonObject) jsonParser.parse(responseString);
@@ -652,6 +652,7 @@ public abstract class SLVInterfaceService {
                                 e.printStackTrace();
                             }
                             break;
+
                         case FIXTURE_TYPE:
                             try {
                                 String fixtureType = valueById(formValuesList, id.getId());
@@ -719,6 +720,27 @@ public abstract class SLVInterfaceService {
                                 if(priority.getType() == SLVProcess.OPERATION) {
                                     edge2SLVData.setPriority(priority);
                                 }
+                            }
+                            catch (NoValueException e){
+                                e.printStackTrace();
+                            }
+                            break;
+
+                        case PART_NUMBER:
+                            try {
+                                String partNumber = valueById(formValuesList, id.getId());
+                                edge2SLVData.setLuminairePartNumber(partNumber);
+
+                            }
+                            catch (NoValueException e){
+                                e.printStackTrace();
+                            }
+                            break;
+                        case SERIAL_NUMBER:
+                            try {
+                                String serialNumber = valueById(formValuesList, id.getId());
+                                edge2SLVData.setLuminaireSerialNumber(serialNumber);
+
                             }
                             catch (NoValueException e){
                                 e.printStackTrace();

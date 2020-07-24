@@ -47,6 +47,14 @@
           "id": 10115,
           "type": "SUPPLY_TYPE",
           "isRequired": true
+        },
+        {
+          "id":10076,
+          "type": "PART_NUMBER"
+        },
+        {
+          "id":10121,
+          "type": "SERIAL_NUMBER"
         }
       ]
     },
