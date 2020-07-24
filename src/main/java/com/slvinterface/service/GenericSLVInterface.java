@@ -222,7 +222,7 @@ public class GenericSLVInterface extends  SLVInterfaceService {
         if(modelFunctionId != null && !modelFunctionId.trim().isEmpty()){
             try {
                 modelFunctionId =  URLEncoder.encode(modelFunctionId,"UTF-8");
-                addStreetLightData("modelfunctionid",modelFunctionId,paramsList);
+                addStreetLightData("modelFunctionId",modelFunctionId,paramsList);
             }catch (Exception e){
                 e.printStackTrace();
             }

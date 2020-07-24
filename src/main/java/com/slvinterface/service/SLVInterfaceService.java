@@ -317,7 +317,7 @@ public abstract class SLVInterfaceService {
             if (value == null || value.trim().isEmpty() || value.contains("null") || value.equals("null")) {
                 throw new NoValueException("Value is Empty or null." + value);
             }
-            return value;
+            return value.trim();
         } else {
             throw new NoValueException(id + " is not found.");
         }
