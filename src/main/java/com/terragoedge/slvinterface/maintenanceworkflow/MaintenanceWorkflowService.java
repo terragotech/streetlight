@@ -307,13 +307,15 @@ public class MaintenanceWorkflowService extends AbstractSlvService {
                 int pos = dataDiff.indexOf(temp);
                 if (pos != -1) {
                     logger.info("Action Type....."+actionType);
+                    temp = dataDiff.get(pos);
                     if(actionType.equals("remove")){
-                        temp = dataDiff.get(pos);
                         if(temp.getId() == 10081 && temp.getValue().startsWith("Decommission Light")){
                             return actionType;
                         }
                     }else{
-                        return actionType;
+                        if(isValidValue(temp.getValue())) {
+                            return actionType;
+                        }
                     }
 
                 }
@@ -321,6 +323,13 @@ public class MaintenanceWorkflowService extends AbstractSlvService {
         }
         return null;
 
+    }
+
+    private boolean isValidValue(String value){
+        if(value == null || value.trim().equals("") || value.contains("null") || value.trim().equals("Select From Below") || value.trim().equals("Choose Value")){
+            return false;
+        }
+        return true;
     }
 
     @Override

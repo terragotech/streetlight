@@ -36,6 +36,10 @@ public class PromotedDataService extends AbstractSlvService {
     private void changeNoteTitle(String noteguid,String newPoleNumber){
         String baseURl = properties.getProperty("streetlight.edge.url.main");
         try {
+            if(newPoleNumber == null || newPoleNumber.equals("")){
+                logger.error("new pole number is empty or null. it will create empty title. So it's skipping");
+                return;
+            }
             ResponseEntity<String> responseEntity = slvRestService.serverCall(baseURl+"/rest/notes/" + noteguid, HttpMethod.GET, null,false);
             logger.info("Get notes rest call response: "+responseEntity.getStatusCode().value());
             if (responseEntity.getStatusCode() == HttpStatus.OK) {
