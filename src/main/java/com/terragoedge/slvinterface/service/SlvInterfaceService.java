@@ -41,7 +41,7 @@ public class SlvInterfaceService extends AbstractSlvService {
         jsonParser = new JsonParser();
         slvService = new SlvService();
         this.properties = PropertiesReader.getProperties();
-        maintenanceWorkflowService = new MaintenanceWorkflowService();
+        maintenanceWorkflowService = new MaintenanceWorkflowService(slvService);
         promotedDataService = new PromotedDataService();
     }
 

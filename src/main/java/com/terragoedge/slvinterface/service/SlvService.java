@@ -259,7 +259,7 @@ public class SlvService extends AbstractSlvService {
         return responseEntity;
     }
 
-    private void saveSlvSyncDetail(SlvSyncDetail slvSyncDetail, EdgeNote edgeNote, JPSWorkflowModel jpsWorkflowModel, ResponseEntity<String> responseEntity, boolean isUpdate) {
+    public void saveSlvSyncDetail(SlvSyncDetail slvSyncDetail, EdgeNote edgeNote, JPSWorkflowModel jpsWorkflowModel, ResponseEntity<String> responseEntity, boolean isUpdate) {
         slvSyncDetail.setCreatedDateTime(edgeNote.getSyncTime());
         slvSyncDetail.setNoteGuid(edgeNote.getNoteGuid());
         slvSyncDetail.setPoleNumber(jpsWorkflowModel.getIdOnController());

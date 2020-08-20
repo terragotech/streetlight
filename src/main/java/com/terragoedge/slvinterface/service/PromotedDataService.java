@@ -179,6 +179,7 @@ public class PromotedDataService extends AbstractSlvService {
     }
 
     private void addJson(String key,String value,JsonArray jsonArray){
+        value = value == null ? "" : value;
         JsonObject jsonObject = new JsonObject();
         jsonObject.addProperty("key",key);
         jsonObject.addProperty("value",value);

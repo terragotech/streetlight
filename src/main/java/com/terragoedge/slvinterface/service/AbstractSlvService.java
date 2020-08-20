@@ -30,7 +30,7 @@ public abstract class AbstractSlvService extends EdgeService {
     SlvRestService slvRestService = null;
     Gson gson = null;
     private static Logger logger = Logger.getLogger(AbstractSlvService.class);
-    ConnectionDAO connectionDAO;
+    public ConnectionDAO connectionDAO;
 
     public AbstractSlvService() {
         gson = new Gson();

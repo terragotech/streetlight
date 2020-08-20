@@ -2,6 +2,7 @@ package com.terragoedge.slvinterface.maintenanceworkflow;
 
 import com.google.gson.*;
 import com.google.gson.reflect.TypeToken;
+import com.terragoedge.slvinterface.dao.tables.SlvSyncDetail;
 import com.terragoedge.slvinterface.exception.InValidBarCodeException;
 import com.terragoedge.slvinterface.exception.NoDataChangeException;
 import com.terragoedge.slvinterface.exception.NoValueException;
@@ -36,12 +37,14 @@ public class MaintenanceWorkflowService extends AbstractSlvService {
     private JsonParser jsonParser;
     private Properties properties;
     private PromotedDataService promotedDataService;
+    private SlvService slvService;
 
-    public MaintenanceWorkflowService() {
+    public MaintenanceWorkflowService(SlvService slvService) {
         gson = new Gson();
         jsonParser = new JsonParser();
         this.properties = PropertiesReader.getProperties();
         promotedDataService = new PromotedDataService();
+        this.slvService = slvService;
     }
 
     final Logger logger = Logger.getLogger(MaintenanceWorkflowService.class);
@@ -105,7 +108,7 @@ public class MaintenanceWorkflowService extends AbstractSlvService {
                                 logger.info("serialnumber Action....");
                                 if(isDevicePresent(idOnController)){
                                     JPSWorkflowModel jpsWorkflowModel = getJPSWorkflowModel(edgeNote,idOnController);
-                                    processLedLight(283,edgeFormDataList,idOnController,jpsWorkflowModel);
+                                    processLedLight(283,edgeFormDataList,idOnController,jpsWorkflowModel,edgeNote);
                                     promotedDataService.updatePromotedData(jpsWorkflowModel,edgeNote);
                                 }else {
                                     logger.info("Device not present.");
@@ -127,7 +130,7 @@ public class MaintenanceWorkflowService extends AbstractSlvService {
                                 logger.info("serialnumber and ReplaceOLC Action....");
                                 if(isDevicePresent(idOnController)){
                                     JPSWorkflowModel jpsWorkflowModel = getJPSWorkflowModel(edgeNote,idOnController);
-                                    processLedLight(10102,edgeFormDataList,idOnController,jpsWorkflowModel);
+                                    processLedLight(10102,edgeFormDataList,idOnController,jpsWorkflowModel,edgeNote);
                                     processReplaceSmartController(10096,edgeFormDataList,idOnController,edgeNote,jpsWorkflowModel);
                                     promotedDataService.updatePromotedData(jpsWorkflowModel,edgeNote);
                                 }else {
@@ -226,12 +229,13 @@ public class MaintenanceWorkflowService extends AbstractSlvService {
         logger.info("********************** set device values reponse code: " + responseEntity.getStatusCode());
         logger.info("set device values response: " + responseEntity.getBody());
         logger.info("********************** set device values reponse end *********");
+        saveSlvSyncDetail(idOnController,edgeNote,jpsWorkflowModel,responseEntity);
     }
 
 
 
 
-    private void processLedLight(int formId, List<EdgeFormData> edgeFormDataList, String idOnController,JPSWorkflowModel jpsWorkflowModel){
+    private void processLedLight(int formId, List<EdgeFormData> edgeFormDataList, String idOnController,JPSWorkflowModel jpsWorkflowModel,EdgeNote edgeNote){
             String serialNumber = valueById(edgeFormDataList, formId);
             if(!serialNumber.trim().isEmpty()){
                 List<Object> paramList = new ArrayList<>();
@@ -243,8 +247,19 @@ public class MaintenanceWorkflowService extends AbstractSlvService {
                 logger.info("********************** set device values reponse code: " + responseEntity.getStatusCode());
                 logger.info("set device values response: " + responseEntity.getBody());
                 logger.info("********************** set device values reponse end *********");
+                saveSlvSyncDetail(idOnController,edgeNote,jpsWorkflowModel,responseEntity);
             }
 
+    }
+
+    private void saveSlvSyncDetail(String idOnController,EdgeNote edgeNote, JPSWorkflowModel jpsWorkflowModel, ResponseEntity<String> responseEntity){
+        SlvSyncDetail slvSyncDetail = connectionDAO.getSlvSyncDetail(idOnController);
+        boolean isupdate = true;
+        if(slvSyncDetail == null){
+            isupdate = false;
+            slvSyncDetail = new SlvSyncDetail();
+        }
+        slvService.saveSlvSyncDetail(slvSyncDetail,edgeNote,jpsWorkflowModel,responseEntity,isupdate);
     }
 
 
