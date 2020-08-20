@@ -2,16 +2,19 @@ package com.terragoedge.slvinterface.service;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.terragoedge.slvinterface.dao.tables.SlvSyncDetail;
 import com.terragoedge.slvinterface.exception.*;
 import com.terragoedge.slvinterface.maintenanceworkflow.MaintenanceWorkflowService;
+import com.terragoedge.slvinterface.maintenanceworkflow.model.DataDiffResponse;
 import com.terragoedge.slvinterface.model.*;
 import com.terragoedge.slvinterface.utils.PropertiesReader;
 import com.terragoedge.slvinterface.utils.Utils;
 import com.vividsolutions.jts.geom.Geometry;
 import org.apache.commons.io.IOUtils;
 import org.apache.log4j.Logger;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.wololo.geojson.Feature;
 import org.wololo.geojson.GeoJSONFactory;
@@ -161,7 +164,20 @@ public class SlvInterfaceService extends AbstractSlvService {
         }else {
             logger.error("There is only one processing form attached to this note. So continuing process."+edgeNote.getNoteGuid());
             String formTemplateGuid = formTemplateGuids.get(0);
-            processEdgeNote(edgeNote, formTemplateGuid, false, formTemplateGuid.equals(installFormtemplateGuid) ? installworkFlowFormId : newFixtureworkFlowFormId);
+            String config = null;
+            if (formTemplateGuid.equals(installFormtemplateGuid)){
+                config = properties.getProperty("streetlight.edge.install.checkrevisiondata.config");
+            }else{
+                config = properties.getProperty("streetlight.edge.newfixture.checkrevisiondata.config");
+            }
+            try{
+                DataDiffResponse dataDiffResponse = maintenanceWorkflowService.compareRevisionData(edgeNote.getNoteGuid(),config);
+                if (dataDiffResponse != null) {
+                    processEdgeNote(edgeNote, formTemplateGuid, false, formTemplateGuid.equals(installFormtemplateGuid) ? installworkFlowFormId : newFixtureworkFlowFormId);
+                }
+            }catch (Exception e){
+                logger.error("Error process install form: ",e);
+            }
         }
     }
 
@@ -303,5 +319,4 @@ public class SlvInterfaceService extends AbstractSlvService {
         }
         return noteguids;
     }
-
 }

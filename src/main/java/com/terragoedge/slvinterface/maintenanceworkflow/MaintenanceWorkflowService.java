@@ -84,7 +84,7 @@ public class MaintenanceWorkflowService extends AbstractSlvService {
                     logger.info("More than one form is present.");
                     throw  new SkipNoteException("More than one form is present.");
                 }
-                DataDiffResponse dataDiffResponse = compareRevisionData(edgeNote.getNoteGuid());
+                DataDiffResponse dataDiffResponse = compareRevisionData(edgeNote.getNoteGuid(),PropertiesReader.getProperties().getProperty("streetlight.edge.checkrevisiondata.config"));
                 if (dataDiffResponse != null) {
                     for (FormData formData : formDataList) {
                         List<EdgeFormData> edgeFormDataList = formData.getFormDef();
@@ -257,11 +257,10 @@ public class MaintenanceWorkflowService extends AbstractSlvService {
      * @throws NoDataChangeException
      * @throws SkipNoteException
      */
-    private DataDiffResponse compareRevisionData(String noteGuid) throws NoDataChangeException, SkipNoteException {
+    public DataDiffResponse compareRevisionData(String noteGuid, String config) throws NoDataChangeException, SkipNoteException {
         logger.info("Comparing data from the Previous Revision.");
         String baseUrl = properties.getProperty("streetlight.edge.url.main");
         String url = PropertiesReader.getProperties().getProperty("streetlight.edge.url.checkrevisiondata");
-        String config = PropertiesReader.getProperties().getProperty("streetlight.edge.checkrevisiondata.config");
         url = baseUrl+url;
         JsonObject configJson = (JsonObject) jsonParser.parse(config);
         configJson.addProperty("noteGuid", noteGuid);
