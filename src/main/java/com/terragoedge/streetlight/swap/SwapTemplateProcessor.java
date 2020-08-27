@@ -372,7 +372,7 @@ public class SwapTemplateProcessor extends AbstractProcessor {
         paramsList.add("idOnController" , idOnController);
         paramsList.add("controllerStrId" , controllerStrId);
         addStreetLightData("MacAddress", slvMacAddress, paramsList);
-        addStreetLightData("MacAddress", slvMacAddress, paramsList);
+        addStreetLightData("install.date", dateFormat(edgeNote.getCreatedDateTime()), paramsList);
         addStreetLightData("installStatus", InstallStatus.Installed.getValue(), paramsList);
         SLVTransactionLogs slvTransactionLogs = getSLVTransactionLogs(installMaintenanceLogModel);
         int errorCode = setDeviceValues(paramsList, slvTransactionLogs);
