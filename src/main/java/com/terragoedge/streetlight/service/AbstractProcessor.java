@@ -503,7 +503,7 @@ public abstract class AbstractProcessor {
     }
 
 
-    protected void addOtherParams(EdgeNote edgeNote, List<Object> paramsList, String idOnContoller, String utilLocId, boolean isNew, String fixerQrScanValue, String macAddress, InstallMaintenanceLogModel loggingModel) {
+    protected void addOtherParams(EdgeNote edgeNote, LinkedMultiValueMap<String, String> paramsList, String idOnContoller, String utilLocId, boolean isNew, String fixerQrScanValue, String macAddress, InstallMaintenanceLogModel loggingModel) {
         // luminaire.installdate - 2017-09-07 09:47:35
         String installStatus = InstallStatus.Installed.getValue();
 
@@ -619,7 +619,7 @@ public abstract class AbstractProcessor {
         return null;
     }
 
-    protected void addStreetLightData(String key, String value, List<Object> paramsList) {
+    protected void addStreetLightData(String key, String value, LinkedMultiValueMap<String, String> paramsList) {
         logger.info(key);
        // paramsList.add("value=" + value.trim());
         try{
@@ -641,9 +641,9 @@ public abstract class AbstractProcessor {
                     return;
                 }
             }
-            paramsList.add("valueName=" + key.trim());
+            paramsList.add("valueName" , key.trim());
             //paramsList.add("value=" + URLEncoder.encode(value.trim(), "UTF-8"));
-            paramsList.add("value=" + value.trim());
+            paramsList.add("value" , value.trim());
         }catch (Exception e){
             logger.error("Error in addStreetLightData",e);
         }
@@ -705,7 +705,7 @@ public abstract class AbstractProcessor {
         return false;
     }
 
-    private void addPower(LoggingModel loggingModel, String powerVal, List<Object> paramsList,ProContextLookupData proContextLookupData) {
+    private void addPower(LoggingModel loggingModel, String powerVal, LinkedMultiValueMap<String, String> paramsList,ProContextLookupData proContextLookupData) {
         logger.info("Start of addPower");
         logger.info("Is Power Added:"+loggingModel.isPowerAdded());
         logger.info("Is Dropped Pin Workflow:"+loggingModel.isDroppedPinWorkflow());
@@ -753,7 +753,7 @@ public abstract class AbstractProcessor {
 
     }
 
-    private void processFixtureQRScan(String data, List<Object> paramsList, EdgeNote edgeNote, SlvServerData slvServerData, LoggingModel loggingModel,ProContextLookupData proContextLookupData){
+    private void processFixtureQRScan(String data, LinkedMultiValueMap<String, String> paramsList, EdgeNote edgeNote, SlvServerData slvServerData, LoggingModel loggingModel,ProContextLookupData proContextLookupData){
         addStreetLightData("luminaire.brand", "Acuity", paramsList);
         slvServerData.setLuminaireBrand("Acuity");
 
@@ -778,7 +778,7 @@ public abstract class AbstractProcessor {
     }
 
 
-    private void processExistingFixtureQRScan(String data,List<Object> paramsList,SlvServerData slvServerData,InstallMaintenanceLogModel loggingModel,ProContextLookupData proContextLookupData){
+    private void processExistingFixtureQRScan(String data,LinkedMultiValueMap<String, String> paramsList,SlvServerData slvServerData,InstallMaintenanceLogModel loggingModel,ProContextLookupData proContextLookupData){
         if(data != null && !data.trim().isEmpty()){
             String[] fixtureQrScan =  parseFixtureQRScan(data);
             String lumBrand =  addExistingFixtureQRScan(fixtureQrScan,paramsList,0,"Existing LED","luminaire.brand",loggingModel,proContextLookupData);
@@ -838,7 +838,7 @@ public abstract class AbstractProcessor {
     }
 
 
-    private String addExistingFixtureQRScan(String[] fixtureQrScan, List<Object> paramsList, int pos, String defaultVal, String key,InstallMaintenanceLogModel logModel,ProContextLookupData proContextLookupData) {
+    private String addExistingFixtureQRScan(String[] fixtureQrScan, LinkedMultiValueMap<String, String> paramsList, int pos, String defaultVal, String key,InstallMaintenanceLogModel logModel,ProContextLookupData proContextLookupData) {
         try {
             String fixtureQrScanVal = fixtureQrScan[pos];
             fixtureQrScanVal = (fixtureQrScanVal == null || fixtureQrScanVal.trim().isEmpty()) ? defaultVal : fixtureQrScanVal;
@@ -861,7 +861,7 @@ public abstract class AbstractProcessor {
         return null;
     }
 
-    private void addProContextLookupData(ProContextLookupData proContextLookupData,SlvServerData slvServerData,List<Object> paramsList,InstallMaintenanceLogModel installMaintenanceLogModel){
+    private void addProContextLookupData(ProContextLookupData proContextLookupData,SlvServerData slvServerData,LinkedMultiValueMap<String, String> paramsList,InstallMaintenanceLogModel installMaintenanceLogModel){
         if(installMaintenanceLogModel.getProposedContext() == null || installMaintenanceLogModel.getProposedContext().isEmpty()){
             proContextLookupData.setLumBrand(slvServerData.getLuminaireBrand());
             proContextLookupData.setLumModel(slvServerData.getLuminaireModel());
@@ -881,7 +881,7 @@ public abstract class AbstractProcessor {
 
 
 
-    public void buildFixtureStreetLightData(String data, List<Object> paramsList, EdgeNote edgeNote, SlvServerData slvServerData, InstallMaintenanceLogModel loggingModel)
+    public void buildFixtureStreetLightData(String data, LinkedMultiValueMap<String, String> paramsList, EdgeNote edgeNote, SlvServerData slvServerData, InstallMaintenanceLogModel loggingModel)
             throws InValidBarCodeException {
         ProContextLookupData proContextLookupData = new ProContextLookupData();
 
@@ -1000,31 +1000,30 @@ public abstract class AbstractProcessor {
     }
 
 
-    protected int setDeviceValues(List<Object> paramsList, SLVTransactionLogs slvTransactionLogs) {
+    protected int setDeviceValues(LinkedMultiValueMap<String, String> paramsList, SLVTransactionLogs slvTransactionLogs) {
         int errorCode = -1;
         try {
             String mainUrl = properties.getProperty("streetlight.slv.url.main");
             String updateDeviceValues = properties.getProperty("streetlight.slv.url.updatedevice");
             String url = mainUrl + updateDeviceValues;
 
-            paramsList.add("ser=json");
+            paramsList.add("ser","json");
             if(slvTransactionLogs.isDroppedPinWorkflow()) {
-                paramsList.add("valueName=location.locationtype");
-                paramsList.add("value=" + properties.getProperty("com.slv.location.locationtype"));
-                paramsList.add("valueName=modelFunctionId");
-                paramsList.add("value=" + properties.getProperty("com.slv.type.equipment"));
+                paramsList.add("valueName","location.locationtype");
+                paramsList.add("value" , properties.getProperty("com.slv.location.locationtype"));
+                paramsList.add("valueName","modelFunctionId");
+                paramsList.add("value" , properties.getProperty("com.slv.type.equipment"));
             }
             // -- No Need for production
-            paramsList.add("valueName=modelFunctionId");
-            paramsList.add("value=" + properties.getProperty("com.slv.type.equipment"));
+            paramsList.add("valueName","modelFunctionId");
+            paramsList.add("value" , properties.getProperty("com.slv.type.equipment"));
 
 
-            String params = StringUtils.join(paramsList, "&");
-            url = url + "&" + params;
             logger.info("SetDevice method called");
             logger.info("SetDevice url:" + url);
-            setSLVTransactionLogs(slvTransactionLogs, url, CallType.SET_DEVICE);
-            ResponseEntity<String> response = restService.getPostRequest(url, null);
+            logger.info("SetDevice Prams:" + gson.toJson(paramsList));
+            setSLVTransactionLogs(slvTransactionLogs, gson.toJson(paramsList), CallType.SET_DEVICE,url);
+            ResponseEntity<String> response = restService.getPostRequest(url, null,paramsList);
             String responseString = response.getBody();
             setResponseDetails(slvTransactionLogs, responseString);
             JsonObject replaceOlcResponse = (JsonObject) jsonParser.parse(responseString);
@@ -1061,8 +1060,8 @@ public abstract class AbstractProcessor {
             url = url + "?" + params;
             logger.info("checkAndCreateGeoZone method called");
             logger.info("checkAndCreateGeoZone url:" + url);
-            setSLVTransactionLogs(slvTransactionLogs, url, CallType.SEARCH_GEOZONE);
-            ResponseEntity<String> response = restService.getPostRequest(url, null);
+            setSLVTransactionLogs(slvTransactionLogs, url, CallType.SEARCH_GEOZONE,mainUrl + searchGeoZone);
+            ResponseEntity<String> response = restService.getPostRequest(url, null,null);
             if(response.getStatusCode() == HttpStatus.NOT_FOUND){
                 geozoneId = -1;
             }else {
@@ -1099,7 +1098,7 @@ public abstract class AbstractProcessor {
             String controllerStrId = properties.getProperty("streetlight.slv.controllerstrid");
             String categoryStrId = properties.getProperty("com.slv.categorystr.id");
             String url = mainUrl + createDeviceMethodName;
-            List<String> paramsList = new ArrayList<>();
+            LinkedMultiValueMap<String, String> paramsList = new LinkedMultiValueMap<>();
             EdgeNotebook edgeNotebook = edgeNote.getEdgeNotebook();
             List<FormData> formDatas = edgeNote.getFormData();
             FormData formData = new FormData();
@@ -1116,21 +1115,22 @@ public abstract class AbstractProcessor {
             JsonObject geojsonObject = jsonParser.parse(geoJson).getAsJsonObject();
             JsonObject geometryObject = geojsonObject.get("geometry").getAsJsonObject();
             JsonArray latlngs = geometryObject.get("coordinates").getAsJsonArray();
-            paramsList.add("ser=json");
-            paramsList.add("userName="+fixtureName);
-            paramsList.add("categoryStrId="+categoryStrId);
-            paramsList.add("geozoneId="+geoZoneId);
-            paramsList.add("controllerStrId="+controllerStrId);
-            paramsList.add("idOnController="+edgeNote.getTitle());
-            paramsList.add("lat="+latlngs.get(1));
-            paramsList.add("lng="+latlngs.get(0));
+            paramsList.add("ser","json");
+            paramsList.add("userName",fixtureName);
+            paramsList.add("categoryStrId",categoryStrId);
+            paramsList.add("geozoneId",geoZoneId+"");
+            paramsList.add("controllerStrId",controllerStrId);
+            paramsList.add("idOnController",edgeNote.getTitle());
+            paramsList.add("lat",latlngs.get(1)+"");
+            paramsList.add("lng",latlngs.get(0)+"");
 
-            String params = StringUtils.join(paramsList, "&");
-            url = url + "?" + params;
+           // String params = StringUtils.join(paramsList, "&");
+            //url = url + "?" + params;
             logger.info("createDevice method called");
             logger.info("createDevice url:" + url);
-            setSLVTransactionLogs(slvTransactionLogs, url, CallType.CREATE_DEVICE);
-            ResponseEntity<String> response = restService.getPostRequest(url, null);
+            logger.info("createDevice Prams:" + gson.toJson(paramsList));
+            setSLVTransactionLogs(slvTransactionLogs, gson.toJson(paramsList), CallType.CREATE_DEVICE,url);
+            ResponseEntity<String> response = restService.getPostRequest(url, null,paramsList);
             String responseString = response.getBody();
             setResponseDetails(slvTransactionLogs, responseString);
             JsonObject replaceOlcResponse = (JsonObject) jsonParser.parse(responseString);
@@ -1166,8 +1166,8 @@ public abstract class AbstractProcessor {
             url = url + "?" + params;
             logger.info("isDevicePresent method called");
             logger.info("isDevicePresent url:" + url);
-            setSLVTransactionLogs(slvTransactionLogs, url, CallType.SEARCH_DEVICE);
-            ResponseEntity<String> response = restService.getPostRequest(url, null);
+            setSLVTransactionLogs(slvTransactionLogs, url, CallType.SEARCH_DEVICE,mainUrl + searchDeviceMethodName);
+            ResponseEntity<String> response = restService.getPostRequest(url, null,null);
             if(response.getStatusCode() == HttpStatus.NOT_FOUND){
                 isDevicePresent = false;
             }else {
@@ -1188,9 +1188,10 @@ public abstract class AbstractProcessor {
 
         return isDevicePresent;
     }
-    private void setSLVTransactionLogs(SLVTransactionLogs slvTransactionLogs, String request, CallType callType) {
+    private void setSLVTransactionLogs(SLVTransactionLogs slvTransactionLogs, String request, CallType callType,String url) {
         slvTransactionLogs.setRequestDetails(request);
         slvTransactionLogs.setTypeOfCall(callType);
+        slvTransactionLogs.setRequestUrl(url);
     }
 
     private void setResponseDetails(SLVTransactionLogs slvTransactionLogs, String responseString) {
@@ -1224,8 +1225,8 @@ public abstract class AbstractProcessor {
             paramsList.add("ser=json");
             String params = StringUtils.join(paramsList, "&");
             url = url + "?" + params;
-            setSLVTransactionLogs(slvTransactionLogs, url, CallType.REPLACE_OLC);
-            ResponseEntity<String> response = restService.getPostRequest(url, null);
+            setSLVTransactionLogs(slvTransactionLogs, url, CallType.REPLACE_OLC,mainUrl + dataUrl);
+            ResponseEntity<String> response = restService.getPostRequest(url, null,null);
             String responseString = response.getBody();
             setResponseDetails(slvTransactionLogs, responseString);
             JsonObject replaceOlcResponse = (JsonObject) jsonParser.parse(responseString);
@@ -1304,10 +1305,10 @@ public abstract class AbstractProcessor {
     }
 
     private void sendNightRideToSLV(String idOnController, String nightRideKey, String nightRideValue, LoggingModel loggingModel) {
-        List<Object> paramsList = new ArrayList<>();
+        LinkedMultiValueMap<String, String> paramsList = new LinkedMultiValueMap<>();
         String controllerStrId = properties.getProperty("streetlight.slv.controllerstrid");
-        paramsList.add("idOnController=" + idOnController);
-        paramsList.add("controllerStrId=" + controllerStrId);
+        paramsList.add("idOnController" , idOnController);
+        paramsList.add("controllerStrId" , controllerStrId);
         if (nightRideValue != null) {
             addStreetLightData(nightRideKey, nightRideValue, paramsList);
             SLVTransactionLogs slvTransactionLogs = getSLVTransactionLogs(loggingModel);
@@ -1660,8 +1661,8 @@ public boolean checkExistingMacAddressValid(EdgeNote edgeNote, InstallMaintenanc
             float minLat = Float.valueOf(properties.getProperty("com.slv.unknown.minlat"));
             float minLng = Float.valueOf(properties.getProperty("com.slv.unknown.minlng"));
             String url = mainUrl + createGeozone;
-            List<String> paramsList = new ArrayList<>();
-            paramsList.add("ser=json");
+            LinkedMultiValueMap<String, String> paramsList = new LinkedMultiValueMap<>();
+            paramsList.add("ser","json");
 
             try{
                // geozone = URLEncoder.encode(geozone.trim(), "UTF-8");
@@ -1670,18 +1671,19 @@ public boolean checkExistingMacAddressValid(EdgeNote edgeNote, InstallMaintenanc
                 logger.error("Error in addStreetLightData",e);
             }
 
-            paramsList.add("name="+geozone);
-            paramsList.add("parentId="+rootGeozoneId);
-            paramsList.add("latMax="+maxLat);
-            paramsList.add("latMin="+minLat);
-            paramsList.add("lngMax="+maxLng);
-            paramsList.add("lngMin="+minLng);
-            String params = StringUtils.join(paramsList, "&");
-            url = url + "?" + params;
+            paramsList.add("name",geozone);
+            paramsList.add("parentId",rootGeozoneId+"");
+            paramsList.add("latMax",maxLat+"");
+            paramsList.add("latMin",minLat+"");
+            paramsList.add("lngMax",maxLng+"");
+            paramsList.add("lngMin",minLng+"");
+            //String params = StringUtils.join(paramsList, "&");
+           // url = url + "?" + params;
             logger.info("checkAndCreateGeoZone method called");
             logger.info("checkAndCreateGeoZone url:" + url);
-            setSLVTransactionLogs(slvTransactionLogs, url, CallType.CREATE_GEOZONE);
-            ResponseEntity<String> response = restService.getPostRequest(url, null);
+            logger.info("checkAndCreateGeoZone Params:" + gson.toJson(paramsList));
+            setSLVTransactionLogs(slvTransactionLogs, gson.toJson(paramsList), CallType.CREATE_GEOZONE,url);
+            ResponseEntity<String> response = restService.getPostRequest(url, null,paramsList);
             if(response.getStatusCode() == HttpStatus.NOT_FOUND){
                 geozoneId = -1;
             }else {
@@ -1740,7 +1742,7 @@ public boolean checkExistingMacAddressValid(EdgeNote edgeNote, InstallMaintenanc
     }
 
 
-    public void addAccountNumber(EdgeNote edgeNote,String status,String macAddress,List paramsList){
+    public void addAccountNumber(EdgeNote edgeNote,String status,String macAddress,LinkedMultiValueMap<String, String> paramsList){
         logger.info("Start of addAccountNumber");
         StringBuilder stringBuilder = new StringBuilder();
         stringBuilder.append("Last Modified By");
@@ -1757,7 +1759,7 @@ public boolean checkExistingMacAddressValid(EdgeNote edgeNote, InstallMaintenanc
     }
 
     //ES-265
-    private void addCustomerNumber(EdgeNote edgeNote,InstallMaintenanceLogModel installMaintenanceLogModel,List paramsList){
+    private void addCustomerNumber(EdgeNote edgeNote,InstallMaintenanceLogModel installMaintenanceLogModel,LinkedMultiValueMap<String, String> paramsList){
         logger.info("Start of addCustomerNumber Method.");
         if(installMaintenanceLogModel.isReplace()){
             StringBuilder stringBuilder = new StringBuilder();
@@ -1775,14 +1777,14 @@ public boolean checkExistingMacAddressValid(EdgeNote edgeNote, InstallMaintenanc
     }
 
 
-    public void syncAccountNumber(List<Object> paramsList,InstallMaintenanceLogModel installMaintenanceLogModel,EdgeNote edgeNote,String status,String macAddress){
+    public void syncAccountNumber(LinkedMultiValueMap<String, String> paramsList,InstallMaintenanceLogModel installMaintenanceLogModel,EdgeNote edgeNote,String status,String macAddress){
         logger.info("Start of syncAccountNumber");
         if(installMaintenanceLogModel.isReplace()){
             logger.info("AccountNumber values going to sync with SLV.");
             addAccountNumber(edgeNote,status,macAddress,paramsList);
             String idOnController = installMaintenanceLogModel.getIdOnController();
-            paramsList.add("idOnController=" + idOnController);
-            paramsList.add("controllerStrId=" + installMaintenanceLogModel.getControllerSrtId());
+            paramsList.add("idOnController" , idOnController);
+            paramsList.add("controllerStrId" , installMaintenanceLogModel.getControllerSrtId());
             SLVTransactionLogs slvTransactionLogs = getSLVTransactionLogs(installMaintenanceLogModel);
             int errorCode = setDeviceValues(paramsList, slvTransactionLogs);
             logger.info("Error Code:"+errorCode);
@@ -1797,11 +1799,11 @@ public boolean checkExistingMacAddressValid(EdgeNote edgeNote, InstallMaintenanc
     public void syncCustomerName(InstallMaintenanceLogModel installMaintenanceLogModel){
         logger.info("Start of syncCustomerName");
         if(installMaintenanceLogModel.isActionNew() && installMaintenanceLogModel.isAmerescoUser()){
-            List<Object> paramsList = new ArrayList<>();
+            LinkedMultiValueMap<String, String> paramsList = new LinkedMultiValueMap<>();
             String idOnController = installMaintenanceLogModel.getIdOnController();
-            paramsList.add("idOnController=" + idOnController);
+            paramsList.add("idOnController" , idOnController);
             addCustomerName(installMaintenanceLogModel,paramsList);
-            paramsList.add("controllerStrId=" + installMaintenanceLogModel.getControllerSrtId());
+            paramsList.add("controllerStrId" , installMaintenanceLogModel.getControllerSrtId());
             SLVTransactionLogs slvTransactionLogs = getSLVTransactionLogs(installMaintenanceLogModel);
             int errorCode = setDeviceValues(paramsList, slvTransactionLogs);
             logger.info("Error Code:"+errorCode);
@@ -1813,7 +1815,7 @@ public boolean checkExistingMacAddressValid(EdgeNote edgeNote, InstallMaintenanc
     }
 
 
-    public void addCustomerName(InstallMaintenanceLogModel installMaintenanceLogModel, List<Object> paramsList){
+    public void addCustomerName(InstallMaintenanceLogModel installMaintenanceLogModel, LinkedMultiValueMap<String, String> paramsList){
         logger.info("Start of addCustomerName Method.");
         if(installMaintenanceLogModel.isActionNew() && installMaintenanceLogModel.isAmerescoUser()){
             addStreetLightData("client.name", "Ameresco Install", paramsList);
@@ -1848,7 +1850,7 @@ public boolean checkExistingMacAddressValid(EdgeNote edgeNote, InstallMaintenanc
 
 
     //ES-275
-    protected void addProposedContext(ProContextLookupData proContextLookupData,List<Object> paramsList,InstallMaintenanceLogModel installMaintenanceLogModel){
+    protected void addProposedContext(ProContextLookupData proContextLookupData,LinkedMultiValueMap<String, String> paramsList,InstallMaintenanceLogModel installMaintenanceLogModel){
         logger.info("ProContextLookupData:"+proContextLookupData.toString());
         logger.info("isDroppedPinWorkflow:"+installMaintenanceLogModel.isDroppedPinWorkflow());
         logger.info("isAmerescoUser:"+installMaintenanceLogModel.isAmerescoUser());

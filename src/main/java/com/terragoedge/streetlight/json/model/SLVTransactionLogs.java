@@ -8,12 +8,20 @@ public class SLVTransactionLogs {
     private String noteGuid;
     private String title;
     private String requestDetails;
+    private String requestUrl;
     private String responseBody;
     private long eventTime;
     private long createdDateTime;
     private CallType typeOfCall;
     private boolean isDroppedPinWorkflow;
 
+    public String getRequestUrl() {
+        return requestUrl;
+    }
+
+    public void setRequestUrl(String requestUrl) {
+        this.requestUrl = requestUrl;
+    }
 
     public String getParentNoteGuid() {
         return parentNoteGuid;

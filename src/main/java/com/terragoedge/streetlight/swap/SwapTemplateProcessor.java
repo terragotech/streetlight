@@ -21,6 +21,7 @@ import com.terragoedge.streetlight.swap.model.DataDiffResponse;
 import org.apache.log4j.Logger;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
+import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 
 import java.util.ArrayList;
@@ -332,10 +333,10 @@ public class SwapTemplateProcessor extends AbstractProcessor {
         // Get Fixture QR Scan Value and
         if (cityWorkflowSyncLog.getFixtureQRScan() != null && !cityWorkflowSyncLog.getFixtureQRScan().trim().isEmpty()) {
             SlvServerData slvServerData = new SlvServerData();
-            List<Object> paramsList = new ArrayList<>();
+            LinkedMultiValueMap<String, String> paramsList = new LinkedMultiValueMap<>();
             String idOnController = installMaintenanceLogModel.getIdOnController();
-            paramsList.add("idOnController=" + idOnController);
-            paramsList.add("controllerStrId=" + controllerStrId);
+            paramsList.add("idOnController" , idOnController);
+            paramsList.add("controllerStrId" , controllerStrId);
             addStreetLightData("luminaire.installdate", dateFormat(edgeNote.getCreatedDateTime()), paramsList);
             try {
                 buildFixtureStreetLightData(cityWorkflowSyncLog.getFixtureQRScan().trim(), paramsList, edgeNote, slvServerData, installMaintenanceLogModel);

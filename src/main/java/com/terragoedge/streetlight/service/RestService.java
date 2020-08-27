@@ -18,6 +18,7 @@ import org.springframework.http.client.ClientHttpRequest;
 import org.springframework.http.client.ClientHttpRequestFactory;
 import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
+import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 
@@ -64,14 +65,14 @@ public class RestService {
 		return new ResponseEntity<>("Error while call this request: "+url,HttpStatus.NOT_FOUND);
 	}
 
-	public ResponseEntity<String> getPostRequest(String url,String accessToken) {
+	public ResponseEntity<String> getPostRequest(String url, String accessToken, LinkedMultiValueMap<String, String> paramsList) {
 		logger.info("------------ Request ------------------");
 		logger.info(url);
 		logger.info("------------ Request End ------------------");
 		String isTokenNeeded = properties.getProperty("com.use.token.slv.api");
 		if(accessToken == null && isTokenNeeded.equals("true")){// slv rest call with token
 			try {
-				ResponseEntity<String> responseEntity = callSlvWithToken(false,url);
+				ResponseEntity<String> responseEntity = callSlvWithToken(false,url,paramsList);
 				return responseEntity;
 			}catch (Exception e){
 				e.printStackTrace();
@@ -190,14 +191,21 @@ public class RestService {
 		return HttpStatus.NOT_FOUND;
 	}
 
-    private ResponseEntity<String> callSlvWithToken(boolean isGetRequest,String url) throws Exception{
+    private ResponseEntity<String> callSlvWithToken(boolean isGetRequest,String url,LinkedMultiValueMap<String, String> paramsList) throws Exception{
 		RestTemplate restTemplate = getRestTemplate();
 
         HttpHeaders headers = new HttpHeaders();
         headers.add("x-requested-with","XMLHttpRequest");
         headers.add("x-csrf-token", SlvRestTemplate.INSTANCE.getToken());
         headers.add("Cookie",SlvRestTemplate.INSTANCE.getCookie());
-        HttpEntity request = new HttpEntity<>(headers);
+        HttpEntity<LinkedMultiValueMap<String, String>> request = null;
+        if(paramsList != null){
+            request = new HttpEntity<>(headers);
+        }else{
+            headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+            request = new HttpEntity(paramsList,headers);
+        }
+
         HttpMethod httpMethod = HttpMethod.POST;
         if(isGetRequest){
             httpMethod = HttpMethod.GET;
