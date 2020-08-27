@@ -114,12 +114,12 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
                 String nightRideTemplateGuid = properties.getProperty("amerescousa.night.ride.formtemplateGuid");
                 int pos = formDataList.indexOf(nightRideTemplateGuid);
                 if (pos != -1) {
-                    List<Object> paramsList = new ArrayList<>();
+                    LinkedMultiValueMap paramsList = new LinkedMultiValueMap<>();
                     String nightRideValue = getNightRideFormVal(formDataList, edgeNote, installMaintenanceLogModel);
                     if (nightRideValue != null) {
                         String idOnController = installMaintenanceLogModel.getIdOnController();
-                        paramsList.add("idOnController=" + idOnController);
-                        paramsList.add("controllerStrId=" + installMaintenanceLogModel.getControllerSrtId());
+                        paramsList.add("idOnController" , idOnController);
+                        paramsList.add("controllerStrId" , installMaintenanceLogModel.getControllerSrtId());
                         addStreetLightData(nightRideKey, nightRideValue, paramsList);
                         SLVTransactionLogs slvTransactionLogs = getSLVTransactionLogs(installMaintenanceLogModel);
                         int errorCode = setDeviceValues(paramsList, slvTransactionLogs);
@@ -749,7 +749,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
 
 
     private void checkFixtureQrScan(String fixtureQrScan, EdgeNote edgeNote, InstallMaintenanceLogModel loggingModel, SlvInterfaceLogEntity slvInterfaceLogEntity) throws InValidBarCodeException {
-        List<Object> paramsList = new ArrayList<>();
+        LinkedMultiValueMap<String, String> paramsList = new LinkedMultiValueMap<>();
         SlvServerData slvServerData = new SlvServerData();
         try {
             // check given macaddress exist or not in edge_all_fix table
@@ -771,8 +771,8 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
             String mainUrl = properties.getProperty("streetlight.slv.url.main");
             String updateDeviceValues = properties.getProperty("streetlight.slv.url.search.device");
             String url = mainUrl + updateDeviceValues;
-            paramsList.add("attribute=idOnController");
-            paramsList.add("value=" + edgeNote.getTitle().trim());
+            paramsList.add("attribute","idOnController");
+            paramsList.add("value" , edgeNote.getTitle().trim());
 
             addFixtureQrScanData("luminaire.brand", slvServerData.getLuminaireBrand(), paramsList);
             addFixtureQrScanData("device.luminaire.partnumber", slvServerData.getLuminairePartNumber(), paramsList);
@@ -780,9 +780,9 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
             addFixtureQrScanData("device.luminaire.manufacturedate", slvServerData.getLuminaireManufacturedate(), paramsList);
             addFixtureQrScanData("device.luminaire.driverpartnumber", slvServerData.getDriverPartNumber(), paramsList);
             addFixtureQrScanData("luminaire.colorcode", slvServerData.getColorCode(), paramsList);
-            paramsList.add("operator=eq-i");
-            paramsList.add("recurse=true");
-            paramsList.add("ser=json");
+            paramsList.add("operator","eq-i");
+            paramsList.add("recurse","true");
+            paramsList.add("ser","json");
             String params = StringUtils.join(paramsList, "&");
             url = url + "?" + params;
             ResponseEntity<String> response = restService.getRequest(url, true, null);
@@ -840,10 +840,10 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
 
 
     private int sync2SlvInstallStatus(String idOnController, String controllerStrIdValue, InstallMaintenanceLogModel loggingModel, String nightRideKey, String nightRideValue) {
-        List<Object> paramsList = new ArrayList<>();
+        LinkedMultiValueMap<String, String> paramsList = new LinkedMultiValueMap<>();
         String installStatus = properties.getProperty("could_note_complete_install_status");
-        paramsList.add("idOnController=" + idOnController);
-        paramsList.add("controllerStrId=" + controllerStrIdValue);
+        paramsList.add("idOnController" , idOnController);
+        paramsList.add("controllerStrId" , controllerStrIdValue);
         if (nightRideValue != null) {
             addStreetLightData(nightRideKey, nightRideValue, paramsList);
         }
@@ -857,10 +857,10 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
     private void sync2Slv(String macAddress, String fixerQrScanValue, EdgeNote edgeNote, InstallMaintenanceLogModel loggingModel, String idOnController, String controllerStrIdValue, String utilLocId, boolean isNew, String nightRideKey, String nightRideValue, SlvInterfaceLogEntity slvInterfaceLogEntity) {
         try {
 
-            List<Object> paramsList = new ArrayList<>();
+            LinkedMultiValueMap<String, String> paramsList = new LinkedMultiValueMap<>();
             loggingModel.setPowerAdded(false);
-            paramsList.add("idOnController=" + idOnController);
-            paramsList.add("controllerStrId=" + controllerStrIdValue);
+            paramsList.add("idOnController" , idOnController);
+            paramsList.add("controllerStrId" , controllerStrIdValue);
             SlvServerData slvServerData = new SlvServerData();
 
             logger.info("Atlasphysicalpage in SLV:"+loggingModel.getAtlasPhysicalPage());
@@ -1010,7 +1010,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
         logger.info("Other task value processed");
         String Key = properties.getProperty("amerescousa.night.ride.key_for_slv");
         logger.info("key :" + Key);
-        List<Object> paramsList = new ArrayList<>();
+        LinkedMultiValueMap<String,String> paramsList = new LinkedMultiValueMap<>();
         String cdotIssue = null;
         try {
             cdotIssue = valueById(edgeFormDatas, 106);
@@ -1028,8 +1028,8 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
         logger.info("cdotIssue :" + cdotIssue);
         String controllerStarId = loggingModel.getControllerSrtId();
         String idOnController = loggingModel.getIdOnController();
-        paramsList.add("idOnController=" + idOnController);
-        paramsList.add("controllerStrId=" + controllerStarId);
+        paramsList.add("idOnController" , idOnController);
+        paramsList.add("controllerStrId" , controllerStarId);
 
 
         try{
@@ -1405,7 +1405,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
                 if(!isMatched){
                     logger.info("Existing MAC Address not Matched with SLV.");
                     // If not, set Account Number value as Unsuccessful.
-                    List<Object> paramsList = new ArrayList<>();
+                    LinkedMultiValueMap<String,String> paramsList = new LinkedMultiValueMap<>();
                     syncAccountNumber(paramsList,loggingModel,edgeNote, Utils.UN_SUCCESSFUL,newNodeMacAddress);
                     return;
                 }
@@ -1492,7 +1492,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
                 if(!isMatched){
                     logger.info("Existing MAC Address not Matched with SLV.");
                     // If not, set Account Number value as Unsuccessful.
-                    List<Object> paramsList = new ArrayList<>();
+                    LinkedMultiValueMap<String, String> paramsList = new LinkedMultiValueMap<>();
                     syncAccountNumber(paramsList,loggingModel,edgeNote, Utils.UN_SUCCESSFUL,newNodeMacAddress);
                 }
 
@@ -1742,9 +1742,10 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
     }
 
     private void clearDeviceValues(String idOnController, String controllerStrIdValue, String type, InstallMaintenanceLogModel loggingModel,boolean isMacRemoved) {
-        List<Object> paramsList = new ArrayList<>();
-        paramsList.add("idOnController=" + idOnController);
-        paramsList.add("controllerStrId=" + controllerStrIdValue);
+       // List<Object> paramsList = new ArrayList<>();
+        LinkedMultiValueMap<String, String> paramsList =new LinkedMultiValueMap<>();
+        paramsList.add("idOnController" , idOnController);
+        paramsList.add("controllerStrId" , controllerStrIdValue);
         switch (type) {
             case "Installed on Wrong Fixture":
                 clearFixtureValues(paramsList);
@@ -1814,7 +1815,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
         return "250";
     }
 
-    private void clearFixtureValues(List<Object> paramsList) {
+    private void clearFixtureValues(LinkedMultiValueMap<String, String> paramsList) {
         addStreetLightData("luminaire.brand", "", paramsList);
         addStreetLightData("device.luminaire.partnumber", "", paramsList);
         addStreetLightData("luminaire.model", "", paramsList);
@@ -2026,7 +2027,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
      * @param loggingModel
      * @param paramsList
      */
-    private void setEdgeDates(InstallMaintenanceLogModel loggingModel,List<Object> paramsList){
+    private void setEdgeDates(InstallMaintenanceLogModel loggingModel,LinkedMultiValueMap<String, String> paramsList){
         DatesHolder datesHolder = loggingModel.getDatesHolder();
         logger.info("Populate EdgeForm Date Values.");
         if(datesHolder != null && datesHolder.getSyncEdgeDates() != null){
@@ -2054,7 +2055,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
         }
     }
 
-    private boolean addDateParam(String paramName,String value,List<Object> paramsList){
+    private boolean addDateParam(String paramName,String value,LinkedMultiValueMap<String, String> paramsList){
         if(value != null && !value.trim().isEmpty()){
             addStreetLightData(paramName, dateFormat(Long.valueOf(value)), paramsList);
             return true;
@@ -2069,7 +2070,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
         if(installMaintenanceLogModel.getDatesHolder() != null && installMaintenanceLogModel.getDatesHolder().getSyncEdgeDates() != null){
             SLVDates syncEdgeDates = installMaintenanceLogModel.getDatesHolder().getSyncEdgeDates();
             logger.info("SyncEdgeDates:"+syncEdgeDates.toString());
-            List<Object> paramsList = new ArrayList<>();
+            LinkedMultiValueMap<String, String> paramsList = new LinkedMultiValueMap<>();
 
             if(syncEdgeDates.getCslpNodeDate() != null && !installMaintenanceLogModel.getDatesHolder().isCslpNodeDateSynced()){
                 logger.info("CslpNodeInstallDate Added");
@@ -2096,8 +2097,8 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
             if(paramsList.size() > 0){
                 logger.info("Date value is Present. Syncing Date value....");
                 String idOnController = installMaintenanceLogModel.getIdOnController();
-                paramsList.add("idOnController=" + idOnController);
-                paramsList.add("controllerStrId=" + installMaintenanceLogModel.getControllerSrtId());
+                paramsList.add("idOnController" , idOnController);
+                paramsList.add("controllerStrId" , installMaintenanceLogModel.getControllerSrtId());
                 SLVTransactionLogs slvTransactionLogs = getSLVTransactionLogs(installMaintenanceLogModel);
                 int errorCode = setDeviceValues(paramsList, slvTransactionLogs);
                 createAllSLVDate(syncEdgeDates,idOnController);
@@ -2343,9 +2344,9 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
                 }
                 String idOnController = loggingModel.getIdOnController();
                 String controllerStrIdValue = loggingModel.getControllerSrtId();
-                List<Object> paramsList = new ArrayList<>();
-                paramsList.add("idOnController=" + idOnController);
-                paramsList.add("controllerStrId=" + controllerStrIdValue);
+                LinkedMultiValueMap<String, String> paramsList = new LinkedMultiValueMap<>();
+                paramsList.add("idOnController" , idOnController);
+                paramsList.add("controllerStrId" , controllerStrIdValue);
                 addStreetLightData("installStatus", InstallStatus.To_be_verified.getValue(), paramsList);
                 addStreetLightData("install.date", dateFormat(edgeNote.getCreatedDateTime()), paramsList);
                 logger.info("Set Device value Called.");
@@ -2385,9 +2386,9 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
                    logger.info("Replace OLC with New MAC Address");
                     callReplaceOLC(loggingModel,slvInterfaceLogEntity,macAddress,edgeNote);
 
-                    List<Object> paramsList = new ArrayList<>();
-                    paramsList.add("idOnController=" + idOnController);
-                    paramsList.add("controllerStrId=" + controllerStrIdValue);
+                    LinkedMultiValueMap<String, String> paramsList = new LinkedMultiValueMap<>();
+                    paramsList.add("idOnController" , idOnController);
+                    paramsList.add("controllerStrId" , controllerStrIdValue);
                     InstallStatus installStatus = InstallStatus.Installed;
                     if(loggingModel.getProposedContext() != null && loggingModel.getProposedContext().trim().contains("Node Only")){
                         installStatus = InstallStatus.Node_Only;

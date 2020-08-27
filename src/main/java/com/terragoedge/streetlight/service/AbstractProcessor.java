@@ -581,7 +581,7 @@ public abstract class AbstractProcessor {
         addPower(loggingModel,null,paramsList,null);
     }
 
-    protected void addFixtureQrScanData(String key, String value, List<Object> paramsList) {
+    protected void addFixtureQrScanData(String key, String value, LinkedMultiValueMap<String, String> paramsList) {
         try{
             /* The following code for changing ";" to "."  based on the request of the customer */
             if(value != null)
@@ -599,9 +599,9 @@ public abstract class AbstractProcessor {
                     return;
                 }
             }
-            paramsList.add("attribute=" + key.trim());
+            paramsList.add("attribute" , key.trim());
             //paramsList.add("value=" + URLEncoder.encode(value.trim(), "UTF-8"));
-            paramsList.add("value=" + value.trim());
+            paramsList.add("value" , value.trim());
         }catch (Exception e){
             logger.error("Error in addStreetLightData",e);
         }
@@ -1217,12 +1217,12 @@ public abstract class AbstractProcessor {
             String replaceOlc = properties.getProperty("streetlight.url.replaceolc.method");
             String url = mainUrl + dataUrl;
             String controllerStrId = controllerStrIdValue;
-            List<Object> paramsList = new ArrayList<Object>();
-            paramsList.add("methodName=" + replaceOlc);
-            paramsList.add("controllerStrId=" + controllerStrId);
-            paramsList.add("idOnController=" + idOnController);
-            paramsList.add("newNetworkId=" + newNetworkId);
-            paramsList.add("ser=json");
+            LinkedMultiValueMap<String,String> paramsList = new LinkedMultiValueMap<>();
+            paramsList.add("methodName" , replaceOlc);
+            paramsList.add("controllerStrId" , controllerStrId);
+            paramsList.add("idOnController" , idOnController);
+            paramsList.add("newNetworkId" , newNetworkId);
+            paramsList.add("ser","json");
             String params = StringUtils.join(paramsList, "&");
             url = url + "?" + params;
             setSLVTransactionLogs(slvTransactionLogs, url, CallType.REPLACE_OLC,mainUrl + dataUrl);
@@ -1238,7 +1238,7 @@ public abstract class AbstractProcessor {
                 if(macAddress != null && !macAddress.trim().isEmpty()){
                     createEdgeAllMac(idOnController, macAddress);
                     syncMacAddress2Edge(idOnController,macAddress,atlasPhysicalPage);
-                    paramsList = new ArrayList<>();
+                    paramsList = new LinkedMultiValueMap<>();
                     syncAccountNumber(paramsList,loggingModel,edgeNote,Utils.SUCCESSFUL,macAddress);
                 }
                 throw new ReplaceOLCFailedException(value);
@@ -1249,7 +1249,7 @@ public abstract class AbstractProcessor {
                     slvInterfaceLogEntity.setStatus(MessageConstants.SUCCESS);
                     createEdgeAllMac(idOnController, macAddress);
                     syncMacAddress2Edge(idOnController,macAddress,atlasPhysicalPage);
-                    paramsList = new ArrayList<>();
+                    paramsList = new LinkedMultiValueMap<>();
                     syncAccountNumber(paramsList,loggingModel,edgeNote,Utils.SUCCESSFUL,macAddress);
                     syncCustomerName(loggingModel);
                 }

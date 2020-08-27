@@ -468,7 +468,7 @@ public class StreetlightChicagoService extends AbstractProcessor {
     }
 
 
-    private void addPoleHeightFixtureCodeComedLite(EdgeNote edgeNote, List<Object> paramsList ){
+    private void addPoleHeightFixtureCodeComedLite(EdgeNote edgeNote, LinkedMultiValueMap paramsList ){
         String installationFormTemplateGUID = PropertiesReader.getProperties().getProperty("amerescousa.edge.formtemplateGuid");
         String strPoleHeightID = PropertiesReader.getProperties().getProperty("edge.formtemplate.poleheight.id");
         String strFixtureCodeID = PropertiesReader.getProperties().getProperty("edge.formtemplate.fixturecode.id");
@@ -529,9 +529,9 @@ public class StreetlightChicagoService extends AbstractProcessor {
                                      EdgeNote edgeNote,
                                      SLVTransactionLogs slvTransactionLogs,InstallMaintenanceLogModel installMaintenanceLogModel){
         String controllerStrId = properties.getProperty("streetlight.slv.controllerstrid");
-        List<Object> paramsList = new ArrayList<>();
-        paramsList.add("idOnController=" + idOnController);
-        paramsList.add("controllerStrId=" + controllerStrId);
+        LinkedMultiValueMap<String,String> paramsList = new LinkedMultiValueMap<>();
+        paramsList.add("idOnController" , idOnController);
+        paramsList.add("controllerStrId" , controllerStrId);
         EdgeNotebook edgeNotebook = edgeNote.getEdgeNotebook();
 
         if(edgeNotebook != null) {
@@ -634,7 +634,7 @@ public class StreetlightChicagoService extends AbstractProcessor {
         return fixtureCode;
     }
 
-    private void addotherParamsForDroppedPin(List<EdgeFormData> edgeFormDatas, List<Object> paramsList) {
+    private void addotherParamsForDroppedPin(List<EdgeFormData> edgeFormDatas, LinkedMultiValueMap<String,String> paramsList) {
         int poleMaterialId = Integer.valueOf(properties.getProperty("com.edge.pole.material.id"));
         int fixtureTypeId = Integer.valueOf(properties.getProperty("edge.formtemplate.fixturecode.id"));
 

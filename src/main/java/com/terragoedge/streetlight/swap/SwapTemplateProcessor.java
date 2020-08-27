@@ -5,6 +5,7 @@ import com.terragoedge.edgeserver.EdgeFormData;
 import com.terragoedge.edgeserver.EdgeNote;
 import com.terragoedge.edgeserver.FormData;
 import com.terragoedge.streetlight.PropertiesReader;
+import com.terragoedge.streetlight.enumeration.InstallStatus;
 import com.terragoedge.streetlight.exception.InValidBarCodeException;
 import com.terragoedge.streetlight.exception.NoValueException;
 import com.terragoedge.streetlight.exception.QRCodeAlreadyUsedException;
@@ -366,12 +367,13 @@ public class SwapTemplateProcessor extends AbstractProcessor {
 
 
     private void setMACAddress(InstallMaintenanceLogModel installMaintenanceLogModel, String slvMacAddress, EdgeNote edgeNote) {
-        List paramsList = new ArrayList();
+        LinkedMultiValueMap paramsList = new LinkedMultiValueMap();
         String idOnController = installMaintenanceLogModel.getIdOnController();
-        paramsList.add("idOnController=" + idOnController);
-        paramsList.add("controllerStrId=" + controllerStrId);
+        paramsList.add("idOnController" , idOnController);
+        paramsList.add("controllerStrId" , controllerStrId);
         addStreetLightData("MacAddress", slvMacAddress, paramsList);
-        addStreetLightData("install.date", dateFormat(edgeNote.getCreatedDateTime()), paramsList);
+        addStreetLightData("MacAddress", slvMacAddress, paramsList);
+        addStreetLightData("installStatus", InstallStatus.Installed.getValue(), paramsList);
         SLVTransactionLogs slvTransactionLogs = getSLVTransactionLogs(installMaintenanceLogModel);
         int errorCode = setDeviceValues(paramsList, slvTransactionLogs);
         logger.info("Error Code:" + errorCode);
