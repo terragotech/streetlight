@@ -662,7 +662,7 @@ public class StreetlightDao extends UtilDao {
         try {
             connection = StreetlightDaoConnection.getInstance().getConnection();
             preparedStatement = connection.prepareStatement(
-                    "INSERT INTO slvtransactionlogs(noteguid ,parentnoteid , title ,requestdata , responsebody ,eventtime,createddatetime,calltype ) values (?,?,?,?,?,?,?,?) ;");
+                    "INSERT INTO slvtransactionlogs(noteguid ,parentnoteid , title ,requestdata , responsebody ,eventtime,createddatetime,calltype,requesturl ) values (?,?,?,?,?,?,?,?,?) ;");
             preparedStatement.setString(1, slvTransactionLogs.getNoteGuid());
             preparedStatement.setString(2, slvTransactionLogs.getParentNoteGuid());
             preparedStatement.setString(3, slvTransactionLogs.getTitle());
@@ -671,6 +671,7 @@ public class StreetlightDao extends UtilDao {
             preparedStatement.setLong(6, System.currentTimeMillis());
             preparedStatement.setLong(7, slvTransactionLogs.getCreatedDateTime());
             preparedStatement.setString(8, slvTransactionLogs.getTypeOfCall().toString());
+            preparedStatement.setString(9, slvTransactionLogs.getRequestUrl());
 
             preparedStatement.execute();
         } catch (Exception e) {

@@ -1,0 +1,1 @@
+alter table slvtransactionlogs add requesturl text;
