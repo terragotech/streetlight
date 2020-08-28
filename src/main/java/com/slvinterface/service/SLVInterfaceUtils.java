@@ -62,12 +62,12 @@ public class SLVInterfaceUtils {
             logger.info("isDevicePresent method called");
             logger.info("isDevicePresent url:" + url);
             setSLVTransactionLogs(slvTransactionLogs, url, CallType.SEARCH_DEVICE);
-            HttpResponse  response = slvRestService.callGetMethod(url);
-            if (response.getStatusLine().getStatusCode() == 404) {
+            ResponseEntity<String>  response = slvRestService.callSlvWithToken(true,url,null);
+            if (response.getStatusCodeValue() == 404) {
                 isDevicePresent = false;
             }
             else {
-                String responseString = slvRestService.getResponseBody(response);
+                String responseString = response.getBody();
                 setResponseDetails(slvTransactionLogs, responseString);
                 JsonObject searchDeviceResponse = (JsonObject) jsonParser.parse(responseString);
                 JsonArray jsonArray = searchDeviceResponse.get("value").getAsJsonArray();
@@ -103,11 +103,11 @@ public class SLVInterfaceUtils {
             logger.info("checkAndCreateGeoZone method called");
             logger.info("checkAndCreateGeoZone url:" + url);
             setSLVTransactionLogs(slvTransactionLogs, url, CallType.SEARCH_GEOZONE);
-            HttpResponse  response = slvRestService.callGetMethod(url);
-            if (response.getStatusLine().getStatusCode() == 404) {
+            ResponseEntity<String>  response = slvRestService.callSlvWithToken(true,url,null);
+            if (response.getStatusCodeValue() == 404) {
                 geozoneId = -1;
             }else {
-                String responseString = slvRestService.getResponseBody(response);
+                String responseString =response.getBody();
                 setResponseDetails(slvTransactionLogs, responseString);
                 JsonArray jsonArray = jsonParser.parse(responseString).getAsJsonArray();
                 if (jsonArray != null && jsonArray.size() > 0) {
@@ -115,8 +115,8 @@ public class SLVInterfaceUtils {
                         JsonObject jsonObject = (JsonObject) jsonElement;
                         String geozoneNamePath = jsonObject.get("namesPath").getAsString();
                         geozoneNamePath = geozoneNamePath.replaceAll("\'","");
-                        geozoneNamePath = URLEncoder.encode(geozoneNamePath,"UTF-8");
-                        String rootGeoZoneEncoded = URLEncoder.encode(rootGeoZone+"/","UTF-8");
+                      //  geozoneNamePath = URLEncoder.encode(geozoneNamePath,"UTF-8");
+                        //String rootGeoZoneEncoded = URLEncoder.encode(rootGeoZone+"/","UTF-8");
                         if(geozoneNamePath.endsWith(geozone)){// inside unknown
                             geozoneId = jsonObject.get("id").getAsInt();
                             return geozoneId;
@@ -158,11 +158,11 @@ public class SLVInterfaceUtils {
             logger.info("checkAndCreateGeoZone method called");
             logger.info("checkAndCreateGeoZone url:" + url);
             setSLVTransactionLogs(slvTransactionLogs, url, CallType.CREATE_GEOZONE);
-            HttpResponse  response = slvRestService.callGetMethod(url);
-            if (response.getStatusLine().getStatusCode() == 404) {
+            ResponseEntity<String>  response = slvRestService.callSlvWithToken(true,url,null);
+            if (response.getStatusCodeValue() == 404) {
                 geozoneId = -1;
             }else {
-                String responseString = slvRestService.getResponseBody(response);
+                String responseString = response.getBody();
                 setResponseDetails(slvTransactionLogs, responseString);
                 JsonObject jsonObject = jsonParser.parse(responseString).getAsJsonObject();
                 geozoneId = jsonObject.get("id").getAsInt();
@@ -203,8 +203,8 @@ public class SLVInterfaceUtils {
             logger.info("createDevice method called");
             logger.info("createDevice url:" + url);
             setSLVTransactionLogs(slvTransactionLogs, url, CallType.CREATE_DEVICE);
-            HttpResponse  response = slvRestService.callGetMethod(url);
-            String responseString = slvRestService.getResponseBody(response);
+            ResponseEntity<String>  response = slvRestService.callSlvWithToken(true,url,null);
+            String responseString = response.getBody();
             setResponseDetails(slvTransactionLogs, responseString);
             JsonObject replaceOlcResponse = (JsonObject) jsonParser.parse(responseString);
             deviceId = replaceOlcResponse.get("id").getAsInt();

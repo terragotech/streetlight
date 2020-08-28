@@ -1,5 +1,4 @@
-{
-  "priority": [{"type":"UPDATE_DEVICE","order":2},{"type":"NEW_DEVICE","order":3}],
+{"priority": [{"type":"UPDATE_DEVICE","order":2},{"type":"NEW_DEVICE","order":3}],
   "config": [
     {
       "type": "NEW_DEVICE",

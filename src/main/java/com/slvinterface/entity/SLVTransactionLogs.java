@@ -28,7 +28,16 @@ public class SLVTransactionLogs {
     private long createdDateTime;
     @DatabaseField(columnName = "typeofcall")
     private CallType typeOfCall;
+    @DatabaseField(columnName = "requesturl")
+    private String requestUrl;
 
+    public String getRequestUrl() {
+        return requestUrl;
+    }
+
+    public void setRequestUrl(String requestUrl) {
+        this.requestUrl = requestUrl;
+    }
 
     public String getParentNoteGuid() {
         return parentNoteGuid;
