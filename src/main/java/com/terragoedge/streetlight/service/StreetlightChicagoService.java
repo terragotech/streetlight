@@ -183,7 +183,7 @@ public class StreetlightChicagoService extends AbstractProcessor {
                 String notesData = responseEntity.getBody();
                 logger.info("rest service data:" + notesData);
                 EdgeNote edgeNote = gson.fromJson(notesData, EdgeNote.class);
-                if (edgeNote.getTitle() == null || edgeNote.getTitle().endsWith("-DC")) {
+                if (edgeNote.getTitle() == null || edgeNote.getTitle().endsWith("-DC")|| edgeNote.getTitle().toLowerCase().contains("device")) {
                     return;
                 }
 

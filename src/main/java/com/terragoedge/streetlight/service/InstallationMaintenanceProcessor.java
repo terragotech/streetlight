@@ -749,7 +749,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
 
 
     private void checkFixtureQrScan(String fixtureQrScan, EdgeNote edgeNote, InstallMaintenanceLogModel loggingModel, SlvInterfaceLogEntity slvInterfaceLogEntity) throws InValidBarCodeException {
-        LinkedMultiValueMap<String, String> paramsList = new LinkedMultiValueMap<>();
+        LinkedMultiValueMap<String, String> paramsListTemp = new LinkedMultiValueMap<>();
         SlvServerData slvServerData = new SlvServerData();
         try {
             // check given macaddress exist or not in edge_all_fix table
@@ -764,15 +764,17 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
                 return;
             }
             logger.info("Fixture QR Scan Validation Starts.");
-            buildFixtureStreetLightData(fixtureQrScan, paramsList, edgeNote, slvServerData, loggingModel);
-            paramsList.clear();
+            buildFixtureStreetLightData(fixtureQrScan, paramsListTemp, edgeNote, slvServerData, loggingModel);
+
             slvServerData.setIdOnController(edgeNote.getTitle());
 
             String mainUrl = properties.getProperty("streetlight.slv.url.main");
             String updateDeviceValues = properties.getProperty("streetlight.slv.url.search.device");
             String url = mainUrl + updateDeviceValues;
-            paramsList.add("attribute","idOnController");
-            paramsList.add("value" , edgeNote.getTitle().trim());
+
+            List<Object> paramsList = new ArrayList<>();
+            paramsList.add("attribute=idOnController");
+            paramsList.add("value=" + edgeNote.getTitle().trim());
 
             addFixtureQrScanData("luminaire.brand", slvServerData.getLuminaireBrand(), paramsList);
             addFixtureQrScanData("device.luminaire.partnumber", slvServerData.getLuminairePartNumber(), paramsList);
@@ -780,12 +782,13 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
             addFixtureQrScanData("device.luminaire.manufacturedate", slvServerData.getLuminaireManufacturedate(), paramsList);
             addFixtureQrScanData("device.luminaire.driverpartnumber", slvServerData.getDriverPartNumber(), paramsList);
             addFixtureQrScanData("luminaire.colorcode", slvServerData.getColorCode(), paramsList);
-            paramsList.add("operator","eq-i");
-            paramsList.add("recurse","true");
-            paramsList.add("ser","json");
+            paramsList.add("operator=eq-i");
+            paramsList.add("recurse=true");
+            paramsList.add("ser=json");
             String params = StringUtils.join(paramsList, "&");
             url = url + "?" + params;
             ResponseEntity<String> response = restService.getRequest(url, true, null);
+
             if (response.getStatusCode().is2xxSuccessful()) {
                 String responseString = response.getBody();
                 logger.info("-------QR Address Check Address----------");

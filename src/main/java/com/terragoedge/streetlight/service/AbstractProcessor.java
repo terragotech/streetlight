@@ -581,7 +581,7 @@ public abstract class AbstractProcessor {
         addPower(loggingModel,null,paramsList,null);
     }
 
-    protected void addFixtureQrScanData(String key, String value, LinkedMultiValueMap<String, String> paramsList) {
+    protected void addFixtureQrScanData(String key, String value, List<Object> paramsList) {
         try{
             /* The following code for changing ";" to "."  based on the request of the customer */
             if(value != null)
@@ -599,9 +599,9 @@ public abstract class AbstractProcessor {
                     return;
                 }
             }
-            paramsList.add("attribute" , key.trim());
+            paramsList.add("attribute="+ key.trim());
             //paramsList.add("value=" + URLEncoder.encode(value.trim(), "UTF-8"));
-            paramsList.add("value" , value.trim());
+            paramsList.add("value="+ value.trim());
         }catch (Exception e){
             logger.error("Error in addStreetLightData",e);
         }
@@ -1218,15 +1218,15 @@ public abstract class AbstractProcessor {
             String url = mainUrl + dataUrl;
             String controllerStrId = controllerStrIdValue;
             LinkedMultiValueMap<String,String> paramsList = new LinkedMultiValueMap<>();
-            paramsList.add("methodName" , replaceOlc);
+            //paramsList.add("methodName" , replaceOlc);
             paramsList.add("controllerStrId" , controllerStrId);
             paramsList.add("idOnController" , idOnController);
             paramsList.add("newNetworkId" , newNetworkId);
             paramsList.add("ser","json");
-            String params = StringUtils.join(paramsList, "&");
-            url = url + "?" + params;
+           // String params = StringUtils.join(paramsList, "&");
+           // url = url + "?" + params;
             setSLVTransactionLogs(slvTransactionLogs, url, CallType.REPLACE_OLC,mainUrl + dataUrl);
-            ResponseEntity<String> response = restService.getPostRequest(url, null,null);
+            ResponseEntity<String> response = restService.getPostRequest(url, null,paramsList);
             String responseString = response.getBody();
             setResponseDetails(slvTransactionLogs, responseString);
             JsonObject replaceOlcResponse = (JsonObject) jsonParser.parse(responseString);

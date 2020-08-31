@@ -6,6 +6,7 @@ import java.io.InputStreamReader;
 import java.net.URI;
 import java.util.Properties;
 
+import com.google.gson.Gson;
 import com.terragoedge.streetlight.service.SlvRestTemplate;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.io.IOUtils;
@@ -31,9 +32,12 @@ public class RestService {
 	private static Logger logger = Logger.getLogger(RestService.class);
 	
 	Properties properties = null;
+
+	Gson gson;
 	
 	public RestService(){
 		properties = PropertiesReader.getProperties();
+		gson = new Gson();
 	}
 
 	public ResponseEntity<String> getRequest(String url,boolean isLog,String accessToken) {
@@ -43,7 +47,7 @@ public class RestService {
 		String isTokenNeeded = properties.getProperty("com.use.token.slv.api");
 		if(accessToken == null && isTokenNeeded.equals("true")){//slv rest call with token
 			try {
-				ResponseEntity<String> responseEntity = callSlvWithToken(true,url);
+				ResponseEntity<String> responseEntity = callSlvWithToken(true,url,null);
 				return responseEntity;
 			}catch (Exception e){
 				logger.error("Error",e);
@@ -68,6 +72,9 @@ public class RestService {
 	public ResponseEntity<String> getPostRequest(String url, String accessToken, LinkedMultiValueMap<String, String> paramsList) {
 		logger.info("------------ Request ------------------");
 		logger.info(url);
+		if(paramsList != null){
+			logger.info(gson.toJson(paramsList));
+		}
 		logger.info("------------ Request End ------------------");
 		String isTokenNeeded = properties.getProperty("com.use.token.slv.api");
 		if(accessToken == null && isTokenNeeded.equals("true")){// slv rest call with token
@@ -191,7 +198,7 @@ public class RestService {
 		return HttpStatus.NOT_FOUND;
 	}
 
-    private ResponseEntity<String> callSlvWithToken(boolean isGetRequest,String url,LinkedMultiValueMap<String, String> paramsList) throws Exception{
+    public ResponseEntity<String> callSlvWithToken(boolean isGetRequest,String url,LinkedMultiValueMap<String, String> paramsList) throws Exception{
 		RestTemplate restTemplate = getRestTemplate();
 
         HttpHeaders headers = new HttpHeaders();
@@ -199,7 +206,7 @@ public class RestService {
         headers.add("x-csrf-token", SlvRestTemplate.INSTANCE.getToken());
         headers.add("Cookie",SlvRestTemplate.INSTANCE.getCookie());
         HttpEntity<LinkedMultiValueMap<String, String>> request = null;
-        if(paramsList != null){
+        if(paramsList == null){
             request = new HttpEntity<>(headers);
         }else{
             headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
