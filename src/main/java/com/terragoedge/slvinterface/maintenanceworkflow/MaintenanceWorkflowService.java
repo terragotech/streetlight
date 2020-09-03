@@ -20,6 +20,7 @@ import com.terragoedge.slvinterface.utils.Utils;
 import org.apache.log4j.Logger;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
+import org.springframework.util.LinkedMultiValueMap;
 
 import java.util.*;
 import java.util.regex.Matcher;
@@ -220,11 +221,11 @@ public class MaintenanceWorkflowService extends AbstractSlvService {
             logger.error("Error in processReplaceSmartController",e);
         }
 
-        List<Object> paramList = new ArrayList<>();
-        paramList.add("idOnController=" + encode(idOnController));
-        paramList.add("controllerStrId=" + jpsWorkflowModel.getControllerStrId());
-        addStreetLightData("idOnController", idOnController, paramList);
-        addStreetLightData("installStatus", "Removed", paramList);
+        LinkedMultiValueMap<String,String> paramList = new LinkedMultiValueMap<>();
+        paramList.add("idOnController",idOnController);
+        paramList.add("controllerStrId",jpsWorkflowModel.getControllerStrId());
+        addStreetLightData("idOnController", idOnController, paramList,false);
+        addStreetLightData("installStatus", "Removed", paramList,false);
         ResponseEntity<String> responseEntity = setDeviceValues(paramList);
         logger.info("********************** set device values reponse code: " + responseEntity.getStatusCode());
         logger.info("set device values response: " + responseEntity.getBody());
@@ -238,11 +239,11 @@ public class MaintenanceWorkflowService extends AbstractSlvService {
     private void processLedLight(int formId, List<EdgeFormData> edgeFormDataList, String idOnController,JPSWorkflowModel jpsWorkflowModel,EdgeNote edgeNote){
             String serialNumber = valueById(edgeFormDataList, formId);
             if(!serialNumber.trim().isEmpty()){
-                List<Object> paramList = new ArrayList<>();
-                paramList.add("idOnController=" + encode(idOnController));
-                paramList.add("controllerStrId=" + jpsWorkflowModel.getControllerStrId());
-                addStreetLightData("idOnController", idOnController, paramList);
-                addStreetLightData("device.node.serialnumber", serialNumber, paramList);
+                LinkedMultiValueMap<String,String> paramList = new LinkedMultiValueMap<>();
+                paramList.add("idOnController",idOnController);
+                paramList.add("controllerStrId",jpsWorkflowModel.getControllerStrId());
+                addStreetLightData("idOnController", idOnController, paramList,false);
+                addStreetLightData("device.node.serialnumber", serialNumber, paramList,false);
                 ResponseEntity<String> responseEntity = setDeviceValues(paramList);
                 logger.info("********************** set device values reponse code: " + responseEntity.getStatusCode());
                 logger.info("set device values response: " + responseEntity.getBody());

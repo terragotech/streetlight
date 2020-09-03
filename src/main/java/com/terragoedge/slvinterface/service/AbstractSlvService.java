@@ -14,6 +14,7 @@ import com.vividsolutions.jts.geom.Geometry;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 import org.springframework.http.ResponseEntity;
+import org.springframework.util.LinkedMultiValueMap;
 import org.wololo.geojson.Feature;
 import org.wololo.geojson.GeoJSONFactory;
 import org.wololo.jts2geojson.GeoJSONReader;
@@ -67,25 +68,24 @@ public abstract class AbstractSlvService extends EdgeService {
 
 
             String mainUrl = properties.getProperty("streetlight.slv.url.main");
-            String serveletApiUrl = properties.getProperty("streetlight.slv.url.device.create");
-            String url = mainUrl + serveletApiUrl;
-            String methodName = properties.getProperty("streetlight.slv.device.create.methodName");
+//            String serveletApiUrl = properties.getProperty("streetlight.slv.url.device.create");
+            String createDeviceUrl = properties.getProperty("com.slv.create.device.url");
+            String url = mainUrl + createDeviceUrl;
             String categoryStrId = jpsWorkflowModel.getCategoryStrId();
             String controllerStrId = jpsWorkflowModel.getControllerStrId();
             String nodeTypeStrId = properties.getProperty("streetlight.slv.equipment.type");
-            Map<String, String> streetLightDataParams = new HashMap<String, String>();
-            streetLightDataParams.put("methodName", methodName);
-            streetLightDataParams.put("categoryStrId", categoryStrId);
-            streetLightDataParams.put("controllerStrId", controllerStrId);
-            streetLightDataParams.put("idOnController", encode(jpsWorkflowModel.getIdOnController().trim()));
-            streetLightDataParams.put("geoZoneId", String.valueOf(jpsWorkflowModel.getGeozoneId()));
-            streetLightDataParams.put("lng", String.valueOf(geom.getCoordinate().x));
-            streetLightDataParams.put("lat", String.valueOf(geom.getCoordinate().y));
-            streetLightDataParams.put("nodeTypeStrId", nodeTypeStrId);
-            streetLightDataParams.put("ser","json");
+            LinkedMultiValueMap<String, String> streetLightDataParams = new LinkedMultiValueMap<>();
+            streetLightDataParams.add("categoryStrId", categoryStrId);
+            streetLightDataParams.add("controllerStrId", controllerStrId);
+            streetLightDataParams.add("idOnController", jpsWorkflowModel.getIdOnController().trim());
+            streetLightDataParams.add("geoZoneId", String.valueOf(jpsWorkflowModel.getGeozoneId()));
+            streetLightDataParams.add("lng", String.valueOf(geom.getCoordinate().x));
+            streetLightDataParams.add("lat", String.valueOf(geom.getCoordinate().y));
+            streetLightDataParams.add("nodeTypeStrId", nodeTypeStrId);
+            streetLightDataParams.add("ser","json");
             // streetLightDataParams.put("modelFunctionId", nodeTypeStrId);
             // modelFunctionId
-            return slvRestService.getRequest(streetLightDataParams, url, true);
+            return slvRestService.getPostRequest(url,null,streetLightDataParams);
         }else{
             return null;
         }
@@ -137,18 +137,15 @@ public abstract class AbstractSlvService extends EdgeService {
         }
     }
 
-    public ResponseEntity<String> setDeviceValues(List<Object> paramsList) {
+    public ResponseEntity<String> setDeviceValues(LinkedMultiValueMap<String,String> paramsList) {
         String mainUrl = properties.getProperty("streetlight.slv.url.main");
         String updateDeviceValues = properties.getProperty("streetlight.slv.url.updatedevice");
         String url = mainUrl + updateDeviceValues;
 
-        paramsList.add("ser=json");
-        String params = StringUtils.join(paramsList, "&");
-        url = url + "&" + params;
-        System.out.println("SetDevice Called");
+        paramsList.add("ser","json");
         logger.info("settDevice value called");
         System.out.println("URL : " + url);
-        ResponseEntity<String> response = slvRestService.getPostRequest(url, null);
+        ResponseEntity<String> response = slvRestService.getPostRequest(url, null,paramsList);
         return response;
     }
 
@@ -163,20 +160,17 @@ public abstract class AbstractSlvService extends EdgeService {
             // Get Url detail from properties
             String mainUrl = properties.getProperty("streetlight.slv.url.main");
             String dataUrl = properties.getProperty("streetlight.url.replaceolc");
-            String replaceOlc = properties.getProperty("streetlight.url.replaceolc.method");
+//            String replaceOlc = properties.getProperty("streetlight.url.replaceolc.method");
             String url = mainUrl + dataUrl;
             String controllerStrId = controllerStrIdValue;
-            List<Object> paramsList = new ArrayList<Object>();
-            paramsList.add("methodName=" + replaceOlc);
-            paramsList.add("controllerStrId=" + controllerStrId);
-            paramsList.add("idOnController=" + encode(idOnController.trim()));
-            paramsList.add("newNetworkId=" + macAddress);
-            paramsList.add("ser=json");
-            String params = StringUtils.join(paramsList, "&");
-            url = url + "?" + params;
+            LinkedMultiValueMap<String,String> paramsList = new LinkedMultiValueMap<>();
+            paramsList.add("controllerStrId=", controllerStrId);
+            paramsList.add("idOnController=", idOnController.trim());
+            paramsList.add("newNetworkId=", macAddress);
+            paramsList.add("ser","json");
             logger.info("Replace OLc called: " + macAddress);
             logger.info("Replace OLc Url" + url);
-            ResponseEntity<String> response = slvRestService.getPostRequest(url, null);
+            ResponseEntity<String> response = slvRestService.getPostRequest(url, null,paramsList);
             logger.info("********************** replace OLC reponse code: "+response.getStatusCode());
             logger.info("replace OLC response: "+response.getBody());
             logger.info("********************** replace OLC reponse end *********");
@@ -428,13 +422,15 @@ public abstract class AbstractSlvService extends EdgeService {
         return "";
     }
 
-    protected void addStreetLightData(String key, String value, List<Object> paramsList) {
-        paramsList.add("valueName=" + key.trim());
+    protected void addStreetLightData(String key, String value, LinkedMultiValueMap<String,String> paramsList, boolean isEncode) {
+        paramsList.add("valueName",key.trim());
         if(value != null && !value.trim().isEmpty()){
-            value = encode(value);
-            paramsList.add("value=" + value);
+            if(isEncode) {
+                value = encode(value);
+            }
+            paramsList.add("value",value);
         }else{
-            paramsList.add("value=");
+            paramsList.add("value","");
         }
 
     }

@@ -1,5 +1,6 @@
 package com.terragoedge.slvinterface.service;
 
+import com.google.gson.Gson;
 import com.terragoedge.slvinterface.utils.PropertiesReader;
 import com.terragoedge.slvinterface.utils.Utils;
 import org.apache.commons.codec.binary.Base64;
@@ -10,6 +11,9 @@ import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.log4j.Logger;
 import org.springframework.http.*;
+import org.springframework.http.client.SimpleClientHttpRequestFactory;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 
 import java.io.BufferedReader;
@@ -18,54 +22,13 @@ import java.net.URI;
 import java.util.*;
 
 public class SlvRestService {
+    private Gson gson = null;
     Properties properties = null;
     private static Logger logger = Logger.getLogger(SlvRestService.class);
 
     public SlvRestService() {
+        gson = new Gson();
         properties = PropertiesReader.getProperties();
-    }
-
-    public <T> ResponseEntity<String> getRequest(Map<String, String> streetLightDataParams, String url, boolean isLog) {
-        Set<String> keys = streetLightDataParams.keySet();
-        List<String> values = new ArrayList<String>();
-        for (String key : keys) {
-            String val = streetLightDataParams.get(key) != null ? streetLightDataParams.get(key).toString() : "";
-            String tem = key + "=" + val;
-            values.add(tem);
-        }
-        String params = StringUtils.join(values, "&");
-        url = url + "?" + params;
-        logger.info("Create Device Url"+url);
-        return getRequest(url, isLog);
-    }
-
-    public ResponseEntity<String> getRequest(String url, boolean isLog) {
-        logger.info("------------ Request ------------------");
-        logger.info(url);
-        logger.info("------------ Request End ------------------");
-        String isTokenNeeded = properties.getProperty("com.use.token.slv.api");
-        if(isTokenNeeded.equals("true")){
-            try {
-                ResponseEntity<String> responseEntity = callSlvWithToken(true,url);
-                return responseEntity;
-            }catch (Exception e){
-                e.printStackTrace();
-            }
-        }else{
-            HttpHeaders headers = getHeaders();
-            RestTemplate restTemplate = Utils.getRestTemplate();
-            HttpEntity request = new HttpEntity<>(headers);
-            ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.GET, request, String.class);
-            logger.info("------------ Response ------------------");
-            logger.info("Response Code:" + response.getStatusCode().toString());
-            String responseBody = response.getBody();
-            if (isLog) {
-                logger.info(responseBody);
-            }
-            logger.info("------------ Response End ------------------");
-            return response;
-        }
-        return new ResponseEntity<>("Error while call this request: "+url,HttpStatus.NOT_FOUND);
     }
 
     public ResponseEntity<String> getRequest(String url, boolean isLog, String accessToken) {
@@ -75,7 +38,7 @@ public class SlvRestService {
         String isTokenNeeded = properties.getProperty("com.use.token.slv.api");
         if(accessToken == null && isTokenNeeded.equals("true")){
             try {
-                ResponseEntity<String> responseEntity = callSlvWithToken(true,url);
+                ResponseEntity<String> responseEntity = callSlvWithToken(true,url,null);
                 return responseEntity;
             }catch (Exception e){
                 e.printStackTrace();
@@ -97,14 +60,15 @@ public class SlvRestService {
         return new ResponseEntity<>("Error while call this request: "+url,HttpStatus.NOT_FOUND);
     }
 
-    public ResponseEntity<String> getPostRequest(String url, String accessToken) {
+    public ResponseEntity<String> getPostRequest(String url, String accessToken,LinkedMultiValueMap<String,String> params) {
         logger.info("------------ Request ------------------");
         logger.info(url);
         logger.info("------------ Request End ------------------");
         String isTokenNeeded = properties.getProperty("com.use.token.slv.api");
+        logger.info("request params: "+gson.toJson(params));
         if(accessToken == null && isTokenNeeded.equals("true")){
             try {
-                ResponseEntity<String> responseEntity = callSlvWithToken(true,url);
+                ResponseEntity<String> responseEntity = callSlvWithToken(false,url,params);
                 return responseEntity;
             }catch (Exception e){
                 e.printStackTrace();
@@ -112,7 +76,13 @@ public class SlvRestService {
         }else{
             HttpHeaders headers = getHeaders(accessToken);
             RestTemplate restTemplate = Utils.getRestTemplate();
-            HttpEntity request = new HttpEntity<>(headers);
+            HttpEntity<LinkedMultiValueMap<String,String>> request = null;
+            if (params == null) {
+                request = new HttpEntity<>(headers);
+            }else {
+                headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+                request = new HttpEntity<>(params,headers);
+            }
             ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.GET, request, String.class);
             logger.info("------------ Response ------------------");
             logger.info("Response Code:" + response.getStatusCode().toString());
@@ -180,79 +150,31 @@ public class SlvRestService {
         return response;
     }
 
-    private HttpHeaders getHeaders() {
-        String userName = properties.getProperty("streetlight.slv.username");
-        String password = properties.getProperty("streetlight.slv.password");
-        String plainCreds = userName + ":" + password;
-        byte[] plainCredsBytes = plainCreds.getBytes();
-        byte[] base64CredsBytes = Base64.encodeBase64(plainCredsBytes);
-        String base64Creds = new String(base64CredsBytes);
+    private ResponseEntity<String> callSlvWithToken(boolean isGetRequest, String url, LinkedMultiValueMap<String, String> paramsList) throws Exception{
+        RestTemplate restTemplate = getRestTemplate();
         HttpHeaders headers = new HttpHeaders();
-        headers.add("Authorization", "Basic " + base64Creds);
-        return headers;
-    }
-
-
-
-    private ResponseEntity<String> callSlvWithToken(boolean isGetRequest,String url) throws Exception{
-        try{
-            SlvRestTemplate.INSTANCE.reConnect();
-        }catch (Exception e){
-            e.printStackTrace();
+        headers.add("x-requested-with","XMLHttpRequest");
+        headers.add("x-csrf-token", SlvRestTemplate.INSTANCE.getToken());
+        headers.add("Cookie",SlvRestTemplate.INSTANCE.getCookie());
+        HttpEntity<LinkedMultiValueMap<String, String>> request = null;
+        if (paramsList == null){
+            request = new HttpEntity<>(headers);
+        }else {
+            headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+            request = new HttpEntity(paramsList,headers);
         }
-        HttpResponse response = SlvRestTemplate.INSTANCE.httpClient.execute(isGetRequest ? getSlvGetHeaders(url) : getSlvPostHeaders(url), SlvRestTemplate.INSTANCE.httpContext);
-        String responseBody = getResponseBody(response);
-        int responseCode = response.getStatusLine().getStatusCode();
-        ResponseEntity<String> responseEntity = new ResponseEntity<String>(responseBody, getHttpStatus(responseCode));
+        HttpMethod httpMethod = HttpMethod.POST;
+        if (isGetRequest){
+            httpMethod = HttpMethod.GET;
+        }
+        ResponseEntity<String> response = restTemplate.exchange(url,httpMethod,request,String.class);
+        String responseBody = response.getBody();
+        int responseCode = response.getStatusCode().value();
         logger.info("------------ Response ------------------");
         logger.info("Response Code:" + responseCode);
         logger.info(responseBody);
         logger.info("------------ Response End ------------------");
-        return responseEntity;
-    }
-
-    private HttpPost getSlvPostHeaders(String url){
-        HttpPost httpPost = new HttpPost();
-        httpPost.setHeader("x-csrf-token", SlvRestTemplate.INSTANCE.token);
-        httpPost.setHeader("x-requested-with","XMLHttpRequest");
-        httpPost.setURI(URI.create(url));
-        return httpPost;
-    }
-
-
-    private HttpGet getSlvGetHeaders(String url){
-        HttpGet httpGet = new HttpGet();
-        httpGet.setHeader("x-csrf-token",SlvRestTemplate.INSTANCE.token);
-        httpGet.setHeader("x-requested-with","XMLHttpRequest");
-        logger.info("------SLV Url------------");
-        logger.info("Url:"+url);
-        logger.info("------SLV Url Ends------------");
-        httpGet.setURI(URI.create(url));
-        return httpGet;
-    }
-
-    private String getResponseBody(HttpResponse httpResponse){
-        try{
-            BufferedReader rd = new BufferedReader(
-                    new InputStreamReader(httpResponse.getEntity().getContent()));
-            String response = IOUtils.toString(rd);
-            logger.info("-------SLV Response ----------");
-            logger.info(response);
-            logger.info("-------SLV Response Ends----------");
-            return response;
-        }catch (Exception e){
-            logger.error("Error in getResponseBody",e);
-        }
-        return null;
-    }
-
-    private HttpStatus getHttpStatus(int statusCode){
-        for(HttpStatus httpStatus : HttpStatus.values()){
-            if(httpStatus.value() == statusCode){
-                return httpStatus;
-            }
-        }
-        return HttpStatus.NOT_FOUND;
+        return response;
     }
 
     public ResponseEntity<String> serverCall(String url, HttpMethod httpMethod, String body,boolean isSlv){
@@ -271,5 +193,12 @@ public class SlvRestService {
         logger.info("Response code: "+responseEntity.getStatusCode());
         logger.info("Response body: "+responseEntity.getBody());
         return responseEntity;
+    }
+    public  RestTemplate getRestTemplate(){
+        SimpleClientHttpRequestFactory simpleClientHttpRequestFactory = new SimpleClientHttpRequestFactory();
+        simpleClientHttpRequestFactory.setConnectTimeout(1000 * 60 * 5);
+        simpleClientHttpRequestFactory.setReadTimeout(1000 * 60 * 5);
+        RestTemplate restTemplate = new RestTemplate(simpleClientHttpRequestFactory);
+        return restTemplate;
     }
 }

@@ -113,6 +113,11 @@ public class SlvInterfaceService extends AbstractSlvService {
                         ResponseEntity<String> responseEntity = slvRestService.getRequest(restUrl, false, accessToken);
                         if (responseEntity.getStatusCode().is2xxSuccessful()) {
                             String notesData = responseEntity.getBody();
+                            try{
+                                SlvRestTemplate.INSTANCE.refreshToken();
+                            }catch (Exception e){
+                                logger.error("Error while refreshing token: ",e);
+                            }
                             doProcess(notesData,edgenoteGuid,installworkFlowFormId,newFixtureworkFlowFormId,maintenanceInstallFormId);
                         }else{
                             logger.info("getting edge note from rest call is failed noteguid: "+edgenoteGuid);
