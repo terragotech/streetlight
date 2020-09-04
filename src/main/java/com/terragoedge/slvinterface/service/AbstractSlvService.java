@@ -164,9 +164,9 @@ public abstract class AbstractSlvService extends EdgeService {
             String url = mainUrl + dataUrl;
             String controllerStrId = controllerStrIdValue;
             LinkedMultiValueMap<String,String> paramsList = new LinkedMultiValueMap<>();
-            paramsList.add("controllerStrId=", controllerStrId);
-            paramsList.add("idOnController=", idOnController.trim());
-            paramsList.add("newNetworkId=", macAddress);
+            paramsList.add("controllerStrId", controllerStrId);
+            paramsList.add("idOnController", idOnController.trim());
+            paramsList.add("newNetworkId", macAddress);
             paramsList.add("ser","json");
             logger.info("Replace OLc called: " + macAddress);
             logger.info("Replace OLc Url" + url);
@@ -221,7 +221,7 @@ public abstract class AbstractSlvService extends EdgeService {
             String url = mainUrl + deviceUrl;
             List<String> paramsList = new ArrayList<>();
             paramsList.add("attributeName=idOnController");
-            paramsList.add("attributeValue=" + encode(idOnController.trim()));
+            paramsList.add("attributeValue=" + idOnController.trim());
             paramsList.add("recurse=true");
             paramsList.add("returnedInfo=lightDevicesList");
             paramsList.add("attributeOperator=eq-i");
@@ -270,7 +270,7 @@ public abstract class AbstractSlvService extends EdgeService {
         return responseEntity;
     }
 
-    public String encode(String data){
+    public String encode1(String data){
         try{
             return  URLEncoder.encode(data, "UTF-8");
         }catch (UnsupportedEncodingException e){
@@ -286,7 +286,7 @@ public abstract class AbstractSlvService extends EdgeService {
         String geozoneUrl = mainUrl + getDeviceUrl;
         List<String> paramsList = new ArrayList<>();
 
-        paramsList.add("name=" + encode(notebookName));
+        paramsList.add("name=" + notebookName);
         if (parentId != -1) {
             paramsList.add("parentId=" + parentId);
         }
@@ -326,7 +326,7 @@ public abstract class AbstractSlvService extends EdgeService {
         String longitudeMax = properties.getProperty("streetlight.slv.lngMax");
         String geozoneUrl = mainUrl + createGeozoneUrl;
         List<String> paramsList = new ArrayList<>();
-        paramsList.add("name=" +  encode(geoZoneName));
+        paramsList.add("name=" +  geoZoneName);
         paramsList.add("parentId=" + parentId);
         paramsList.add("latMin="+latitudeMin);
         paramsList.add("latMax="+latitudeMax);
@@ -426,7 +426,7 @@ public abstract class AbstractSlvService extends EdgeService {
         paramsList.add("valueName",key.trim());
         if(value != null && !value.trim().isEmpty()){
             if(isEncode) {
-                value = encode(value);
+                value = encode1(value);
             }
             paramsList.add("value",value);
         }else{

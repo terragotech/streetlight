@@ -245,7 +245,7 @@ public class SlvService extends AbstractSlvService {
         addStreetLightData("pole.type", jpsWorkflowModel.getPole_type(), paramList,false);
         addStreetLightData("model", jpsWorkflowModel.getModel(), paramList,false);
         // addStreetLightData("MacAddress", jpsWorkflowModel.getMacAddress(), paramList);
-        addStreetLightData("location.utillocationid", encode(jpsWorkflowModel.getUtillocationid().trim()), paramList,false);
+        addStreetLightData("location.utillocationid", jpsWorkflowModel.getUtillocationid().trim(), paramList,false);
         addStreetLightData("fixing.type", jpsWorkflowModel.getFixing_type(), paramList,false);
         addStreetLightData("install.date", jpsWorkflowModel.getInstall_date(), paramList,false);
         addStreetLightData("network.type", jpsWorkflowModel.getNetwork_type(), paramList,false);
