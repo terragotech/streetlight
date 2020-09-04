@@ -238,16 +238,25 @@ public abstract class SLVInterfaceService {
     private void processNoteData(String notesData, SLVSyncTable slvSyncTable)throws SLVConnectionException {
         try {
             EdgeNote edgeNote = gson.fromJson(notesData, EdgeNote.class);
+            List<String> tags = edgeNote.getTags();
             populateSLVSyncTable(edgeNote, slvSyncTable);
-            List<FormData> formDataList = getFormDataList(edgeNote);
-            if(formDataList.size() < 1){
-                slvSyncTable.setErrorDetails("Form Template is not present.");
+            if(tags != null && tags.contains("droppedpin")){
+                List<FormData> formDataList = getFormDataList(edgeNote);
+                if(formDataList.size() < 1){
+                    slvSyncTable.setErrorDetails("Form Template is not present.");
+                    slvSyncTable.setStatus("Failure");
+                    logger.info("Form Template is not present.");
+                    return;
+                }
+
+                processFormData(formDataList,slvSyncTable,edgeNote);
+            }else{
+                slvSyncTable.setErrorDetails("droppedpin tag is not present.");
                 slvSyncTable.setStatus("Failure");
-                logger.info("Form Template is not present.");
+                logger.info("droppedpin tag is not present.");
                 return;
             }
 
-            processFormData(formDataList,slvSyncTable,edgeNote);
         }catch (SLVConnectionException e){
             throw new SLVConnectionException(e);
         }catch (Exception e) {

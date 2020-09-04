@@ -39,6 +39,16 @@ public class EdgeNote {
 
     private EdgeNotebook edgeNotebook = null;
 
+    private List<String> tags = new ArrayList<>();
+
+
+    public List<String> getTags() {
+        return tags;
+    }
+
+    public void setTags(List<String> tags) {
+        this.tags = tags;
+    }
 
     public String getPDOP() {
         return PDOP;
