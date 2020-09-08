@@ -10,6 +10,7 @@ import com.slvinterface.json.*;
 import com.slvinterface.utils.PropertiesReader;
 import com.slvinterface.utils.SLVInterfaceUtilsModel;
 import org.apache.log4j.Logger;
+import org.springframework.util.LinkedMultiValueMap;
 
 import java.net.URLEncoder;
 import java.text.SimpleDateFormat;
@@ -177,7 +178,7 @@ public class SurreySLVInterface extends  SLVInterfaceService {
     private void clearValue(SLVSyncTable slvSyncTable,Edge2SLVData previousEdge2SLVData){
         logger.info("Clearing values from SLV.");
         SLVTransactionLogs slvTransactionLogs = getSLVTransVal(slvSyncTable);
-        List<Object> paramsList = new ArrayList<>();
+        LinkedMultiValueMap<String,String> paramsList = new LinkedMultiValueMap<>();
         loadVal(paramsList,previousEdge2SLVData);
         addStreetLightData("installStatus","To be installed",paramsList);
         addStreetLightData("install.date","",paramsList);
@@ -188,7 +189,7 @@ public class SurreySLVInterface extends  SLVInterfaceService {
     //Customer asset ID,Customer prefix,Feature ID,Road name,Location description
     private void setDeviceVal(SLVSyncTable slvSyncTable,Edge2SLVData previousEdge2SLVData){
         SLVTransactionLogs slvTransactionLogs = getSLVTransVal(slvSyncTable);
-        List<Object> paramsList = new ArrayList<>();
+        LinkedMultiValueMap<String,String> paramsList = new LinkedMultiValueMap<>();
         loadVal(paramsList,previousEdge2SLVData);
         addStreetLightData("installStatus","Installed",paramsList);
         addStreetLightData("MacAddress",previousEdge2SLVData.getMacAddress(),paramsList);

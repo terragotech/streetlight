@@ -7,7 +7,10 @@ import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.log4j.Logger;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.*;
+import org.springframework.http.client.SimpleClientHttpRequestFactory;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.web.client.RestTemplate;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -16,24 +19,24 @@ import java.net.URI;
 
 public class SLVRestService {
 
-private static final Logger logger = Logger.getLogger(SLVRestService.class);
+    private static final Logger logger = Logger.getLogger(SLVRestService.class);
 
 
-    public HttpResponse callGetMethod(String url)throws IOException, ClientProtocolException {
+   /* public HttpResponse callGetMethod(String url)throws IOException, ClientProtocolException {
         try{
-            RestTemplate.INSTANCE.reConnect();
+            SLVRestTemplate.INSTANCE.reConnect();
         }catch (Exception e){
             e.printStackTrace();
         }
 
         HttpGet httpGet = new HttpGet();
-        httpGet.setHeader("x-csrf-token",RestTemplate.INSTANCE.token);
+        httpGet.setHeader("x-csrf-token", SLVRestTemplate.INSTANCE.token);
         httpGet.setHeader("x-requested-with","XMLHttpRequest");
         logger.info("------SLV Url------------");
         logger.info("Url:"+url);
         logger.info("------SLV Url Ends------------");
         httpGet.setURI(URI.create(url));
-        HttpResponse response = RestTemplate.INSTANCE.httpClient.execute(httpGet, RestTemplate.INSTANCE.httpContext);
+        HttpResponse response = SLVRestTemplate.INSTANCE.httpClient.execute(httpGet, SLVRestTemplate.INSTANCE.httpContext);
         logger.info("------SLV Response Status Code------------");
         logger.info("Status Code:"+response.getStatusLine().getStatusCode());
         logger.info("------SLV Response Status Code Ends------------");
@@ -44,11 +47,11 @@ private static final Logger logger = Logger.getLogger(SLVRestService.class);
 
     private HttpResponse callPostMethod()throws IOException, ClientProtocolException {
         HttpPost httpGet = new HttpPost();
-        httpGet.setHeader("x-csrf-token",RestTemplate.INSTANCE.token);
+        httpGet.setHeader("x-csrf-token", SLVRestTemplate.INSTANCE.token);
         httpGet.setHeader("x-requested-with","XMLHttpRequest");
         String baseUrl = PropertiesReader.getProperties().getProperty("streetlight.slv.base.url");
         httpGet.setURI(URI.create(baseUrl));
-        HttpResponse response = RestTemplate.INSTANCE.httpClient.execute(httpGet, RestTemplate.INSTANCE.httpContext);
+        HttpResponse response = SLVRestTemplate.INSTANCE.httpClient.execute(httpGet, SLVRestTemplate.INSTANCE.httpContext);
         return response;
 
     }
@@ -66,5 +69,43 @@ private static final Logger logger = Logger.getLogger(SLVRestService.class);
            logger.error("Error in getResponseBody",e);
        }
         return null;
+    }
+*/
+
+    public ResponseEntity<String> callSlvWithToken(boolean isGetRequest,String url,LinkedMultiValueMap<String, String> paramsList) throws Exception{
+        RestTemplate restTemplate = getRestTemplate();
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.add("x-requested-with","XMLHttpRequest");
+        headers.add("x-csrf-token", SLVRestTemplate.INSTANCE.getToken());
+        headers.add("Cookie",SLVRestTemplate.INSTANCE.getCookie());
+        HttpEntity<LinkedMultiValueMap<String, String>> request = null;
+        if(paramsList == null){
+            request = new HttpEntity<>(headers);
+        }else{
+            headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+            request = new HttpEntity(paramsList,headers);
+        }
+
+        HttpMethod httpMethod = HttpMethod.POST;
+        if(isGetRequest){
+            httpMethod = HttpMethod.GET;
+        }
+        ResponseEntity<String> response = restTemplate.exchange(url, httpMethod, request, String.class);
+        logger.info("------------ Response ------------------");
+        logger.info("Response Code:" + response.getStatusCodeValue());
+        logger.info(response.getBody());
+        logger.info("------------ Response End ------------------");
+        return response;
+    }
+
+
+
+    public  RestTemplate getRestTemplate(){
+        SimpleClientHttpRequestFactory simpleClientHttpRequestFactory = new SimpleClientHttpRequestFactory();
+        simpleClientHttpRequestFactory.setConnectTimeout(1000 * 60 * 5);
+        simpleClientHttpRequestFactory.setReadTimeout(1000 * 60 * 5);
+        RestTemplate restTemplate = new RestTemplate(simpleClientHttpRequestFactory);
+        return restTemplate;
     }
 }

@@ -9,6 +9,7 @@ import com.slvinterface.exception.ReplaceOLCFailedException;
 import com.slvinterface.exception.SLVConnectionException;
 import com.slvinterface.json.*;
 import org.apache.log4j.Logger;
+import org.springframework.util.LinkedMultiValueMap;
 
 import java.net.URLEncoder;
 import java.text.SimpleDateFormat;
@@ -132,7 +133,7 @@ public class UrbanControlSLVInterfaceService extends  SLVInterfaceService{
 
     private void setDeviceVal(SLVSyncTable slvSyncTable,Edge2SLVData previousEdge2SLVData){
         SLVTransactionLogs slvTransactionLogs = getSLVTransVal(slvSyncTable);
-        List<Object> paramsList = new ArrayList<>();
+        LinkedMultiValueMap<String,String> paramsList = new LinkedMultiValueMap<>();
         loadVal(paramsList,previousEdge2SLVData);
         addStreetLightData("installStatus","Installed",paramsList);
         addStreetLightData("MacAddress",previousEdge2SLVData.getMacAddress(),paramsList);
