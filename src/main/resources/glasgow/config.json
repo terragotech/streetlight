@@ -10,6 +10,16 @@
           "isRequired": false
         },
         {
+          "id": 14,
+          "type": "GEOZONE",
+          "isRequired": true
+        },
+        {
+          "id": 23,
+          "type": "DATE",
+          "isRequired": true
+        },
+        {
           "id": 23,
           "type": "FIXTURE",
           "isRequired": true
@@ -41,6 +51,16 @@
           "isRequired": true
         },
         {
+          "id": 14,
+          "type": "GEOZONE",
+          "isRequired": true
+        },
+        {
+          "id": 26,
+          "type": "DATE",
+          "isRequired": true
+        },
+        {
           "id": 26,
           "type": "IDONCONTROLLER",
           "isRequired": true
@@ -59,6 +79,11 @@
         {
           "id": 31,
           "type": "MAC",
+          "isRequired": true
+        },
+        {
+          "id": 14,
+          "type": "GEOZONE",
           "isRequired": true
         }
       ],

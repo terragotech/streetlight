@@ -585,6 +585,7 @@ public abstract class SLVInterfaceService {
 
     protected void addStreetLightData(String key, String value, List<Object> paramsList) {
         paramsList.add("valueName=" + key.trim());
+        value = value == null ? "" : value;
         try {
             value =  URLEncoder.encode(value,"UTF-8");
             paramsList.add("value=" + value.trim());
@@ -682,6 +683,7 @@ public abstract class SLVInterfaceService {
                               // String[] geoZoneArray = geoZone.split("/");
                                // geoZone = geoZoneArray[geoZoneArray.length - 1];
                                 geoZone = geoZone.replaceAll("Urban Control/","");
+                                geoZone = geoZone.replaceAll("Glasgow/City Centre/","");
                                 logger.info("Form GeoZone:"+geoZone);
                                 edge2SLVData.setCurrentGeoZone(geoZone);
                             }catch (NoValueException e){
