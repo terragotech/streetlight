@@ -683,7 +683,6 @@ public abstract class SLVInterfaceService {
                               // String[] geoZoneArray = geoZone.split("/");
                                // geoZone = geoZoneArray[geoZoneArray.length - 1];
                                 geoZone = geoZone.replaceAll("Urban Control/","");
-                                geoZone = geoZone.replaceAll("Glasgow/City Centre/","");
                                 logger.info("Form GeoZone:"+geoZone);
                                 edge2SLVData.setCurrentGeoZone(geoZone);
                             }catch (NoValueException e){

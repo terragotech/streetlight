@@ -20,6 +20,7 @@ import org.apache.log4j.Logger;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
+import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.List;
@@ -45,7 +46,7 @@ public class SLVInterfaceUtils {
         try {
             String mainUrl = properties.getProperty("streetlight.slv.base.url");
             String searchDeviceMethodName = properties.getProperty("com.slv.search.device");
-            int rootGeoZoneId = Integer.valueOf(properties.getProperty("com.slv.root.geozone.id"));
+            int rootGeoZoneId = Integer.valueOf(properties.getProperty("streetlight.root.geozone"));
             String url = mainUrl + searchDeviceMethodName;
             List<String> paramsList = new ArrayList<>();
 
@@ -147,7 +148,10 @@ public class SLVInterfaceUtils {
             String url = mainUrl + createGeozone;
             List<String> paramsList = new ArrayList<>();
             paramsList.add("ser=json");
-            paramsList.add("name="+slvInterfaceUtilsModel.getCurrentGeoZoneName());
+            String geozone = slvInterfaceUtilsModel.getCurrentGeoZoneName();
+            String decodedString = URLDecoder.decode(geozone,"UTF-8");
+            geozone = decodedString.replaceAll("Glasgow/City Centre/","");
+            paramsList.add("name="+URLEncoder.encode(geozone,"UTF-8"));
             paramsList.add("parentId="+previousGeoZoneId);
             paramsList.add("latMax="+slvInterfaceUtilsModel.getLat());
             paramsList.add("latMin="+slvInterfaceUtilsModel.getLat());
