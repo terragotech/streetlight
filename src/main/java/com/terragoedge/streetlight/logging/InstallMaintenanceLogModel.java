@@ -29,7 +29,8 @@ public class InstallMaintenanceLogModel extends LoggingModel {
     private boolean isAmerescoUser;
     private String proposedContext;
     private String atlasGroup;
-
+    private float onLuxLevel;
+    private float offLuxLevel;
 
     private boolean isBulkImport = false;
 
@@ -199,6 +200,22 @@ public class InstallMaintenanceLogModel extends LoggingModel {
         this.atlasGroup = atlasGroup;
     }
 
+    public float getOnLuxLevel() {
+        return onLuxLevel;
+    }
+
+    public void setOnLuxLevel(float onLuxLevel) {
+        this.onLuxLevel = onLuxLevel;
+    }
+
+    public float getOffLuxLevel() {
+        return offLuxLevel;
+    }
+
+    public void setOffLuxLevel(float offLuxLevel) {
+        this.offLuxLevel = offLuxLevel;
+    }
+
     @Override
     public String toString() {
         return "InstallMaintenanceLogModel{" +
@@ -215,7 +232,13 @@ public class InstallMaintenanceLogModel extends LoggingModel {
                 ", isAmerescoUser=" + isAmerescoUser +
                 ", proposedContext='" + proposedContext + '\'' +
                 ", atlasGroup='" + atlasGroup + '\'' +
+                ", onLuxLevel=" + onLuxLevel +
+                ", offLuxLevel=" + offLuxLevel +
                 ", isBulkImport=" + isBulkImport +
+                ", isMacRemoved=" + isMacRemoved +
+                ", isCNRNoMAC=" + isCNRNoMAC +
+                ", isReSync=" + isReSync +
+                ", unMatchedFormGuids=" + unMatchedFormGuids +
                 ", datesHolder=" + datesHolder +
                 '}';
     }

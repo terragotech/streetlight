@@ -136,6 +136,8 @@ public abstract class AbstractProcessor {
         String proposedContextKey = properties.getProperty("streetlight.location.proposedcontext");
         String cslInstallDateKey = properties.getProperty("streetlight.csl.installdate");
         String cslLuminaireDateKey = properties.getProperty("streetlight.csl.luminairedate");
+        String offLuxKey = properties.getProperty("com.slv.off.lux.level.getdevice.key");
+        String onLuxKey = properties.getProperty("com.slv.on.lux.level.getdevice.key");
         //String serialNumberKey = properties.getProperty("streetlight.luminaire.serialnumber");
         logger.info("contextKey :" + proposedContextKey);
         logger.info("cslInstallDate :" + cslInstallDateKey);
@@ -162,6 +164,8 @@ public abstract class AbstractProcessor {
         String fixtureCode = null;
         String proposedContextValue = null;
         String atlasGroupValue = null;
+        float onLuxValue = 0.0f;
+        float offLuxValue = 0.0f;
         for (int i = 0; i < arr.size(); i++) {
             JsonObject jsonObject1 = arr.get(i).getAsJsonObject();
             String keyValue = jsonObject1.get("key").getAsString();
@@ -190,6 +194,14 @@ public abstract class AbstractProcessor {
                 fixtureCode = jsonObject1.get("value").getAsString();
             }else if(keyValue != null && keyValue.equals("userProperty.network.atlasgroup")){
                 atlasGroupValue = jsonObject1.get("value").getAsString();
+            } else if(keyValue != null && keyValue.equals(onLuxKey)){
+                if (jsonObject1.has("value")){
+                    onLuxValue = jsonObject1.get("value").getAsFloat();
+                }
+            } else if(keyValue != null && keyValue.equals(offLuxKey)){
+                if (jsonObject1.has("value")){
+                    offLuxValue = jsonObject1.get("value").getAsFloat();
+                }
             }
             //userproperty.location.atlasphysicalpage
 
@@ -238,6 +250,8 @@ public abstract class AbstractProcessor {
             installMaintenanceLogModel.setAtlasGroup(atlasGroupValue);
         }
 
+        installMaintenanceLogModel.setOnLuxLevel(onLuxValue);
+        installMaintenanceLogModel.setOffLuxLevel(offLuxValue);
         if(nodeInstallDate == null){
             logger.info("Node Install Date is Empty");
             nodeInstallDate = getSLVInstallDate(installMaintenanceLogModel);
@@ -1252,6 +1266,7 @@ public abstract class AbstractProcessor {
                     paramsList = new LinkedMultiValueMap<>();
                     syncAccountNumber(paramsList,loggingModel,edgeNote,Utils.SUCCESSFUL,macAddress);
                     syncCustomerName(loggingModel);
+                    sendLuxValueToSLV(idOnController,loggingModel,slvTransactionLogs);
                 }
 
             }
@@ -1269,6 +1284,20 @@ public abstract class AbstractProcessor {
 
     }
 
+    private void sendLuxValueToSLV(String idOnController, InstallMaintenanceLogModel loggingModel, SLVTransactionLogs slvTransactionLogs) {
+        logger.info("present on lux level: "+loggingModel.getOnLuxLevel());
+        logger.info("present off lux level: "+loggingModel.getOffLuxLevel());
+        if (loggingModel.getOnLuxLevel() == 0.0 && loggingModel.getOffLuxLevel() == 0.0){
+            logger.info("Going to call setdevice values to set lux level");
+            LinkedMultiValueMap<String, String> paramsList = new LinkedMultiValueMap<>();
+            String controllerStrId = properties.getProperty("streetlight.slv.controllerstrid");
+            paramsList.add("idOnController" , idOnController);
+            paramsList.add("controllerStrId" , controllerStrId);
+            addStreetLightData(properties.getProperty("com.slv.on.lux.level.setdevice.key"),properties.getProperty("com.slv.on.lux.level.value"),paramsList);
+            addStreetLightData(properties.getProperty("com.slv.off.lux.level.setdevice.key"),properties.getProperty("com.slv.off.lux.level.value"),paramsList);
+            setDeviceValues(paramsList, slvTransactionLogs);
+        }
+    }
 
     protected String getUtilLocationId(String errorDetails) {
         if (errorDetails != null && errorDetails.contains("Service point is already associated with LocationUtilID")) {
