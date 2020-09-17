@@ -1224,7 +1224,9 @@ public abstract class AbstractProcessor {
         try {
             // String newNetworkId = slvSyncDataEntity.getMacAddress();
             String newNetworkId = macAddress;
-
+            if (newNetworkId != null && !newNetworkId.trim().isEmpty()) {
+                sendLuxValueToSLV(idOnController,loggingModel,slvTransactionLogs);
+            }
             // Get Url detail from properties
             String mainUrl = properties.getProperty("streetlight.url.main");
             String dataUrl = properties.getProperty("streetlight.url.replaceolc");
@@ -1266,7 +1268,6 @@ public abstract class AbstractProcessor {
                     paramsList = new LinkedMultiValueMap<>();
                     syncAccountNumber(paramsList,loggingModel,edgeNote,Utils.SUCCESSFUL,macAddress);
                     syncCustomerName(loggingModel);
-                    sendLuxValueToSLV(idOnController,loggingModel,slvTransactionLogs);
                 }
 
             }
@@ -1296,6 +1297,8 @@ public abstract class AbstractProcessor {
             addStreetLightData(properties.getProperty("com.slv.on.lux.level.setdevice.key"),properties.getProperty("com.slv.on.lux.level.value"),paramsList);
             addStreetLightData(properties.getProperty("com.slv.off.lux.level.setdevice.key"),properties.getProperty("com.slv.off.lux.level.value"),paramsList);
             setDeviceValues(paramsList, slvTransactionLogs);
+        }else {
+            logger.info("Lux level already there in SLV. So Skipping lux level update for this idoncontroller: "+idOnController);
         }
     }
 

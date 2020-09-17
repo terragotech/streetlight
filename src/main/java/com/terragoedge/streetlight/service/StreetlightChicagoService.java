@@ -539,6 +539,10 @@ public class StreetlightChicagoService extends AbstractProcessor {
             addStreetLightData("location.atlaspage", edgeNotebook.getNotebookName(), paramsList);
         }
 
+        // lux level update while creating device
+        addStreetLightData(properties.getProperty("com.slv.on.lux.level.setdevice.key"),properties.getProperty("com.slv.on.lux.level.value"),paramsList);
+        addStreetLightData(properties.getProperty("com.slv.off.lux.level.setdevice.key"),properties.getProperty("com.slv.off.lux.level.value"),paramsList);
+
         addStreetLightData("network.lowvoltagethreshold","108",paramsList);
         addStreetLightData("network.highvoltagethreshold","264",paramsList);
         addStreetLightData("location.locationtype","LOCATION_TYPE_POLE", paramsList);
