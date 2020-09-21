@@ -195,11 +195,11 @@ public abstract class AbstractProcessor {
             }else if(keyValue != null && keyValue.equals("userProperty.network.atlasgroup")){
                 atlasGroupValue = jsonObject1.get("value").getAsString();
             } else if(keyValue != null && keyValue.equals(onLuxKey)){
-                if (jsonObject1.has("value")){
+                if (jsonObject1.has("value") && !jsonObject1.get("value").isJsonNull()){
                     onLuxValue = jsonObject1.get("value").getAsFloat();
                 }
             } else if(keyValue != null && keyValue.equals(offLuxKey)){
-                if (jsonObject1.has("value")){
+                if (jsonObject1.has("value") && !jsonObject1.get("value").isJsonNull()){
                     offLuxValue = jsonObject1.get("value").getAsFloat();
                 }
             }
