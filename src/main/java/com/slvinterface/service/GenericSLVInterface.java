@@ -181,6 +181,15 @@ public class GenericSLVInterface extends  SLVInterfaceService {
         }
     }
 
+    private String getWattageValue(String wattage){
+        String wattageValue = wattage;
+        if (wattage.toLowerCase().endsWith(" w")){
+            wattageValue = wattage.replace(" w","");
+        }else if(wattage.toLowerCase().endsWith("w")){
+            wattageValue = wattage.replace("w","");
+        }
+        return wattageValue;
+    }
 
     private void setDeviceVal(SLVSyncTable slvSyncTable,Edge2SLVData previousEdge2SLVData){
         SLVTransactionLogs slvTransactionLogs = getSLVTransVal(slvSyncTable);
@@ -190,6 +199,11 @@ public class GenericSLVInterface extends  SLVInterfaceService {
         addStreetLightData("MacAddress",previousEdge2SLVData.getMacAddress(),paramsList);
         addStreetLightData("install.date",previousEdge2SLVData.getInstallDate(),paramsList);
         addStreetLightData("luminaire.type",previousEdge2SLVData.getFixtureType(),paramsList);
+
+        String timezoneIdValue = properties.getProperty("streelight.timezone.id.value","");
+        if(timezoneIdValue !=null && !timezoneIdValue.trim().equals("")){
+            addStreetLightData("TimeZoneId",timezoneIdValue,paramsList);
+        }
         if(previousEdge2SLVData.getLampTypeOther() != null && (!previousEdge2SLVData.getLampTypeOther().equals("")))
         {
             addStreetLightData("brandId",previousEdge2SLVData.getLampTypeOther(),paramsList);
@@ -200,13 +214,17 @@ public class GenericSLVInterface extends  SLVInterfaceService {
         }
         if(previousEdge2SLVData.getWattageOther() != null && (!previousEdge2SLVData.getWattageOther().equals("")))
         {
-            addStreetLightData("power",previousEdge2SLVData.getWattageOther(),paramsList);
+            String wattage = previousEdge2SLVData.getWattageOther();
+            addStreetLightData("power",getWattageValue(wattage),paramsList);
         }
         else
         {
-            addStreetLightData("power",previousEdge2SLVData.getWattage(),paramsList);
+            String wattage = previousEdge2SLVData.getWattage();
+            addStreetLightData("power",getWattageValue(wattage),paramsList);
         }
-        addStreetLightData("network.type",previousEdge2SLVData.getSupplyType(),paramsList);
+        if(previousEdge2SLVData.getSupplyType() != null && (!previousEdge2SLVData.getSupplyType().equals(""))) {
+            addStreetLightData("network.type", previousEdge2SLVData.getSupplyType(), paramsList);
+        }
 
         if(previousEdge2SLVData.getLuminairePartNumber() != null){
             addStreetLightData("luminaire.partnumber",previousEdge2SLVData.getLuminairePartNumber(),paramsList);
