@@ -21,7 +21,7 @@ public class DataTools {
         }
     }
     public static String URLEncoder(String value)throws Exception{
-        return   URLEncoder.encode(value, "UTF-8");
+        return   value;
         //return value;
     }
     public static int convertFormIDToInt(String inputString){

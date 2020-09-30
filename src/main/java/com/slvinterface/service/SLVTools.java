@@ -15,10 +15,7 @@ import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.HttpResponse;
 import org.apache.log4j.Logger;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.*;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
@@ -77,9 +74,9 @@ public class SLVTools {
             String params = StringUtils.join(paramsList, "&");
             url = url + "?" + params;
             logger.info("Load Device url :" + url);
-            HttpResponse response = slvRestService.callGetMethod(url);
-            if (response.getStatusLine().getStatusCode() == 200) {
-                String responseString = slvRestService.getResponseBody(response);
+            ResponseEntity<String> response = slvRestService.callGetMethod(url);
+            if (response.getStatusCode() == HttpStatus.OK) {
+                String responseString = response.getBody();
                 int id = processDeviceJson(responseString);
                 logger.info("LoadDevice Id :" + id);
 
@@ -96,8 +93,8 @@ public class SLVTools {
         return false;
     }
 
-    public HttpResponse createDevice(Edge2SLVData previousEdge2SLVData,
-                                     String geoZoneId,SLVTransactionLogs slvTransactionLogs) throws Exception {
+    public ResponseEntity<String> createDevice(Edge2SLVData previousEdge2SLVData,
+                                               String geoZoneId, SLVTransactionLogs slvTransactionLogs) throws Exception {
         Properties properties = PropertiesReader.getProperties();
 
         Feature feature = (Feature) GeoJSONFactory.create(previousEdge2SLVData.getGeometry());
@@ -110,12 +107,13 @@ public class SLVTools {
         String mainUrl = properties.getProperty("streetlight.slv.base.url");
         String serveletApiUrl = properties.getProperty("streetlight.slv.url.device.create");
 
-        String methodName = properties.getProperty("streetlight.slv.device.create.methodName");
+//        String methodName = properties.getProperty("streetlight.slv.device.create.methodName");
         String categoryStrId = properties.getProperty("streetlight.categorystr.id");
         String controllerStrId = properties.getProperty("streetlight.controller.str.id");
         String nodeTypeStrId = properties.getProperty("streetlight.slv.equipment.type");
 
-        String url = mainUrl + serveletApiUrl + "/" + methodName;
+//        String url = mainUrl + serveletApiUrl + "/" + methodName;
+        String url = mainUrl + serveletApiUrl;
 
 
 
@@ -132,117 +130,27 @@ public class SLVTools {
         streetLightDataParams.put("nodeTypeStrId", nodeTypeStrId);
         // streetLightDataParams.put("modelFunctionId", nodeTypeStrId);
         // modelFunctionId*/
-        List<Object> paramsList = new ArrayList<>();
+        LinkedMultiValueMap<String,String> paramsList = new LinkedMultiValueMap<>();
 
-        paramsList.add("ser=json");
-        paramsList.add("userName="+previousEdge2SLVData.getIdOnController());
-        paramsList.add("categoryStrId="+DataTools.URLEncoder(categoryStrId));
-        paramsList.add("geozoneId="+geoZoneId);
-        paramsList.add("controllerStrId="+DataTools.URLEncoder(controllerStrId));
-        paramsList.add("idOnController="+previousEdge2SLVData.getIdOnController());
-        paramsList.add("lat="+String.valueOf(geom.getCoordinate().y));
-        paramsList.add("lng="+String.valueOf(geom.getCoordinate().x));
+        paramsList.add("ser","json");
+        paramsList.add("userName",previousEdge2SLVData.getIdOnController());
+        paramsList.add("categoryStrId",DataTools.URLEncoder(categoryStrId));
+        paramsList.add("geozoneId",geoZoneId);
+        paramsList.add("controllerStrId",DataTools.URLEncoder(controllerStrId));
+        paramsList.add("idOnController",previousEdge2SLVData.getIdOnController());
+        paramsList.add("lat",String.valueOf(geom.getCoordinate().y));
+        paramsList.add("lng",String.valueOf(geom.getCoordinate().x));
         //paramsList.add("nodeTypeStrId="+DataTools.URLEncoder(nodeTypeStrId));
 
-        String params = StringUtils.join(paramsList, "&");
-        url = url + "?" + params;
         logger.info(url);
         slvTransactionLogs.setRequestDetails(url);
-        return slvRestService.callPostMethod(url);
-    }
-    public void setDeviceValues(List<Object> paramsList, SLVSyncTable slvSyncDetails, EdgeNote edgeNote) throws DeviceUpdationFailedException {
-        Properties properties = PropertiesReader.getProperties();
-        JsonParser jsonParser = new JsonParser();
-        String mainUrl = properties.getProperty("streetlight.slv.base.url");
-        String updateDeviceValues = properties.getProperty("streetlight.slv.url.updatedevice");
-        String url = mainUrl + updateDeviceValues;
-
-        paramsList.add("ser=json");
-        String params = StringUtils.join(paramsList, "&");
-        url = url + "&" + params;
-        System.out.println("SetDevice Called");
-        System.out.println("URL : " + url);
-        logger.info("Request URL " + url);
-
-        SLVTransactionLogs slvTransactionLogs = new SLVTransactionLogs();
-        slvTransactionLogs.setParentNoteGuid(edgeNote.getBaseParentNoteId());
-        slvTransactionLogs.setNoteGuid(edgeNote.getNoteGuid());
-        slvTransactionLogs.setTitle(edgeNote.getTitle());
-        slvTransactionLogs.setCreatedDateTime(edgeNote.getCreatedDateTime());
-        slvTransactionLogs.setTypeOfCall("SET_DEVICE");
-        slvTransactionLogs.setEventTime(System.currentTimeMillis());
-        slvTransactionLogs.setRequestDetails(url);
-
-        HttpResponse httpResponse = null;
-        try {
-            httpResponse = slvRestService.callPostMethod(url);
-        }
-        catch (Exception e)
-        {
-            throw new DeviceUpdationFailedException(params);
-        }
-        String responseString = slvRestService.getResponseBody(httpResponse);
-        slvTransactionLogs.setResponseBody(responseString);
-        queryExecutor.saveSLVTransactionLogs(slvTransactionLogs);
-        JsonObject setDeviceValuesResponse = (JsonObject) jsonParser.parse(responseString);
-        int errorCode = setDeviceValuesResponse.get("errorCode").getAsInt();
-        logger.info("setDevice value :"+errorCode);
-        logger.info(setDeviceValuesResponse);
-        if (errorCode != 0) {
-            slvSyncDetails.setErrorDetails(gson.toJson(setDeviceValuesResponse));
-            slvSyncDetails.setStatus("Failure");
-            throw new DeviceUpdationFailedException(gson.toJson(setDeviceValuesResponse));
-        }
-    }
-    public void setDeviceMacValues(List<Object> paramsList, SLVSyncTable slvSyncDetails,EdgeNote edgeNote) throws DeviceUpdationFailedException {
-        Properties properties = PropertiesReader.getProperties();
-        JsonParser jsonParser = new JsonParser();
-        String mainUrl = properties.getProperty("streetlight.slv.base.url");
-        String updateDeviceValues = properties.getProperty("streetlight.slv.url.updatedevice");
-        String url = mainUrl + updateDeviceValues;
-
-        paramsList.add("ser=json");
-        String params = StringUtils.join(paramsList, "&");
-        url = url + "&" + params;
-        System.out.println("SetDevice Called");
-        System.out.println("URL : " + url);
-        logger.info("Request URL " + url);
-
-        SLVTransactionLogs slvTransactionLogs = new SLVTransactionLogs();
-        slvTransactionLogs.setParentNoteGuid(edgeNote.getBaseParentNoteId());
-        slvTransactionLogs.setNoteGuid(edgeNote.getNoteGuid());
-        slvTransactionLogs.setTitle(edgeNote.getTitle());
-        slvTransactionLogs.setCreatedDateTime(edgeNote.getCreatedDateTime());
-        slvTransactionLogs.setTypeOfCall("SET_DEVICE");
-        slvTransactionLogs.setEventTime(System.currentTimeMillis());
-        slvTransactionLogs.setRequestDetails(url);
-
-        HttpResponse httpResponse = null;
-        try {
-            httpResponse = slvRestService.callPostMethod(url);
-        }
-        catch (Exception e)
-        {
-            throw new DeviceUpdationFailedException(params);
-        }
-        String responseString = slvRestService.getResponseBody(httpResponse);
-        slvTransactionLogs.setResponseBody(responseString);
-        //connectionDAO.saveSLVTransactionLog(slvTransactionLogs);
-        JsonObject setDeviceValuesResponse = (JsonObject) jsonParser.parse(responseString);
-        int errorCode = setDeviceValuesResponse.get("errorCode").getAsInt();
-        logger.info("setDevice value :"+errorCode);
-        logger.info(setDeviceValuesResponse);
-        if (errorCode != 0) {
-            slvSyncDetails.setErrorDetails(gson.toJson(setDeviceValuesResponse));
-            slvSyncDetails.setStatus("Failure");
-            throw new DeviceUpdationFailedException(gson.toJson(setDeviceValuesResponse));
-        }
+        return slvRestService.getPostRequest(url,null,paramsList);
     }
 
     public void createNewDevice(Edge2SLVData previousEdge2SLVData, SLVSyncTable slvSyncDetails, String geoZoneId) throws DeviceCreationFailedException {
         if (geoZoneId != null) {
             System.out.println("Device created method called");
-            HttpResponse response = null;
+            ResponseEntity<String> response = null;
             SLVTransactionLogs slvTransactionLogs = new SLVTransactionLogs();
 
             try {
@@ -252,12 +160,12 @@ public class SLVTools {
             {
                 throw new DeviceCreationFailedException(e.getMessage());
             }
-            if (response.getStatusLine().getStatusCode() == 200)
+            if (response.getStatusCode() == HttpStatus.OK)
             {
-                String responseBody = slvRestService.getResponseBody(response);
+                String responseBody = response.getBody();
                 slvTransactionLogs.setResponseBody(responseBody);
                 logger.info(responseBody);
-                if (response.getStatusLine().getStatusCode()==200
+                if (response.getStatusCode()==HttpStatus.OK
                         && !responseBody.contains("<status>ERROR</status>")) {
                     logger.info("Device Created Successfully, NoteId:" + slvSyncDetails.getNoteGuid() + "-"
                             + previousEdge2SLVData.getTitle());
@@ -280,148 +188,7 @@ public class SLVTools {
             throw new DeviceCreationFailedException("GeoZone should not be empty.");
         }
     }
-    public int checkAndCreateGeoZone(String geozone,EdgeNote edgeNote) throws GeoZoneCreationFailedException,SearchGeoZoneException {
-        int geozoneId = -1;
-        try {
-            JsonParser jsonParser = new JsonParser();
-            Properties properties = PropertiesReader.getProperties();
-            String rootGeoZone = properties.getProperty("streetlight.root.geozone");
-            String mainUrl = properties.getProperty("streetlight.slv.base.url");
-            String searchGeoZone = properties.getProperty("com.slv.search.devices.url");
-            String url = mainUrl + searchGeoZone;
-            List<String> paramsList = new ArrayList<>();
-            paramsList.add("ser=json");
 
-            try{
-                geozone = URLEncoder.encode(geozone.trim(), "UTF-8");
-            }catch (Exception e){
-                logger.error("Error in addStreetLightData",e);
-            }
-
-            paramsList.add("name="+geozone);
-            paramsList.add("partialMatch=false");
-            String params = StringUtils.join(paramsList, "&");
-            url = url + "?" + params;
-            logger.info("checkAndCreateGeoZone method called");
-            logger.info("checkAndCreateGeoZone url:" + url);
-            //setSLVTransactionLogs(slvTransactionLogs, url, CallType.SEARCH_GEOZONE);
-            //ResponseEntity<String> response = restService.getPostRequest(url, null);
-
-            SLVTransactionLogs slvTransactionLogs = new SLVTransactionLogs();
-            slvTransactionLogs.setParentNoteGuid(edgeNote.getBaseParentNoteId());
-            slvTransactionLogs.setNoteGuid(edgeNote.getNoteGuid());
-            slvTransactionLogs.setTitle(edgeNote.getTitle());
-            slvTransactionLogs.setRequestDetails(url);
-            slvTransactionLogs.setEventTime(System.currentTimeMillis());
-            slvTransactionLogs.setCreatedDateTime(edgeNote.getCreatedDateTime());
-            slvTransactionLogs.setTypeOfCall("SEARCH_GEOZONE");
-            HttpResponse response = slvRestService.callPostMethod(url);
-            if (response.getStatusLine().getStatusCode() == 404)
-            {
-                geozoneId = -1;
-            }else {
-                String responseString = slvRestService.getResponseBody(response);
-                slvTransactionLogs.setResponseBody(responseString);
-                geozone = URLDecoder.decode(geozone,"UTF-8");
-                JsonArray jsonArray = jsonParser.parse(responseString).getAsJsonArray();
-                if (jsonArray != null && jsonArray.size() > 0) {
-                    for (JsonElement jsonElement : jsonArray) {
-                        JsonObject jsonObject = (JsonObject) jsonElement;
-                        geozoneId = jsonObject.get("id").getAsInt();
-                    }
-                }
-                else
-                {
-                    geozoneId = -1;
-                }
-
-                //connectionDAO.saveSLVTransactionLog(slvTransactionLogs);
-                /*geozone = URLDecoder.decode(geozone,"UTF-8");
-                if (jsonArray != null && jsonArray.size() > 0) {
-                    for (JsonElement jsonElement : jsonArray) {
-                        JsonObject jsonObject = (JsonObject) jsonElement;
-                        String geozoneNamePath = jsonObject.get("namesPath").getAsString();
-                        if(geozoneNamePath.equals(rootGeoZone + geozone)){// inside unknown
-                            geozoneId = jsonObject.get("id").getAsInt();
-                        }
-                    }
-                }*/
-            }
-
-        } catch (Exception e) {
-            //setResponseDetails(slvTransactionLogs, "Error in checkAndCreateGeoZone:" + e.getMessage());
-
-            throw new SearchGeoZoneException(e.getMessage());
-        } finally {
-            //streetlightDao.insertTransactionLogs(slvTransactionLogs);
-        }
-        if(geozoneId == -1) {// no geozone present in unknown geozone so going to create geozone inside unknown
-            geozoneId = createGeoZone(geozone,edgeNote);
-        }
-        return geozoneId;
-    }
-    public int createGeoZone(String geozone,EdgeNote edgeNote) throws GeoZoneCreationFailedException {
-        int geozoneId = -1;
-        try {
-            JsonParser jsonParser = new JsonParser();
-            Properties properties = PropertiesReader.getProperties();
-            int rootGeozoneId = Integer.valueOf(properties.getProperty("streetlight.root.geozoneid"));
-            String mainUrl = properties.getProperty("streetlight.slv.base.url");
-            String createGeozone = properties.getProperty("com.slv.create.geozone.method");
-            Feature feature = (Feature) GeoJSONFactory.create(edgeNote.getGeometry());
-
-            // parse Geometry from Feature
-            GeoJSONReader reader = new GeoJSONReader();
-            Geometry geom = reader.read(feature.getGeometry());
-
-            double lat = geom.getCoordinate().y;
-            double lng = geom.getCoordinate().x;
-
-            double maxLat = lat;
-            double maxLng = lng;
-            double minLat = lat;
-            double minLng = lng;
-            String url = mainUrl + createGeozone;
-            List<String> paramsList = new ArrayList<>();
-            paramsList.add("ser=json");
-
-            try{
-                geozone = URLEncoder.encode(geozone.trim(), "UTF-8");
-            }catch (Exception e){
-                logger.error("Error in addStreetLightData",e);
-            }
-
-            paramsList.add("name="+geozone);
-            paramsList.add("parentId="+rootGeozoneId);
-            paramsList.add("latMax="+maxLat);
-            paramsList.add("latMin="+minLat);
-            paramsList.add("lngMax="+maxLng);
-            paramsList.add("lngMin="+minLng);
-            String params = StringUtils.join(paramsList, "&");
-            url = url + "?" + params;
-            logger.info("checkAndCreateGeoZone method called");
-            logger.info("checkAndCreateGeoZone url:" + url);
-            //setSLVTransactionLogs(slvTransactionLogs, url, CallType.CREATE_GEOZONE);
-            //ResponseEntity<String> response = restService.getPostRequest(url, null);
-            HttpResponse response = slvRestService.callPostMethod(url);
-            if (response.getStatusLine().getStatusCode() == 404)
-            {
-                geozoneId = -1;
-            }else {
-                String responseString = slvRestService.getResponseBody(response);
-                //setResponseDetails(slvTransactionLogs, responseString);
-                JsonObject jsonObject = jsonParser.parse(responseString).getAsJsonObject();
-                geozoneId = jsonObject.get("id").getAsInt();
-            }
-        } catch (Exception e) {
-            //setResponseDetails(slvTransactionLogs, "Error in createGeoZone:" + e.getMessage());
-            throw new GeoZoneCreationFailedException(e.getMessage());
-        } finally {
-            //streetlightDao.insertTransactionLogs(slvTransactionLogs);
-        }
-
-        return geozoneId;
-    }
     public void syncMacAddress2Edge(String idOnController,String macAddress,String blockName){
         Properties properties = PropertiesReader.getProperties();
 

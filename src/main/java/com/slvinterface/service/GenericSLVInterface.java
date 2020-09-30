@@ -9,6 +9,7 @@ import com.slvinterface.exception.SLVConnectionException;
 import com.slvinterface.json.*;
 import com.slvinterface.utils.PropertiesReader;
 import org.apache.log4j.Logger;
+import org.springframework.util.LinkedMultiValueMap;
 
 import java.net.URLEncoder;
 import java.util.*;
@@ -58,16 +59,16 @@ public class GenericSLVInterface extends  SLVInterfaceService {
 
                 slvSyncTable.setIdOnController(previousEdge2SLVData.getIdOnController());
 
-                previousEdge2SLVData.setIdOnController(URLEncoder.encode(previousEdge2SLVData.getIdOnController(),"UTF-8"));
-                previousEdge2SLVData.setTitle(URLEncoder.encode(previousEdge2SLVData.getTitle(),"UTF-8"));
+                previousEdge2SLVData.setIdOnController(previousEdge2SLVData.getIdOnController());
+                previousEdge2SLVData.setTitle(previousEdge2SLVData.getTitle());
 
                 retryCount = 0;
                 checkTokenValidity(previousEdge2SLVData);
 
-                // Check MAC Address already Present.
+                /*// Check MAC Address already Present.
                 if(macAddress != null && !macAddress.trim().isEmpty()){
                     checkMacAddressExists(macAddress,previousEdge2SLVData.getIdOnController());
-                }
+                }*/
 
                 //Install Date
                 String installDate  = dateFormat(slvSyncTable.getNoteCreatedDateTime());
@@ -78,11 +79,6 @@ public class GenericSLVInterface extends  SLVInterfaceService {
                 slvSync(slvSyncTable,previousEdge2SLVData);
             }catch (SLVConnectionException e){
                 throw new SLVConnectionException(e);
-            }catch (QRCodeAlreadyUsedException e){
-                slvSyncTable.setStatus("Failure");
-                slvSyncTable.setErrorDetails(e.getMessage());
-                logger.info("MAC Address is Empty. So Note is not synced.");
-                return;
             }catch (ReplaceOLCFailedException e){
                 slvSyncTable.setStatus("Failure");
                 slvSyncTable.setErrorDetails("Error while during replaceOLC Call.");
@@ -164,6 +160,7 @@ public class GenericSLVInterface extends  SLVInterfaceService {
                     {
                         logger.error("New Device Install mac address replace OLC failed",e);
                     }
+                    sendMacAddressToSLV(slvSyncTable,previousEdge2SLVData);
                     slvSyncTable.setStatus("Success");
                 }catch (ErrorCheckDeviceExists e){
                     logger.error("Error",e);
@@ -193,12 +190,14 @@ public class GenericSLVInterface extends  SLVInterfaceService {
 
     private void setDeviceVal(SLVSyncTable slvSyncTable,Edge2SLVData previousEdge2SLVData){
         SLVTransactionLogs slvTransactionLogs = getSLVTransVal(slvSyncTable);
-        List<Object> paramsList = new ArrayList<>();
+        LinkedMultiValueMap<String,String> paramsList = new LinkedMultiValueMap<>();
         loadVal(paramsList,previousEdge2SLVData);
         addStreetLightData("installStatus","Installed",paramsList);
         addStreetLightData("MacAddress",previousEdge2SLVData.getMacAddress(),paramsList);
         addStreetLightData("install.date",previousEdge2SLVData.getInstallDate(),paramsList);
-        addStreetLightData("luminaire.type",previousEdge2SLVData.getFixtureType(),paramsList);
+        if (previousEdge2SLVData.getFixtureType() != null && !previousEdge2SLVData.getFixtureType().trim().equals("")) {
+            addStreetLightData("luminaire.type", previousEdge2SLVData.getFixtureType(), paramsList);
+        }
 
         String timezoneIdValue = properties.getProperty("streelight.timezone.id.value","");
         if(timezoneIdValue !=null && !timezoneIdValue.trim().equals("")){
@@ -210,7 +209,9 @@ public class GenericSLVInterface extends  SLVInterfaceService {
         }
         else
         {
-            addStreetLightData("brandId",previousEdge2SLVData.getLampType(),paramsList);
+            if(previousEdge2SLVData.getLampType() != null && !previousEdge2SLVData.getLampType().trim().equals("")) {
+                addStreetLightData("brandId", previousEdge2SLVData.getLampType(), paramsList);
+            }
         }
         if(previousEdge2SLVData.getWattageOther() != null && (!previousEdge2SLVData.getWattageOther().equals("")))
         {
@@ -220,8 +221,11 @@ public class GenericSLVInterface extends  SLVInterfaceService {
         else
         {
             String wattage = previousEdge2SLVData.getWattage();
-            addStreetLightData("power",getWattageValue(wattage),paramsList);
+            if (wattage != null && !wattage.trim().equals("")) {
+                addStreetLightData("power", getWattageValue(wattage), paramsList);
+            }
         }
+
         if(previousEdge2SLVData.getSupplyType() != null && (!previousEdge2SLVData.getSupplyType().equals(""))) {
             addStreetLightData("network.type", previousEdge2SLVData.getSupplyType(), paramsList);
         }
@@ -262,9 +266,30 @@ public class GenericSLVInterface extends  SLVInterfaceService {
         setDeviceValues(paramsList,slvTransactionLogs);
     }
 
+    private void sendMacAddressToSLV(SLVSyncTable slvSyncTable,Edge2SLVData previousEdge2SLVData){
+        SLVTransactionLogs slvTransactionLogs = getSLVTransVal(slvSyncTable);
+        LinkedMultiValueMap<String,String> paramsList = new LinkedMultiValueMap<>();
+        loadVal(paramsList,previousEdge2SLVData);
+        addStreetLightData("MacAddress",previousEdge2SLVData.getMacAddress(),paramsList);
+
+        String modelFunctionId = PropertiesReader.getProperties().getProperty("streetlight.model.functionid");
+        //String modelFunctionId = "talq.streetlight.v1:lightNodeFunction6";
+        if(modelFunctionId != null && !modelFunctionId.trim().isEmpty()){
+            try {
+                // modelFunctionId =  URLEncoder.encode(modelFunctionId,"UTF-8");
+                addStreetLightData("modelFunctionId",modelFunctionId,paramsList);
+
+            }catch (Exception e){
+                e.printStackTrace();
+            }
+        }
+
+        setDeviceValues(paramsList,slvTransactionLogs);
+    }
 
 
-    public void buildFixtureStreetLightData(String data, List<Object> paramsList)
+
+    public void buildFixtureStreetLightData(String data, LinkedMultiValueMap<String,String> paramsList)
             {
         String[] fixtureInfo = data.split(",");
         logger.info("Fixture QR Scan Val length" + fixtureInfo.length);
