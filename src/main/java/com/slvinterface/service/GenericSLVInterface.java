@@ -160,7 +160,7 @@ public class GenericSLVInterface extends  SLVInterfaceService {
                     {
                         logger.error("New Device Install mac address replace OLC failed",e);
                     }
-                    sendMacAddressToSLV(slvSyncTable,previousEdge2SLVData);
+//                    sendMacAddressToSLV(slvSyncTable,previousEdge2SLVData);
                     slvSyncTable.setStatus("Success");
                 }catch (ErrorCheckDeviceExists e){
                     logger.error("Error",e);
@@ -197,6 +197,47 @@ public class GenericSLVInterface extends  SLVInterfaceService {
         addStreetLightData("install.date",previousEdge2SLVData.getInstallDate(),paramsList);
         if (previousEdge2SLVData.getFixtureType() != null && !previousEdge2SLVData.getFixtureType().trim().equals("")) {
             addStreetLightData("luminaire.type", previousEdge2SLVData.getFixtureType(), paramsList);
+        }
+
+        String luminaireModel = previousEdge2SLVData.getLuminaireModel();
+        if (luminaireModel != null){
+
+            if (luminaireModel.equals("RoadLED Midi 150W 4K")){
+                addStreetLightData("luminaire.model", luminaireModel, paramsList);
+                addStreetLightData("luminaire.brand", "Sylvania Schreder", paramsList);
+                addStreetLightData("device.luminaire.partnumber", "PM99Z05L150", paramsList);
+                addStreetLightData("power", "150", paramsList);
+                addStreetLightData("luminaire.type", "V1", paramsList);
+                addStreetLightData("device.luminaire.colortemp", "4000", paramsList);
+                addStreetLightData("device.luminaire.lumenoutput", "18145", paramsList);
+                addStreetLightData("luminaire.DistributionType", "180125PH", paramsList);
+                addStreetLightData("ballast.dimmingtype", "0-10V", paramsList);
+
+            }else if(luminaireModel.equals("RoadLED Midi 80W 4K")){
+
+                addStreetLightData("luminaire.model", luminaireModel, paramsList);
+                addStreetLightData("luminaire.brand", "Sylvania Schreder", paramsList);
+                addStreetLightData("device.luminaire.partnumber", "PM99Z115L80", paramsList);
+                addStreetLightData("power", "80", paramsList);
+                addStreetLightData("luminaire.type", "V3", paramsList);
+                addStreetLightData("device.luminaire.colortemp", "4000", paramsList);
+                addStreetLightData("device.luminaire.lumenoutput", "9064", paramsList);
+                addStreetLightData("luminaire.DistributionType", "180226PH", paramsList);
+                addStreetLightData("ballast.dimmingtype", "0-10V", paramsList);
+
+            }else if(luminaireModel.equals("StreetLED3 17W 3K")){
+
+                addStreetLightData("luminaire.model", luminaireModel, paramsList);
+                addStreetLightData("luminaire.brand", "Sylvania Schreder", paramsList);
+                addStreetLightData("device.luminaire.partnumber", "PM99Z115L17", paramsList);
+                addStreetLightData("power", "17", paramsList);
+                addStreetLightData("luminaire.type", "P4P5", paramsList);
+                addStreetLightData("device.luminaire.colortemp", "3000", paramsList);
+                addStreetLightData("device.luminaire.lumenoutput", "1870", paramsList);
+                addStreetLightData("luminaire.DistributionType", "PM99Z115L17 ", paramsList);
+                addStreetLightData("ballast.dimmingtype", "0-10V", paramsList);
+
+            }
         }
 
         String timezoneIdValue = properties.getProperty("streelight.timezone.id.value","");

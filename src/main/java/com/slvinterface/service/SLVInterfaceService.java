@@ -761,6 +761,14 @@ public abstract class SLVInterfaceService {
                                 e.printStackTrace();
                             }
                             break;
+                        case LUMINAIRE_MODEL:
+                            try{
+                                String luminaireModel = valueById(formValuesList,id.getId());
+                                edge2SLVData.setLuminaireModel(luminaireModel);
+                            }catch (NoValueException e){
+                                e.printStackTrace();
+                            }
+                            break;
 
                     }
                 }

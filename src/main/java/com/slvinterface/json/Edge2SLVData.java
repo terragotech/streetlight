@@ -20,6 +20,16 @@ public class Edge2SLVData {
     private String supplyType;
     private String luminairePartNumber;
     private String luminaireSerialNumber;
+    private String luminaireModel;
+
+
+    public String getLuminaireModel() {
+        return luminaireModel;
+    }
+
+    public void setLuminaireModel(String luminaireModel) {
+        this.luminaireModel = luminaireModel;
+    }
 
     public String getLuminairePartNumber() {
         return luminairePartNumber;
@@ -167,6 +177,17 @@ public class Edge2SLVData {
                 ", macAddress='" + macAddress + '\'' +
                 ", priority=" + priority +
                 ", existingMACAddress='" + existingMACAddress + '\'' +
+                ", fixtureQRScan='" + fixtureQRScan + '\'' +
+                ", geometry='" + geometry + '\'' +
+                ", fixtureType='" + fixtureType + '\'' +
+                ", lampType='" + lampType + '\'' +
+                ", lampTypeOther='" + lampTypeOther + '\'' +
+                ", wattage='" + wattage + '\'' +
+                ", wattageOther='" + wattageOther + '\'' +
+                ", supplyType='" + supplyType + '\'' +
+                ", luminairePartNumber='" + luminairePartNumber + '\'' +
+                ", luminaireSerialNumber='" + luminaireSerialNumber + '\'' +
+                ", luminaireModel='" + luminaireModel + '\'' +
                 '}';
     }
 }
