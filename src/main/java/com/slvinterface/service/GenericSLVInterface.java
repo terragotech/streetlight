@@ -205,11 +205,11 @@ public class GenericSLVInterface extends  SLVInterfaceService {
             if (luminaireModel.equals("RoadLED Midi 150W 4K")){
                 addStreetLightData("luminaire.model", luminaireModel, paramsList);
                 addStreetLightData("luminaire.brand", "Sylvania Schreder", paramsList);
-                addStreetLightData("device.luminaire.partnumber", "PM99Z05L150", paramsList);
+                addStreetLightData("luminaire.partnumber", "PM99Z05L150", paramsList);
                 addStreetLightData("power", "150", paramsList);
                 addStreetLightData("luminaire.type", "V1", paramsList);
-                addStreetLightData("device.luminaire.colortemp", "4000", paramsList);
-                addStreetLightData("device.luminaire.lumenoutput", "18145", paramsList);
+                addStreetLightData("luminaire.cct", "4000", paramsList);
+                addStreetLightData("luminaire.lumenoutput", "18145", paramsList);
                 addStreetLightData("luminaire.DistributionType", "180125PH", paramsList);
                 addStreetLightData("ballast.dimmingtype", "0-10V", paramsList);
 
@@ -217,11 +217,11 @@ public class GenericSLVInterface extends  SLVInterfaceService {
 
                 addStreetLightData("luminaire.model", luminaireModel, paramsList);
                 addStreetLightData("luminaire.brand", "Sylvania Schreder", paramsList);
-                addStreetLightData("device.luminaire.partnumber", "PM99Z115L80", paramsList);
+                addStreetLightData("luminaire.partnumber", "PM99Z115L80", paramsList);
                 addStreetLightData("power", "80", paramsList);
                 addStreetLightData("luminaire.type", "V3", paramsList);
-                addStreetLightData("device.luminaire.colortemp", "4000", paramsList);
-                addStreetLightData("device.luminaire.lumenoutput", "9064", paramsList);
+                addStreetLightData("luminaire.cct", "4000", paramsList);
+                addStreetLightData("luminaire.lumenoutput", "9064", paramsList);
                 addStreetLightData("luminaire.DistributionType", "180226PH", paramsList);
                 addStreetLightData("ballast.dimmingtype", "0-10V", paramsList);
 
@@ -229,11 +229,11 @@ public class GenericSLVInterface extends  SLVInterfaceService {
 
                 addStreetLightData("luminaire.model", luminaireModel, paramsList);
                 addStreetLightData("luminaire.brand", "Sylvania Schreder", paramsList);
-                addStreetLightData("device.luminaire.partnumber", "PM99Z115L17", paramsList);
+                addStreetLightData("luminaire.partnumber", "PM99Z115L17", paramsList);
                 addStreetLightData("power", "17", paramsList);
                 addStreetLightData("luminaire.type", "P4P5", paramsList);
-                addStreetLightData("device.luminaire.colortemp", "3000", paramsList);
-                addStreetLightData("device.luminaire.lumenoutput", "1870", paramsList);
+                addStreetLightData("luminaire.cct", "3000", paramsList);
+                addStreetLightData("luminaire.lumenoutput", "1870", paramsList);
                 addStreetLightData("luminaire.DistributionType", "PM99Z115L17 ", paramsList);
                 addStreetLightData("ballast.dimmingtype", "0-10V", paramsList);
 
