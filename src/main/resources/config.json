@@ -55,6 +55,11 @@
         {
           "id":10121,
           "type": "SERIAL_NUMBER"
+        },
+        {
+          "id": 2,
+          "type": "LUMINAIRE_MODEL",
+          "isRequired": true
         }
       ]
     },
