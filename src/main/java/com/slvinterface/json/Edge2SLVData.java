@@ -21,7 +21,24 @@ public class Edge2SLVData {
     private String luminairePartNumber;
     private String luminaireSerialNumber;
     private String luminaireModel;
+    private String poleMaterial;
+    private String poleStatus;
 
+    public String getPoleMaterial() {
+        return poleMaterial;
+    }
+
+    public void setPoleMaterial(String poleMaterial) {
+        this.poleMaterial = poleMaterial;
+    }
+
+    public String getPoleStatus() {
+        return poleStatus;
+    }
+
+    public void setPoleStatus(String poleStatus) {
+        this.poleStatus = poleStatus;
+    }
 
     public String getLuminaireModel() {
         return luminaireModel;
@@ -188,6 +205,8 @@ public class Edge2SLVData {
                 ", luminairePartNumber='" + luminairePartNumber + '\'' +
                 ", luminaireSerialNumber='" + luminaireSerialNumber + '\'' +
                 ", luminaireModel='" + luminaireModel + '\'' +
+                ", poleMaterial='" + poleMaterial + '\'' +
+                ", poleStatus='" + poleStatus + '\'' +
                 '}';
     }
 }

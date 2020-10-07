@@ -240,6 +240,15 @@ public class GenericSLVInterface extends  SLVInterfaceService {
             }
         }
 
+        String poleMaterial = previousEdge2SLVData.getPoleMaterial();
+        if (poleMaterial != null && !poleMaterial.trim().equals("")){
+            addStreetLightData("pole.material",poleMaterial,paramsList);
+        }
+        String poleStatus = previousEdge2SLVData.getPoleStatus();
+        if (poleStatus != null && !poleStatus.trim().equals("")){
+            addStreetLightData("pole.status",poleStatus,paramsList);
+        }
+
         String timezoneIdValue = properties.getProperty("streelight.timezone.id.value","");
         if(timezoneIdValue !=null && !timezoneIdValue.trim().equals("")){
             addStreetLightData("TimeZoneId",timezoneIdValue,paramsList);

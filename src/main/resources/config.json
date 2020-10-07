@@ -60,6 +60,16 @@
           "id": 2,
           "type": "LUMINAIRE_MODEL",
           "isRequired": true
+        },
+        {
+          "id": 10,
+          "type": "POLE_MATERIAL",
+          "isRequired": true
+        },
+        {
+          "id": 11,
+          "type": "POLE_STATUS",
+          "isRequired": true
         }
       ]
     },

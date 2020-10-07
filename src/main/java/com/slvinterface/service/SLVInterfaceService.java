@@ -770,6 +770,23 @@ public abstract class SLVInterfaceService {
                             }
                             break;
 
+                        case POLE_MATERIAL:
+                            try{
+                                String poleMaterial = valueById(formValuesList,id.getId());
+                                edge2SLVData.setPoleMaterial(poleMaterial);
+                            }catch (NoValueException e){
+                                e.printStackTrace();
+                            }
+                            break;
+                        case POLE_STATUS:
+                            try{
+                                String poleStatus = valueById(formValuesList,id.getId());
+                                edge2SLVData.setPoleStatus(poleStatus);
+                            }catch (NoValueException e){
+                                e.printStackTrace();
+                            }
+                            break;
+
                     }
                 }
 
