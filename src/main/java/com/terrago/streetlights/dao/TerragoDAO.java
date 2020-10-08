@@ -5,6 +5,7 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.reflect.TypeToken;
+import com.terrago.streetlights.dao.model.DeviceData;
 import com.terrago.streetlights.dao.model.UbiInterfaceLog;
 import com.terrago.streetlights.dao.model.UbiTransactionLog;
 import com.terrago.streetlights.service.RESTService;
@@ -388,7 +389,7 @@ public class TerragoDAO {
         ResultSet resultSet = null;
         try{
             statement = conn.createStatement();
-            resultSet = statement.executeQuery("select max(synctime) as utime from ubitransactionlog");
+            resultSet = statement.executeQuery("select max(lastmaxtime) as utime from tmp_florlights");
             while(resultSet.next())
             {
                 result = resultSet.getLong("utime");
@@ -516,6 +517,150 @@ public class TerragoDAO {
         }
         DataBaseConnector.closeConnection();
         return result;
+    }
+    public static String isCurrentNote(String noteGUID)
+    {
+        Connection conn = DataBaseConnector.getConnection();
+        Statement statement = null;
+        ResultSet resultSet = null;
+        String result="";
+        try {
+            statement = conn.createStatement();
+            String query = "select title,noteguid from edgenote where iscurrent=true and isdeleted=false and noteguid='" +
+                    noteGUID + "'";
+            System.out.println(query);
+            resultSet = statement.executeQuery(query);
+            while(resultSet.next())
+            {
+                String noteguid = resultSet.getString("noteguid");
+                result = noteguid;
+            }
+
+        }
+        catch (Exception e)
+        {
+            e.printStackTrace();
+        }
+        finally
+        {
+            if(resultSet != null)
+            {
+                try{
+                    resultSet.close();
+                }
+                catch (SQLException e)
+                {
+                    e.printStackTrace();
+                }
+            }
+            if(statement != null)
+            {
+                try{
+                    statement.close();
+                }
+                catch (SQLException e)
+                {
+                    e.printStackTrace();
+                }
+            }
+        }
+        DataBaseConnector.closeConnection();
+        return result;
+    }
+    public static String getCurrentNoteFromParentGUID(String parentGUID)
+    {
+        Connection conn = DataBaseConnector.getConnection();
+        Statement statement = null;
+        ResultSet resultSet = null;
+        String result="";
+        try {
+            statement = conn.createStatement();
+            String query = "select title,noteguid from edgenote where iscurrent=true and isdeleted=false and parentnoteid='" +
+                    parentGUID + "'";
+            System.out.println(query);
+            resultSet = statement.executeQuery(query);
+            while(resultSet.next())
+            {
+                String noteguid = resultSet.getString("noteguid");
+                result = noteguid;
+            }
+
+        }
+        catch (Exception e)
+        {
+            e.printStackTrace();
+        }
+        finally
+        {
+            if(resultSet != null)
+            {
+                try{
+                    resultSet.close();
+                }
+                catch (SQLException e)
+                {
+                    e.printStackTrace();
+                }
+            }
+            if(statement != null)
+            {
+                try{
+                    statement.close();
+                }
+                catch (SQLException e)
+                {
+                    e.printStackTrace();
+                }
+            }
+        }
+        DataBaseConnector.closeConnection();
+        return result;
+    }
+    public static LastUpdated getNoteInfo(String noteguid){
+        LastUpdated lastUpdated = null;
+
+        Connection conn = DataBaseConnector.getConnection();
+        Statement statement = null;
+        ResultSet resultSet = null;
+
+        try {
+            statement = conn.createStatement();
+            resultSet = statement.executeQuery("select title,noteguid,synctime,parentnoteid from edgenote where noteguid='" + noteguid + "'" );
+            while(resultSet.next())
+            {
+                String notetitle = resultSet.getString("title");
+                Long syncTime = resultSet.getLong("synctime");
+                String strParentguid = resultSet.getString("parentnoteid");
+                lastUpdated = new LastUpdated();
+                lastUpdated.setNoteguid(noteguid);
+                lastUpdated.setTitle(notetitle);
+                lastUpdated.setSynctime(syncTime);
+                lastUpdated.setParentnoteguid(strParentguid);
+            }
+
+        }
+        catch (Exception e)
+        {
+            e.printStackTrace();
+        }
+        finally {
+            if (resultSet != null) {
+                try {
+                    resultSet.close();
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
+            }
+            if (statement != null) {
+                try {
+                    statement.close();
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
+            }
+            DataBaseConnector.closeConnection();
+        }
+        return lastUpdated;
     }
     public static List<String> getUpdatedTitles(String lastProcessedTime)
     {
@@ -668,6 +813,231 @@ public class TerragoDAO {
                     e.printStackTrace();
                 }
             }
+        }
+    }
+    public static LastUpdated getUpdateInfo(String noteguid)
+    {
+        LastUpdated lastUpdated = null;
+        Connection conn = DataBaseConnector.getConnection();
+        Statement statement = null;
+        ResultSet resultSet = null;
+        try {
+            statement = conn.createStatement();
+            resultSet = statement.executeQuery(
+                    "select title,noteguid,synctime,parentnoteid from edgenote where noteguid='" + noteguid + "'");
+            while(resultSet.next())
+            {
+                lastUpdated = new LastUpdated();
+                lastUpdated.setNoteguid(noteguid);
+                lastUpdated.setSynctime(resultSet.getLong("synctime"));
+                lastUpdated.setTitle(resultSet.getString("title"));
+                lastUpdated.setParentnoteguid(resultSet.getString("parentnoteid"));
+
+            }
+
+        }
+        catch (Exception e)
+        {
+            e.printStackTrace();
+        }
+        finally {
+            if(resultSet != null)
+            {
+                try{
+                    resultSet.close();
+                }
+                catch (SQLException e)
+                {
+                    e.printStackTrace();
+                }
+            }
+            if(statement != null)
+            {
+                try{
+                    statement.close();
+                }
+                catch (SQLException e)
+                {
+                    e.printStackTrace();
+                }
+            }
+            DataBaseConnector.closeConnection();
+        }
+        return  lastUpdated;
+    }
+    public List<LastUpdated> getUpdatedNotes(String lastProcessedTime)
+    {
+        List<LastUpdated> lstString = new ArrayList<LastUpdated>();
+        Connection conn = DataBaseConnector.getConnection();
+        Statement statement = null;
+        ResultSet resultSet = null;
+        //logger.info("Checking for updates");
+        try {
+            statement = conn.createStatement();
+            resultSet = statement.executeQuery("select title,noteguid,synctime from edgenote where iscurrent=true and isdeleted=false and synctime > " + lastProcessedTime + " order by synctime ");
+            while(resultSet.next())
+            {
+                String noteguid = resultSet.getString("noteguid");
+                LastUpdated lastUpdated = new LastUpdated();
+                lastUpdated.setNoteguid(noteguid);
+                lastUpdated.setSynctime(resultSet.getLong("synctime"));
+                lastUpdated.setTitle(resultSet.getString("title"));
+                lstString.add(lastUpdated);
+            }
+
+        }
+        catch (Exception e)
+        {
+            e.printStackTrace();
+        }
+        finally {
+            if(resultSet != null)
+            {
+                try{
+                    resultSet.close();
+                }
+                catch (SQLException e)
+                {
+                    e.printStackTrace();
+                }
+            }
+            if(statement != null)
+            {
+                try{
+                    statement.close();
+                }
+                catch (SQLException e)
+                {
+                    e.printStackTrace();
+                }
+            }
+            DataBaseConnector.closeConnection();
+        }
+        return lstString;
+    }
+    public static List<DeviceData> getAllDeviceData(){
+        Connection conn = DataBaseConnector.getConnection();
+        Statement statement = null;
+        ResultSet resultSet = null;
+        List<DeviceData> result = new ArrayList<DeviceData>();
+        try {
+            statement = conn.createStatement();
+            resultSet = statement.executeQuery("select parentnoteguid,dev_eui,status from " +
+                    "pendingdevice where status='NOT_FOUND'");
+            while(resultSet.next())
+            {
+
+                String strParentNoteGUID = resultSet.getString("parentnoteguid");
+                String strDev_UI = resultSet.getString("dev_eui");
+                String strStatus = resultSet.getString("status");
+                DeviceData deviceData = new DeviceData();
+                deviceData.setParentnoteguid(strParentNoteGUID);
+                deviceData.setDev_eui(strDev_UI);
+                deviceData.setStatus(strStatus);
+                result.add(deviceData);
+            }
+
+        }
+        catch (Exception e)
+        {
+            e.printStackTrace();
+        }
+        finally {
+            if(resultSet != null)
+            {
+                try{
+                    resultSet.close();
+                }
+                catch (SQLException e)
+                {
+                    e.printStackTrace();
+                }
+            }
+            if(statement != null)
+            {
+                try{
+                    statement.close();
+                }
+                catch (SQLException e)
+                {
+                    e.printStackTrace();
+                }
+            }
+            DataBaseConnector.closeConnection();
+        }
+        return result;
+    }
+    public static void addDeviceData(DeviceData deviceData){
+        PreparedStatement preparedStatement = null;
+        String SQL = "INSERT INTO pendingdevice(parentnoteguid,dev_eui,status) "
+                + "VALUES(?,?,?)";
+        try {
+            Connection conn = DataBaseConnector.getConnection();
+            preparedStatement = conn.prepareStatement(SQL);
+            preparedStatement.setString(1,deviceData.getParentnoteguid());
+            preparedStatement.setString(2,deviceData.getDev_eui());
+            preparedStatement.setString(3,deviceData.getStatus());
+
+            preparedStatement.executeUpdate();
+
+        }
+        catch (SQLException e)
+        {
+            e.printStackTrace();
+        }
+        finally
+        {
+            if(preparedStatement != null)
+            {
+                try {
+                    preparedStatement.close();
+                }
+                catch (Exception e)
+                {
+                    e.printStackTrace();
+                }
+            }
+        }
+    }
+    public static void updateDeviceData(DeviceData deviceData)
+    {
+        Connection conn = DataBaseConnector.getConnection();
+        Statement statement = null;
+        ResultSet resultSet = null;
+
+        try {
+            statement = conn.createStatement();
+            statement.executeUpdate("update pendingdevice set status='PROCESSED' where " +
+                    "parentnoteguid=" + "'" + deviceData.getParentnoteguid() + "'");
+
+
+        }
+        catch (Exception e)
+        {
+            e.printStackTrace();
+        }
+        finally {
+            if(resultSet != null)
+            {
+                try{
+                    resultSet.close();
+                }
+                catch (SQLException e)
+                {
+                    e.printStackTrace();
+                }
+            }
+            if(statement != null)
+            {
+                try{
+                    statement.close();
+                }
+                catch (SQLException e)
+                {
+                    e.printStackTrace();
+                }
+            }
+            DataBaseConnector.closeConnection();
         }
     }
 }

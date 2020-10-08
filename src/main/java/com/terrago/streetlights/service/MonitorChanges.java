@@ -6,6 +6,7 @@ import com.google.gson.reflect.TypeToken;
 import com.terrago.streetlights.App;
 import com.terrago.streetlights.dao.DataBaseConnector;
 import com.terrago.streetlights.dao.TerragoDAO;
+import com.terrago.streetlights.dao.model.DeviceData;
 import com.terrago.streetlights.dao.model.UbiTransactionLog;
 import com.terrago.streetlights.json.UbiData;
 import com.terrago.streetlights.utils.JsonDataParser;
@@ -38,6 +39,8 @@ import com.terrago.streetlights.utils.*;
 
 public class MonitorChanges {
     private Logger logger = Logger.getLogger(MonitorChanges.class);
+    private static final int PROCESS_NOT_FOUND_DEVICES = 1;
+    private static final int PROCESS_NORMAL_INSTALL = 0;
     //
     private String getDevicControlStatus(List<EdgeFormData> formComponents)
     {
@@ -407,6 +410,239 @@ public class MonitorChanges {
             result = qrstring;
         }
         return result;
+    }
+
+    private void processUnFoundDevices()
+    {
+        List<DeviceData> lstDeviceData = TerragoDAO.getAllDeviceData();
+        for(DeviceData deviceData:lstDeviceData){
+            String parentNoteGUI = TerragoDAO.getCurrentNoteFromParentGUID(deviceData.getParentnoteguid());
+            String processGUID = "";
+            if(parentNoteGUI == null || parentNoteGUI.equals(""))
+            {
+                String noteGUID = TerragoDAO.isCurrentNote(deviceData.getParentnoteguid());
+                if(noteGUID.equals(parentNoteGUI))
+                {
+                    //No revision on this note so no parent
+                    processGUID = noteGUID;
+                }
+            }
+            else
+            {
+                processGUID = parentNoteGUI;
+            }
+            if(!processGUID.equals(""))
+            {
+                LastUpdated lastUpdated = TerragoDAO.getNoteInfo(processGUID);
+                processNote(processGUID,lastUpdated,PROCESS_NOT_FOUND_DEVICES);
+            }
+        }
+    }
+    public void startMonitoring2()
+    {
+        String nnguid = "";
+        do {
+            processUnFoundDevices();
+            long lastMaxUpdatedTime = TerragoDAO.readLastUpdatedTime();
+            if (lastMaxUpdatedTime == 0) {
+                lastMaxUpdatedTime = System.currentTimeMillis() - 300000;
+            }
+            System.out.println("Looking for Changes ...");
+            List<LastUpdated> lstUpdated = getUpdatedNotes(Long.toString(lastMaxUpdatedTime));
+            for (LastUpdated lstCur : lstUpdated) {
+                System.out.println("Processing Changes ...");
+                lastMaxUpdatedTime = Math.max(lastMaxUpdatedTime, lstCur.getSynctime());
+                nnguid = lstCur.getNoteguid();
+                processNote(nnguid,lstCur,PROCESS_NORMAL_INSTALL);
+            }
+            TerragoDAO.writeLastUpdateTime(lastMaxUpdatedTime);
+            try{
+                Thread.sleep(10000);
+            }
+            catch (InterruptedException e)
+            {
+                e.printStackTrace();
+            }
+        }while(true);
+    }
+    private void processNote(String nnguid,LastUpdated curNoteInfo,int mode)
+    {
+        String notesJson = RESTService.getNoteDetails(nnguid);
+        Type listType = new TypeToken<ArrayList<EdgeNote>>() {
+        }.getType();
+        Gson gson = new Gson();
+        List<EdgeNote> edgeNoteList = new ArrayList<>();
+        //    List<EdgeNote> edgeNoteList = gson.fromJson(notesJson, listType);
+        EdgeNote restEdgeNote = gson.fromJson(notesJson, EdgeNote.class);
+        JsonObject edgenoteJson = new JsonParser().parse(notesJson).getAsJsonObject();
+        JsonArray serverForms = edgenoteJson.get("formData").getAsJsonArray();
+        int size = serverForms.size();
+        String ignoreUser = PropertiesReader.getProperties().getProperty("ignoreuser");
+        boolean ispresent = false;
+        boolean isDCPresent = false;
+        boolean isInvalidUser = false;
+        List<EdgeFormData> installFormComponents = null;
+        List<EdgeFormData> auditFormComponents = null;
+        for (int i = 0; i < size; i++) {
+            JsonObject serverEdgeForm = serverForms.get(i).getAsJsonObject();
+            String formDefJson = serverEdgeForm.get("formDef").getAsString();
+            String formTemplate = serverEdgeForm.get("formTemplateGuid").getAsString();
+            List<EdgeFormData> formComponents = gson.fromJson(formDefJson, new TypeToken<List<EdgeFormData>>() {
+            }.getType());
+
+            if (formTemplate.equals(PropertiesReader.getProperties().getProperty("formtemplatetoinstall"))) {
+                installFormComponents = formComponents;
+            }
+            if (formTemplate.equals(PropertiesReader.getProperties().getProperty("formtemplatetoaudit"))) {
+                auditFormComponents = formComponents;
+            }
+            if (formTemplate.equals(PropertiesReader.getProperties().getProperty("formtemplatedc"))) {
+                isDCPresent = true;
+            }
+
+        }
+        if(isDCPresent)
+        {
+            //Do Device Control
+            LastUpdated lastUpdated = TerragoDAO.getNoteInfo(nnguid);
+            String strTitle = lastUpdated.getTitle();
+            int idx = strTitle.lastIndexOf("-DC");
+            String noteTitle = strTitle.substring(0,idx);
+            String dcnoteid = TerragoDAO.getNoteGUID(noteTitle);
+            doDeviceControl(dcnoteid);
+        }
+        if(installFormComponents != null && auditFormComponents != null) {
+            doInstall(curNoteInfo, auditFormComponents, installFormComponents, mode);
+        }
+    }
+    private void doDeviceControl(String noteguid)
+    {
+        String notesJson = RESTService.getNoteDetails(noteguid);
+        Type listType = new TypeToken<ArrayList<EdgeNote>>() {
+        }.getType();
+        Gson gson = new Gson();
+        List<EdgeNote> edgeNoteList = new ArrayList<>();
+        //    List<EdgeNote> edgeNoteList = gson.fromJson(notesJson, listType);
+        EdgeNote restEdgeNote = gson.fromJson(notesJson, EdgeNote.class);
+        JsonObject edgenoteJson = new JsonParser().parse(notesJson).getAsJsonObject();
+        JsonArray serverForms = edgenoteJson.get("formData").getAsJsonArray();
+        int size = serverForms.size();
+        String ignoreUser = PropertiesReader.getProperties().getProperty("ignoreuser");
+        boolean ispresent = false;
+        boolean isDCPresent = false;
+        boolean isInvalidUser = false;
+        List<EdgeFormData> installFormComponents = null;
+        List<EdgeFormData> auditFormComponents = null;
+
+        for (int i = 0; i < size; i++) {
+            JsonObject serverEdgeForm = serverForms.get(i).getAsJsonObject();
+            String formDefJson = serverEdgeForm.get("formDef").getAsString();
+            String formTemplate = serverEdgeForm.get("formTemplateGuid").getAsString();
+            List<EdgeFormData> formComponents = gson.fromJson(formDefJson, new TypeToken<List<EdgeFormData>>() {
+            }.getType());
+
+            if (formTemplate.equals(PropertiesReader.getProperties().getProperty("formtemplatetoinstall"))) {
+                installFormComponents = formComponents;
+            }
+            if (formTemplate.equals(PropertiesReader.getProperties().getProperty("formtemplatetoaudit"))) {
+                auditFormComponents = formComponents;
+            }
+            if (formTemplate.equals(PropertiesReader.getProperties().getProperty("formtemplatedc"))) {
+                isDCPresent = true;
+            }
+
+        }
+        if(installFormComponents != null) {
+            String idDev = PropertiesReader.getProperties().getProperty("ubicquia_deveui");
+            int nidDev = Integer.parseInt(idDev);
+            String dev_eui = TerragoUtils.getEdgeFormValue(installFormComponents, nidDev);
+            dev_eui = TerragoUtils.parseDevUI(dev_eui);
+            UbicquiaLightsInterface.requestDynamicToken();
+            LastUpdated lastUpdated = TerragoDAO.getNoteInfo(noteguid);
+            JsonObject jsonObject = UbicquiaLightsInterface.getNodes(lastUpdated, dev_eui);
+            String nodeid = jsonObject.get("id").getAsString();
+            new SingleLightDeviceControl(lastUpdated, nodeid);
+        }
+    }
+    private void doInstall(LastUpdated lastUpdated,
+                           List<EdgeFormData> formComponents,
+                           List<EdgeFormData> installformComponents,int mode){
+
+        String idDev = PropertiesReader.getProperties().getProperty("ubicquia_deveui");
+        String idFixtureType = PropertiesReader.getProperties().getProperty("ubicquia_fixtype");
+        String idFixtureWattage = PropertiesReader.getProperties().getProperty("ubicquia_wattage");
+
+
+
+        String idPoleNumber = PropertiesReader.getProperties().getProperty("ubicquia_polenumber");
+        String idPoleHeight = PropertiesReader.getProperties().getProperty("ubicquia_poleheight");
+        String idPoleType = PropertiesReader.getProperties().getProperty("ubicquia_poletype");
+
+        int nidDev = Integer.parseInt(idDev);
+        int nidFixtureType = Integer.parseInt(idFixtureType);
+        int nidFixtureWattage = Integer.parseInt(idFixtureWattage);
+
+        int nidPoleNumber = Integer.parseInt(idPoleNumber);
+        int nidPoleHeight = Integer.parseInt(idPoleHeight);
+        int nidPoleType = Integer.parseInt(idPoleType);
+
+        String dev_eui = TerragoUtils.getEdgeFormValue(installformComponents,nidDev);
+        String strFixtureType = TerragoUtils.getEdgeFormValue(installformComponents,nidFixtureType);
+        String strFixtureWattage = TerragoUtils.getEdgeFormValue(installformComponents,nidFixtureWattage);
+
+        String strPoleNumber = TerragoUtils.getEdgeFormValue(formComponents,nidPoleNumber);
+        String strPoleHeight = TerragoUtils.getEdgeFormValue(formComponents,nidPoleHeight);
+        String strPoleType = TerragoUtils.getEdgeFormValue(formComponents,nidPoleType);
+        dev_eui = TerragoUtils.parseDevUI(dev_eui);
+        if(!dev_eui.equals(""))
+        {
+            UbicquiaLightsInterface.requestDynamicToken();
+            JsonObject jsonObject = UbicquiaLightsInterface.getNodes(lastUpdated,dev_eui);
+            if(jsonObject != null)
+            {
+                //Do Update
+                UbicquiaLightsInterface.requestDynamicToken();
+                //Change Node Name
+
+                String nodeid = jsonObject.get("id").getAsString();
+                jsonObject.addProperty("fixtureType", strFixtureType);
+                jsonObject.addProperty("fixture_wattage", strFixtureWattage);
+
+                jsonObject.addProperty("fixtureId", strPoleNumber);
+                jsonObject.addProperty("poleId", strPoleNumber);
+                jsonObject.addProperty("node", strPoleNumber);
+                //poleId
+                jsonObject.addProperty("poleType", strPoleType);
+                jsonObject.addProperty("poleHeight", strPoleHeight);
+                String updateDataJSON =  jsonObject.toString();
+                UbicquiaLightsInterface.setNodeData(lastUpdated,nodeid,updateDataJSON);
+                if(mode == PROCESS_NOT_FOUND_DEVICES)
+                {
+                    DeviceData deviceData = new DeviceData();
+                    deviceData.setParentnoteguid(lastUpdated.getParentnoteguid());
+                    TerragoDAO.updateDeviceData(deviceData);
+                }
+            }
+            else
+            {
+                LastUpdated l1 = TerragoDAO.getUpdateInfo(lastUpdated.getNoteguid());
+                //Write into Table
+                if(mode == PROCESS_NORMAL_INSTALL) {
+                    DeviceData deviceData = new DeviceData();
+                    deviceData.setStatus("NOT_FOUND");
+                    deviceData.setDev_eui(dev_eui);
+                    if(l1.getParentnoteguid() == null || l1.getParentnoteguid().equals("")){
+                        deviceData.setParentnoteguid(lastUpdated.getNoteguid());
+                    }
+                    else
+                    {
+                        deviceData.setParentnoteguid(l1.getParentnoteguid());
+                    }
+
+                    TerragoDAO.addDeviceData(deviceData);
+                }
+            }
+        }
     }
     public void startMonitoring()
     {

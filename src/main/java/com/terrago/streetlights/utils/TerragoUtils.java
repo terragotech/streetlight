@@ -123,6 +123,21 @@ public class TerragoUtils {
         }
         return result;
     }
+    public static String parseDevUI(String devui)
+    {
+        String result = "";
+        int idx = -1;
+        if(devui == null || devui.equals("") )
+        {
+            return result;
+        }
+        idx = devui.lastIndexOf(";");
+        if(idx != - 1 && idx <= devui.length()-1)
+        {
+            result = devui.substring(idx+1,devui.length());
+        }
+        return  result;
+    }
     public static String getEdgeFormValue(List<EdgeFormData> formComponents, int id)
     {
         String result = "";

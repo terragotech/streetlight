@@ -73,7 +73,7 @@ public class UbicquiaLightsInterface {
             HttpHeaders headers = new HttpHeaders();
             String strBaseUrl = PropertiesReader.getProperties().getProperty("ubicquia_baseurl");
             String baseURL = strBaseUrl;
-            String requestURL = baseURL + "/nodes";
+            String requestURL = baseURL + "/nodes?node_level_type_id=1";
             //headers.add("x-api-key", "321b0b2e5a815068913c659e93dc56608bd8c4dafcc586f5e1732cf41b443f54");
             headers.add("Authorization", "Bearer " + dynamicToken);
             RestTemplate restTemplate = new RestTemplate();
@@ -206,7 +206,7 @@ public class UbicquiaLightsInterface {
             String strBaseUrl = PropertiesReader.getProperties().getProperty("ubicquia_baseurl");
             String baseURL = strBaseUrl;
 
-            String requestURL = baseURL + "/nodes/" + nodeId;
+            String requestURL = baseURL + "/nodes/update-node/" + nodeId;
             headers.add("Authorization", "Bearer " + dynamicToken);
             RestTemplate restTemplate = new RestTemplate();
             HttpEntity<String> request = new HttpEntity<String>(nodeData,headers);
@@ -237,6 +237,7 @@ public class UbicquiaLightsInterface {
         return result;
 
     }
+
     public static String SetDimmingValue(LastUpdated lastUpdated,String id,String dimmingValue)
     {
         String result = null;
@@ -299,11 +300,11 @@ public class UbicquiaLightsInterface {
             RestTemplate restTemplate = new RestTemplate();
             String idData = "";
             if(status) {
-                idData = "{\"id_list\":[{\"id\":" + id + "}],\"value\":" + "1" + "}";
+                idData = "{\"id_list\":[{\"id\":" + id + "}],\"value\":" + "1" + ",\"node_level_type_id\": 1}";
             }
             else
             {
-                idData = "{\"id_list\":[{\"id\":" + id + "}],\"value\":" + "0" + "}";
+                idData = "{\"id_list\":[{\"id\":" + id + "}],\"value\":" + "0" + ",\"node_level_type_id\": 1}";
             }
             System.out.println(idData);
             System.out.println(requestURL);
