@@ -99,7 +99,7 @@ public class UbicquiaLightsInterface {
                 for (JsonElement pa : jsonArray) {
                     JsonObject jsonObject1 = pa.getAsJsonObject();
                     String res1 = JsonDataParser.checkDataNull(jsonObject1, "dev_eui");
-                    if(res1.equals(dev_eui))
+                    if(res1.trim().toLowerCase().equals(dev_eui.trim().toLowerCase()))
                     {
                         result = jsonObject1;
                         break;
