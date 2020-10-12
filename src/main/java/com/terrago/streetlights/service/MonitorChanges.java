@@ -7,6 +7,7 @@ import com.terrago.streetlights.App;
 import com.terrago.streetlights.dao.DataBaseConnector;
 import com.terrago.streetlights.dao.TerragoDAO;
 import com.terrago.streetlights.dao.model.DeviceData;
+import com.terrago.streetlights.dao.model.UbiInterfaceLog;
 import com.terrago.streetlights.dao.model.UbiTransactionLog;
 import com.terrago.streetlights.json.UbiData;
 import com.terrago.streetlights.utils.JsonDataParser;
@@ -514,6 +515,15 @@ public class MonitorChanges {
         if(installFormComponents != null && auditFormComponents != null) {
             doInstall(curNoteInfo, auditFormComponents, installFormComponents, mode);
         }
+        UbiTransactionLog ubiTransactionLog = new UbiTransactionLog();
+        ubiTransactionLog.setEventtime(System.currentTimeMillis());
+        ubiTransactionLog.setSynctime(curNoteInfo.getSynctime());
+        ubiTransactionLog.setDevui("");
+        ubiTransactionLog.setDeviceStatus("");
+        ubiTransactionLog.setAction("Processed");
+        ubiTransactionLog.setTitle(curNoteInfo.getTitle());
+        ubiTransactionLog.setNotegui(curNoteInfo.getNoteguid());
+        TerragoDAO.addUbiTransactionLog(ubiTransactionLog);
     }
     private void doDeviceControl(String noteguid)
     {

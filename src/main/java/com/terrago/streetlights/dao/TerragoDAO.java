@@ -389,7 +389,7 @@ public class TerragoDAO {
         ResultSet resultSet = null;
         try{
             statement = conn.createStatement();
-            resultSet = statement.executeQuery("select max(lastmaxtime) as utime from tmp_florlights");
+            resultSet = statement.executeQuery("select max(synctime) as utime from ubitransactionlog");
             while(resultSet.next())
             {
                 result = resultSet.getLong("utime");
