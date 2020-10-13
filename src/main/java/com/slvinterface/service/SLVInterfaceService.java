@@ -23,6 +23,7 @@ import org.springframework.util.LinkedMultiValueMap;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
+import java.text.Normalizer;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
@@ -237,7 +238,39 @@ public abstract class SLVInterfaceService {
 
         }
     }
+    private void handleRemoveForm(List<FormData> formDataList,SLVSyncTable slvSyncTable){
+        try {
+            String controllerStrId = properties.getProperty("streetlight.controller.str.id");
+        String idoncontroller = "";
+        String installformTemplate1 = PropertiesReader.getProperties().getProperty("streetlight.edge.installid");
+        String installformTemplate2 = PropertiesReader.getProperties().getProperty("streetlight.edge.installidn");
+        String []arinstallformTemplate1 = installformTemplate1.split(",");
+        String []arinstallformTemplate2 = installformTemplate2.split(",");
+        for(FormData formData:formDataList)
+        {
+            if(formData.getFormTemplateGuid().equals(arinstallformTemplate1[1]))
+            {
+                List<FormValues> frmValues = formData.getFormDef();
+                idoncontroller = valueById(frmValues,Integer.parseInt(arinstallformTemplate1[0]));
+            }
+            else if(formData.getFormTemplateGuid().equals(arinstallformTemplate2[1]))
+            {
+                List<FormValues> frmValues = formData.getFormDef();
+                idoncontroller = valueById(frmValues,Integer.parseInt(arinstallformTemplate2[0]));
+            }
+        }
+           replaceOLC(controllerStrId, idoncontroller, "", slvSyncTable);
+        }
+        catch (ReplaceOLCFailedException e)
+        {
 
+            logger.error(e);
+        }
+        catch (NoValueException e)
+        {
+            logger.error(e);
+        }
+    }
     private void processNoteData(String notesData, SLVSyncTable slvSyncTable)throws SLVConnectionException {
         try {
             EdgeNote edgeNote = gson.fromJson(notesData, EdgeNote.class);
@@ -249,7 +282,17 @@ public abstract class SLVInterfaceService {
                 logger.info("Form Template is not present.");
                 return;
             }
-
+            /* To Handle the Remove Form */
+            String removeFormGUID = PropertiesReader.getProperties().getProperty("streetlight.edge.removeformtemplate.guid");
+            for(FormData formData:formDataList)
+            {
+                if(formData.equals(removeFormGUID))
+                {
+                    handleRemoveForm(formDataList,slvSyncTable);
+                    return;
+                }
+            }
+            /* End of Handle to Remove Form */
             processFormData(formDataList,slvSyncTable,edgeNote);
         }catch (SLVConnectionException e){
             throw new SLVConnectionException(e);
@@ -285,10 +328,24 @@ public abstract class SLVInterfaceService {
         List<FormData> formDataList = edgeNote.getFormData();
         List<FormData> formDataRes = new ArrayList<>();
         String formTemplateGuid = PropertiesReader.getProperties().getProperty("streetlight.edge.formtemplate.guid");
+        String []arformTemplateGuid = formTemplateGuid.split(",");
+
         for (FormData formData : formDataList) {
-            if (formData.getFormTemplateGuid().equals(formTemplateGuid)) {
-                formDataRes.add(formData);
+            if(arformTemplateGuid.length >= 3)
+            {
+                if (formData.getFormTemplateGuid().equals(arformTemplateGuid[0]) ||
+                        formData.getFormTemplateGuid().equals(arformTemplateGuid[1]) ||
+                                formData.getFormTemplateGuid().equals(arformTemplateGuid[2])) {
+                    formDataRes.add(formData);
+                }
             }
+            else if(arformTemplateGuid.length == 1)
+            {
+                if (formData.getFormTemplateGuid().equals(arformTemplateGuid[0])) {
+                    formDataRes.add(formData);
+                }
+            }
+
         }
         return formDataRes;
     }
