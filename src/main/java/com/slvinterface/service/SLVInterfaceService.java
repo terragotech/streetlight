@@ -282,17 +282,29 @@ public abstract class SLVInterfaceService {
                 logger.info("Form Template is not present.");
                 return;
             }
+            String formTemplateGuid = PropertiesReader.getProperties().getProperty("streetlight.edge.formtemplate.guid");
+            String []arformTemplateGuid = formTemplateGuid.split(",");
             /* To Handle the Remove Form */
+            int mode = 0;
             String removeFormGUID = PropertiesReader.getProperties().getProperty("streetlight.edge.removeformtemplate.guid");
             for(FormData formData:formDataList)
             {
-                if(formData.equals(removeFormGUID))
+                if(formData.getFormTemplateGuid().equals(removeFormGUID))
                 {
                     handleRemoveForm(formDataList,slvSyncTable);
                     return;
                 }
+                else if (formData.getFormTemplateGuid().equals(arformTemplateGuid[0]))
+                {
+                    mode = 0;
+                }
+                else if (formData.getFormTemplateGuid().equals(arformTemplateGuid[1]))
+                {
+                    mode = 1;
+                }
             }
             /* End of Handle to Remove Form */
+            conditionsJson = getConditionsJson(mode);
             processFormData(formDataList,slvSyncTable,edgeNote);
         }catch (SLVConnectionException e){
             throw new SLVConnectionException(e);
@@ -366,7 +378,24 @@ public abstract class SLVInterfaceService {
 
 
     }
+    public ConditionsJson getConditionsJson(int option) throws Exception {
+        ConditionsJson configs = null;
+        if(option == 0) {
+            FileReader reader = new FileReader(ResourceDetails.CONFIG_JSON_PATH);
+            String configjson = jsonParser.parse(reader).toString();
 
+            configs = gson.fromJson(configjson, ConditionsJson.class);
+        }
+        else if(option == 1)
+        {
+            FileReader reader = new FileReader(ResourceDetails.CONFIG_JSON_PATH1);
+            String configjson = jsonParser.parse(reader).toString();
+            configs = gson.fromJson(configjson, ConditionsJson.class);
+        }
+        return configs;
+
+
+    }
 
     protected String valueById(List<FormValues> formValuesList, int id) throws NoValueException {
         FormValues edgeFormTemp = new FormValues();
