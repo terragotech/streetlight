@@ -491,12 +491,25 @@ public class MonitorChanges {
             List<EdgeFormData> formComponents = gson.fromJson(formDefJson, new TypeToken<List<EdgeFormData>>() {
             }.getType());
 
-            if (formTemplate.equals(PropertiesReader.getProperties().getProperty("formtemplatetoinstall"))) {
-                installFormComponents = formComponents;
+            String instFrmTemplates = PropertiesReader.getProperties().getProperty("formtemplatetoinstall");
+            String []arrinstFrmTemplates = instFrmTemplates.split(",");
+
+            String auditFrmTemplates = PropertiesReader.getProperties().getProperty("formtemplatetoaudit");
+            String []arrauditFrmTemplates = auditFrmTemplates.split(",");
+
+            for(int idx=0;idx<arrinstFrmTemplates.length;idx++)
+            {
+                if (formTemplate.equals(arrinstFrmTemplates[idx])) {
+                    installFormComponents = formComponents;
+                }
             }
-            if (formTemplate.equals(PropertiesReader.getProperties().getProperty("formtemplatetoaudit"))) {
-                auditFormComponents = formComponents;
+            for(int jdx=0;jdx<arrauditFrmTemplates.length;jdx++)
+            {
+                if (formTemplate.equals(arrauditFrmTemplates[jdx])) {
+                    auditFormComponents = formComponents;
+                }
             }
+
             if (formTemplate.equals(PropertiesReader.getProperties().getProperty("formtemplatedc"))) {
                 isDCPresent = true;
             }
