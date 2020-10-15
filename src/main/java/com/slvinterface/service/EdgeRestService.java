@@ -51,6 +51,18 @@ public class EdgeRestService {
         return response;
     }
 
+    public ResponseEntity<String> postRequest(String url,String body){
+        logger.info("------------ Request ------------------");
+        logger.info(url);
+        logger.info("------------ Request End ------------------");
+        RestTemplate restTemplate = new RestTemplate();
+        ResponseEntity<String> response = restTemplate.postForEntity(url,body,   String.class);
+        logger.info("------------ Response ------------------");
+        logger.info("Response Code:" + response.getStatusCode().toString());
+        logger.info("------------ Response End ------------------");
+        // return responseBody;
+        return response;
+    }
 
     public ResponseEntity<String> getRequest(String url,boolean isLog,String accessToken) {
         logger.info("------------ Request ------------------");
