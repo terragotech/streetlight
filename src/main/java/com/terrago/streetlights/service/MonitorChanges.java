@@ -443,26 +443,29 @@ public class MonitorChanges {
     {
         String nnguid = "";
         do {
-            processUnFoundDevices();
-            long lastMaxUpdatedTime = TerragoDAO.readLastUpdatedTime();
-            if (lastMaxUpdatedTime == 0) {
-                lastMaxUpdatedTime = System.currentTimeMillis() - 300000;
-            }
-            System.out.println("Looking for Changes ...");
-            List<LastUpdated> lstUpdated = getUpdatedNotes(Long.toString(lastMaxUpdatedTime));
-            for (LastUpdated lstCur : lstUpdated) {
-                System.out.println("Processing Changes ...");
-                lastMaxUpdatedTime = Math.max(lastMaxUpdatedTime, lstCur.getSynctime());
-                nnguid = lstCur.getNoteguid();
-                processNote(nnguid,lstCur,PROCESS_NORMAL_INSTALL);
-            }
-            TerragoDAO.writeLastUpdateTime(lastMaxUpdatedTime);
-            try{
-                Thread.sleep(10000);
-            }
-            catch (InterruptedException e)
+            try {
+                processUnFoundDevices();
+                long lastMaxUpdatedTime = TerragoDAO.readLastUpdatedTime();
+                if (lastMaxUpdatedTime == 0) {
+                    lastMaxUpdatedTime = System.currentTimeMillis() - 300000;
+                }
+                System.out.println("Looking for Changes ...");
+                List<LastUpdated> lstUpdated = getUpdatedNotes(Long.toString(lastMaxUpdatedTime));
+                for (LastUpdated lstCur : lstUpdated) {
+                    System.out.println("Processing Changes ...");
+                    lastMaxUpdatedTime = Math.max(lastMaxUpdatedTime, lstCur.getSynctime());
+                    nnguid = lstCur.getNoteguid();
+                    processNote(nnguid, lstCur, PROCESS_NORMAL_INSTALL);
+                }
+                TerragoDAO.writeLastUpdateTime(lastMaxUpdatedTime);
+                try {
+                    Thread.sleep(10000);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }catch (Exception e)
             {
-                e.printStackTrace();
+                logger.error("Error processing" + e);
             }
         }while(true);
     }
