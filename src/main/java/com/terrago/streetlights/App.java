@@ -36,7 +36,7 @@ public class App
     }
     public static void main( String[] args ) {
 
-        String strDev = "UBC-20-0-01-NA-01-2-GY;2005DFA000090;7526E80F495CCAFB";
+        //String strDev = "UBC-20-0-01-NA-01-2-GY;2005DFA000090;7526E80F495CCAFB";
 
         //System.out.println(TerragoUtils.parseDevUI(strDev));
         //UbicquiaLightsInterface.requestDynamicToken();

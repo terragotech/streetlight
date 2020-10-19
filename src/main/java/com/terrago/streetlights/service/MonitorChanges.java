@@ -27,6 +27,7 @@ import org.springframework.web.client.RestTemplate;
 
 import javax.swing.plaf.nimbus.State;
 import java.io.IOException;
+import java.lang.reflect.Executable;
 import java.lang.reflect.Type;
 import java.sql.Connection;
 import java.sql.ResultSet;
@@ -100,6 +101,51 @@ public class MonitorChanges {
 
     private List<LastUpdated> getUpdatedNotes(String lastProcessedTime)
     {
+        String instFrmTemplates = PropertiesReader.getProperties().getProperty("formtemplatetoinstall");
+        String []arrinstFrmTemplates = instFrmTemplates.split(",");
+
+        String auditFrmTemplates = PropertiesReader.getProperties().getProperty("formtemplatetoaudit");
+
+        String dcTemplate = PropertiesReader.getProperties().getProperty("formtemplatedc");
+        String []arrauditFrmTemplates = auditFrmTemplates.split(",");
+
+        StringBuilder stringBuilder = new StringBuilder();
+        stringBuilder.append("(");
+        stringBuilder.append("b.formtemplateguid='");
+        stringBuilder.append(dcTemplate);
+        stringBuilder.append("' or ");
+        for(int idx=0;idx<arrinstFrmTemplates.length;idx++)
+        {
+            stringBuilder.append("b.formtemplateguid='");
+            stringBuilder.append(arrinstFrmTemplates[idx]);
+            stringBuilder.append("' ");
+            if(idx != arrinstFrmTemplates.length-1)
+            {
+                stringBuilder.append(" or ");
+            }
+        }
+        if(arrauditFrmTemplates.length > 0)
+        {
+            stringBuilder.append(" or ");
+        }
+        for(int jdx=0;jdx<arrauditFrmTemplates.length;jdx++)
+        {
+            stringBuilder.append("b.formtemplateguid='");
+            stringBuilder.append(arrauditFrmTemplates[jdx]);
+            stringBuilder.append("' ");
+            if(jdx != arrauditFrmTemplates.length-1)
+            {
+                stringBuilder.append(" or ");
+            }
+        }
+
+        stringBuilder.append(")");
+        String frmTemp = stringBuilder.toString();
+
+        String sqlQuery = "select a.title as title,a.noteguid as noteguid,a.synctime as synctime from edgenote a,edgeform b where " + "a.synctime > "+ lastProcessedTime + " and a.noteid=b.edgenoteentity_noteid and a.iscurrent=true and a.isdeleted=false and " +
+                frmTemp + " group by a.title ,a.noteguid ,a.synctime  order by a.synctime";
+        System.out.println(sqlQuery);
+        logger.info("Query Fetch notes:" + sqlQuery);
         List<LastUpdated> lstString = new ArrayList<LastUpdated>();
         Connection conn = DataBaseConnector.getConnection();
         Statement statement = null;
@@ -107,7 +153,7 @@ public class MonitorChanges {
         //logger.info("Checking for updates");
         try {
             statement = conn.createStatement();
-            resultSet = statement.executeQuery("select title,noteguid,synctime from edgenote where iscurrent=true and isdeleted=false and synctime > " + lastProcessedTime + " order by synctime ");
+            resultSet = statement.executeQuery(sqlQuery);
             while(resultSet.next())
             {
                 String noteguid = resultSet.getString("noteguid");
@@ -435,7 +481,22 @@ public class MonitorChanges {
             if(!processGUID.equals(""))
             {
                 LastUpdated lastUpdated = TerragoDAO.getNoteInfo(processGUID);
-                processNote(processGUID,lastUpdated,PROCESS_NOT_FOUND_DEVICES);
+                try {
+                    processNote(processGUID, lastUpdated, PROCESS_NOT_FOUND_DEVICES);
+                }
+                catch (Exception e)
+                {
+                    logger.error("Error processing processNote - pending devices:" + lastUpdated.getNoteguid(),e);
+                    UbiTransactionLog ubiTransactionLog = new UbiTransactionLog();
+                    ubiTransactionLog.setEventtime(System.currentTimeMillis());
+                    ubiTransactionLog.setSynctime(lastUpdated.getSynctime());
+                    ubiTransactionLog.setDevui("");
+                    ubiTransactionLog.setDeviceStatus("");
+                    ubiTransactionLog.setAction("Error Processing");
+                    ubiTransactionLog.setTitle(lastUpdated.getTitle());
+                    ubiTransactionLog.setNotegui(lastUpdated.getNoteguid());
+                    TerragoDAO.addUbiTransactionLog(ubiTransactionLog);
+                }
             }
         }
     }
@@ -452,10 +513,26 @@ public class MonitorChanges {
                 System.out.println("Looking for Changes ...");
                 List<LastUpdated> lstUpdated = getUpdatedNotes(Long.toString(lastMaxUpdatedTime));
                 for (LastUpdated lstCur : lstUpdated) {
-                    System.out.println("Processing Changes ...");
+                    System.out.println("Processing Changes ..." + lstCur.getNoteguid() );
+                    logger.info("Processing Changes ..." + lstCur.getNoteguid() );
                     lastMaxUpdatedTime = Math.max(lastMaxUpdatedTime, lstCur.getSynctime());
                     nnguid = lstCur.getNoteguid();
-                    processNote(nnguid, lstCur, PROCESS_NORMAL_INSTALL);
+                    try {
+                        processNote(nnguid, lstCur, PROCESS_NORMAL_INSTALL);
+                    }
+                    catch (Exception e)
+                    {
+                        logger.error("Error processing note:" + lstCur.getNoteguid(),e);
+                        UbiTransactionLog ubiTransactionLog = new UbiTransactionLog();
+                        ubiTransactionLog.setEventtime(System.currentTimeMillis());
+                        ubiTransactionLog.setSynctime(lstCur.getSynctime());
+                        ubiTransactionLog.setDevui("");
+                        ubiTransactionLog.setDeviceStatus("");
+                        ubiTransactionLog.setAction("Error Processing");
+                        ubiTransactionLog.setTitle(lstCur.getTitle());
+                        ubiTransactionLog.setNotegui(lstCur.getNoteguid());
+                        TerragoDAO.addUbiTransactionLog(ubiTransactionLog);
+                    }
                 }
                 TerragoDAO.writeLastUpdateTime(lastMaxUpdatedTime);
                 try {
