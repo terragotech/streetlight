@@ -16,6 +16,7 @@ import com.terrago.streetlights.utils.PropertiesReader;
 import com.terragoedge.edgeserver.EdgeFormData;
 import com.terragoedge.edgeserver.EdgeNote;
 import com.terragoedge.edgeserver.FormData;
+import com.terragoedge.streetlight.json.model.Dictionary;
 import com.terragoedge.streetlight.json.model.NoteInfo;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.log4j.Logger;
@@ -41,8 +42,8 @@ import com.terrago.streetlights.utils.*;
 
 public class MonitorChanges {
     private Logger logger = Logger.getLogger(MonitorChanges.class);
-    private static final int PROCESS_NOT_FOUND_DEVICES = 1;
-    private static final int PROCESS_NORMAL_INSTALL = 0;
+    protected static final int PROCESS_NOT_FOUND_DEVICES = 1;
+    protected static final int PROCESS_NORMAL_INSTALL = 0;
     //
     private String getDevicControlStatus(List<EdgeFormData> formComponents)
     {
@@ -99,7 +100,7 @@ public class MonitorChanges {
         return actionString;
     }
 
-    private List<LastUpdated> getUpdatedNotes(String lastProcessedTime)
+    public List<LastUpdated> getUpdatedNotes(String lastProcessedTime)
     {
         String instFrmTemplates = PropertiesReader.getProperties().getProperty("formtemplatetoinstall");
         String []arrinstFrmTemplates = instFrmTemplates.split(",");
@@ -459,7 +460,7 @@ public class MonitorChanges {
         return result;
     }
 
-    private void processUnFoundDevices()
+    public void processUnFoundDevices()
     {
         List<DeviceData> lstDeviceData = TerragoDAO.getAllDeviceData();
         for(DeviceData deviceData:lstDeviceData){
@@ -546,7 +547,7 @@ public class MonitorChanges {
             }
         }while(true);
     }
-    private void processNote(String nnguid,LastUpdated curNoteInfo,int mode)
+    public void processNote(String nnguid,LastUpdated curNoteInfo,int mode)
     {
         String notesJson = RESTService.getNoteDetails(nnguid);
         Type listType = new TypeToken<ArrayList<EdgeNote>>() {
@@ -618,7 +619,7 @@ public class MonitorChanges {
         ubiTransactionLog.setNotegui(curNoteInfo.getNoteguid());
         TerragoDAO.addUbiTransactionLog(ubiTransactionLog);
     }
-    private void doDeviceControl(String noteguid)
+    public void doDeviceControl(String noteguid)
     {
         String notesJson = RESTService.getNoteDetails(noteguid);
         Type listType = new TypeToken<ArrayList<EdgeNote>>() {
@@ -671,7 +672,7 @@ public class MonitorChanges {
             new SingleLightDeviceControl(lastUpdated, nodeid);
         }
     }
-    private void doInstall(LastUpdated lastUpdated,
+    public int doInstall(LastUpdated lastUpdated,
                            List<EdgeFormData> formComponents,
                            List<EdgeFormData> installformComponents,int mode){
 
@@ -750,6 +751,7 @@ public class MonitorChanges {
                 }
             }
         }
+        return 0;
     }
     public void startMonitoring()
     {
@@ -1294,6 +1296,74 @@ public class MonitorChanges {
             }
         }while(true);
     }
-    
+    public void processNoteLayer(JsonObject jsonObject,String layerGUID)
+    {
+
+        JsonArray jsonArray = jsonObject.get("dictionary").getAsJsonArray();
+        List<Dictionary> dictionaryList = new ArrayList<>();
+        for(JsonElement jsonElement : jsonArray){
+            JsonObject dicObj = jsonElement.getAsJsonObject();
+            Dictionary dictionary = new Dictionary();
+            dictionary.setKey(dicObj.get("key").getAsString());
+            dictionary.setValue(dicObj.get("value").getAsString());
+            dictionaryList.add(dictionary);
+        }
+        jsonObject.remove("dictionary");
+        setGroupValue(dictionaryList,layerGUID,jsonObject);
+    }
+    public void setGroupValue(List<Dictionary> dictionaryList, String value, JsonObject notesJson) {
+        Gson gson = new Gson();
+        if(dictionaryList == null){
+            dictionaryList = new ArrayList<>();
+        }
+        if (dictionaryList == null || dictionaryList.size() == 0) {
+            Dictionary dictionary = new Dictionary();
+            dictionary.setKey("groupGuid");
+            dictionary.setValue(value);
+            dictionaryList.add(dictionary);
+        }else{
+            boolean isLayerUpdated= false;
+            for (Dictionary dictionary : dictionaryList) {
+                if (dictionary.getKey().equals("groupGuid")) {
+                    isLayerUpdated = true;
+                    dictionary.setValue(value);
+                }
+            }
+            if(!isLayerUpdated){
+                Dictionary dictionary = new Dictionary();
+                dictionary.setKey("groupGuid");
+                dictionary.setValue(value);
+                dictionaryList.add(dictionary);
+            }
+        }
+        notesJson.add("dictionary", gson.toJsonTree(dictionaryList));
+    }
+    public String performLayerChange(String noteguid,String noteJson,String layerGUI)
+    {
+        Gson gson = new Gson();
+        JsonObject edgenoteJson = new JsonParser().parse(noteJson).getAsJsonObject();
+        JsonArray serverForms = edgenoteJson.get("formData").getAsJsonArray();
+        int size = serverForms.size();
+        for (int i = 0; i < size; i++) {
+            JsonObject serverEdgeForm = serverForms.get(i).getAsJsonObject();
+            String formDefJson = serverEdgeForm.get("formDef").getAsString();
+            String formTemplate = serverEdgeForm.get("formTemplateGuid").getAsString();
+            List<EdgeFormData> formComponents = gson.fromJson(formDefJson, new TypeToken<List<EdgeFormData>>() {
+            }.getType());
+            serverEdgeForm.add("formDef", gson.toJsonTree(formComponents));
+            serverEdgeForm.addProperty("formGuid", UUID.randomUUID().toString());
+        }
+        edgenoteJson.add("formData", serverForms);
+        edgenoteJson.addProperty("createdDateTime", System.currentTimeMillis());
+
+        JsonObject edgenotebookJson = edgenoteJson.getAsJsonObject("edgeNotebook");
+        String noteBookGuid = edgenotebookJson.get("notebookGuid").getAsString();
+        processNoteLayer(edgenoteJson,layerGUI);
+
+        ResponseEntity<String> response = RESTService.updateNoteDetails(edgenoteJson.toString(),noteguid,noteBookGuid);
+        String responseNoteGUID = response.getBody();
+
+        return responseNoteGUID;
+    }
 
 }

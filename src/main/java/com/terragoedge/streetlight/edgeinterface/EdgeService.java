@@ -7,7 +7,6 @@ import com.google.gson.JsonParser;
 import com.google.gson.reflect.TypeToken;
 import com.terragoedge.edgeserver.EdgeFormData;
 import com.terragoedge.edgeserver.EdgeNote;
-import com.terragoedge.streetlight.PropertiesReader;
 import com.terragoedge.streetlight.exception.NoValueException;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.log4j.Logger;
@@ -16,7 +15,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.RestTemplate;
-
+import com.terrago.streetlights.utils.PropertiesReader;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
@@ -79,6 +78,7 @@ public class EdgeService {
     }
 
     private HttpHeaders getHeaders() {
+
         String userName = PropertiesReader.getProperties().getProperty("edge.username");
         String password = PropertiesReader.getProperties().getProperty("edge.password");
         HttpHeaders headers = new HttpHeaders();

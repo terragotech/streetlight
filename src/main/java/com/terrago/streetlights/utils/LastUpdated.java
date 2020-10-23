@@ -5,6 +5,15 @@ public class LastUpdated {
     long synctime;
     String title;
     String parentnoteguid;
+    String createdBy;
+
+    public String getCreatedBy() {
+        return createdBy;
+    }
+
+    public void setCreatedBy(String createdBy) {
+        this.createdBy = createdBy;
+    }
 
     public String getParentnoteguid() {
         return parentnoteguid;

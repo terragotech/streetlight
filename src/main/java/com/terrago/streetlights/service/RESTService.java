@@ -28,8 +28,8 @@ public class RESTService {
         return response;
     }
     public static  HttpHeaders getHeaders() {
-        String userName = com.terragoedge.streetlight.PropertiesReader.getProperties().getProperty("edge.username");
-        String password = com.terragoedge.streetlight.PropertiesReader.getProperties().getProperty("edge.password");
+        String userName = PropertiesReader.getProperties().getProperty("edge.username");
+        String password = PropertiesReader.getProperties().getProperty("edge.password");
         HttpHeaders headers = new HttpHeaders();
         String plainCreds = userName + ":" + password;
         byte[] plainCredsBytes = plainCreds.getBytes();

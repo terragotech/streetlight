@@ -5,10 +5,7 @@ import com.google.gson.JsonObject;
 import com.terrago.streetlights.dao.TerragoDAO;
 import com.terrago.streetlights.json.TerragoData;
 import com.terrago.streetlights.json.UbiData;
-import com.terrago.streetlights.service.MonitorChanges;
-import com.terrago.streetlights.service.MonitorChanges2;
-import com.terrago.streetlights.service.RESTService;
-import com.terrago.streetlights.service.UbicquiaLightsInterface;
+import com.terrago.streetlights.service.*;
 import com.terrago.streetlights.utils.*;
 import com.terragoedge.edgeserver.EdgeFormData;
 import org.apache.log4j.Logger;
@@ -41,7 +38,7 @@ public class App
         //System.out.println(TerragoUtils.parseDevUI(strDev));
         //UbicquiaLightsInterface.requestDynamicToken();
 
-        MonitorChanges monitorChanges = new MonitorChanges();
+        MonitorChanges monitorChanges = new LUSPilot();
         monitorChanges.startMonitoring2();
         /*MonitorChanges2 monitorChanges2 = new MonitorChanges2();
         monitorChanges2.startMonitoring();*/

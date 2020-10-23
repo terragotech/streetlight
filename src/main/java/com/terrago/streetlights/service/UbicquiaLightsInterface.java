@@ -64,7 +64,48 @@ public class UbicquiaLightsInterface {
         }
         return result;
     }
+    public static String updateCustomFields(LastUpdated lastUpdated, String nodeData, String dev_eui)
+    {
+        logger.info("Update Custom Fields");
+        String result = null;
+        try {
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
 
+            String strBaseUrl = PropertiesReader.getProperties().getProperty("ubicquia_baseurl");
+            String baseURL = strBaseUrl;
+
+            String requestURL = baseURL + "/nodecustomdata";
+            headers.add("Authorization", "Bearer " + dynamicToken);
+            RestTemplate restTemplate = new RestTemplate();
+            HttpEntity<String> request = new HttpEntity<String>(nodeData,headers);
+            ResponseEntity<String> response = restTemplate.exchange(requestURL, HttpMethod.POST, request, String.class);
+            if(lastUpdated != null)
+            {
+                UbiInterfaceLog ubiInterfaceLog = new UbiInterfaceLog();
+                ubiInterfaceLog.setNotegui(lastUpdated.getNoteguid());
+                ubiInterfaceLog.setTitle(lastUpdated.getTitle());
+                ubiInterfaceLog.setUrlrequest(requestURL);
+                ubiInterfaceLog.setRequestBody(nodeData);
+                ubiInterfaceLog.setRequestResponse(response.getBody());
+                ubiInterfaceLog.setEventtime(System.currentTimeMillis());
+                TerragoDAO.addUbiInterfaceLog(ubiInterfaceLog);
+            }
+            if (response.getStatusCode() == HttpStatus.OK) {
+                System.out.println(response.getBody());
+                JsonObject jsonObject = JsonDataParser.getJsonObject(response.getBody());
+                JsonObject datajsonObject = jsonObject.getAsJsonObject("data");
+                result = datajsonObject.toString();
+            }
+
+        }
+        catch (Exception e)
+        {
+            e.printStackTrace();
+        }
+        return result;
+
+    }
     public static JsonObject getNodes(LastUpdated lastUpdated, String dev_eui)
     {
         logger.info("get all nodes");

@@ -18,10 +18,10 @@ public class PropertiesReader {
 
 
             //String path = "./src/main/resources/main.properties";
-            String path = "./resources/main.properties";
+            //String path = "./resources/main.properties";
 
             // load the file handle for main.properties
-            file = new FileInputStream(path);
+            file = new FileInputStream(ResourceDetails.PROPS_PATH);
 
             // load all the properties from this file
             mainProperties.load(file);
