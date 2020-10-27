@@ -347,6 +347,8 @@ public class UbicquiaLightsInterface {
             {
                 idData = "{\"id_list\":[{\"id\":" + id + "}],\"value\":" + "0" + ",\"node_level_type_id\": 1}";
             }
+            logger.info("Url:"+requestURL);
+            logger.info("Request Body:"+idData);
             System.out.println(idData);
             System.out.println(requestURL);
             System.out.println(idData);
@@ -365,6 +367,7 @@ public class UbicquiaLightsInterface {
             }
             if (response.getStatusCode() == HttpStatus.OK) {
                 System.out.println(response.getBody());
+                logger.info("Response Body:"+response.getBody());
                 /*JsonObject jsonObject = JsonDataParser.getJsonObject(response.getBody());
                 JsonObject datajsonObject = jsonObject.getAsJsonObject("data");
                 result = datajsonObject.toString();*/
@@ -373,7 +376,7 @@ public class UbicquiaLightsInterface {
         }
         catch (Exception e)
         {
-            e.printStackTrace();
+            logger.error("Error",e);
         }
         return result;
     }

@@ -22,6 +22,7 @@ public class CycleSingleLightDeviceControl implements Runnable{
         int n = Integer.parseInt(strLightCycleRep);
         for(int idx=0;idx<n;idx++) {
             try {
+                // ON,OFF,ON,OFF,ON
                 logger.info("cycle interation : " + idx);
                 UbicquiaLightsInterface.requestDynamicToken();
                 logger.info("Requesting light ON");
@@ -31,6 +32,7 @@ public class CycleSingleLightDeviceControl implements Runnable{
                 logger.info("Requesting light OFF");
                 UbicquiaLightsInterface.requestDynamicToken();
                 UbicquiaLightsInterface.SetDevice(lastUpdated, fixtureID, false);
+                Thread.sleep(Long.parseLong(strLightCycle));
             } catch (Exception e) {
                 e.printStackTrace();
             }

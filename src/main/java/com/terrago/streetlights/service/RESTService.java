@@ -58,7 +58,7 @@ public class RESTService {
 
         //  logger.info("Response Code:" + responseEntity.getStatusCode().toString());
         if (responseEntity.getBody() != null) {
-               logger.info("Response Data:" + responseEntity.getBody());
+               //logger.info("Response Data:" + responseEntity.getBody());
         }
 
         return responseEntity;
