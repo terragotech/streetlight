@@ -1,0 +1,30 @@
+{
+  "priority": [{"type":"NEW_DEVICE","order":1}],
+  "config": [
+    {
+      "type": "NEW_DEVICE",
+      "ids": [
+        {
+          "id": 11,
+          "type": "IDONCONTROLLER_SUFFIX",
+          "isRequired": true
+        },
+		{
+          "id": 8,
+          "type": "IDONCONTROLLER",
+          "isRequired": true
+        },
+		{
+          "id": 3,
+          "type": "WATTAGE",
+          "isRequired": true
+        },
+		{
+          "id": 7,
+          "type": "MAC",
+          "isRequired": true
+        }
+      ]
+    }
+  ]
+}

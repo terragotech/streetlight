@@ -1,0 +1,30 @@
+{
+  "priority": [{"type":"UPDATE_DEVICE","order":1}],
+  "config": [
+    {
+      "type": "UPDATE_DEVICE",
+     "ids": [
+        {
+          "id": 8,
+          "type": "IDONCONTROLLER_SUFFIX",
+          "isRequired": true
+        },
+		{
+          "id": 1,
+          "type": "IDONCONTROLLER",
+          "isRequired": true
+        },
+		{
+          "id": 3,
+          "type": "WATTAGE",
+          "isRequired": true
+        },
+		{
+          "id": 7,
+          "type": "MAC",
+          "isRequired": true
+        }
+      ]
+    }
+  ]
+}

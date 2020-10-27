@@ -30,6 +30,8 @@ import java.util.*;
 public abstract class SLVInterfaceService {
 
     private static final Logger logger = Logger.getLogger(SLVInterfaceService.class);
+    public static int USE_NEW_FIX_JSON = 0;
+    public static int USE_INSTALL_FIX_JSON = 1;
 
     EdgeRestService edgeRestService = null;
     JsonParser jsonParser = null;
@@ -282,29 +284,26 @@ public abstract class SLVInterfaceService {
                 logger.info("Form Template is not present.");
                 return;
             }
-            String formTemplateGuid = PropertiesReader.getProperties().getProperty("streetlight.edge.formtemplate.guid");
-            String []arformTemplateGuid = formTemplateGuid.split(",");
-            /* To Handle the Remove Form */
-            int mode = 0;
-            String removeFormGUID = PropertiesReader.getProperties().getProperty("streetlight.edge.removeformtemplate.guid");
+            String newFixFormGUID = PropertiesReader.getProperties().getProperty("streetlight.edge.newfixformtemplate.guid");
+            int CURRENT_OPERATION = -1;
+            String installFormGUID = PropertiesReader.getProperties().getProperty("streetlight.edge.installfixformtemplate.guid");
             for(FormData formData:formDataList)
             {
-                if(formData.getFormTemplateGuid().equals(removeFormGUID))
+                if(formData.getFormTemplateGuid().equals(newFixFormGUID))
                 {
-                    handleRemoveForm(formDataList,slvSyncTable);
-                    return;
+                    CURRENT_OPERATION = USE_NEW_FIX_JSON;
                 }
-                else if (formData.getFormTemplateGuid().equals(arformTemplateGuid[0]))
+                else if (formData.getFormTemplateGuid().equals(installFormGUID))
                 {
-                    mode = 0;
-                }
-                else if (formData.getFormTemplateGuid().equals(arformTemplateGuid[1]))
-                {
-                    mode = 1;
+                    CURRENT_OPERATION = USE_INSTALL_FIX_JSON;
                 }
             }
-            /* End of Handle to Remove Form */
-            conditionsJson = getConditionsJson(mode);
+            if(CURRENT_OPERATION == -1)
+            {
+                //No valid Template found
+                return;
+            }
+            conditionsJson = getConditionsJson(CURRENT_OPERATION);
             processFormData(formDataList,slvSyncTable,edgeNote);
         }catch (SLVConnectionException e){
             throw new SLVConnectionException(e);
@@ -380,13 +379,13 @@ public abstract class SLVInterfaceService {
     }
     public ConditionsJson getConditionsJson(int option) throws Exception {
         ConditionsJson configs = null;
-        if(option == 0) {
+        if(option == USE_NEW_FIX_JSON) {
             FileReader reader = new FileReader(ResourceDetails.CONFIG_JSON_PATH);
             String configjson = jsonParser.parse(reader).toString();
 
             configs = gson.fromJson(configjson, ConditionsJson.class);
         }
-        else if(option == 1)
+        else if(option == USE_INSTALL_FIX_JSON)
         {
             FileReader reader = new FileReader(ResourceDetails.CONFIG_JSON_PATH1);
             String configjson = jsonParser.parse(reader).toString();
@@ -712,8 +711,17 @@ public abstract class SLVInterfaceService {
             if(pos != -1){
                 Config config =  configList.get(pos);
                 List<Id> idList = config.getIds();
+                String idOnControllerSuffix = "";
                 for(Id id : idList){
                     switch (id.getType()){
+                        case IDONCONTROLLER_SUFFIX:
+                            try{
+                                idOnControllerSuffix = valueById(formValuesList,id.getId()).toUpperCase();
+
+                            }catch (NoValueException e){
+                                e.printStackTrace();
+                            }
+                            break;
                         case MAC:
                             try{
                                 String macAddress = valueById(formValuesList,id.getId()).toUpperCase();
@@ -739,6 +747,10 @@ public abstract class SLVInterfaceService {
                         case IDONCONTROLLER:
                             try{
                                 String idOnController = valueById(formValuesList,id.getId());
+                                if(!idOnControllerSuffix.equals(""))
+                                {
+                                    idOnController = idOnController + "-" + idOnControllerSuffix;
+                                }
                                 edge2SLVData.setIdOnController(idOnController);
                             }catch (NoValueException e){
                                 e.printStackTrace();
