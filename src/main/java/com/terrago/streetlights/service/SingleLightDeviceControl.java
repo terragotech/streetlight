@@ -28,11 +28,11 @@ public class SingleLightDeviceControl implements Runnable {
         try{
 
                 UbicquiaLightsInterface.requestDynamicToken();
-                UbicquiaLightsInterface.SetDevice(lastUpdated, fixtureID, true);
+                UbicquiaLightsInterface.SetDevice(lastUpdated, fixtureID, true,null);
                 //Thread.sleep(300000);
                 Thread.sleep(10000);
                 UbicquiaLightsInterface.requestDynamicToken();
-                UbicquiaLightsInterface.SetDevice(lastUpdated, fixtureID, false);
+                UbicquiaLightsInterface.SetDevice(lastUpdated, fixtureID, false,null);
                 Thread.sleep(10000);
                 isCompleted = true;
 

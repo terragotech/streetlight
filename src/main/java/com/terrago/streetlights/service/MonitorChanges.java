@@ -1015,7 +1015,7 @@ public class MonitorChanges {
                                                                         String dimmingValue = f4.getValue();
                                                                         UbicquiaLightsInterface.requestDynamicToken();
                                                                         UbicquiaLightsInterface.SetDimmingValue(lstCur,strID, dimmingValue);
-                                                                        UbicquiaLightsInterface.SetDevice(lstCur,strID, true);
+                                                                        UbicquiaLightsInterface.SetDevice(lstCur,strID, true,null);
                                                                         try {
                                                                             Thread.sleep(1000);
                                                                         } catch (InterruptedException e) {
@@ -1261,7 +1261,7 @@ public class MonitorChanges {
                                             String strID = jobj.get("id").getAsString();
                                             System.out.println(strID);
                                             logger.info("Turing the light ON");
-                                            UbicquiaLightsInterface.SetDevice(lstCur,strID, true);
+                                            UbicquiaLightsInterface.SetDevice(lstCur,strID, true,null);
                                             new DeviceMeteringData(lstCur,fixtureId, strID,noteInfo.getNoteguid(),null);
 
                                         }

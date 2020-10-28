@@ -110,7 +110,7 @@ public class DeviceMeteringData implements Runnable{
                 }
                 Thread.sleep(300000);
                 UbicquiaLightsInterface.requestDynamicToken();
-                UbicquiaLightsInterface.SetDevice(lastUpdated,strID,false);
+                UbicquiaLightsInterface.SetDevice(lastUpdated,strID,false,null);
             }
 
         }catch (Exception e)

@@ -327,7 +327,7 @@ public class UbicquiaLightsInterface {
         }
         return result;
     }
-    public static String SetDevice(LastUpdated lastUpdated,String id,boolean status)
+    public static String SetDevice(LastUpdated lastUpdated,String id,boolean status, String dimmingVal)
     {
         String result = null;
         try {
@@ -345,7 +345,12 @@ public class UbicquiaLightsInterface {
             }
             else
             {
-                idData = "{\"id_list\":[{\"id\":" + id + "}],\"value\":" + "0" + ",\"node_level_type_id\": 1}";
+               if(dimmingVal != null){
+                   idData = "{\"id_list\":[{\"id\":" + id + "}],\"value\":" + ""+dimmingVal+"" + ",\"node_level_type_id\": 1}";
+               }else{
+                   idData = "{\"id_list\":[{\"id\":" + id + "}],\"value\":" + "0" + ",\"node_level_type_id\": 1}";
+               }
+
             }
             logger.info("Url:"+requestURL);
             logger.info("Request Body:"+idData);
