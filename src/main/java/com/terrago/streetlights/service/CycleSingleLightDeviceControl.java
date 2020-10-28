@@ -24,24 +24,28 @@ public class CycleSingleLightDeviceControl implements Runnable{
             try {
                 // ON,OFF,ON,OFF,ON
                 logger.info("cycle interation : " + idx);
-                UbicquiaLightsInterface.requestDynamicToken();
+                //UbicquiaLightsInterface.requestDynamicToken();
                 logger.info("Requesting light ON");
                 UbicquiaLightsInterface.SetDevice(lastUpdated, fixtureID, true,null);
                 logger.info("Going to wait state");
                 Thread.sleep(Long.parseLong(strLightCycle));
+
                 logger.info("Requesting light OFF");
-                UbicquiaLightsInterface.requestDynamicToken();
-                UbicquiaLightsInterface.SetDevice(lastUpdated, fixtureID, false,"0.25");
+                UbicquiaLightsInterface.SetDevice(lastUpdated, fixtureID, false,null);
+                //UbicquiaLightsInterface.requestDynamicToken();
+                //UbicquiaLightsInterface.SetDimmingValue(lastUpdated,fixtureID,"25");
+                //UbicquiaLightsInterface.SetDevice(lastUpdated, fixtureID, false,"0.25");
                 Thread.sleep(Long.parseLong(strLightCycle));
             } catch (Exception e) {
                 logger.error("Error",e);
             }
         }
-        try {
-            UbicquiaLightsInterface.SetDevice(lastUpdated, fixtureID, false,null);
+        /*try {
+            //logger.info("Requesting light OFF");
+            //UbicquiaLightsInterface.SetDevice(lastUpdated, fixtureID, false,null);
         }catch (Exception e){
             logger.error("Error",e);
-        }
+        }*/
 
     }
 

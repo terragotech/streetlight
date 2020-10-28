@@ -222,7 +222,7 @@ public class LUSPilot extends MonitorChanges{
             int nidDev = Integer.parseInt(idDev);
             String dev_eui = TerragoUtils.getEdgeFormValue(installFormComponents, nidDev);
             dev_eui = TerragoUtils.parseDevUI(dev_eui);
-            UbicquiaLightsInterface.requestDynamicToken();
+            //UbicquiaLightsInterface.requestDynamicToken();
             LastUpdated lastUpdated = TerragoDAO.getNoteInfo(noteguid);
             JsonObject jsonObject = UbicquiaLightsInterface.getNodes(lastUpdated, dev_eui);
             String nodeid = jsonObject.get("id").getAsString();
@@ -296,12 +296,12 @@ public class LUSPilot extends MonitorChanges{
         dev_eui = TerragoUtils.parseDevUI(dev_eui);
         if(!dev_eui.equals(""))
         {
-            UbicquiaLightsInterface.requestDynamicToken();
+            //UbicquiaLightsInterface.requestDynamicToken();
             JsonObject jsonObject = UbicquiaLightsInterface.getNodes(lastUpdated,dev_eui);
             if(jsonObject != null)
             {
                 //Do Update
-                UbicquiaLightsInterface.requestDynamicToken();
+                //UbicquiaLightsInterface.requestDynamicToken();
                 //Change Node Name
                 String nodeid = jsonObject.get("id").getAsString();
                 String strInstallDate = getTodayInstallDate();

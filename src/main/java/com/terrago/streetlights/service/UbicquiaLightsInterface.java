@@ -67,6 +67,7 @@ public class UbicquiaLightsInterface {
     public static String updateCustomFields(LastUpdated lastUpdated, String nodeData, String dev_eui)
     {
         logger.info("Update Custom Fields");
+        String apikey = PropertiesReader.getProperties().getProperty("apikey");
         String result = null;
         try {
             HttpHeaders headers = new HttpHeaders();
@@ -76,10 +77,13 @@ public class UbicquiaLightsInterface {
             String baseURL = strBaseUrl;
 
             String requestURL = baseURL + "/nodecustomdata";
-            headers.add("Authorization", "Bearer " + dynamicToken);
+            //headers.add("Authorization", "Bearer " + dynamicToken);
+            headers.add("x-api-key", apikey);
             RestTemplate restTemplate = new RestTemplate();
             HttpEntity<String> request = new HttpEntity<String>(nodeData,headers);
+            logger.info("Request custom field updated");
             ResponseEntity<String> response = restTemplate.exchange(requestURL, HttpMethod.POST, request, String.class);
+            logger.info("custom field updated log:" + response.getBody());
             if(lastUpdated != null)
             {
                 UbiInterfaceLog ubiInterfaceLog = new UbiInterfaceLog();
@@ -113,10 +117,11 @@ public class UbicquiaLightsInterface {
         try {
             HttpHeaders headers = new HttpHeaders();
             String strBaseUrl = PropertiesReader.getProperties().getProperty("ubicquia_baseurl");
+            String apikey = PropertiesReader.getProperties().getProperty("apikey");
             String baseURL = strBaseUrl;
             String requestURL = baseURL + "/nodes?node_level_type_id=1";
-            //headers.add("x-api-key", "321b0b2e5a815068913c659e93dc56608bd8c4dafcc586f5e1732cf41b443f54");
-            headers.add("Authorization", "Bearer " + dynamicToken);
+            headers.add("x-api-key", apikey);
+            //headers.add("Authorization", "Bearer " + dynamicToken);
             RestTemplate restTemplate = new RestTemplate();
             HttpEntity<String> request = new HttpEntity<String>(headers);
             ResponseEntity<String> response = restTemplate.exchange(requestURL, HttpMethod.GET, request, String.class);
@@ -241,6 +246,7 @@ public class UbicquiaLightsInterface {
     {
         String result = null;
         try {
+            String apikey = PropertiesReader.getProperties().getProperty("apikey");
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON);
 
@@ -248,7 +254,9 @@ public class UbicquiaLightsInterface {
             String baseURL = strBaseUrl;
 
             String requestURL = baseURL + "/nodes/update-node/" + nodeId;
-            headers.add("Authorization", "Bearer " + dynamicToken);
+            //headers.add("Authorization", "Bearer " + dynamicToken);
+            headers.add("x-api-key", apikey);
+            logger.info("Calling setvalues");
             RestTemplate restTemplate = new RestTemplate();
             HttpEntity<String> request = new HttpEntity<String>(nodeData,headers);
             ResponseEntity<String> response = restTemplate.exchange(requestURL, HttpMethod.PUT, request, String.class);
@@ -263,6 +271,8 @@ public class UbicquiaLightsInterface {
                 ubiInterfaceLog.setEventtime(System.currentTimeMillis());
                 TerragoDAO.addUbiInterfaceLog(ubiInterfaceLog);
             }
+            logger.info("Set values response");
+            logger.info(response.getBody());
             if (response.getStatusCode() == HttpStatus.OK) {
                 System.out.println(response.getBody());
                 JsonObject jsonObject = JsonDataParser.getJsonObject(response.getBody());
@@ -282,6 +292,7 @@ public class UbicquiaLightsInterface {
     public static String SetDimmingValue(LastUpdated lastUpdated,String id,String dimmingValue)
     {
         String result = null;
+        String apikey = PropertiesReader.getProperties().getProperty("apikey");
         try {
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON);
@@ -289,20 +300,26 @@ public class UbicquiaLightsInterface {
             String strBaseUrl = PropertiesReader.getProperties().getProperty("ubicquia_baseurl");
             String baseURL = strBaseUrl;
             String requestURL = baseURL + "/nodes/setLightDim";
-            headers.add("Authorization", "Bearer " + dynamicToken);
+            //headers.add("Authorization", "Bearer " + dynamicToken);
+            headers.add("x-api-key", apikey);
             RestTemplate restTemplate = new RestTemplate();
             String idData = "";
             if(dimmingValue == null)
             {
-                idData = "{\"id_list\":[{\"id\":" + id + "}],\"value\":" + "80" + "}";
+                idData = "{\"id_list\":[{\"id\":" + id + "}],\"value\":" + "80" + "\"node_level_type_id\": 1,\n" +
+                        "  \"dim_type\": \"DC\"}";
             }
             else
             {
-                idData = "{\"id_list\":[{\"id\":" + id + "}],\"value\":" + dimmingValue + "}";
+                idData = "{\"id_list\":[{\"id\":" + id + "}],\"value\":" + dimmingValue + ",\"node_level_type_id\": 1,\n" +
+                        "  \"dim_type\": \"DC\"}";
             }
             System.out.println(idData);
             HttpEntity<String> request = new HttpEntity<String>(idData,headers);
+            logger.info("Request data:" + idData);
+            logger.info("Request light dimming");
             ResponseEntity<String> response = restTemplate.exchange(requestURL, HttpMethod.POST, request, String.class);
+            logger.info("response light dimming:" + response.getBody());
             if(lastUpdated != null)
             {
                 UbiInterfaceLog ubiInterfaceLog = new UbiInterfaceLog();
@@ -333,11 +350,12 @@ public class UbicquiaLightsInterface {
         try {
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON);
-
+            String apikey = PropertiesReader.getProperties().getProperty("apikey");
             String strBaseUrl = PropertiesReader.getProperties().getProperty("ubicquia_baseurl");
             String baseURL = strBaseUrl;
             String requestURL = baseURL + "/nodes/setLightState";
-            headers.add("Authorization", "Bearer " + dynamicToken);
+            //headers.add("Authorization", "Bearer " + dynamicToken);
+            headers.add("x-api-key", apikey);
             RestTemplate restTemplate = new RestTemplate();
             String idData = "";
             if(status) {
