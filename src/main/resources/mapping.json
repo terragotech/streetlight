@@ -2,15 +2,38 @@
   {
     "formTemplateGuid":"",
     "getDevice": {
-      "url":"",
+      "url":"/reports/api/asset/searchDevicesExt",
       "method":"post",
-      "paramsType":"json/formVal",
+      "paramsType":"formVal",
       "mappings": [
         {
-          "sourceComponent": "",
+          "destinationComponent": "recurse",
+          "defaultValue": "true"
+        },
+        {
+          "destinationComponent": "returnedInfo",
+          "defaultValue": "lightDevicesList"
+        },
+        {
+          "destinationComponent": "attributeOperator",
+          "defaultValue": "eq-i"
+        },
+        {
+          "destinationComponent": "maxResults",
+          "defaultValue": "1"
+        },
+        {
+          "destinationComponent": "ser",
+          "defaultValue": "json"
+        },
+        {
+          "destinationComponent": "attributeName",
+          "defaultValue": "idOnController"
+        },
+        {
+          "sourceComponent": "1",
           "sourceObject": "form",
-          "destinationComponent": "",
-          "defaultValue": ""
+          "destinationComponent": "attributeValue"
         }
       ],
       "objectKey": "getDevice"
@@ -44,12 +67,12 @@
           "defaultValue": "TalqBridge@TB398484989"
         },
         {
-          "sourceComponent": {"key":"id","value":"1"},
+          "sourceComponent": "1",
           "sourceObject": "form",
           "destinationComponent": "userName"
         },
         {
-          "sourceComponent":  {"key":"id","value":"1"},
+          "sourceComponent":  "1",
           "sourceObject": "form",
           "destinationComponent": "idOnController"
         },
