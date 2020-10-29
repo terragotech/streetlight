@@ -26,10 +26,18 @@ public class GenericProcess {
     }
 
     public void process(){
+        JsonObject data = new JsonObject();
         SlvRequestConfig getDeviceConfig = slvConfig.getGetDevice();
+        SlvRequestConfig createDeviceConfig = slvConfig.getCreateDevice();
+        SlvRequestConfig setDeviceConfig = slvConfig.getSetDevice();
+        SlvRequestConfig replaceOLCConfig = slvConfig.getReplaceOLC();
+        processRequestConfig(data, getDeviceConfig,false);
+        processRequestConfig(data, createDeviceConfig,false);
+        processRequestConfig(data, setDeviceConfig,true);
+        processRequestConfig(data, replaceOLCConfig,false);
     }
 
-    private void processRequestConfig(JsonObject data, SlvRequestConfig slvRequestConfig, List<FormValues> formValues){
+    private void processRequestConfig(JsonObject data, SlvRequestConfig slvRequestConfig, boolean isSetdeviceValueConfig){
         if (slvRequestConfig != null) {
             String url = slvRequestConfig.getUrl();
             List<Condition> conditions = slvRequestConfig.getConditions();
@@ -39,14 +47,23 @@ public class GenericProcess {
             String paramsType = slvRequestConfig.getParamsType();
             boolean isConditionPassed = Utils.checkConditions(data,conditions);
             if(isConditionPassed){
-                JsonObject requestData = Utils.getMappingsValue(data,mappings,formValues);
+                JsonObject requestData = Utils.getMappingsValue(data,mappings);
                 List<String> queryParams = new ArrayList<>();
                 LinkedMultiValueMap<String,String> linkedMultiValueMap = new LinkedMultiValueMap<>();
                 for(Map.Entry<String, JsonElement> entry: requestData.entrySet()){
                     String value = entry.getValue().isJsonNull() ? "" : entry.getValue().getAsString();
                     String key = entry.getKey();
                     queryParams.add(key+"="+value);
-                    linkedMultiValueMap.add(key, value);
+                    if(isSetdeviceValueConfig){
+                        if (value != null && !value.trim().equals("")) {
+                            linkedMultiValueMap.add("valueName", key);
+                            linkedMultiValueMap.add("value", value);
+                        }
+                    }else {
+                        if (value != null && !value.trim().equals("")) {
+                            linkedMultiValueMap.add(key, value);
+                        }
+                    }
                 }
                 ResponseEntity<String> responseEntity = null;
                 switch (method){

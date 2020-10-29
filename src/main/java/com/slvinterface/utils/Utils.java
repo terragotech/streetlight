@@ -1,6 +1,8 @@
 package com.slvinterface.utils;
 
+import com.google.gson.Gson;
 import com.google.gson.JsonObject;
+import com.google.gson.reflect.TypeToken;
 import com.slvinterface.json.Condition;
 import com.slvinterface.json.FormData;
 import com.slvinterface.json.FormValues;
@@ -84,7 +86,8 @@ public class Utils {
         }
         return null;
     }
-    public static JsonObject getMappingsValue(JsonObject data, List<Mapping> mappings, List<FormValues> formValues){
+    public static JsonObject getMappingsValue(JsonObject data, List<Mapping> mappings){
+        Gson gson = new Gson();
         JsonObject resultData = new JsonObject();
         for(Mapping mapping : mappings){
             String sourceObject = mapping.getSourceObject();
@@ -94,6 +97,7 @@ public class Utils {
             if (defaultValue != null){
                 resultData.addProperty(destinationComponent,defaultValue);
             }else {
+                List<FormValues> formValues  = gson.fromJson(data.get("formdatas").getAsString(),new TypeToken<List<FormValues>>() {}.getType());
                 String destinationValue = getEdgeValue(data,sourceObject, sourceComponent,formValues);
                 if (destinationValue != null) {
                     resultData.addProperty(destinationComponent, destinationValue);
