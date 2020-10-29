@@ -16,62 +16,145 @@
       "objectKey": "getDevice"
     },
     "createDevice": {
-      "url":"",
+      "url":"/api/assetmanagement/createCategoryDevice",
       "method":"post",
-      "paramsType":"json/formVal",
+      "paramsType":"formVal",
       "conditions": [
         {
           "sourceComponent": "",
           "sourceObject": "getDevice",
-          "conditionType": ""
+          "conditionType": "isNull"
         }
       ],
       "mappings": [
         {
-          "sourceComponent": "",
-          "sourceObject": "form",
-          "destinationComponent": "",
+          "destinationComponent": "ser",
+          "defaultValue": "json"
+        },
+        {
+          "destinationComponent": "categoryStrId",
+          "defaultValue": "streetlight"
+        },
+        {
+          "destinationComponent": "geozoneId",
           "defaultValue": ""
+        },
+        {
+          "destinationComponent": "controllerStrId",
+          "defaultValue": "TalqBridge@TB398484989"
+        },
+        {
+          "sourceComponent": {"key":"id","value":"1"},
+          "sourceObject": "form",
+          "destinationComponent": "userName"
+        },
+        {
+          "sourceComponent":  {"key":"id","value":"1"},
+          "sourceObject": "form",
+          "destinationComponent": "idOnController"
+        },
+        {
+          "sourceComponent":  "lat",
+          "sourceObject": "geometry",
+          "destinationComponent": "lat"
+        },
+        {
+          "sourceComponent":  "lng",
+          "sourceObject": "geometry",
+          "destinationComponent": "lng"
         }
       ]
     },
     "setDevice": {
-      "url":"",
+      "url":"/api/loggingmanagement/setDeviceValues",
       "method":"post",
-      "paramsType":"json/formVal",
+      "paramsType":"formVal",
       "conditions": [
         {
-          "sourceComponent": "",
-          "sourceObject": "getDevice",
-          "conditionType": ""
+          "sourceComponent":  "1",
+          "sourceObject": "form",
+          "conditionType": "isNotNull"
         }
       ],
       "mappings": [
         {
-          "sourceComponent": "",
+          "destinationComponent": "ser",
+          "defaultValue": "json"
+        },
+        {
+          "sourceComponent":  "1",
           "sourceObject": "form",
-          "destinationComponent": "",
+          "destinationComponent": "idOnController"
+        },
+        {
+          "destinationComponent": "controllerStrId",
+          "defaultValue": "TalqBridge@TB398484989"
+        },
+        {
+          "destinationComponent": "installStatus",
+          "defaultValue": "Installed"
+        },
+        {
+          "sourceComponent": "createdDateTime",
+          "sourceObject": "note",
+          "destinationComponent": "install.date",
+          "type":"date",
+          "dateConfig":{
+            "format":"yyyy-MM-dd",
+             "timeZone":"GMT"
+          },
           "defaultValue": ""
+        },
+        {
+          "sourceComponent": "8",
+          "sourceObject": "form",
+          "destinationComponent": "macAddress",
+          "destinationComponents": "macAddress"
+        },
+        {
+          "sourceComponent": "14",
+          "sourceObject": "form",
+          "destinationComponent": "luminaire.type"
+        },{
+          "sourceComponent":"13",
+          "sourceObject": "form",
+          "destinationComponent": "brandId"
+        },{
+          "sourceComponent": "12",
+          "sourceObject": "form",
+          "destinationComponent": "power"
         }
       ]
     },
     "replaceOLC": {
-      "url":"",
+      "url":"/api/monitoringmanagement/replaceOLCs",
       "method":"post",
-      "paramsType":"json/formVal",
+      "paramsType":"formVal",
       "conditions": [
         {
-          "sourceComponent": "",
-          "sourceObject": "getDevice",
-          "conditionType": ""
+          "sourceComponent":  "1",
+          "sourceObject": "form",
+          "conditionType": "isNotNull"
         }
       ],
       "mappings": [
         {
-          "sourceComponent": "",
+          "sourceComponent": "8",
           "sourceObject": "form",
-          "destinationComponent": "",
-          "defaultValue": ""
+          "destinationComponent": "newNetworkId"
+        },
+        {
+          "destinationComponent": "ser",
+          "defaultValue": "json"
+        },
+        {
+          "destinationComponent": "controllerStrId",
+          "defaultValue": "TalqBridge@TB398484989"
+        },
+        {
+          "sourceComponent":  "1",
+          "sourceObject": "form",
+          "destinationComponent": "idOnController"
         }
       ]
     }
