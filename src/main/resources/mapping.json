@@ -1,0 +1,79 @@
+[
+  {
+    "formTemplateGuid":"",
+    "getDevice": {
+      "url":"",
+      "method":"post",
+      "paramsType":"json/formVal",
+      "mappings": [
+        {
+          "sourceComponent": "",
+          "sourceObject": "form",
+          "destinationComponent": "",
+          "defaultValue": ""
+        }
+      ],
+      "objectKey": "getDevice"
+    },
+    "createDevice": {
+      "url":"",
+      "method":"post",
+      "paramsType":"json/formVal",
+      "conditions": [
+        {
+          "sourceComponent": "",
+          "sourceObject": "getDevice",
+          "conditionType": ""
+        }
+      ],
+      "mappings": [
+        {
+          "sourceComponent": "",
+          "sourceObject": "form",
+          "destinationComponent": "",
+          "defaultValue": ""
+        }
+      ]
+    },
+    "setDevice": {
+      "url":"",
+      "method":"post",
+      "paramsType":"json/formVal",
+      "conditions": [
+        {
+          "sourceComponent": "",
+          "sourceObject": "getDevice",
+          "conditionType": ""
+        }
+      ],
+      "mappings": [
+        {
+          "sourceComponent": "",
+          "sourceObject": "form",
+          "destinationComponent": "",
+          "defaultValue": ""
+        }
+      ]
+    },
+    "replaceOLC": {
+      "url":"",
+      "method":"post",
+      "paramsType":"json/formVal",
+      "conditions": [
+        {
+          "sourceComponent": "",
+          "sourceObject": "getDevice",
+          "conditionType": ""
+        }
+      ],
+      "mappings": [
+        {
+          "sourceComponent": "",
+          "sourceObject": "form",
+          "destinationComponent": "",
+          "defaultValue": ""
+        }
+      ]
+    }
+  }
+]
