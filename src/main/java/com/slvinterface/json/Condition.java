@@ -1,11 +1,8 @@
 package com.slvinterface.json;
 
-public class Condition {
-    private String sourceComponent;
-    private String sourceObject;
+public class Condition extends Mapping{
     private String conditionComponent;
     private String conditionObject;
-    private String defaultValue;
     private String conditionType;
 
 
@@ -25,29 +22,6 @@ public class Condition {
         this.conditionObject = conditionObject;
     }
 
-    public String getDefaultValue() {
-        return defaultValue;
-    }
-
-    public void setDefaultValue(String defaultValue) {
-        this.defaultValue = defaultValue;
-    }
-
-    public String getSourceComponent() {
-        return sourceComponent;
-    }
-
-    public void setSourceComponent(String sourceComponent) {
-        this.sourceComponent = sourceComponent;
-    }
-
-    public String getSourceObject() {
-        return sourceObject;
-    }
-
-    public void setSourceObject(String sourceObject) {
-        this.sourceObject = sourceObject;
-    }
 
     public String getConditionType() {
         return conditionType;
@@ -60,11 +34,8 @@ public class Condition {
     @Override
     public String toString() {
         return "Condition{" +
-                "sourceComponent='" + sourceComponent + '\'' +
-                ", sourceObject='" + sourceObject + '\'' +
-                ", conditionComponent='" + conditionComponent + '\'' +
+                "conditionComponent='" + conditionComponent + '\'' +
                 ", conditionObject='" + conditionObject + '\'' +
-                ", defaultValue='" + defaultValue + '\'' +
                 ", conditionType='" + conditionType + '\'' +
                 '}';
     }

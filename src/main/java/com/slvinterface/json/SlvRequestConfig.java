@@ -9,8 +9,25 @@ public class SlvRequestConfig {
     private String paramsType;
     private List<Condition> conditions = new ArrayList<>();
     private List<Mapping> mappings = new ArrayList<>();
-    private String objectKey;
+    private Response response;
+    private SlvRequestConfig checkMac;
+    private SlvRequestConfig setDevice;
 
+    public SlvRequestConfig getCheckMac() {
+        return checkMac;
+    }
+
+    public void setCheckMac(SlvRequestConfig checkMac) {
+        this.checkMac = checkMac;
+    }
+
+    public SlvRequestConfig getSetDevice() {
+        return setDevice;
+    }
+
+    public void setSetDevice(SlvRequestConfig setDevice) {
+        this.setDevice = setDevice;
+    }
 
     public List<Condition> getConditions() {
         return conditions;
@@ -52,12 +69,12 @@ public class SlvRequestConfig {
         this.mappings = mappings;
     }
 
-    public String getObjectKey() {
-        return objectKey;
+    public Response getResponse() {
+        return response;
     }
 
-    public void setObjectKey(String objectKey) {
-        this.objectKey = objectKey;
+    public void setResponse(Response response) {
+        this.response = response;
     }
 
     @Override
@@ -68,7 +85,9 @@ public class SlvRequestConfig {
                 ", paramsType='" + paramsType + '\'' +
                 ", conditions=" + conditions +
                 ", mappings=" + mappings +
-                ", objectKey='" + objectKey + '\'' +
+                ", response=" + response +
+                ", checkMac=" + checkMac +
+                ", setDevice=" + setDevice +
                 '}';
     }
 }
