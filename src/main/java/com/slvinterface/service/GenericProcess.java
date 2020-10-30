@@ -90,6 +90,16 @@ public class GenericProcess {
             boolean isConditionPassed = Utils.checkConditions(data,slvConfig.getConditions());
             if(isConditionPassed){
                 try{
+
+                    if(edgeNote.getEdgeNotebook().getNotebookName().equals("CPS Medical Center")){
+                        JsonObject geoZoneJson = new JsonObject();
+                        geoZoneJson.addProperty("id","13203");
+                        data.put("geoZone",geoZoneJson);
+                    }else if(edgeNote.getEdgeNotebook().getNotebookName().equals("CPS Downtown")){
+                        JsonObject geoZoneJson = new JsonObject();
+                        geoZoneJson.addProperty("id","13196");
+                        data.put("geoZone",geoZoneJson);
+                    }
                     SlvRequestConfig getDeviceConfig = slvConfig.getGetDevice();
                     SlvRequestConfig createDeviceConfig = slvConfig.getCreateDevice();
                     SlvRequestConfig setDeviceConfig = slvConfig.getSetDevice();

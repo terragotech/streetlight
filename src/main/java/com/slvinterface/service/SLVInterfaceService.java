@@ -38,6 +38,7 @@ public abstract class SLVInterfaceService {
     ConditionsJson conditionsJson = null;
     Properties properties = null;
     SLVRestService slvRestService = null;
+    GenericProcess genericProcess = null;
 
     public static int retryCount = 0;
 
@@ -51,6 +52,7 @@ public abstract class SLVInterfaceService {
         gson = new Gson();
         slvTools = new SLVTools();
         slvRestService = new SLVRestService();
+        genericProcess = new GenericProcess();
         this.properties = PropertiesReader.getProperties();
     }
 
@@ -182,16 +184,18 @@ public abstract class SLVInterfaceService {
                 }
                 logger.info("Response from edge.");
                 String notesData = responseEntity.getBody();
-                processNoteData(notesData,slvSyncTable);
+                EdgeNote edgeNote = gson.fromJson(notesData, EdgeNote.class);
+                genericProcess.process(edgeNote);
+                //processNoteData(notesData,slvSyncTable);
             } else {
                 slvSyncTable.setErrorDetails("Unable to Get Note Details from Edge Server and status code is:"+responseEntity.getStatusCode());
             }
 
-        }catch (SLVConnectionException e){
+        }/*catch (SLVConnectionException e){
             slvSyncTable.setStatus("Failure");
             slvSyncTable.setErrorDetails(e.getMessage());
             throw new SLVConnectionException(e);
-        }catch (Exception e) {
+        }*/catch (Exception e) {
             slvSyncTable.setStatus("Failure");
             slvSyncTable.setErrorDetails(e.getMessage());
             logger.error("Error in run", e);

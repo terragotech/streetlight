@@ -167,14 +167,17 @@ public class Utils {
 
 
     private static String getFormValue(List<FormValues> formValuesList,String componentId){
-        FormValues formValues1 = new FormValues();
-        formValues1.setId(Integer.valueOf(componentId));
-        int pos = formValuesList.indexOf(formValues1);
-        if (pos > -1) {
-            String value = formValuesList.get(pos).getValue();
-            value = (value == null || value.contains("null") || value.trim().isEmpty()) ? null : value.trim();
-            return value;
+        if(formValuesList != null){
+            FormValues formValues1 = new FormValues();
+            formValues1.setId(Integer.valueOf(componentId));
+            int pos = formValuesList.indexOf(formValues1);
+            if (pos > -1) {
+                String value = formValuesList.get(pos).getValue();
+                value = (value == null || value.contains("null") || value.trim().isEmpty()) ? null : value.trim();
+                return value;
+            }
         }
+
         return null;
     }
 }

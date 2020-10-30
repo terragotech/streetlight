@@ -1,0 +1,306 @@
+[
+  {
+    "label": "Pole Number",
+    "showLabel": true,
+    "placeholder": "Enter text",
+    "validation": "none",
+    "component": "textInput",
+    "id": 21,
+    "$$hashKey": "51WlbM",
+    "required": true,
+    "index": 1
+  },
+  {
+    "label": "Fixture 1",
+    "showLabel": true,
+    "components": [
+      {
+        "label": "Scan Smart Controller QR Code",
+        "showLabel": true,
+        "required": false,
+        "component": "barcode",
+        "id": 8,
+        "$$hashKey": "053",
+        "validation": "macaddress",
+        "index": 3
+      },
+      {
+        "label": "Fixture Style",
+        "showLabel": true,
+        "options": [
+          "Select From Below",
+          "Acorn",
+          "Cobra Head",
+          "Flood Light",
+          "Shoebox",
+          "Pendant",
+          "Unknown"
+        ],
+        "placeholder": "placeholder",
+        "required": false,
+        "component": "select",
+        "id": 14,
+        "$$hashKey": "07F",
+        "index": 4
+      },
+      {
+        "label": "Lamp Type",
+        "showLabel": true,
+        "options": [
+          "Select From Below",
+          "Light-emitting Diod - LED",
+          "High Pressure Sodium - HPS",
+          "Mercury Vapor - MV",
+          "Unknown"
+        ],
+        "placeholder": "placeholder",
+        "required": false,
+        "component": "select",
+        "id": 13,
+        "$$hashKey": "073",
+        "index": 5
+      },
+      {
+        "label": "Wattage",
+        "showLabel": true,
+        "options": [
+          "Select From Below",
+          "50",
+          "70",
+          "100",
+          "110",
+          "120",
+          "150",
+          "220",
+          "250",
+          "280",
+          "400",
+          "420",
+          "Unknown"
+        ],
+        "placeholder": "placeholder",
+        "required": false,
+        "component": "select",
+        "id": 12,
+        "$$hashKey": "06R",
+        "index": 6
+      }
+    ],
+    "component": "group",
+    "id": 2,
+    "$$hashKey": "G5solm",
+    "required": false,
+    "index": 2
+  },
+  {
+    "label": "Fixture 2",
+    "showLabel": true,
+    "components": [
+      {
+        "label": "Scan Smart Controller QR Code",
+        "showLabel": true,
+        "required": false,
+        "component": "barcode",
+        "id": 9,
+        "$$hashKey": "05F",
+        "validation": "macaddress",
+        "index": 8
+      },
+      {
+        "label": "Fixture Style",
+        "showLabel": true,
+        "options": [
+          "Select From Below",
+          "Acorn",
+          "Cobra Head",
+          "Flood Light",
+          "Shoebox",
+          "Pendant",
+          "Unknown"
+        ],
+        "placeholder": "placeholder",
+        "required": false,
+        "component": "select",
+        "id": 17,
+        "$$hashKey": "08F",
+        "index": 9
+      },
+      {
+        "label": "Lamp Type",
+        "showLabel": true,
+        "options": [
+          "Select From Below",
+          "Light-emitting Diod - LED",
+          "High Pressure Sodium - HPS",
+          "Mercury Vapor - MV",
+          "Unknown"
+        ],
+        "placeholder": "placeholder",
+        "required": false,
+        "component": "select",
+        "id": 16,
+        "$$hashKey": "083",
+        "index": 10
+      },
+      {
+        "label": "Wattage",
+        "showLabel": true,
+        "options": [
+          "Select From Below",
+          "50",
+          "70",
+          "100",
+          "110",
+          "120",
+          "150",
+          "220",
+          "250",
+          "280",
+          "400",
+          "420",
+          "Unknown"
+        ],
+        "placeholder": "placeholder",
+        "required": false,
+        "component": "select",
+        "id": 15,
+        "$$hashKey": "07R",
+        "index": 11
+      }
+    ],
+    "component": "group",
+    "id": 4,
+    "$$hashKey": "DhkjGG",
+    "required": false,
+    "index": 7
+  },
+  {
+    "label": "Fixture 3",
+    "showLabel": true,
+    "components": [
+      {
+        "label": "Scan Smart Controller QR Code",
+        "showLabel": true,
+        "required": false,
+        "component": "barcode",
+        "id": 11,
+        "$$hashKey": "06F",
+        "validation": "macaddress",
+        "index": 13
+      },
+      {
+        "label": "Fixture Style",
+        "showLabel": true,
+        "options": [
+          "Select From Below",
+          "Acorn",
+          "Cobra Head",
+          "Flood Light",
+          "Shoebox",
+          "Pendant",
+          "Unknown"
+        ],
+        "placeholder": "placeholder",
+        "required": false,
+        "component": "select",
+        "id": 20,
+        "$$hashKey": "09F",
+        "index": 14
+      },
+      {
+        "label": "Lamp Type",
+        "showLabel": true,
+        "options": [
+          "Select From Below",
+          "Light-emitting Diod - LED",
+          "High Pressure Sodium - HPS",
+          "Mercury Vapor - MV",
+          "Unknown"
+        ],
+        "placeholder": "placeholder",
+        "required": false,
+        "component": "select",
+        "id": 19,
+        "$$hashKey": "093",
+        "index": 15
+      },
+      {
+        "label": "Wattage",
+        "showLabel": true,
+        "options": [
+          "Select From Below",
+          "50",
+          "70",
+          "100",
+          "110",
+          "120",
+          "150",
+          "220",
+          "250",
+          "280",
+          "400",
+          "420",
+          "Unknown"
+        ],
+        "placeholder": "placeholder",
+        "required": false,
+        "component": "select",
+        "id": 18,
+        "$$hashKey": "08R",
+        "index": 16
+      }
+    ],
+    "component": "group",
+    "id": 3,
+    "$$hashKey": "5IMvZu",
+    "required": false,
+    "index": 12
+  },
+  {
+    "label": "Install Status",
+    "showLabel": true,
+    "placeholder": "placeholder",
+    "setNoteLayer": true,
+    "options": [
+      "Not Yet Complete",
+      "Could Not Complete",
+      "Complete"
+    ],
+    "required": true,
+    "component": "radio",
+    "id": 5,
+    "$$hashKey": "VaTAN3",
+    "index": 17
+  },
+  {
+    "label": "Could Not Complete - Reason",
+    "showLabel": true,
+    "placeholder": "Enter text",
+    "required": true,
+    "component": "textArea",
+    "id": 6,
+    "$$hashKey": "EIysLo",
+    "conditionCollection": {
+      "conjunctionType": "AND",
+      "conditions": [
+        {
+          "equalityType": "equals",
+          "$$hashKey": "04P",
+          "sourceComponent": 5,
+          "targetValue": "Could Not Complete"
+        }
+      ]
+    },
+    "index": 18
+  },
+  {
+    "label": "Comments",
+    "showLabel": true,
+    "placeholder": "Enter text",
+    "required": false,
+    "component": "textArea",
+    "id": 7,
+    "$$hashKey": "6CqWWh",
+    "index": 19
+  }
+]
