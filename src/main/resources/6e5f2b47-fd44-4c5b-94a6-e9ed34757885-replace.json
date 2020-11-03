@@ -1,0 +1,22 @@
+[
+  {
+    "label": "Scan Existing Smart Controller QR Code",
+    "showLabel": true,
+    "required": false,
+    "component": "barcode",
+    "id": 1,
+    "$$hashKey": "fT0wtd",
+    "validation": "macaddress",
+    "index": 1
+  },
+  {
+    "label": "Scan New Smart Controller QR Code",
+    "showLabel": true,
+    "required": true,
+    "component": "barcode",
+    "id": 2,
+    "$$hashKey": "3o63xf",
+    "validation": "macaddress",
+    "index": 2
+  }
+]

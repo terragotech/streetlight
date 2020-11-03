@@ -161,11 +161,6 @@
           "defaultValue": "talq.streetlight.v1:Lamp"
         },
         {
-          "destinationComponent": "DimmingGroupName",
-          "isValueParam":true,
-          "defaultValue": "Demo Daylight"
-        },
-        {
           "sourceComponent": "14",
           "sourceObject": "form",
           "isValueParam":true,
@@ -505,11 +500,6 @@
           "defaultValue": "talq.streetlight.v1:Lamp"
         },
         {
-          "destinationComponent": "DimmingGroupName",
-          "isValueParam":true,
-          "defaultValue": "Demo Daylight"
-        },
-        {
           "sourceComponent": "17",
           "sourceObject": "form",
           "isValueParam":true,
@@ -847,11 +837,6 @@
           "destinationComponent": "modelFunctionId",
           "isValueParam":true,
           "defaultValue": "talq.streetlight.v1:Lamp"
-        },
-        {
-          "destinationComponent": "DimmingGroupName",
-          "isValueParam":true,
-          "defaultValue": "Demo Daylight"
         },
         {
           "sourceComponent": "20",
@@ -1193,11 +1178,6 @@
           "defaultValue": "talq.streetlight.v1:Lamp"
         },
         {
-          "destinationComponent": "DimmingGroupName",
-          "isValueParam":true,
-          "defaultValue": "Demo Daylight"
-        },
-        {
           "sourceComponent": "14",
           "sourceObject": "form",
           "isValueParam":true,
@@ -1537,11 +1517,6 @@
           "defaultValue": "talq.streetlight.v1:Lamp"
         },
         {
-          "destinationComponent": "DimmingGroupName",
-          "isValueParam":true,
-          "defaultValue": "Demo Daylight"
-        },
-        {
           "sourceComponent": "17",
           "sourceObject": "form",
           "isValueParam":true,
@@ -1879,11 +1854,6 @@
           "destinationComponent": "modelFunctionId",
           "isValueParam":true,
           "defaultValue": "talq.streetlight.v1:Lamp"
-        },
-        {
-          "destinationComponent": "DimmingGroupName",
-          "isValueParam":true,
-          "defaultValue": "Demo Daylight"
         },
         {
           "sourceComponent": "20",

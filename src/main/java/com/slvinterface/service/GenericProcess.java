@@ -27,6 +27,7 @@ public class GenericProcess {
     private JsonParser jsonParser;
     private Gson gson;
     private Properties properties;
+
     public GenericProcess() {
         jsonParser = new JsonParser();
         slvRestService = new SLVRestService();
@@ -77,12 +78,16 @@ public class GenericProcess {
     }
 
     public void process(EdgeNote edgeNote) {
-        HashMap data = new HashMap();
-        loadGeometryObject(edgeNote, data);
+
 
         List<SlvConfig> slvConfigList = getSlvRequestConfigs();
-
+        int count = 0;
         for (SlvConfig slvConfig : slvConfigList) {
+            HashMap data = new HashMap();
+            loadGeometryObject(edgeNote, data);
+            logger.info("Current Count:"+count);
+            count = count + 1;
+
             String formTemplateGuid = slvConfig.getFormTemplateGuid();
             loadFormData(edgeNote, formTemplateGuid, data);
             loadNoteData(edgeNote,data);

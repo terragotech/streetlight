@@ -39,6 +39,7 @@ public abstract class SLVInterfaceService {
     Properties properties = null;
     SLVRestService slvRestService = null;
     GenericProcess genericProcess = null;
+    ReplaceFormService replaceFormService = null;
 
     public static int retryCount = 0;
 
@@ -53,6 +54,7 @@ public abstract class SLVInterfaceService {
         slvTools = new SLVTools();
         slvRestService = new SLVRestService();
         genericProcess = new GenericProcess();
+        replaceFormService = new ReplaceFormService();
         this.properties = PropertiesReader.getProperties();
     }
 
@@ -92,7 +94,7 @@ public abstract class SLVInterfaceService {
         // Process only response code as success
         if (edgeSlvServerResponse.getStatusCode().is2xxSuccessful()) {
             // Get Response String
-            String notesGuids = edgeSlvServerResponse.getBody();
+            String notesGuids =   edgeSlvServerResponse.getBody();
             JsonArray noteGuidsJsonArray = (JsonArray) jsonParser.parse(notesGuids);
             if (noteGuidsJsonArray != null && !noteGuidsJsonArray.isJsonNull()) {
                 for (JsonElement noteGuidJson : noteGuidsJsonArray) {
@@ -147,7 +149,6 @@ public abstract class SLVInterfaceService {
         }
     }
 
-
     private void run(String noteGuid, String accessToken) throws DatabaseException,SLVConnectionException {
         try {
             SLVSyncTable slvSyncTable = queryExecutor.getSLSyncTable(noteGuid);
@@ -185,7 +186,22 @@ public abstract class SLVInterfaceService {
                 logger.info("Response from edge.");
                 String notesData = responseEntity.getBody();
                 EdgeNote edgeNote = gson.fromJson(notesData, EdgeNote.class);
-                genericProcess.process(edgeNote);
+                String replaceFormTemplateGuid = PropertiesReader.getProperties().getProperty("streetlight.edge.replaceform");
+                boolean isReplaceFormPresent = false;
+                if(replaceFormTemplateGuid != null){
+                    List<FormData> formDataList =  edgeNote.getFormData();
+                    for(FormData formData : formDataList){
+                       if(formData.getFormTemplateGuid().equals(replaceFormTemplateGuid)){
+                           isReplaceFormPresent = true;
+                       }
+                    }
+                }
+                if(isReplaceFormPresent){
+                    replaceFormService.processReplaceForm(edgeNote);
+                }else{
+                    genericProcess.process(edgeNote);
+                }
+
                 //processNoteData(notesData,slvSyncTable);
             } else {
                 slvSyncTable.setErrorDetails("Unable to Get Note Details from Edge Server and status code is:"+responseEntity.getStatusCode());

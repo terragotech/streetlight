@@ -12,6 +12,15 @@ public class SlvRequestConfig {
     private Response response;
     private SlvRequestConfig checkMac;
     private SlvRequestConfig setDevice;
+    private SlvRequestConfig existingMACValidation;
+
+    public SlvRequestConfig getExistingMACValidation() {
+        return existingMACValidation;
+    }
+
+    public void setExistingMACValidation(SlvRequestConfig existingMACValidation) {
+        this.existingMACValidation = existingMACValidation;
+    }
 
     public SlvRequestConfig getCheckMac() {
         return checkMac;

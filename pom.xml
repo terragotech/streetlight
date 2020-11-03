@@ -140,7 +140,7 @@
                             <goal>single</goal>
                         </goals>
                         <configuration>
-                            <finalName>generic_slv_interface_v6</finalName>
+                            <finalName>cps_interface_v2</finalName>
                             <archive>
                                 <manifest>
                                     <mainClass>
