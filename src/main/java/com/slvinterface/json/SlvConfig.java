@@ -8,8 +8,17 @@ public class SlvConfig {
     private SlvRequestConfig createDevice;
     private SlvRequestConfig setDevice;
     private SlvRequestConfig replaceOLC;
+    private SlvRequestConfig deCommission;
     private String formTemplateGuid;
     private List<Condition> conditions = new ArrayList<>();
+
+    public SlvRequestConfig getDeCommission() {
+        return deCommission;
+    }
+
+    public void setDeCommission(SlvRequestConfig deCommission) {
+        this.deCommission = deCommission;
+    }
 
     public List<Condition> getConditions() {
         return conditions;

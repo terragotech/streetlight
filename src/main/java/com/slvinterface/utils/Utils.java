@@ -12,10 +12,7 @@ import org.springframework.web.client.RestTemplate;
 
 import java.nio.charset.Charset;
 import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.TimeZone;
+import java.util.*;
 
 public class Utils {
     public static RestTemplate getRestTemplate() {
@@ -29,11 +26,12 @@ public class Utils {
         if (conditions == null || conditions.size() == 0) {
             return true;
         }
+        Set<Boolean> conditionResult = new HashSet<>();
         for (Condition condition : conditions) {
             String conditionObject = condition.getConditionObject();
             String conditionComponent = condition.getConditionComponent();
             String defaultValue = condition.getDefaultValue();
-            String sourceValue = getValue(data,condition);
+            String sourceValue = getValue(data, condition);
             JsonObject conditionData = (JsonObject) data.get(conditionObject);
             String conditionValue = getValue(conditionData, conditionComponent);
             conditionValue = defaultValue != null ? defaultValue : conditionValue;
@@ -42,18 +40,27 @@ public class Utils {
                 case "equal":
                     sourceValue = sourceValue == null ? "" : sourceValue;
                     conditionValue = conditionValue == null ? "" : conditionValue;
-                    return sourceValue.equals(conditionValue);
+                    conditionResult.add(sourceValue.equals(conditionValue));
+                    break;
                 case "notEqual":
                     sourceValue = sourceValue == null ? "" : sourceValue;
                     conditionValue = conditionValue == null ? "" : conditionValue;
-                    return !sourceValue.equals(conditionValue);
+                    conditionResult.add( !sourceValue.equals(conditionValue));
+                    break;
                 case "isNull":
-                    return sourceValue == null ? true : false;
+                    conditionResult.add(  sourceValue == null ? true : false);
+                    break;
                 case "isNotNull":
-                    return sourceValue != null ? true : false;
+                    conditionResult.add( sourceValue != null ? true : false);
+                    break;
             }
         }
-        return false;
+       for(boolean bb : conditionResult){
+           if(!bb){
+               return false;
+           }
+       }
+       return true;
     }
 
     public static String getValue(JsonObject data, String component) {

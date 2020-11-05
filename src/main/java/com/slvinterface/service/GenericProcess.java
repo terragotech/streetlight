@@ -113,6 +113,7 @@ public class GenericProcess {
                     processDeviceConfig(data, createDeviceConfig);
                     processRequestConfig(data, setDeviceConfig, false);
                     processReplaceOLC(data, replaceOLCConfig);
+                    processDeCommission(data,slvConfig.getDeCommission());
                 }catch (Exception e){
                     logger.error("Error",e);
                 }
@@ -125,10 +126,22 @@ public class GenericProcess {
 
 
     private void processReplaceOLC(HashMap data, SlvRequestConfig slvRequestConfig){
-        processCheckMACUsedConfig(data,slvRequestConfig.getCheckMac());
-        processRequestConfig(data, slvRequestConfig, true);
-        processRequestConfig(data, slvRequestConfig, false);
-        processRequestConfig(data, slvRequestConfig.getSetDevice(), false);
+        if(slvRequestConfig != null){
+            processCheckMACUsedConfig(data,slvRequestConfig.getCheckMac());
+            processRequestConfig(data, slvRequestConfig, true);
+            processRequestConfig(data, slvRequestConfig, false);
+            processRequestConfig(data, slvRequestConfig.getSetDevice(), false);
+        }
+
+    }
+
+
+    private void processDeCommission(HashMap data, SlvRequestConfig slvRequestConfig){
+        if(slvRequestConfig != null){
+            processRequestConfig(data, slvRequestConfig, true);
+            processRequestConfig(data, slvRequestConfig.getSetDevice(), false);
+        }
+
     }
 
 

@@ -1,0 +1,220 @@
+[
+  {
+    "label": "Select Action",
+    "showLabel": true,
+    "placeholder": "placeholder",
+    "options": [
+      "Installation",
+      "Maintenance"
+    ],
+    "required": false,
+    "component": "radio",
+    "id": 10044,
+    "index": 1,
+    "$$hashKey": "cFlAOl"
+  },
+  {
+    "label": "Installation",
+    "showLabel": true,
+    "components": [
+      {
+        "label": "Nom du contrÃ´leur dâarmoire (Name)",
+        "showLabel": true,
+        "placeholder": "Enter text",
+        "validation": "none",
+        "component": "textInput",
+        "id": 10121,
+        "required": false,
+        "index": 3,
+        "isReadOnly": false,
+        "$$hashKey": "0OZ"
+      },
+      {
+        "label": "Scanner le code barre (Scan)",
+        "showLabel": true,
+        "required": true,
+        "component": "barcode",
+        "id": 10037,
+        "index": 4,
+        "conditionCollection": {
+          "conjunctionType": "AND",
+          "conditions": [
+
+          ]
+        },
+        "validation": "macaddress",
+        "$$hashKey": "0ZE"
+      },
+      {
+        "label": "Statut de lâinstallation (Status)",
+        "showLabel": true,
+        "placeholder": "placeholder",
+        "setNoteLayer": true,
+        "options": [
+          "InstallÃ© dans lâarmoire (In Cabinet)",
+          "Installation terminÃ©e (Complete)",
+          "Impossible Ã  terminer (Could Not Complete)"
+        ],
+        "required": false,
+        "component": "radio",
+        "id": 10108,
+        "index": 5,
+        "$$hashKey": "0ZH"
+      },
+      {
+        "label": "Commentaires Ã  lâinstallation (Comments)",
+        "showLabel": true,
+        "placeholder": "Enter text",
+        "required": false,
+        "component": "textArea",
+        "id": 10079,
+        "index": 6,
+        "$$hashKey": "0ZI"
+      }
+    ],
+    "component": "group",
+    "id": 10036,
+    "required": false,
+    "index": 2,
+    "conditionCollection": {
+      "conjunctionType": "AND",
+      "conditions": [
+        {
+          "equalityType": "equals",
+          "sourceComponent": 10044,
+          "targetValue": "Installation",
+          "$$hashKey": "06F"
+        }
+      ]
+    },
+    "$$hashKey": "eS3vUa"
+  },
+  {
+    "label": "Maintenance",
+    "showLabel": true,
+    "placeholder": "placeholder",
+    "options": [
+      "Remplacer BCEP (Replace BCEP)",
+      "Supprimer BCEP (Remove BCEP)"
+    ],
+    "required": false,
+    "component": "radio",
+    "id": 10082,
+    "index": 7,
+    "$$hashKey": "anjRbB",
+    "conditionCollection": {
+      "conjunctionType": "AND",
+      "conditions": [
+        {
+          "equalityType": "equals",
+          "sourceComponent": 10044,
+          "targetValue": "Maintenance",
+          "$$hashKey": "06S"
+        }
+      ]
+    }
+  },
+  {
+    "label": "Remplacer BCEP (Replace BCEP)",
+    "showLabel": true,
+    "components": [
+      {
+        "label": "scanner lâancien code barre (Scan Old)",
+        "showLabel": true,
+        "required": false,
+        "component": "barcode",
+        "id": 10038,
+        "index": 9,
+        "$$hashKey": "0RR"
+      },
+      {
+        "label": "scanner le nouveau code barre (Scan New)",
+        "showLabel": true,
+        "required": false,
+        "component": "barcode",
+        "id": 10122,
+        "$$hashKey": "0RS",
+        "index": 10
+      },
+      {
+        "label": "Commentaires (Comments)",
+        "showLabel": true,
+        "placeholder": "Enter text",
+        "required": false,
+        "component": "textArea",
+        "id": 10120,
+        "index": 11,
+        "$$hashKey": "0RT"
+      }
+    ],
+    "component": "group",
+    "id": 10035,
+    "required": false,
+    "index": 8,
+    "conditionCollection": {
+      "conjunctionType": "AND",
+      "conditions": [
+        {
+          "equalityType": "equals",
+          "sourceComponent": 10082,
+          "targetValue": "Remplacer BCEP (Replace BCEP)",
+          "$$hashKey": "07C"
+        },
+        {
+          "equalityType": "equals",
+          "sourceComponent": 10044,
+          "targetValue": "Maintenance",
+          "$$hashKey": "07D"
+        }
+      ]
+    },
+    "$$hashKey": "CtLn69"
+  },
+  {
+    "label": "Supprimer BCEP (Remove BCEP)",
+    "showLabel": true,
+    "components": [
+      {
+        "label": "Scanner le code barre (Scan)",
+        "showLabel": true,
+        "required": false,
+        "component": "barcode",
+        "id": 10105,
+        "$$hashKey": "0JM",
+        "index": 13
+      },
+      {
+        "label": "Commentaires (Comments)",
+        "showLabel": true,
+        "placeholder": "Enter text",
+        "required": false,
+        "component": "textArea",
+        "id": 10119,
+        "$$hashKey": "1US",
+        "index": 14
+      }
+    ],
+    "component": "group",
+    "id": 10103,
+    "$$hashKey": "9y7cC6",
+    "required": false,
+    "index": 12,
+    "conditionCollection": {
+      "conjunctionType": "AND",
+      "conditions": [
+        {
+          "equalityType": "equals",
+          "sourceComponent": 10082,
+          "targetValue": "Supprimer BCEP (Remove BCEP)",
+          "$$hashKey": "083"
+        },
+        {
+          "equalityType": "equals",
+          "sourceComponent": 10044,
+          "targetValue": "Maintenance",
+          "$$hashKey": "084"
+        }
+      ]
+    }
+  }
+]

@@ -94,7 +94,7 @@ public abstract class SLVInterfaceService {
         // Process only response code as success
         if (edgeSlvServerResponse.getStatusCode().is2xxSuccessful()) {
             // Get Response String
-            String notesGuids =   edgeSlvServerResponse.getBody();
+            String notesGuids =  edgeSlvServerResponse.getBody();
             JsonArray noteGuidsJsonArray = (JsonArray) jsonParser.parse(notesGuids);
             if (noteGuidsJsonArray != null && !noteGuidsJsonArray.isJsonNull()) {
                 for (JsonElement noteGuidJson : noteGuidsJsonArray) {
@@ -154,7 +154,7 @@ public abstract class SLVInterfaceService {
             SLVSyncTable slvSyncTable = queryExecutor.getSLSyncTable(noteGuid);
             if (slvSyncTable != null) {
                 logger.info("Current NoteGuid [" + noteGuid + "] is already Processed.");
-                return;
+               // return;
             }
         } catch (Exception e) {
             //throw new DatabaseException(e);
