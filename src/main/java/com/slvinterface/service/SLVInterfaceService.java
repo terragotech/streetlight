@@ -154,7 +154,7 @@ public abstract class SLVInterfaceService {
             SLVSyncTable slvSyncTable = queryExecutor.getSLSyncTable(noteGuid);
             if (slvSyncTable != null) {
                 logger.info("Current NoteGuid [" + noteGuid + "] is already Processed.");
-               // return;
+                return;
             }
         } catch (Exception e) {
             //throw new DatabaseException(e);
@@ -197,6 +197,7 @@ public abstract class SLVInterfaceService {
                     }
                 }
                 if(isReplaceFormPresent){
+                    slvSyncTable.setSyncTime(edgeNote.getSyncTime());
                     replaceFormService.processReplaceForm(edgeNote);
                 }else{
                     genericProcess.process(edgeNote);
@@ -217,6 +218,7 @@ public abstract class SLVInterfaceService {
             logger.error("Error in run", e);
         }finally {
             try {
+
                 queryExecutor.saveSLVTransactionLogs(slvSyncTable);
             }catch (Exception e){
                 throw new DatabaseException(e);
