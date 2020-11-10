@@ -17,12 +17,10 @@ import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.*;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
+import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.RestTemplate;
 
 import java.text.SimpleDateFormat;
@@ -2192,7 +2190,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
                      String requestJson = gson.toJson(promotedFormData);
                      String edgeSlvUrl = PropertiesReader.getProperties().getProperty("streetlight.edge.slvserver.url");
                      edgeSlvUrl = edgeSlvUrl+"/updatePromotedFormDates";
-                    serverCall(edgeSlvUrl,HttpMethod.POST,requestJson);
+                    serverCall(edgeSlvUrl,HttpMethod.POST,requestJson,0);
                 }else{
                     logger.info("No Dates available to update promoted data");
                 }
@@ -2204,7 +2202,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
     }
 
 
-    public void serverCall(final String url,final HttpMethod httpMethod,final String body) {
+    public void serverCall(final String url, final HttpMethod httpMethod, final String body, final int retryCount) {
         promotedFormDatesExecutor.execute(new Runnable() {
             @Override
             public void run() {
@@ -2220,16 +2218,22 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
                 } else {
                     request = new HttpEntity<>(headers);
                 }
-
-                ResponseEntity<String> responseEntity = restTemplate.exchange(url, httpMethod, request, String.class);
-                logger.info("------------ Response ------------------");
-
-                logger.info("Response Code:" + responseEntity.getStatusCode().toString());
-                if (responseEntity.getBody() != null) {
-                    logger.info("Response Data:" + responseEntity.getBody());
+                try {
+                    ResponseEntity<String> responseEntity = restTemplate.exchange(url, httpMethod, request, String.class);
+                    logger.info("------------ Response ------------------");
+                    logger.info("Response Code:" + responseEntity.getStatusCode().toString());
+                    if (responseEntity.getBody() != null) {
+                        logger.info("Response Data:" + responseEntity.getBody());
+                    }
+                } catch (HttpServerErrorException e){
+                    logger.error("Error in update formdates HttpServerErrorException", e);
+                    //Since it is executed in background thread, if it throws unique constraint error, it will send request one more time(in promotedformdata table parentnoteguid is unique constraint so it throw this error)
+                        if (e.getStatusCode() == HttpStatus.INTERNAL_SERVER_ERROR && retryCount == 0){
+                            serverCall(url, httpMethod, body, (retryCount + 1));
+                        }
+                }catch (Exception e){
+                    logger.error("Error in update formdates", e);
                 }
-
-              //  return responseEntity;
             }
         });
 
@@ -2242,7 +2246,7 @@ public class InstallationMaintenanceProcessor extends AbstractProcessor {
         MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
         params.add("slvIdOnController",idOnController);
         restService.slv2Edge("/rest/validation/removeSLVMacAddress", HttpMethod.GET,params);
-        syncMacAddress2Promoted(idOnController,null);
+        syncMacAddress2Promoted(idOnController,null,0);
 
     }
 

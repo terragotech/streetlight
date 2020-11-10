@@ -27,6 +27,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
+import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.RestTemplate;
 
 import java.net.URLEncoder;
@@ -1746,12 +1747,12 @@ public boolean checkExistingMacAddressValid(EdgeNote edgeNote, InstallMaintenanc
 
             restService.slv2Edge("/rest/validation/updateSLVSyncedMAC", HttpMethod.GET,params);
 
-            syncMacAddress2Promoted(idOnController,macAddress);
+            syncMacAddress2Promoted(idOnController,macAddress,0);
         }
     }
 
 
-    protected void syncMacAddress2Promoted(final String idOnController,final String macAddress){
+    protected void syncMacAddress2Promoted(final String idOnController, final String macAddress, final int retryCount){
         promotedSLVMACAddressExecutor.execute(new Runnable() {
             @Override
             public void run() {
@@ -1762,11 +1763,16 @@ public boolean checkExistingMacAddressValid(EdgeNote edgeNote, InstallMaintenanc
                     if(macAddress != null && !macAddress.trim().isEmpty()){
                         url = url + "&slvMacAddress="+macAddress;
                     }
-
                     restService.callPostMethod(url,HttpMethod.GET,null,true);
                     logger.info("Remove MAC Address from the Promoted Data End.");
+                }catch (HttpServerErrorException e){
+                    logger.error("Error in update macaddress HttpServerErrorException", e);
+                    //Since it is executed in background thread, if it throws unique constraint error, it will send request one more time(in promotedformdata table parentnoteguid is unique constraint so it throw this error)
+                        if (e.getStatusCode() == HttpStatus.INTERNAL_SERVER_ERROR && retryCount == 0){
+                            syncMacAddress2Promoted(idOnController, macAddress, (retryCount + 1));
+                        }
                 }catch (Exception e){
-                    logger.error("Error in removeEdgeSLVMacAddress",e);
+                    logger.error("Error in update macaddress", e);
                 }
             }
         });
