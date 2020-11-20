@@ -1,0 +1,296 @@
+[
+  {
+    "formTemplateGuid": "c4221d69-c997-40f7-b013-f14946df056d",
+    "conditions": [
+      {
+        "sourceComponent": "1",
+        "sourceObject": "form",
+        "sourceType": "FORM",
+        "conditionType": "isNotNull"
+      },
+      {
+        "sourceComponent": "2",
+        "sourceObject": "form",
+        "sourceType": "FORM",
+        "conditionType": "isNotNull"
+      }
+    ],
+    "getDevice": {
+      "url": "/reports/api/asset/searchDevicesExt",
+      "method": "post",
+      "paramsType": "formVal",
+      "mappings": [
+        {
+          "destinationComponent": "recurse",
+          "defaultValue": "true"
+        },
+        {
+          "destinationComponent": "returnedInfo",
+          "defaultValue": "lightDevicesList"
+        },
+        {
+          "destinationComponent": "attributeOperator",
+          "defaultValue": "eq-i"
+        },
+        {
+          "destinationComponent": "maxResults",
+          "defaultValue": "1"
+        },
+        {
+          "destinationComponent": "ser",
+          "defaultValue": "json"
+        },
+        {
+          "destinationComponent": "attributeName",
+          "defaultValue": "idOnController"
+        },
+        {
+          "sourceComponent": "1",
+          "sourceObject": "form",
+          "sourceType": "FORM",
+          "destinationComponent": "attributeValue"
+        }
+      ],
+      "response": {
+        "statusCode": 200,
+        "filters": [
+          {
+            "sourceObject": "value",
+            "objectKey": "slvDeviceDetails"
+          }
+        ]
+      }
+    },
+    "createDevice": {
+      "url": "/reports/api/assetmanagement/createCategoryDevice",
+      "method": "post",
+      "paramsType": "formVal",
+      "conditions": [
+        {
+          "sourceObject": "slvDeviceDetails",
+          "sourceComponent": "name",
+          "sourceType": "JSON_OBJECT",
+          "conditionType": "isNull"
+        }
+      ],
+      "mappings": [
+        {
+          "destinationComponent": "ser",
+          "defaultValue": "json"
+        },
+        {
+          "destinationComponent": "categoryStrId",
+          "defaultValue": "streetlight"
+        },
+        {
+          "destinationComponent": "geozoneId",
+          "defaultValue": "13315"
+        },
+        {
+          "destinationComponent": "controllerStrId",
+          "defaultValue": "TalqBridge@TB398484989"
+        },
+        {
+          "sourceComponent": "1",
+          "sourceObject": "form",
+          "sourceType": "FORM",
+          "destinationComponent": "userName"
+        },
+        {
+          "sourceComponent": "1",
+          "sourceObject": "form",
+          "sourceType": "FORM",
+          "destinationComponent": "idOnController"
+        },
+        {
+          "sourceComponent": "lat",
+          "sourceObject": "geometry",
+          "sourceType": "JSON_OBJECT",
+          "destinationComponent": "lat"
+        },
+        {
+          "sourceComponent": "lng",
+          "sourceObject": "geometry",
+          "sourceType": "JSON_OBJECT",
+          "destinationComponent": "lng"
+        }
+      ]
+    },
+    "setDevice": {
+      "url": "/reports/api/loggingmanagement/setDeviceValues",
+      "method": "post",
+      "paramsType": "formVal",
+      "mappings": [
+        {
+          "destinationComponent": "ser",
+          "defaultValue": "json"
+        },
+        {
+          "sourceComponent": "1",
+          "sourceObject": "form",
+          "sourceType": "FORM",
+          "destinationComponent": "idOnController"
+        },
+        {
+          "destinationComponent": "controllerStrId",
+          "defaultValue": "TalqBridge@TB398484989"
+        },
+        {
+          "destinationComponent": "modelFunctionId",
+          "isValueParam": true,
+          "defaultValue": "talq.streetlight.v1:Lamp"
+        },
+        {
+          "sourceComponent": "10",
+          "sourceObject": "form",
+          "sourceType": "FORM",
+          "isValueParam":true,
+          "destinationComponent": "power"
+        },
+        {
+          "sourceComponent": "9",
+          "sourceObject": "form",
+          "isValueParam":true,
+          "sourceType": "FORM",
+          "destinationComponent": "brandId"
+        },
+        {
+          "sourceComponent": "8",
+          "sourceObject": "form",
+          "isValueParam":true,
+          "sourceType": "FORM",
+          "destinationComponent": "luminaire.type"
+        }
+      ]
+    },
+    "replaceOLC": {
+      "checkMac": {
+        "url": "/reports/api/asset/searchDevicesExt",
+        "method": "post",
+        "paramsType": "formVal",
+        "mappings": [
+          {
+            "destinationComponent": "ser",
+            "defaultValue": "json"
+          },
+          {
+            "destinationComponent": "attributeName",
+            "defaultValue": "MacAddress"
+          },
+          {
+            "sourceComponent": "2",
+            "sourceObject": "form",
+            "sourceType": "FORM",
+            "destinationComponent": "attributeValue"
+          },
+          {
+            "destinationComponent": "attributeOperator",
+            "defaultValue": "eq-i"
+          },
+          {
+            "destinationComponent": "recurse",
+            "defaultValue": "true"
+          },
+          {
+            "destinationComponent": "returnedInfo",
+            "defaultValue": "devicesList"
+          },
+          {
+            "destinationComponent": "controllerStrId",
+            "defaultValue": "TalqBridge@TB398484989"
+          }
+        ],
+        "response": {
+          "statusCode": 200,
+          "filters": [
+            {
+              "sourceObject": "value",
+              "destinationComponent": "isMacAddressUsed",
+              "objectKey": "macDup",
+              "defaultValue": true
+            }
+          ]
+        }
+      },
+      "url": "/reports/api/monitoringmanagement/replaceOLCs",
+      "method": "post",
+      "paramsType": "formVal",
+      "conditions": [
+        {
+          "sourceComponent": "isMacAddressUsed",
+          "sourceObject": "macDup",
+          "sourceType": "JSON_OBJECT",
+          "conditionType": "isNull"
+        }
+      ],
+      "mappings": [
+        {
+          "sourceComponent": "2",
+          "sourceObject": "form",
+          "sourceType": "FORM",
+          "destinationComponent": "newNetworkId"
+        },
+        {
+          "destinationComponent": "ser",
+          "defaultValue": "json"
+        },
+        {
+          "destinationComponent": "controllerStrId",
+          "defaultValue": "TalqBridge@TB398484989"
+        },
+        {
+          "sourceComponent": "1",
+          "sourceObject": "form",
+          "sourceType": "FORM",
+          "destinationComponent": "idOnController"
+        }
+      ],
+      "setDevice": {
+        "url": "/reports/api/loggingmanagement/setDeviceValues",
+        "method": "post",
+        "paramsType": "formVal",
+        "mappings": [
+          {
+            "destinationComponent": "ser",
+            "defaultValue": "json"
+          },
+          {
+            "sourceComponent": "1",
+            "sourceObject": "form",
+            "sourceType": "FORM",
+            "destinationComponent": "idOnController"
+          },
+          {
+            "destinationComponent": "controllerStrId",
+            "defaultValue": "TalqBridge@TB398484989"
+          },
+          {
+            "destinationComponent": "installStatus",
+            "isValueParam": true,
+            "defaultValue": "Installed"
+          },
+          {
+            "sourceComponent": "createdDateTime",
+            "sourceObject": "note",
+            "sourceType": "JSON_OBJECT",
+            "isValueParam": true,
+            "destinationComponent": "install.date",
+            "type": "date",
+            "dateConfig": {
+              "format": "yyyy-MM-dd",
+              "timeZone": "WIB"
+            },
+            "defaultValue": ""
+          },
+          {
+            "sourceComponent": "2",
+            "sourceObject": "form",
+            "sourceType": "FORM",
+            "isValueParam": true,
+            "destinationComponent": "MacAddress"
+          }
+        ]
+      }
+    }
+  }
+]

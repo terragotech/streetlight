@@ -1,0 +1,126 @@
+[
+  {
+    "label": "Pole Number",
+    "showLabel": true,
+    "placeholder": "Enter text",
+    "validation": "none",
+    "component": "textInput",
+    "id": 1,
+    "$$hashKey": "Aworkb",
+    "required": false,
+    "isReadOnly": false,
+    "index": 1
+  },
+  {
+    "label": "Fixture Type",
+    "showLabel": true,
+    "options": [
+      "Select From Below",
+      "Acorn",
+      "Cobra Head",
+      "Decorative",
+      "Enterprise",
+      "Flood Light",
+      "High Mast",
+      "NEMA Head",
+      "Offset Roadway",
+      "Pendant",
+      "Post Top",
+      "Shoebox",
+      "TearDrop",
+      "Tunnel"
+    ],
+    "placeholder": "placeholder",
+    "required": false,
+    "component": "select",
+    "id": 8,
+    "$$hashKey": "qzUtDL",
+    "index": 2
+  },
+  {
+    "label": "Lamp Type",
+    "showLabel": true,
+    "options": [
+      "Select From Below",
+      "LED",
+      "High Pressure Sodium",
+      "Mercury Vapor"
+    ],
+    "placeholder": "placeholder",
+    "required": false,
+    "component": "select",
+    "id": 9,
+    "$$hashKey": "0seYsI",
+    "index": 3
+  },
+  {
+    "label": "Wattage",
+    "showLabel": true,
+    "options": [
+      "Select From Below",
+      "50",
+      "60",
+      "70",
+      "83",
+      "100",
+      "105",
+      "110",
+      "135",
+      "150",
+      "220",
+      "250",
+      "280",
+      "400",
+      "420"
+    ],
+    "placeholder": "placeholder",
+    "required": false,
+    "component": "select",
+    "id": 10,
+    "$$hashKey": "WFex8n",
+    "index": 4
+  },
+  {
+    "label": "Scan Smart Controller QR Code",
+    "showLabel": true,
+    "required": true,
+    "component": "barcode",
+    "id": 2,
+    "$$hashKey": "opYva0",
+    "index": 5
+  },
+  {
+    "label": "Install Status",
+    "showLabel": true,
+    "placeholder": "placeholder",
+    "setNoteLayer": true,
+    "options": [
+      "Pending Install",
+      "Installed in NEMA"
+    ],
+    "required": true,
+    "component": "radio",
+    "id": 4,
+    "index": 6,
+    "$$hashKey": "epcWlD"
+  },
+  {
+    "label": "Photo",
+    "showLabel": true,
+    "required": false,
+    "component": "imageupload",
+    "id": 6,
+    "$$hashKey": "GeiY0j",
+    "index": 7
+  },
+  {
+    "label": "Comments",
+    "showLabel": true,
+    "placeholder": "Enter text",
+    "required": false,
+    "component": "textArea",
+    "id": 7,
+    "$$hashKey": "GSlKOB",
+    "index": 8
+  }
+]
