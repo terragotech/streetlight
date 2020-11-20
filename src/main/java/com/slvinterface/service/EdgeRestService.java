@@ -76,4 +76,22 @@ public class EdgeRestService {
         return headers;
     }
 
+    public ResponseEntity<String> serverCall(String url, HttpMethod httpMethod, String body) {
+        RestTemplate restTemplate = new RestTemplate();
+        HttpHeaders headers = getHeaders(null);
+
+        HttpEntity request = null;
+        if (body != null) {
+            headers.add("Content-Type", "application/json");
+            request = new HttpEntity<String>(body, headers);
+        } else {
+            request = new HttpEntity<>(headers);
+        }
+
+        ResponseEntity<String> responseEntity = restTemplate.exchange(url, httpMethod, request, String.class);
+        logger.info("------------ Response ------------------");
+        logger.info("Response Code:" + responseEntity.getStatusCode().toString());
+        return responseEntity;
+    }
+
 }

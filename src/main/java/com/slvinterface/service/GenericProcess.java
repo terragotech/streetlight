@@ -3,12 +3,14 @@ package com.slvinterface.service;
 import com.google.gson.*;
 import com.google.gson.reflect.TypeToken;
 import com.slvinterface.json.*;
+import com.slvinterface.json.Dictionary;
 import com.slvinterface.utils.PropertiesReader;
 import com.slvinterface.utils.ResourceDetails;
 import com.slvinterface.utils.Utils;
 import com.vividsolutions.jts.geom.Geometry;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.LinkedMultiValueMap;
@@ -27,12 +29,14 @@ public class GenericProcess {
     private JsonParser jsonParser;
     private Gson gson;
     private Properties properties;
+    private EdgeRestService edgeRestService;
 
     public GenericProcess() {
         jsonParser = new JsonParser();
         slvRestService = new SLVRestService();
         gson = new Gson();
         properties = PropertiesReader.getProperties();
+        edgeRestService = new EdgeRestService();
     }
 
 
@@ -280,8 +284,73 @@ public class GenericProcess {
             }
         }
     }
+    private void addDictionary(List<Dictionary> dictionaries, String layerGuid){
+        Dictionary dictionary = new Dictionary();
+        dictionary.setKey("groupguid");
+        dictionary.setValue(layerGuid);
+        if (dictionaries == null){
+            dictionaries = new ArrayList<>();
+        }
+        dictionaries.add(dictionary);
+    }
+    private boolean processLayer(EdgeNote edgeNote,String layerGuid){
+        boolean isLayerChanged = false;
+        List<Dictionary> dictionaries = edgeNote.getDictionary();
+        if (dictionaries == null || dictionaries.size() == 0){// no dictionaries present in edgenote, so we can directly add groupguid dictionary
+            addDictionary(dictionaries, layerGuid);
+            isLayerChanged = true;
+        } else{
+            boolean isLayerAlreadyPresent = false;
+            for(Dictionary dictionary : dictionaries){
+                if(dictionary.getKey().equals("groupguid")){// already groupguid dictionary present
+                    if (!dictionary.getValue().equals(layerGuid)){// if given layerguid already present in edgenote, then skip it
+                        dictionary.setValue(layerGuid);
+                        isLayerChanged = true;
+                    }
+                    isLayerAlreadyPresent = true;
+                }
+            }
+            if (!isLayerAlreadyPresent){// dictionaries present, but groupguid dictionary not there, just add groupguid dictionary
+                addDictionary(dictionaries, layerGuid);
+                isLayerChanged = true;
+            }
+        }
+        return isLayerChanged;
+    }
 
-
+public void updateEdgenoteService(EdgeNote edgeNote,List<FieldUpdate> fieldUpdates) {
+        boolean isEdgeNoteChanged = false;
+        for (FieldUpdate fieldUpdate : fieldUpdates) {
+            String type = fieldUpdate.getType();
+            String value = fieldUpdate.getValue();
+            switch (type) {
+                case "layer":
+                    boolean isLayerChanged = processLayer(edgeNote, value);
+                    if(!isEdgeNoteChanged){// if isEdgeNoteChanged already true,need to create new revision. so no need to update isEdgeNoteChanged.
+                        isEdgeNoteChanged = isLayerChanged;
+                    }
+                    break;
+            }
+        }
+        if(isEdgeNoteChanged){// if any edgenote value changed based of fieldUpdates, need to call revision
+            EdgeNotebook edgeNotebook = edgeNote.getEdgeNotebook();
+            if(edgeNotebook == null){
+                logger.error("no notebook present for this note: "+edgeNote.getNoteGuid());
+                return;
+            }
+            List<FormData> formDatas = edgeNote.getFormData();
+            if(formDatas != null){
+                for(FormData formData : formDatas){
+                    formData.setFormGuid(UUID.randomUUID().toString());
+                }
+            }
+            String oldGuid = edgeNote.getNoteGuid();
+            edgeNote.setNoteGuid(UUID.randomUUID().toString());
+            edgeNote.setCreatedDateTime(System.currentTimeMillis());
+            String urlNew = properties.getProperty("streetlight.edge.url.main") + "/rest/notebooks/" + edgeNotebook.getNotebookGuid() + "/notes/" + oldGuid;
+            edgeRestService.serverCall(urlNew, HttpMethod.PUT, gson.toJson(edgeNote));
+        }
+}
 
 
 }
