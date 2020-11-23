@@ -4,6 +4,7 @@ import com.google.gson.*;
 import com.google.gson.reflect.TypeToken;
 import com.slvinterface.dao.QueryExecutor;
 import com.slvinterface.entity.EdgeFormData;
+import com.slvinterface.entity.ReplaceOLCResponse;
 import com.slvinterface.entity.SLVSyncTable;
 import com.slvinterface.json.*;
 import com.slvinterface.json.Dictionary;
@@ -127,21 +128,11 @@ public class GenericProcess {
                     SlvRequestConfig replaceOLCConfig = slvConfig.getReplaceOLC();
                     processDeviceConfig(data, getDeviceConfig);
                     processDeviceConfig(data, createDeviceConfig);
-                    processRequestConfig(data, setDeviceConfig, false);
-                    processReplaceOLC(data, replaceOLCConfig);
+                    processRequestConfig(data, setDeviceConfig, false,false,edgeNote,accessToken);
+                    processReplaceOLC(data, replaceOLCConfig,edgeNote,accessToken);
                     processDeCommission(data,slvConfig.getDeCommission());
 
-                    String layerGuid = PropertiesReader.getProperties().getProperty("edge.layer.uuid");
 
-                    if(layerGuid != null && !layerGuid.trim().isEmpty()){
-                        FieldUpdate fieldUpdate = new FieldUpdate();
-                        fieldUpdate.setType("layer");
-
-                        fieldUpdate.setValue(layerGuid);
-                        List<FieldUpdate> fieldUpdates = new ArrayList<>();
-                        fieldUpdates.add(fieldUpdate);
-                        updateEdgenoteService(edgeNote,fieldUpdates,accessToken);
-                    }
 
                 }catch (Exception e){
                     logger.error("Error",e);
@@ -154,12 +145,12 @@ public class GenericProcess {
     }
 
 
-    private void processReplaceOLC(HashMap data, SlvRequestConfig slvRequestConfig){
+    private void processReplaceOLC(HashMap data, SlvRequestConfig slvRequestConfig,EdgeNote edgeNote,String accessToken){
         if(slvRequestConfig != null){
             processCheckMACUsedConfig(data,slvRequestConfig.getCheckMac());
-            processRequestConfig(data, slvRequestConfig, true);
-            processRequestConfig(data, slvRequestConfig, false);
-            processRequestConfig(data, slvRequestConfig.getSetDevice(), false);
+            processRequestConfig(data, slvRequestConfig, true,false,null,null);
+            processRequestConfig(data, slvRequestConfig, false,true,edgeNote,accessToken);
+            processRequestConfig(data, slvRequestConfig.getSetDevice(), false,false,null,null);
         }
 
     }
@@ -167,8 +158,8 @@ public class GenericProcess {
 
     private void processDeCommission(HashMap data, SlvRequestConfig slvRequestConfig){
         if(slvRequestConfig != null){
-            processRequestConfig(data, slvRequestConfig, true);
-            processRequestConfig(data, slvRequestConfig.getSetDevice(), false);
+            processRequestConfig(data, slvRequestConfig, true,false,null,null);
+            processRequestConfig(data, slvRequestConfig.getSetDevice(), false,false,null,null);
         }
 
     }
@@ -248,7 +239,7 @@ public class GenericProcess {
         }
     }
 
-    private void processRequestConfig(HashMap data, SlvRequestConfig slvRequestConfig, boolean isEmptyReplaceOLC){
+    private void processRequestConfig(HashMap data, SlvRequestConfig slvRequestConfig, boolean isEmptyReplaceOLC,boolean isCreateNoteRevision,EdgeNote edgeNote,String accessToken){
         if (slvRequestConfig != null) {
             String url = slvRequestConfig.getUrl();
             List<Condition> conditions = slvRequestConfig.getConditions();
@@ -302,6 +293,35 @@ public class GenericProcess {
                         String mainUrl = properties.getProperty("streetlight.slv.base.url");
                         url = mainUrl + url;
                         responseEntity = slvRestService.getPostRequest(url,null, linkedMultiValueMap);
+                        if(isCreateNoteRevision){
+                            try {
+                                if(responseEntity.getStatusCodeValue() == 200){
+                                    ReplaceOLCResponse replaceOLCResponse =  gson.fromJson(responseEntity.getBody(), ReplaceOLCResponse.class);
+                                    if(replaceOLCResponse.getStatus().equals("OK")){
+                                        List<String> values =  replaceOLCResponse.getValue();
+                                        if(values.size() > 0 && values.get(0).startsWith("OK")){
+
+                                            String layerGuid = PropertiesReader.getProperties().getProperty("edge.layer.uuid");
+
+                                            if(layerGuid != null && !layerGuid.trim().isEmpty()){
+                                                FieldUpdate fieldUpdate = new FieldUpdate();
+                                                fieldUpdate.setType("layer");
+
+                                                fieldUpdate.setValue(layerGuid);
+                                                List<FieldUpdate> fieldUpdates = new ArrayList<>();
+                                                fieldUpdates.add(fieldUpdate);
+                                                updateEdgenoteService(edgeNote,fieldUpdates,accessToken);
+                                            }
+
+
+                                        }
+                                    }
+                                }
+                            }catch (Exception e){
+                                logger.error("Error",e);
+                            }
+
+                        }
                         break;
                 }
 
