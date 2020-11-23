@@ -85,7 +85,7 @@ public abstract class SLVInterfaceService {
 
         Long lastSyncTime =   queryExecutor.getMaxSyncTime();
         if(lastSyncTime == -1){
-            lastSyncTime = System.currentTimeMillis() - (30 * 60000);
+            lastSyncTime = System.currentTimeMillis() - (10 * 60000);
         }
         edgeSlvUrl = edgeSlvUrl +"/notesGuid?lastSyncTime="+lastSyncTime;
         // Get NoteList from edgeserver
@@ -186,6 +186,7 @@ public abstract class SLVInterfaceService {
                 logger.info("Response from edge.");
                 String notesData = responseEntity.getBody();
                 EdgeNote edgeNote = gson.fromJson(notesData, EdgeNote.class);
+                slvSyncTable.setSyncTime(edgeNote.getSyncTime());
                 String replaceFormTemplateGuid = PropertiesReader.getProperties().getProperty("streetlight.edge.replaceform");
                 boolean isReplaceFormPresent = false;
                 if(replaceFormTemplateGuid != null){
@@ -197,10 +198,9 @@ public abstract class SLVInterfaceService {
                     }
                 }
                 if(isReplaceFormPresent){
-                    slvSyncTable.setSyncTime(edgeNote.getSyncTime());
                     replaceFormService.processReplaceForm(edgeNote);
                 }else{
-                    genericProcess.process(edgeNote);
+                    genericProcess.process(edgeNote,accessToken);
                 }
 
                 //processNoteData(notesData,slvSyncTable);

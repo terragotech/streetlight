@@ -2,6 +2,9 @@ package com.slvinterface.service;
 
 import com.google.gson.*;
 import com.google.gson.reflect.TypeToken;
+import com.slvinterface.dao.QueryExecutor;
+import com.slvinterface.entity.EdgeFormData;
+import com.slvinterface.entity.SLVSyncTable;
 import com.slvinterface.json.*;
 import com.slvinterface.json.Dictionary;
 import com.slvinterface.utils.PropertiesReader;
@@ -30,12 +33,19 @@ public class GenericProcess {
     private Gson gson;
     private Properties properties;
     private EdgeRestService edgeRestService;
+    QueryExecutor queryExecutor = null;
 
     public GenericProcess() {
         jsonParser = new JsonParser();
         slvRestService = new SLVRestService();
         gson = new Gson();
         properties = PropertiesReader.getProperties();
+        try {
+            queryExecutor = new QueryExecutor();
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+
         edgeRestService = new EdgeRestService();
     }
 
@@ -81,9 +91,11 @@ public class GenericProcess {
         return new ArrayList<>();
     }
 
-    public void process(EdgeNote edgeNote) {
+    public void process(EdgeNote edgeNote,String accessToken) {
 
-
+        if(edgeNote.getCreatedBy().equals("admin")){
+            return;
+        }
         List<SlvConfig> slvConfigList = getSlvRequestConfigs();
         int count = 0;
         for (SlvConfig slvConfig : slvConfigList) {
@@ -118,6 +130,19 @@ public class GenericProcess {
                     processRequestConfig(data, setDeviceConfig, false);
                     processReplaceOLC(data, replaceOLCConfig);
                     processDeCommission(data,slvConfig.getDeCommission());
+
+                    String layerGuid = PropertiesReader.getProperties().getProperty("edge.layer.uuid");
+
+                    if(layerGuid != null && !layerGuid.trim().isEmpty()){
+                        FieldUpdate fieldUpdate = new FieldUpdate();
+                        fieldUpdate.setType("layer");
+
+                        fieldUpdate.setValue(layerGuid);
+                        List<FieldUpdate> fieldUpdates = new ArrayList<>();
+                        fieldUpdates.add(fieldUpdate);
+                        updateEdgenoteService(edgeNote,fieldUpdates,accessToken);
+                    }
+
                 }catch (Exception e){
                     logger.error("Error",e);
                 }
@@ -302,7 +327,7 @@ public class GenericProcess {
         } else{
             boolean isLayerAlreadyPresent = false;
             for(Dictionary dictionary : dictionaries){
-                if(dictionary.getKey().equals("groupguid")){// already groupguid dictionary present
+                if(dictionary.getKey().equals("groupGuid")){// already groupguid dictionary present
                     if (!dictionary.getValue().equals(layerGuid)){// if given layerguid already present in edgenote, then skip it
                         dictionary.setValue(layerGuid);
                         isLayerChanged = true;
@@ -318,7 +343,7 @@ public class GenericProcess {
         return isLayerChanged;
     }
 
-public void updateEdgenoteService(EdgeNote edgeNote,List<FieldUpdate> fieldUpdates) {
+public void updateEdgenoteService(EdgeNote edgeNote,List<FieldUpdate> fieldUpdates,String accessToken)throws Exception {
         boolean isEdgeNoteChanged = false;
         for (FieldUpdate fieldUpdate : fieldUpdates) {
             String type = fieldUpdate.getType();
@@ -338,19 +363,41 @@ public void updateEdgenoteService(EdgeNote edgeNote,List<FieldUpdate> fieldUpdat
                 logger.error("no notebook present for this note: "+edgeNote.getNoteGuid());
                 return;
             }
-            List<FormData> formDatas = edgeNote.getFormData();
-            if(formDatas != null){
-                for(FormData formData : formDatas){
-                    formData.setFormGuid(UUID.randomUUID().toString());
-                }
+            JsonObject edgeJsonObject = jsonParser.parse(gson.toJson(edgeNote)).getAsJsonObject();
+            JsonArray serverEdgeFormJsonArray = edgeJsonObject.get("formData").getAsJsonArray();
+            int size = serverEdgeFormJsonArray.size();
+            for (int i = 0; i < size; i++) {
+                JsonObject serverEdgeForm = serverEdgeFormJsonArray.get(i).getAsJsonObject();
+                String formDefJson = serverEdgeForm.get("formDef").getAsString();
+                formDefJson = formDefJson.replaceAll("\\\\", "");
+                List<EdgeFormData> edgeFormDataList = getEdgeFormData(formDefJson);
+
+                serverEdgeForm.add("formDef", gson.toJsonTree(edgeFormDataList));
+                serverEdgeForm.addProperty("formGuid", UUID.randomUUID().toString());
             }
-            String oldGuid = edgeNote.getNoteGuid();
-            edgeNote.setNoteGuid(UUID.randomUUID().toString());
-            edgeNote.setCreatedDateTime(System.currentTimeMillis());
+            String oldGuid = edgeJsonObject.get("noteGuid").getAsString();
+            edgeJsonObject.add("formData", serverEdgeFormJsonArray);
+            String noteUU = UUID.randomUUID().toString();
+            edgeJsonObject.addProperty("noteGuid", noteUU);
+            edgeJsonObject.addProperty("createdDateTime", System.currentTimeMillis());
+
             String urlNew = properties.getProperty("streetlight.edge.url.main") + "/rest/notebooks/" + edgeNotebook.getNotebookGuid() + "/notes/" + oldGuid;
-            edgeRestService.serverCall(urlNew, HttpMethod.PUT, gson.toJson(edgeNote));
+            ResponseEntity<String> responseEntity =  edgeRestService.serverCall(urlNew, HttpMethod.PUT, gson.toJson(edgeJsonObject),accessToken);
+
+            SLVSyncTable slvSyncTable = new SLVSyncTable();
+            slvSyncTable.setNoteGuid(responseEntity.getBody());
+            slvSyncTable.setProcessedDateTime(System.currentTimeMillis());
+            slvSyncTable.setSyncTime(edgeNote.getSyncTime());
+            slvSyncTable.setStatus("Failure");
+            queryExecutor.saveSLVTransactionLogs(slvSyncTable);
         }
 }
+
+    protected List<EdgeFormData> getEdgeFormData(String data) {
+        List<EdgeFormData> edgeFormDatas = gson.fromJson(data, new TypeToken<List<EdgeFormData>>() {
+        }.getType());
+        return edgeFormDatas;
+    }
 
 
 }

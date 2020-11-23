@@ -76,9 +76,9 @@ public class EdgeRestService {
         return headers;
     }
 
-    public ResponseEntity<String> serverCall(String url, HttpMethod httpMethod, String body) {
+    public ResponseEntity<String> serverCall(String url, HttpMethod httpMethod, String body,String accessToken) {
         RestTemplate restTemplate = new RestTemplate();
-        HttpHeaders headers = getHeaders(null);
+        HttpHeaders headers = getHeaders(accessToken);
 
         HttpEntity request = null;
         if (body != null) {
