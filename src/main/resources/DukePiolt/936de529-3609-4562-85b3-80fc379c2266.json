@@ -1,0 +1,500 @@
+[
+  {
+    "label": "Pole Number",
+    "showLabel": true,
+    "placeholder": "Enter text",
+    "validation": "none",
+    "component": "textInput",
+    "id": 32,
+    "$$hashKey": "ylpYC0",
+    "required": true,
+    "index": 1
+  },
+  {
+    "label": "Fixture Count",
+    "showLabel": true,
+    "placeholder": "placeholder",
+    "options": [
+      "Select From Below",
+      "1",
+      "2",
+      "3",
+      "4"
+    ],
+    "required": true,
+    "component": "radio",
+    "id": 15,
+    "$$hashKey": "HYWyEQ",
+    "index": 2
+  },
+  {
+    "label": "Fixture 1",
+    "showLabel": true,
+    "components": [
+      {
+        "label": "Scan Smart Controller QR Code",
+        "showLabel": true,
+        "required": true,
+        "component": "barcode",
+        "id": 25,
+        "$$hashKey": "0E3",
+        "index": 4
+      },
+      {
+        "label": "Fixture Type",
+        "showLabel": true,
+        "options": [
+          "Select From Below",
+          "Acorn",
+          "Cobra Head",
+          "Decorative",
+          "Enterprise",
+          "Flood Light",
+          "High Mast",
+          "NEMA Head",
+          "Offset Roadway",
+          "Pendant",
+          "Post Top",
+          "Shoebox",
+          "TearDrop",
+          "Tunnel"
+        ],
+        "placeholder": "placeholder",
+        "required": false,
+        "component": "select",
+        "id": 18,
+        "$$hashKey": "0BR",
+        "index": 5
+      },
+      {
+        "label": "Lamp Type",
+        "showLabel": true,
+        "options": [
+          "Select From Below",
+          "LED",
+          "High Pressure Sodium",
+          "Mercury Vapor"
+        ],
+        "placeholder": "placeholder",
+        "required": false,
+        "component": "select",
+        "id": 16,
+        "$$hashKey": "0B3",
+        "index": 6
+      },
+      {
+        "label": "Wattage",
+        "showLabel": true,
+        "options": [
+          "Select From Below",
+          "50",
+          "60",
+          "70",
+          "83",
+          "100",
+          "105",
+          "110",
+          "135",
+          "150",
+          "220",
+          "250",
+          "280",
+          "400",
+          "420"
+        ],
+        "placeholder": "placeholder",
+        "required": false,
+        "component": "select",
+        "id": 17,
+        "$$hashKey": "0BF",
+        "index": 7
+      }
+    ],
+    "component": "group",
+    "id": 11,
+    "$$hashKey": "YTA7d7",
+    "required": false,
+    "conditionCollection": {
+      "conjunctionType": "OR",
+      "conditions": [
+        {
+          "equalityType": "equals",
+          "sourceComponent": 15,
+          "targetValue": "1",
+          "$$hashKey": "09Q"
+        },
+        {
+          "equalityType": "equals",
+          "$$hashKey": "0A7",
+          "sourceComponent": 15,
+          "targetValue": "2"
+        },
+        {
+          "equalityType": "equals",
+          "$$hashKey": "0AK",
+          "sourceComponent": 15,
+          "targetValue": "3"
+        },
+        {
+          "equalityType": "equals",
+          "$$hashKey": "0AX",
+          "sourceComponent": 15,
+          "targetValue": "4"
+        }
+      ]
+    },
+    "index": 3
+  },
+  {
+    "label": "Fixture 2",
+    "showLabel": true,
+    "components": [
+      {
+        "label": "Scan Smart Controller QR Code",
+        "showLabel": true,
+        "required": true,
+        "component": "barcode",
+        "id": 26,
+        "$$hashKey": "0EF",
+        "index": 9
+      },
+      {
+        "label": "Fixture Type",
+        "showLabel": true,
+        "options": [
+          "Select From Below",
+          "Acorn",
+          "Cobra Head",
+          "Decorative",
+          "Enterprise",
+          "Flood Light",
+          "High Mast",
+          "NEMA Head",
+          "Offset Roadway",
+          "Pendant",
+          "Post Top",
+          "Shoebox",
+          "TearDrop",
+          "Tunnel"
+        ],
+        "placeholder": "placeholder",
+        "required": false,
+        "component": "select",
+        "id": 19,
+        "$$hashKey": "0C3",
+        "index": 10
+      },
+      {
+        "label": "Lamp Type",
+        "showLabel": true,
+        "options": [
+          "Select From Below",
+          "LED",
+          "High Pressure Sodium",
+          "Mercury Vapor"
+        ],
+        "placeholder": "placeholder",
+        "required": false,
+        "component": "select",
+        "id": 21,
+        "$$hashKey": "0CR",
+        "index": 11
+      },
+      {
+        "label": "Wattage",
+        "showLabel": true,
+        "options": [
+          "Select From Below",
+          "50",
+          "60",
+          "70",
+          "83",
+          "100",
+          "105",
+          "110",
+          "135",
+          "150",
+          "220",
+          "250",
+          "280",
+          "400",
+          "420"
+        ],
+        "placeholder": "placeholder",
+        "required": false,
+        "component": "select",
+        "id": 20,
+        "$$hashKey": "0CF",
+        "index": 12
+      }
+    ],
+    "component": "group",
+    "id": 12,
+    "$$hashKey": "7sTNcV",
+    "required": false,
+    "conditionCollection": {
+      "conjunctionType": "OR",
+      "conditions": [
+        {
+          "equalityType": "equals",
+          "sourceComponent": 15,
+          "targetValue": "2",
+          "$$hashKey": "0BD"
+        },
+        {
+          "equalityType": "equals",
+          "$$hashKey": "0C7",
+          "sourceComponent": 15,
+          "targetValue": "3"
+        },
+        {
+          "equalityType": "equals",
+          "$$hashKey": "0CK",
+          "sourceComponent": 15,
+          "targetValue": "4"
+        }
+      ]
+    },
+    "index": 8
+  },
+  {
+    "label": "Fixture 3",
+    "showLabel": true,
+    "components": [
+      {
+        "label": "Scan Smart Controller QR Code",
+        "showLabel": true,
+        "required": true,
+        "component": "barcode",
+        "id": 27,
+        "$$hashKey": "0ER",
+        "index": 14
+      },
+      {
+        "label": "Fixture Type",
+        "showLabel": true,
+        "options": [
+          "Select From Below",
+          "Acorn",
+          "Cobra Head",
+          "Decorative",
+          "Enterprise",
+          "Flood Light",
+          "High Mast",
+          "NEMA Head",
+          "Offset Roadway",
+          "Pendant",
+          "Post Top",
+          "Shoebox",
+          "TearDrop",
+          "Tunnel"
+        ],
+        "placeholder": "placeholder",
+        "required": false,
+        "component": "select",
+        "id": 24,
+        "$$hashKey": "0DR",
+        "index": 15
+      },
+      {
+        "label": "Lamp Type",
+        "showLabel": true,
+        "options": [
+          "Select From Below",
+          "LED",
+          "High Pressure Sodium",
+          "Mercury Vapor"
+        ],
+        "placeholder": "placeholder",
+        "required": false,
+        "component": "select",
+        "id": 23,
+        "$$hashKey": "0DF",
+        "index": 16
+      },
+      {
+        "label": "Wattage",
+        "showLabel": true,
+        "options": [
+          "Select From Below",
+          "50",
+          "60",
+          "70",
+          "83",
+          "100",
+          "105",
+          "110",
+          "135",
+          "150",
+          "220",
+          "250",
+          "280",
+          "400",
+          "420"
+        ],
+        "placeholder": "placeholder",
+        "required": false,
+        "component": "select",
+        "id": 22,
+        "$$hashKey": "0D3",
+        "index": 17
+      }
+    ],
+    "component": "group",
+    "id": 13,
+    "$$hashKey": "CZ6RJa",
+    "required": false,
+    "conditionCollection": {
+      "conjunctionType": "OR",
+      "conditions": [
+        {
+          "equalityType": "equals",
+          "$$hashKey": "0E7",
+          "sourceComponent": 15,
+          "targetValue": "3"
+        },
+        {
+          "equalityType": "equals",
+          "$$hashKey": "0EK",
+          "sourceComponent": 15,
+          "targetValue": "4"
+        }
+      ]
+    },
+    "index": 13
+  },
+  {
+    "label": "Fixture 4",
+    "showLabel": true,
+    "components": [
+      {
+        "label": "Scan Smart Controller QR Code",
+        "showLabel": true,
+        "required": true,
+        "component": "barcode",
+        "id": 28,
+        "$$hashKey": "0F3",
+        "index": 19
+      },
+      {
+        "label": "Fixture Type",
+        "showLabel": true,
+        "options": [
+          "Select From Below",
+          "Acorn",
+          "Cobra Head",
+          "Decorative",
+          "Enterprise",
+          "Flood Light",
+          "High Mast",
+          "NEMA Head",
+          "Offset Roadway",
+          "Pendant",
+          "Post Top",
+          "Shoebox",
+          "TearDrop",
+          "Tunnel"
+        ],
+        "placeholder": "placeholder",
+        "required": false,
+        "component": "select",
+        "id": 31,
+        "$$hashKey": "0G3",
+        "index": 20
+      },
+      {
+        "label": "Lamp Type",
+        "showLabel": true,
+        "options": [
+          "Select From Below",
+          "LED",
+          "High Pressure Sodium",
+          "Mercury Vapor"
+        ],
+        "placeholder": "placeholder",
+        "required": false,
+        "component": "select",
+        "id": 30,
+        "$$hashKey": "0FR",
+        "index": 21
+      },
+      {
+        "label": "Wattage",
+        "showLabel": true,
+        "options": [
+          "Select From Below",
+          "50",
+          "60",
+          "70",
+          "83",
+          "100",
+          "105",
+          "110",
+          "135",
+          "150",
+          "220",
+          "250",
+          "280",
+          "400",
+          "420"
+        ],
+        "placeholder": "placeholder",
+        "required": false,
+        "component": "select",
+        "id": 29,
+        "$$hashKey": "0FF",
+        "index": 22
+      }
+    ],
+    "component": "group",
+    "id": 14,
+    "$$hashKey": "E2JJiN",
+    "required": false,
+    "conditionCollection": {
+      "conjunctionType": "OR",
+      "conditions": [
+        {
+          "equalityType": "equals",
+          "$$hashKey": "0GK",
+          "sourceComponent": 15,
+          "targetValue": "4"
+        }
+      ]
+    },
+    "index": 18
+  },
+  {
+    "label": "Install Status",
+    "showLabel": true,
+    "placeholder": "placeholder",
+    "setNoteLayer": true,
+    "options": [
+      "Pending Install",
+      "Installed in NEMA"
+    ],
+    "required": true,
+    "component": "radio",
+    "id": 4,
+    "index": 23,
+    "$$hashKey": "RNgsM7"
+  },
+  {
+    "label": "Photo",
+    "showLabel": true,
+    "required": false,
+    "component": "imageupload",
+    "id": 6,
+    "$$hashKey": "KoyEDy",
+    "index": 24
+  },
+  {
+    "label": "Comments",
+    "showLabel": true,
+    "placeholder": "Enter text",
+    "required": false,
+    "component": "textArea",
+    "id": 7,
+    "$$hashKey": "wrlm7m",
+    "index": 25
+  }
+]
