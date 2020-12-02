@@ -140,7 +140,7 @@
                             <goal>single</goal>
                         </goals>
                         <configuration>
-                            <finalName>cps_interface_v2</finalName>
+                            <finalName>duke_pilot_interface_v1</finalName>
                             <archive>
                                 <manifest>
                                     <mainClass>
