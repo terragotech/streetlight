@@ -41,8 +41,12 @@
           "isRequired": true
         },
         {
-          "id": 26,
+          "id": 15,
           "type": "IDONCONTROLLER",
+          "isRequired": true
+        },{
+          "id": 26,
+          "type": "FIXTURE",
           "isRequired": true
         }
       ],
