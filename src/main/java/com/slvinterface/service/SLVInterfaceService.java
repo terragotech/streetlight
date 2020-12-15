@@ -58,6 +58,11 @@ public abstract class SLVInterfaceService {
             return;
         }
 
+        try {
+            SLVRestTemplate.INSTANCE.refreshToken();
+        }catch (Exception e){
+            logger.error("Error to get SLV Token", e);
+        }
 
         try {
             conditionsJson = getConditionsJson();

@@ -112,9 +112,9 @@ public class SurreySLVInterface extends  SLVInterfaceService {
 
 
     private void encodeData(Edge2SLVData currentEdge2SLVData)throws Exception{
-        currentEdge2SLVData.setIdOnController(encodeData(currentEdge2SLVData.getIdOnController()));
-        currentEdge2SLVData.setCurrentGeoZone(encodeData(currentEdge2SLVData.getCurrentGeoZone()));
-        currentEdge2SLVData.setTitle(encodeData(currentEdge2SLVData.getTitle()));
+        //currentEdge2SLVData.setIdOnController(encodeData(currentEdge2SLVData.getIdOnController()));
+        //currentEdge2SLVData.setCurrentGeoZone(encodeData(currentEdge2SLVData.getCurrentGeoZone()));
+        //currentEdge2SLVData.setTitle(encodeData(currentEdge2SLVData.getTitle()));
     }
 
 
@@ -195,16 +195,33 @@ public class SurreySLVInterface extends  SLVInterfaceService {
         addStreetLightData("MacAddress",previousEdge2SLVData.getMacAddress(),paramsList);
         addStreetLightData("install.date",previousEdge2SLVData.getInstallDate(),paramsList);
 
-        addStreetLightData("client.number",previousEdge2SLVData.getClientNumber(),paramsList);
-        addStreetLightData("client.name",previousEdge2SLVData.getCentralAssetId(),paramsList);
-        addStreetLightData("device.premise",previousEdge2SLVData.getFeatureId(),paramsList);
-        addStreetLightData("address",previousEdge2SLVData.getSiteName(),paramsList);
-        String featureLocation = previousEdge2SLVData.getFeatureLocation();
-        featureLocation = featureLocation == null ? "" : featureLocation;
-        if(featureLocation.length()>80){// while commissioning, address2 field supports only upto 80 chars
-            featureLocation = featureLocation.substring(0,80);
+        if(previousEdge2SLVData.getClientNumber() != null){
+            addStreetLightData("client.number",previousEdge2SLVData.getClientNumber(),paramsList);
         }
-        addStreetLightData("location.streetdescription",featureLocation,paramsList);
+
+        if(previousEdge2SLVData.getCentralAssetId() != null){
+            addStreetLightData("client.name",previousEdge2SLVData.getCentralAssetId(),paramsList);
+        }
+
+
+        if(previousEdge2SLVData.getFeatureId() != null){
+            addStreetLightData("device.premise",previousEdge2SLVData.getFeatureId(),paramsList);
+        }
+
+        if(previousEdge2SLVData.getSiteName() != null){
+            addStreetLightData("address",previousEdge2SLVData.getSiteName(),paramsList);
+        }
+
+
+        String featureLocation = previousEdge2SLVData.getFeatureLocation();
+        if(featureLocation != null){
+            featureLocation = featureLocation == null ? "" : featureLocation;
+            if(featureLocation.length()>80){// while commissioning, address2 field supports only upto 80 chars
+                featureLocation = featureLocation.substring(0,80);
+            }
+            addStreetLightData("location.streetdescription",featureLocation,paramsList);
+        }
+
 
         String slvCalender = PropertiesReader.getProperties().getProperty("streetlight.calendar");
         if(slvCalender != null && !slvCalender.trim().isEmpty()){
