@@ -92,7 +92,7 @@ public class SchuylkillPilot extends LUSPilot {
                 //Change Node Name
                 String nodeid = jsonObject.get("id").getAsString();
                 String strInstallDate = getTodayInstallDate();
-                jsonObject.addProperty("poleId", strPoleId);//OK
+                //jsonObject.addProperty("poleId", strPoleId);//OK
                 jsonObject.addProperty("poleHeight", strPoleHeight);//OK
                 jsonObject.addProperty("poleType", strPoleType);//OK
                 jsonObject.addProperty("poleColor", strPoleColor);//OK
@@ -117,12 +117,12 @@ public class SchuylkillPilot extends LUSPilot {
                 JsonArray customDataArray = new JsonArray();
 
                 JsonObject cusDataLampType = new JsonObject();
-                cusDataLampType.addProperty("display_name","Lamp Type");
+                cusDataLampType.addProperty("display_name","Audit Street");
                 cusDataLampType.addProperty("key","custom1");
                 cusDataLampType.addProperty("value",strAuditStreet);
 
                 JsonObject cusDataFeed = new JsonObject();
-                cusDataFeed.addProperty("display_name","Feed");
+                cusDataFeed.addProperty("display_name","Audit ID");
                 cusDataFeed.addProperty("key","custom2");
                 cusDataFeed.addProperty("value",strAuditId);
 
