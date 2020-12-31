@@ -92,7 +92,7 @@ public class SchuylkillPilot extends LUSPilot {
                 //Change Node Name
                 String nodeid = jsonObject.get("id").getAsString();
                 String strInstallDate = getTodayInstallDate();
-                //jsonObject.addProperty("poleId", strPoleId);//OK
+                jsonObject.addProperty("poleId", strPoleId);//OK
                 jsonObject.addProperty("poleHeight", strPoleHeight);//OK
                 jsonObject.addProperty("poleType", strPoleType);//OK
                 jsonObject.addProperty("poleColor", strPoleColor);//OK
