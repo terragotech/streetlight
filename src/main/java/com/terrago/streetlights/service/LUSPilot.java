@@ -26,7 +26,7 @@ import java.util.TimeZone;
 public class LUSPilot extends MonitorChanges{
     private Logger logger = Logger.getLogger(MonitorChanges.class);
     public static int INSTALL_COMPLETE = 1;
-    private String getTodayInstallDate(){
+    protected String getTodayInstallDate(){
         String pattern = "MM-dd-yyyy";
         SimpleDateFormat simpleDateFormat = new SimpleDateFormat(pattern);
         simpleDateFormat.setTimeZone(TimeZone.getTimeZone("CDT"));

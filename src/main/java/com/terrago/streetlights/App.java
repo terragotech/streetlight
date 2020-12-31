@@ -38,7 +38,7 @@ public class App
         //System.out.println(TerragoUtils.parseDevUI(strDev));
         //UbicquiaLightsInterface.requestDynamicToken();
 
-        MonitorChanges monitorChanges = new LUSPilot();
+        MonitorChanges monitorChanges = new SchuylkillPilot();
         monitorChanges.startMonitoring2();
         /*MonitorChanges2 monitorChanges2 = new MonitorChanges2();
         monitorChanges2.startMonitoring();*/
