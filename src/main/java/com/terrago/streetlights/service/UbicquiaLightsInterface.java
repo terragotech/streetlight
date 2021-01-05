@@ -254,6 +254,7 @@ public class UbicquiaLightsInterface {
             String baseURL = strBaseUrl;
 
             String requestURL = baseURL + "/nodes/update-node/" + nodeId;
+            logger.info("Set node data:" + requestURL);
             //headers.add("Authorization", "Bearer " + dynamicToken);
             headers.add("x-api-key", apikey);
             logger.info("Calling setvalues");

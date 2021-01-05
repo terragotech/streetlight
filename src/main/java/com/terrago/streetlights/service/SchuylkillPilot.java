@@ -80,10 +80,11 @@ public class SchuylkillPilot extends LUSPilot {
         {
             strFixtureType = struFixtureType;
         }
-        dev_eui = TerragoUtils.parseDevUI(dev_eui);
+        dev_eui = TerragoUtils.parseDevUIAll(dev_eui);
         if(!dev_eui.equals(""))
         {
             //UbicquiaLightsInterface.requestDynamicToken();
+            logger.info(dev_eui);
             JsonObject jsonObject = UbicquiaLightsInterface.getNodes(lastUpdated,dev_eui);
             if(jsonObject != null)
             {
@@ -101,7 +102,11 @@ public class SchuylkillPilot extends LUSPilot {
                 jsonObject.addProperty("fixtureId", strFixtureId);//OK
                 jsonObject.addProperty("node", strFixtureId);//OK
                 jsonObject.addProperty("fixtureType", strFixtureType);//OK
-                jsonObject.addProperty("fixture_wattage", strFixtureWattage);//OK
+                if(isNumeric(strFixtureWattage))
+                {
+                    jsonObject.addProperty("fixture_wattage", strFixtureWattage);//OK
+                }
+
                 //jsonObject.addProperty("Custom1", strLampType);
                 //jsonObject.addProperty("Custom3",strInstallDate);
 
@@ -111,6 +116,7 @@ public class SchuylkillPilot extends LUSPilot {
 
 
                 String updateDataJSON =  jsonObject.toString();
+                logger.info(updateDataJSON);
                 String nodeUpdateResponse = UbicquiaLightsInterface.setNodeData(lastUpdated,nodeid,updateDataJSON);
 
                 JsonObject jsonObject1 = new JsonObject();
