@@ -114,7 +114,7 @@ public class SchuylkillPilot extends LUSPilot {
 
                 //poleId
 
-
+                jsonObject.remove("state");
                 String updateDataJSON =  jsonObject.toString();
                 logger.info(updateDataJSON);
                 String nodeUpdateResponse = UbicquiaLightsInterface.setNodeData(lastUpdated,nodeid,updateDataJSON);
