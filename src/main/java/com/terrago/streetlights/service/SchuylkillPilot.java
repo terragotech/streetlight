@@ -22,19 +22,19 @@ public class SchuylkillPilot extends LUSPilot {
         String idPoleHeight = PropertiesReader.getProperties().getProperty("ubicquia_poleheight");
         String iduPoleHeight = PropertiesReader.getProperties().getProperty("ubicquia_upoleheight");
         String idPoleType = PropertiesReader.getProperties().getProperty("ubicquia_poletype");
-        String idPoleColor = PropertiesReader.getProperties().getProperty("ubicquia_polecolor");
+        //String idPoleColor = PropertiesReader.getProperties().getProperty("ubicquia_polecolor");
 
         int nidPoleId = Integer.parseInt(idPoleId);
         int nidPoleHeight = Integer.parseInt(idPoleHeight);
         int niduPoleHeight = Integer.parseInt(iduPoleHeight);
         int nidPoleType = Integer.parseInt(idPoleType);
-        int nidPoleColor = Integer.parseInt(idPoleColor);
+        //int nidPoleColor = Integer.parseInt(idPoleColor);
 
         //Mapped to Custom2
         String idFeed = PropertiesReader.getProperties().getProperty("ubicquia_feed");
         int nidFeed = Integer.parseInt(idFeed);
 
-        String idFixtureId = PropertiesReader.getProperties().getProperty("ubicquia_fixid");
+        //String idFixtureId = PropertiesReader.getProperties().getProperty("ubicquia_fixid");
         String idFixtureType = PropertiesReader.getProperties().getProperty("ubicquia_fixtype");
         String idFixtureuType = PropertiesReader.getProperties().getProperty("ubicquia_ufixtype");
         String idFixtureWattage = PropertiesReader.getProperties().getProperty("ubicquia_wattage");
@@ -44,7 +44,7 @@ public class SchuylkillPilot extends LUSPilot {
         //Mapped to Custom 3
         //Install Time Stamp
 
-        int nidFixtureId = Integer.parseInt(idFixtureId);
+        //int nidFixtureId = Integer.parseInt(idFixtureId);
         int nidFixtureType = Integer.parseInt(idFixtureType);
         int niduFixtureType = Integer.parseInt(idFixtureuType);
         int nidFixtureWattage = Integer.parseInt(idFixtureWattage);
@@ -60,10 +60,10 @@ public class SchuylkillPilot extends LUSPilot {
         String strPoleHeight = TerragoUtils.getEdgeFormValue(installformComponents,nidPoleHeight);
         String struPoleHeight = TerragoUtils.getEdgeFormValue(installformComponents,niduPoleHeight);
         String strPoleType = TerragoUtils.getEdgeFormValue(installformComponents,nidPoleType);
-        String strPoleColor =  TerragoUtils.getEdgeFormValue(installformComponents,nidPoleColor);
+        //String strPoleColor =  TerragoUtils.getEdgeFormValue(installformComponents,nidPoleColor);
         //String strFeed = TerragoUtils.getEdgeFormValue(installformComponents,nidFeed);
 
-        String strFixtureId = TerragoUtils.getEdgeFormValue(installformComponents,nidFixtureId);
+        //String strFixtureId = TerragoUtils.getEdgeFormValue(installformComponents,nidFixtureId);
         String strFixtureType = TerragoUtils.getEdgeFormValue(installformComponents,nidFixtureType);
         String struFixtureType = TerragoUtils.getEdgeFormValue(installformComponents,niduFixtureType);
         String strFixtureWattage = TerragoUtils.getEdgeFormValue(installformComponents,nidFixtureWattage);
@@ -96,11 +96,11 @@ public class SchuylkillPilot extends LUSPilot {
                 jsonObject.addProperty("poleId", strPoleId);//OK
                 jsonObject.addProperty("poleHeight", strPoleHeight);//OK
                 jsonObject.addProperty("poleType", strPoleType);//OK
-                jsonObject.addProperty("poleColor", strPoleColor);//OK
+                //jsonObject.addProperty("poleColor", strPoleColor);//OK
                 //jsonObject.addProperty("Custom2", strPoleColor);
 
-                jsonObject.addProperty("fixtureId", strFixtureId);//OK
-                jsonObject.addProperty("node", strFixtureId);//OK
+                jsonObject.addProperty("fixtureId", strPoleId);//OK
+                jsonObject.addProperty("node", strPoleId);//OK
                 jsonObject.addProperty("fixtureType", strFixtureType);//OK
                 if(isNumeric(strFixtureWattage))
                 {

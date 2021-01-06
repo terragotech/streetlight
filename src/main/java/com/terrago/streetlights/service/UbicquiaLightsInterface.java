@@ -285,6 +285,7 @@ public class UbicquiaLightsInterface {
         catch (Exception e)
         {
             e.printStackTrace();
+            logger.info(e);
         }
         return result;
 
