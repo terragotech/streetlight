@@ -308,7 +308,7 @@ public class SwapTemplateProcessor extends AbstractProcessor {
                     }
                 }
                 // Call Set Device to send MAC Address
-                setMACAddress(installMaintenanceLogModel, cityWorkflowSyncLog.getMacAddress().trim(), edgeNote);
+                setMACAddress(installMaintenanceLogModel, cityWorkflowSyncLog.getMacAddress().trim(), edgeNote,edgeNote.getEdgeNotebook() != null ? edgeNote.getEdgeNotebook().getNotebookName() : null);
 
                 // Call ReplaceOLC With MAC Address
                 SLVTransactionLogs slvTransactionLogs = getSLVTransactionLogs(edgeNote);
@@ -341,6 +341,15 @@ public class SwapTemplateProcessor extends AbstractProcessor {
             addStreetLightData("luminaire.installdate", dateFormat(edgeNote.getCreatedDateTime()), paramsList);
             try {
                 buildFixtureStreetLightData(cityWorkflowSyncLog.getFixtureQRScan().trim(), paramsList, edgeNote, slvServerData, installMaintenanceLogModel);
+                if(installMaintenanceLogModel.getDatesHolder() != null){
+                    if(installMaintenanceLogModel.getDatesHolder().getSlvDates()  == null || installMaintenanceLogModel.getDatesHolder().getSlvDates().getCslpLumDate() == null){
+                        addStreetLightData("cslp.lum.install.date", dateFormat(edgeNote.getCreatedDateTime()), paramsList);
+                    }
+                }
+                if(installMaintenanceLogModel.getDimmingGroupName() == null &&  edgeNote.getEdgeNotebook() != null && edgeNote.getEdgeNotebook().getNotebookName() != null){
+                    addStreetLightData("DimmingGroupName", edgeNote.getEdgeNotebook().getNotebookName(), paramsList);
+                    installMaintenanceLogModel.setDimmingGroupName(edgeNote.getEdgeNotebook().getNotebookName());
+                }
                 SLVTransactionLogs slvTransactionLogs = getSLVTransactionLogs(installMaintenanceLogModel);
                 int errorCode = setDeviceValues(paramsList, slvTransactionLogs);
                 logger.info("Error Code:" + errorCode);
@@ -366,7 +375,7 @@ public class SwapTemplateProcessor extends AbstractProcessor {
     }
 
 
-    private void setMACAddress(InstallMaintenanceLogModel installMaintenanceLogModel, String slvMacAddress, EdgeNote edgeNote) {
+    private void setMACAddress(InstallMaintenanceLogModel installMaintenanceLogModel, String slvMacAddress, EdgeNote edgeNote,String dimmingGroupName) {
         LinkedMultiValueMap paramsList = new LinkedMultiValueMap();
         String idOnController = installMaintenanceLogModel.getIdOnController();
         paramsList.add("idOnController" , idOnController);
@@ -374,6 +383,16 @@ public class SwapTemplateProcessor extends AbstractProcessor {
         addStreetLightData("MacAddress", slvMacAddress, paramsList);
         addStreetLightData("install.date", dateFormat(edgeNote.getCreatedDateTime()), paramsList);
         addStreetLightData("installStatus", InstallStatus.Installed.getValue(), paramsList);
+        if(installMaintenanceLogModel.getDatesHolder() != null){
+            if(installMaintenanceLogModel.getDatesHolder().getSlvDates()  == null || installMaintenanceLogModel.getDatesHolder().getSlvDates().getCslpNodeDate() == null){
+                addStreetLightData("cslp.node.install.date", dateFormat(edgeNote.getCreatedDateTime()), paramsList);
+            }
+        }
+        if(installMaintenanceLogModel.getDimmingGroupName() == null && dimmingGroupName != null){
+            addStreetLightData("DimmingGroupName", dimmingGroupName, paramsList);
+            installMaintenanceLogModel.setDimmingGroupName(dimmingGroupName);
+        }
+
         SLVTransactionLogs slvTransactionLogs = getSLVTransactionLogs(installMaintenanceLogModel);
         int errorCode = setDeviceValues(paramsList, slvTransactionLogs);
         logger.info("Error Code:" + errorCode);

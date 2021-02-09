@@ -48,11 +48,21 @@ public class LoggingModel {
 
     private String luminaireFixturecode;
 
+    private String dimmingGroupName;
+
 
     private boolean isNodeOnly;
 
 
     private boolean isPowerAdded;
+
+    public String getDimmingGroupName() {
+        return dimmingGroupName;
+    }
+
+    public void setDimmingGroupName(String dimmingGroupName) {
+        this.dimmingGroupName = dimmingGroupName;
+    }
 
     public boolean isPowerAdded() {
         return isPowerAdded;

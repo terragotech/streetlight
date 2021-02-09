@@ -167,6 +167,7 @@ public abstract class AbstractProcessor {
         String atlasGroupValue = null;
         float onLuxValue = 0.0f;
         float offLuxValue = 0.0f;
+        String dimmingGroupName = null;
         for (int i = 0; i < arr.size(); i++) {
             JsonObject jsonObject1 = arr.get(i).getAsJsonObject();
             String keyValue = jsonObject1.get("key").getAsString();
@@ -203,7 +204,10 @@ public abstract class AbstractProcessor {
                 if (jsonObject1.has("value") && !jsonObject1.get("value").isJsonNull()){
                     offLuxValue = jsonObject1.get("value").getAsFloat();
                 }
+            }else if(keyValue != null && keyValue.equals("userproperty.DimmingGroupName")){
+                dimmingGroupName = jsonObject1.get("value").getAsString();
             }
+            //userproperty.DimmingGroupName
             //userproperty.location.atlasphysicalpage
 
         }
@@ -249,6 +253,10 @@ public abstract class AbstractProcessor {
 
         if(atlasGroupValue != null && !atlasGroupValue.trim().isEmpty()){
             installMaintenanceLogModel.setAtlasGroup(atlasGroupValue);
+        }
+
+        if(dimmingGroupName != null && !dimmingGroupName.trim().isEmpty()){
+            installMaintenanceLogModel.setDimmingGroupName(dimmingGroupName);
         }
 
         installMaintenanceLogModel.setOnLuxLevel(onLuxValue);
