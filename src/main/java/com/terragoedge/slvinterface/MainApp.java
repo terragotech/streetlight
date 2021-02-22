@@ -10,7 +10,7 @@ public class MainApp {
         try {
             while (true) {
                 titleChangeListener.start();
-                Thread.sleep(10 * 60 *1000);// 10 mins
+                Thread.sleep(30 * 1000);// 30 secs
             }
         }catch (Exception e){
            logger.error("Error while starting: "+e.getMessage());

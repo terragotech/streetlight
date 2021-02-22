@@ -21,6 +21,7 @@ public enum ConnectionDAO {
 
     ConnectionSource connectionSource = null;
     private Dao<TitleChangeDetail, String> titleChangeDetailDao;
+    private Dao<EdgeNoteEntity, String> edgeNoteDao;
     private static final Logger logger = Logger.getLogger(ConnectionDAO.class);
 
     ConnectionDAO() {
@@ -34,6 +35,7 @@ public enum ConnectionDAO {
                   e.printStackTrace();
             }
             titleChangeDetailDao = DaoManager.createDao(connectionSource, TitleChangeDetail.class);
+            edgeNoteDao = DaoManager.createDao(connectionSource, EdgeNoteEntity.class);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -41,7 +43,7 @@ public enum ConnectionDAO {
 
     public long getMaxSyncTime() {
         try {
-            long maxSyncTime = titleChangeDetailDao.queryRawValue("select max(created_date_time) from slvsyncdetails");
+            long maxSyncTime = titleChangeDetailDao.queryRawValue("select max(synctime) from title_change_detail");
             return maxSyncTime;
         } catch (Exception e) {
             e.printStackTrace();
@@ -59,6 +61,15 @@ public enum ConnectionDAO {
         }
     }
 
+    public TitleChangeDetail getTitleChangeDetail(String noteguid) {
+        try {
+            return titleChangeDetailDao.queryBuilder().where().eq("noteguid", noteguid).queryForFirst();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
     public void updateSlvSyncDetail(TitleChangeDetail slvSyncDetail) {
         try {
             titleChangeDetailDao.update(slvSyncDetail);
@@ -68,6 +79,13 @@ public enum ConnectionDAO {
     }
 
 
+    public void updateEdgeNote(String createdby,String noteguid){
+        try{
+            edgeNoteDao.executeRawNoArgs("update edgenote set createdby='"+createdby+"' where noteguid='"+noteguid+"';");
+        }catch (Exception e){
+            logger.error("Error in updateEdgeNote: ",e);
+        }
+    }
     public ConnectionSource getConnection() {
         return connectionSource;
     }

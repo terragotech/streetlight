@@ -3,6 +3,7 @@ package com.terragoedge.slvinterface.service;
 import com.google.gson.*;
 import com.google.gson.reflect.TypeToken;
 import com.terragoedge.slvinterface.dao.ConnectionDAO;
+import com.terragoedge.slvinterface.dao.TitleChangeDetail;
 import com.terragoedge.slvinterface.model.EdgeFormData;
 import com.terragoedge.slvinterface.utils.PropertiesReader;
 import org.apache.log4j.Logger;
@@ -77,7 +78,7 @@ public class TitleChangeListener {
 
             // Get Response String
             String notesGuids = edgeSlvServerResponse.getBody();
-            System.out.println(notesGuids);
+            logger.info(notesGuids);
 
             JsonArray noteGuidsJsonArray = (JsonArray) jsonParser.parse(notesGuids);
             if(noteGuidsJsonArray != null &&  !noteGuidsJsonArray.isJsonNull()){
@@ -94,12 +95,13 @@ public class TitleChangeListener {
     }
 
     private void changeNoteTitle(String noteguid){
+        long synctime = 0;
         String newTitle = null;
         String baseURl = properties.getProperty("streetlight.edge.url.main");
         String processingTemplateguid = properties.getProperty("streetlight.edge.processing.formtemplateguid");
         try {
 
-            ResponseEntity<String> responseEntity = slvRestService.serverCall(baseURl+"/rest/notes/" + noteguid, HttpMethod.GET, null,false);
+            ResponseEntity<String> responseEntity = slvRestService.serverCall(baseURl+"/rest/notes/" + noteguid, HttpMethod.GET, null);
             logger.info("Get notes rest call response: "+responseEntity.getStatusCode().value());
             if (responseEntity.getStatusCode() == HttpStatus.OK) {
                 String body = responseEntity.getBody();
@@ -109,6 +111,7 @@ public class TitleChangeListener {
                 } else {
                     JsonObject edgeJsonObject = jsonParser.parse(body).getAsJsonObject();
                     String oldNoteguid = edgeJsonObject.get("noteGuid").getAsString();
+                    synctime = edgeJsonObject.get("syncTime").getAsLong();
                     JsonElement notebookElement = edgeJsonObject.get("edgeNotebook");
                     if (notebookElement == null || notebookElement.isJsonNull()) {
                         logger.error("This senor is undefined: " + noteguid);
@@ -116,6 +119,8 @@ public class TitleChangeListener {
                     } else {
                         String title = edgeJsonObject.get("title").getAsString();
                             String notebookGuid = edgeJsonObject.get("edgeNotebook").getAsJsonObject().get("notebookGuid").getAsString();
+                            String createdBy = edgeJsonObject.get("createdBy").getAsString();
+                            createdBy = createdBy == null ? "admin" : createdBy;
                             JsonArray serverEdgeFormJsonArray = edgeJsonObject.get("formData").getAsJsonArray();
                             int size = serverEdgeFormJsonArray.size();
                             int validFormsCount = 0;
@@ -153,8 +158,10 @@ public class TitleChangeListener {
                             edgeJsonObject.addProperty("createdDateTime", System.currentTimeMillis());
                             edgeJsonObject.addProperty("createdBy", "admin");
                             edgeJsonObject.addProperty("title", newTitle);
-                            ResponseEntity<String> responseEntity1 = slvRestService.serverCall(baseURl+"/rest/notebooks/" + notebookGuid + "/notes/" + oldNoteguid, HttpMethod.PUT, gson.toJson(edgeJsonObject),false);
+                            ResponseEntity<String> responseEntity1 = slvRestService.serverCall(baseURl+"/rest/notebooks/" + notebookGuid + "/notes/" + oldNoteguid, HttpMethod.PUT, gson.toJson(edgeJsonObject));
                             logger.info("Update note rest call response: "+responseEntity1.getStatusCode().value());
+                            String createdNoteGuid = responseEntity1.getBody();
+                            connectionDAO.updateEdgeNote(createdBy, createdNoteGuid);
                         }
                 }
             } else {
@@ -162,6 +169,14 @@ public class TitleChangeListener {
             }
         }catch (Exception e){
             logger.error("Error in changeNoteTitle: ",e);
+        }finally {
+            TitleChangeDetail dbDetail = connectionDAO.getTitleChangeDetail(noteguid);
+            if (dbDetail == null) {
+                TitleChangeDetail titleChangeDetail = new TitleChangeDetail();
+                titleChangeDetail.setNoteguid(noteguid);
+                titleChangeDetail.setSynctime(synctime);
+                connectionDAO.saveSlvSyncDetail(titleChangeDetail);
+            }
         }
     }
 
