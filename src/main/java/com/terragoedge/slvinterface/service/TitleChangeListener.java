@@ -104,7 +104,7 @@ public class TitleChangeListener {
             ResponseEntity<String> responseEntity = slvRestService.serverCall(baseURl+"/rest/notes/" + noteguid, HttpMethod.GET, null);
             logger.info("Get notes rest call response: "+responseEntity.getStatusCode().value());
             if (responseEntity.getStatusCode() == HttpStatus.OK) {
-                String body = responseEntity.getBody();
+                String body = new String(responseEntity.getBody().getBytes("UTF-8"),"UTF-8");
                 if (body == null) {
                     logger.error("no note present in inventory server for this serial no: " + noteguid);
                     return;
@@ -158,7 +158,7 @@ public class TitleChangeListener {
                             edgeJsonObject.addProperty("createdDateTime", System.currentTimeMillis());
                             edgeJsonObject.addProperty("createdBy", "admin");
                             edgeJsonObject.addProperty("title", newTitle);
-                            ResponseEntity<String> responseEntity1 = slvRestService.serverCall(baseURl+"/rest/notebooks/" + notebookGuid + "/notes/" + oldNoteguid, HttpMethod.PUT, gson.toJson(edgeJsonObject));
+                            ResponseEntity<String> responseEntity1 = slvRestService.serverCall(baseURl+"/rest/notebooks/" + notebookGuid + "/notes/" + oldNoteguid, HttpMethod.PUT, new String(gson.toJson(edgeJsonObject).getBytes("UTF-8"),"UTF-8"));
                             logger.info("Update note rest call response: "+responseEntity1.getStatusCode().value());
                             String createdNoteGuid = responseEntity1.getBody();
                             connectionDAO.updateEdgeNote(createdBy, createdNoteGuid);

@@ -110,7 +110,7 @@ public class SlvRestService {
         HttpHeaders  headers = getHeaders(null);
         HttpEntity request = null;
         if(body != null){
-            headers.add("Content-Type", "application/json");
+            headers.add("Content-Type", MediaType.APPLICATION_JSON_UTF8_VALUE);
             request = new HttpEntity<String>(body, headers);
         }else{
             request = new HttpEntity<>(headers);
