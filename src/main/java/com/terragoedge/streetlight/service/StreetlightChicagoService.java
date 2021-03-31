@@ -119,6 +119,7 @@ public class StreetlightChicagoService extends AbstractProcessor {
 
         long lastSynctime = streetlightDao.getLastSyncTime();
         if(lastSynctime > 0){
+            lastSynctime = lastSynctime -1;
             edgeSlvUrl = edgeSlvUrl + lastSynctime;
 
         }else{

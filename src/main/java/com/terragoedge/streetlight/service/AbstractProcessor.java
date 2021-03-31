@@ -1639,6 +1639,9 @@ public boolean checkExistingMacAddressValid(EdgeNote edgeNote, InstallMaintenanc
             String existingMacAddress = installMaintenanceLogModel.getExistingNodeMACaddress() == null ? "" : installMaintenanceLogModel.getExistingNodeMACaddress();
             logger.info("Existing MacAddress:"+existingMacAddress);
             logger.info("SLV MacAddress:"+slvMacAddress);
+            if(existingMacAddress.startsWith("00000")){
+                return  true;
+            }
                 if(slvMacAddress.trim().toLowerCase().equals(existingMacAddress.trim().toLowerCase())) {
                     List<ExistingMacValidationFailure> existingMacValidationFailures = connectionDAO.getExistingMacValidationFailure(idonController,existingMacAddress);
                     for(ExistingMacValidationFailure existingMacValidationFailure : existingMacValidationFailures){
