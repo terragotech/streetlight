@@ -8,6 +8,8 @@ insert into pro_context_lookup("proposed_context","lum_brand","lum_model","lum_p
 insert into pro_context_lookup("proposed_context","lum_brand","lum_model","lum_part_no","lum_wattage") values ('2 - Alley','Leotek','GCJ H-Series','GCJ2-20H-MV-WW-2R-GY-1A-PCR7-CR-WL','68');
 
 
+
+
 insert into pro_context_lookup("proposed_context","lum_brand","lum_model","lum_part_no","lum_wattage") values ('3 - Residential Modern (66ft ROW Staggered)','Philips RoadFocus','RFM','[RFM-077]-[108W32LED3K-001]-G2-R2M','108');
 insert into pro_context_lookup("proposed_context","lum_brand","lum_model","lum_part_no","lum_wattage") values ('3 - Residential Modern (66ft ROW Staggered)','Philips RoadFocus','RFM','[RFM-077]-[108W32LED3K-002]-G2-R3S','108');
 insert into pro_context_lookup("proposed_context","lum_brand","lum_model","lum_part_no","lum_wattage") values ('3 - Residential Modern (66ft ROW Staggered)','Philips RoadFocus','RFM','[RFM-077]-[108W32LED3K-002]-T-R3S','108');
@@ -35,7 +37,7 @@ insert into pro_context_lookup("proposed_context","lum_brand","lum_model","lum_p
 insert into pro_context_lookup("proposed_context","lum_brand","lum_model","lum_part_no") values ('Node Only','Existing LED','Node Only','Node Only');
 
 
-insert into pro_context_lookup("proposed_context","lum_brand","lum_wattage") values ('F - Flood','Acuity','119');
+insert into pro_context_lookup("proposed_context","lum_brand","lum_model","lum_part_no","lum_wattage") values ('F - Flood','Acuity Brands Lighting','Flood','ACP0LEDP30MVOLT663KTMMPP7NLRFD307394','123');
 
 
 delete from pro_context_lookup where proposed_context = 'F - Flood';
