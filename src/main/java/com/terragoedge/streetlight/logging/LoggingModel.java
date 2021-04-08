@@ -50,6 +50,8 @@ public class LoggingModel {
 
     private String dimmingGroupName;
 
+    private String luminaireModel;
+
 
     private boolean isNodeOnly;
 
@@ -115,6 +117,13 @@ public class LoggingModel {
 
     }
 
+    public String getLuminaireModel() {
+        return luminaireModel;
+    }
+
+    public void setLuminaireModel(String luminaireModel) {
+        this.luminaireModel = luminaireModel;
+    }
 
     public String getParentNoteId() {
         return parentNoteId;

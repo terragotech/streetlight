@@ -387,6 +387,10 @@ public class SwapTemplateProcessor extends AbstractProcessor {
             if(installMaintenanceLogModel.getDatesHolder().getSlvDates()  == null || installMaintenanceLogModel.getDatesHolder().getSlvDates().getCslpNodeDate() == null){
                 addStreetLightData("cslp.node.install.date", dateFormat(edgeNote.getCreatedDateTime()), paramsList);
             }
+            // After Installation Removed, COC user use swap workflow to sync node. At that time, we need to send luminaire.installdate if value is not in SLV.
+            if(installMaintenanceLogModel.getLuminaireModel() != null && (installMaintenanceLogModel.getDatesHolder().getSlvDates()  == null || installMaintenanceLogModel.getDatesHolder().getSlvDates().getLumInstallDate() == null)){
+                addStreetLightData("luminaire.installdate", dateFormat(edgeNote.getCreatedDateTime()), paramsList);
+            }
         }
         if(installMaintenanceLogModel.getDimmingGroupName() == null && dimmingGroupName != null){
             addStreetLightData("DimmingGroupName", dimmingGroupName, paramsList);

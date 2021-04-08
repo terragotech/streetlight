@@ -206,6 +206,11 @@ public abstract class AbstractProcessor {
                 }
             }else if(keyValue != null && keyValue.equals("userproperty.DimmingGroupName")){
                 dimmingGroupName = jsonObject1.get("value").getAsString();
+            }else if(keyValue != null && keyValue.equals("userproperty.luminaire.model")){
+                String luminaireModel = jsonObject1.get("value").getAsString();
+                if(luminaireModel != null && !luminaireModel.trim().isEmpty()){
+                    installMaintenanceLogModel.setLuminaireModel(luminaireModel.trim());
+                }
             }
             //userproperty.DimmingGroupName
             //userproperty.location.atlasphysicalpage
