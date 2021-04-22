@@ -219,7 +219,7 @@ public class SlvInterfaceService extends AbstractSlvService {
                     logger.info("JspWorkmodel json :" + gson.toJson(jpsWorkflowModel));
                     if(jpsWorkflowModel.getInstallStatus().equals("CONVERTED")){//CONVERTED
                         slvService.processSlv(jpsWorkflowModel, edgeNote);
-                        promotedDataService.updatePromotedData(jpsWorkflowModel,edgeNote);
+                        promotedDataService.updatePromotedData(jpsWorkflowModel,edgeNote, formTemplateGuid);
                     }else{
                         logger.error("Install status is not CONVERTED. So skipping this note: "+edgeNote.getNoteGuid());
                     }
