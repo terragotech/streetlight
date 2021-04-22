@@ -14,10 +14,7 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Properties;
-import java.util.UUID;
+import java.util.*;
 
 public class PromotedDataService extends AbstractSlvService {
     private Logger logger = Logger.getLogger(PromotedDataService.class);
@@ -94,7 +91,7 @@ public class PromotedDataService extends AbstractSlvService {
         return isTitleUpdated;
     }
 
-    public void updateCrewUserOnNote(String noteguid, String formTemplateGuid){
+    private void updateCrewUserOnNote(String noteguid, String formTemplateGuid){
         String baseURl = properties.getProperty("streetlight.edge.url.main");
         try {
             ResponseEntity<String> responseEntity = slvRestService.serverCall(baseURl+"/rest/notes/" + noteguid, HttpMethod.GET, null,false);
@@ -149,12 +146,13 @@ public class PromotedDataService extends AbstractSlvService {
     }
 
     private boolean processCrewUserId(String formTemplateGuid, List<EdgeFormData> edgeFormDatas, String currentTemplateGuid, JsonObject edgeJsonObject){
+        String baseUrl = properties.getProperty("streetlight.edge.url.main");
         boolean crewUserUpdated = false;
         try{
             if (currentTemplateGuid.equals(formTemplateGuid)) {
                 String user = edgeJsonObject.get("createdBy").getAsString();
                 String skippingUserStr = properties.getProperty("com.edge.skipping.users");
-                List<String> skippingUsers = gson.fromJson(skippingUserStr, new TypeToken<List<String>>(){}.getType());
+                List<String> skippingUsers = skippingUserStr == null ? new ArrayList<String>() : Arrays.asList(skippingUserStr.split(",",-1));
                 if (skippingUsers.contains(user)) {
                     logger.info("this note captured by skipping users. So crewUser update skipped");
                     return false;
@@ -171,8 +169,8 @@ public class PromotedDataService extends AbstractSlvService {
                     logger.info("this formtemplate not present in config to update crew user");
                 } else {
                     String existingCrewUser = getFormValue(edgeFormDatas, crewUserConfigForTemplate.get("crewUserId").getAsInt());
-                    if (existingCrewUser == null || existingCrewUser.equals("")) {
-                        ResponseEntity<String> responseEntity = serverCall("/rest/users", HttpMethod.GET, null);
+                    if (existingCrewUser == null || existingCrewUser.equals("") || existingCrewUser.contains("null")) {
+                        ResponseEntity<String> responseEntity = slvRestService.serverCall(baseUrl+"/rest/users", HttpMethod.GET, null, false);
                         String responseBody = responseEntity.getBody();
                         if (responseBody != null) {
                             String userEmail = null;
