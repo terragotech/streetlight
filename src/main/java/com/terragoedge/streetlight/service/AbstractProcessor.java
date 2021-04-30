@@ -172,30 +172,30 @@ public abstract class AbstractProcessor {
             JsonObject jsonObject1 = arr.get(i).getAsJsonObject();
             String keyValue = jsonObject1.get("key").getAsString();
             if (keyValue != null && keyValue.equals(proposedContextKey)) {
-                String proposedContext = jsonObject1.get("value").getAsString();
+                String proposedContext = getJsonValue(jsonObject1);
                 proposedContextValue = proposedContext;
                 contextListHashMap.put(idOnController, proposedContext);
             } else if (keyValue != null && keyValue.equals(cslInstallDateKey)) {
-                cslpNodeInstall = jsonObject1.get("value").getAsString();
+                cslpNodeInstall = getJsonValue(jsonObject1);
             } else if (keyValue != null && keyValue.equals(cslLuminaireDateKey)) {
-                cslpLuminaireDate = jsonObject1.get("value").getAsString();
+                cslpLuminaireDate = getJsonValue(jsonObject1);
             } else if (keyValue != null && keyValue.equals("userproperty.MacAddress")) {
-                macAddress = jsonObject1.get("value").getAsString();
+                macAddress = getJsonValue(jsonObject1);
                 installMaintenanceLogModel.setSlvMacaddress(macAddress);
             }else if (keyValue != null && keyValue.equals("userproperty.luminaire.serialnumber")) {
-                luminaireSerialNumber = jsonObject1.get("value").getAsString();
+                luminaireSerialNumber = getJsonValue(jsonObject1);
             }else if (keyValue != null && keyValue.equals("install.date")) {
-                nodeInstallDate = jsonObject1.get("value").getAsString();
+                nodeInstallDate = getJsonValue(jsonObject1);
             }else if (keyValue != null && keyValue.equals("userproperty.luminaire.installdate")) {
-                luminaireInstallDate = jsonObject1.get("value").getAsString();
+                luminaireInstallDate = getJsonValue(jsonObject1);
             }else if(keyValue != null && keyValue.equals("userproperty.location.atlasphysicalpage")){
-                atlasPhysicalPage = jsonObject1.get("value").getAsString();
+                atlasPhysicalPage = getJsonValue(jsonObject1);
             }else if(keyValue != null && keyValue.equals("CommunicationStatus")){
-                communicationSatus = jsonObject1.get("value").getAsString();
+                communicationSatus = getJsonValue(jsonObject1);
             }else if(keyValue != null && keyValue.equals("userproperty.luminaire.fixturecode")){
-                fixtureCode = jsonObject1.get("value").getAsString();
+                fixtureCode = getJsonValue(jsonObject1);
             }else if(keyValue != null && keyValue.equals("userProperty.network.atlasgroup")){
-                atlasGroupValue = jsonObject1.get("value").getAsString();
+                atlasGroupValue = getJsonValue(jsonObject1);
             } else if(keyValue != null && keyValue.equals(onLuxKey)){
                 if (jsonObject1.has("value") && !jsonObject1.get("value").isJsonNull()){
                     onLuxValue = jsonObject1.get("value").getAsFloat();
@@ -205,9 +205,9 @@ public abstract class AbstractProcessor {
                     offLuxValue = jsonObject1.get("value").getAsFloat();
                 }
             }else if(keyValue != null && keyValue.equals("userproperty.DimmingGroupName")){
-                dimmingGroupName = jsonObject1.get("value").getAsString();
+                dimmingGroupName = getJsonValue(jsonObject1);
             }else if(keyValue != null && keyValue.equals("userproperty.luminaire.model")){
-                String luminaireModel = jsonObject1.get("value").getAsString();
+                String luminaireModel = getJsonValue(jsonObject1);
                 if(luminaireModel != null && !luminaireModel.trim().isEmpty()){
                     installMaintenanceLogModel.setLuminaireModel(luminaireModel.trim());
                 }
@@ -289,6 +289,14 @@ public abstract class AbstractProcessor {
         deviceAttributes.setNoteGuid(noteGuid);
         connectionDAO.saveDeviceAttributes(deviceAttributes);
         logger.info("processDeviceValuesJson End");
+    }
+
+
+    private String getJsonValue(JsonObject jsonObject1){
+        if (jsonObject1.has("value") && !jsonObject1.get("value").isJsonNull()){
+            return  jsonObject1.get("value").getAsString();
+        }
+        return null;
     }
 
 
