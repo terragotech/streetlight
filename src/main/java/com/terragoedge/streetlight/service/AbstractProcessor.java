@@ -1269,6 +1269,15 @@ public abstract class AbstractProcessor {
             setResponseDetails(slvTransactionLogs, responseString);
             JsonObject replaceOlcResponse = (JsonObject) jsonParser.parse(responseString);
             String errorStatus = replaceOlcResponse.get("status").getAsString();
+            // If its warning, we need to call once again to process that request.
+            if (errorStatus.equals("WARNING")) {
+                setSLVTransactionLogs(slvTransactionLogs, url, CallType.REPLACE_OLC,mainUrl + dataUrl);
+                response = restService.getPostRequest(url, null,paramsList);
+                responseString = response.getBody();
+                setResponseDetails(slvTransactionLogs, responseString);
+                replaceOlcResponse = (JsonObject) jsonParser.parse(responseString);
+                errorStatus = replaceOlcResponse.get("status").getAsString();
+            }
             logger.info("Replace OLC Process End.");
             // As per doc, errorcode is 0 for success. Otherwise, its not success.
             if (errorStatus.equals("ERROR")) {
