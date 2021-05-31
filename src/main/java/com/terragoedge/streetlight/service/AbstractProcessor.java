@@ -1271,6 +1271,7 @@ public abstract class AbstractProcessor {
             String errorStatus = replaceOlcResponse.get("status").getAsString();
             // If its warning, we need to call once again to process that request.
             if (errorStatus.equals("WARNING")) {
+                Thread.sleep(5000);
                 logger.info("Due to Warning, Going to Call ReplaceOLC again");
                 setSLVTransactionLogs(slvTransactionLogs, url, CallType.REPLACE_OLC,mainUrl + dataUrl);
                 response = restService.getPostRequest(url, null,paramsList);
