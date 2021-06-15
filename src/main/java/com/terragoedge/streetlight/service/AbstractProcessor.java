@@ -1951,20 +1951,20 @@ public boolean checkExistingMacAddressValid(EdgeNote edgeNote, InstallMaintenanc
             ProContextLookupData dbProContextLookupData =  connectionDAO.getProContextLookupData(proContextLookupData,isLumModelExact,isLumPartExact);
             logger.info("DB ProContextLookupData"+dbProContextLookupData);
             if(dbProContextLookupData != null && dbProContextLookupData.getProposedContext() != null){
-                String atlasPage = Utils.getAtlasPage(installMaintenanceLogModel.getAtlasPhysicalPage());
+//                String atlasPage = Utils.getAtlasPage(installMaintenanceLogModel.getAtlasPhysicalPage());
                 logger.info("DB ProContextLookupData"+dbProContextLookupData.toString());
                 if(dbProContextLookupData.getLumBrand() != null && dbProContextLookupData.getLumBrand().toLowerCase().startsWith("existing") && installMaintenanceLogModel.isButtonPhotoCell()){
                     addStreetLightData("location.proposedcontext", "Photocell Only", paramsList);
-                    String fixtureName = getFixtureName("Photocell Only",installMaintenanceLogModel.getLuminaireFixturecode(),atlasPage,installMaintenanceLogModel.getNoteName(),installMaintenanceLogModel.getAtlasGroup());
-                    addStreetLightData("userName", fixtureName, paramsList);
+                    /*String fixtureName = getFixtureName("Photocell Only",installMaintenanceLogModel.getLuminaireFixturecode(),atlasPage,installMaintenanceLogModel.getNoteName(),installMaintenanceLogModel.getAtlasGroup());
+                    addStreetLightData("userName", fixtureName, paramsList);*/
                 }else if(dbProContextLookupData.getLumBrand() != null && dbProContextLookupData.getLumBrand().toLowerCase().startsWith("existing") && installMaintenanceLogModel.isNodeOnly()){
                     addStreetLightData("location.proposedcontext", "Node Only", paramsList);
-                    String fixtureName = getFixtureName("Node Only",installMaintenanceLogModel.getLuminaireFixturecode(),atlasPage,installMaintenanceLogModel.getNoteName(),installMaintenanceLogModel.getAtlasGroup());
-                    addStreetLightData("userName", fixtureName, paramsList);
+                    /*String fixtureName = getFixtureName("Node Only",installMaintenanceLogModel.getLuminaireFixturecode(),atlasPage,installMaintenanceLogModel.getNoteName(),installMaintenanceLogModel.getAtlasGroup());
+                    addStreetLightData("userName", fixtureName, paramsList);*/
                 }else {
                     addStreetLightData("location.proposedcontext", dbProContextLookupData.getProposedContext(), paramsList);
-                    String fixtureName = getFixtureName(dbProContextLookupData.getProposedContext(),installMaintenanceLogModel.getLuminaireFixturecode(),atlasPage,installMaintenanceLogModel.getNoteName(),installMaintenanceLogModel.getAtlasGroup());
-                    addStreetLightData("userName", fixtureName, paramsList);
+                    /*String fixtureName = getFixtureName(dbProContextLookupData.getProposedContext(),installMaintenanceLogModel.getLuminaireFixturecode(),atlasPage,installMaintenanceLogModel.getNoteName(),installMaintenanceLogModel.getAtlasGroup());
+                    addStreetLightData("userName", fixtureName, paramsList);*/
                 }
 
             }
