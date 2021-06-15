@@ -111,7 +111,7 @@
                             <goal>single</goal>
                         </goals>
                         <configuration>
-                            <finalName>slv_interface_v15</finalName>
+                            <finalName>slv_interface_production_v20</finalName>
 
                             <archive>
                                 <manifest>

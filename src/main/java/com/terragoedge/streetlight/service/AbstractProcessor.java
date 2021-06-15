@@ -538,6 +538,38 @@ public abstract class AbstractProcessor {
         return SLVDates != null && SLVDates.getCslpNodeDate() != null;
     }
 
+    public void addDimmingGroup(EdgeNote edgeNote, LinkedMultiValueMap<String, String> paramsList,String idOnContoller,InstallMaintenanceLogModel loggingModel){
+        String proposedContext = contextListHashMap.get(idOnContoller);
+        logger.info("DimmingGroupName :" + proposedContext);
+        logger.info("edgeNote :" + edgeNote.toString());
+        logger.info("edgeNote :" + edgeNote.getEdgeNotebook().toString());
+        String edgeNotebookName = edgeNote.getEdgeNotebook().getNotebookName();
+        /*if (dimmingGroupName != null && dimmingGroupName.trim().toLowerCase().contains("acorns")) {
+            edgeNotebookName = "Acorn Calendar";
+        } else {
+            edgeNotebookName = "Group Calendar 1";
+        }*/
+        edgeNotebookName = edgeNotebookName.replace("Residential", "").trim();
+        logger.info("ProposedContextName :" + proposedContext);
+        logger.info("DimmingGroupName :" + edgeNotebookName);
+        if (proposedContext != null) {
+            if (proposedContext.startsWith("4") || proposedContext.startsWith("13")) {
+                edgeNotebookName = edgeNotebookName + " Acorns";
+            }else if(proposedContext.equals("X - Out of Scope") &&  ( loggingModel.getLuminaireFixturecode().equalsIgnoreCase("piggy-back") || loggingModel.getLuminaireFixturecode().equalsIgnoreCase("Post-top Acorn"))){
+                edgeNotebookName = edgeNotebookName + " Acorns";
+            }
+
+        }
+
+        logger.info("DimmingGroupName After:" + edgeNotebookName);
+
+        if(loggingModel.isDroppedPinWorkflow() && (loggingModel.getLuminaireFixturecode() != null && loggingModel.getLuminaireFixturecode().equalsIgnoreCase("piggy-back"))){
+            addStreetLightData("DimmingGroupName", edgeNotebookName +" Acorns", paramsList);
+        }else {
+            addStreetLightData("DimmingGroupName", edgeNotebookName, paramsList);
+        }
+    }
+
 
     protected void addOtherParams(EdgeNote edgeNote, LinkedMultiValueMap<String, String> paramsList, String idOnContoller, String utilLocId, boolean isNew, String fixerQrScanValue, String macAddress, InstallMaintenanceLogModel loggingModel) {
         // luminaire.installdate - 2017-09-07 09:47:35
@@ -576,30 +608,7 @@ public abstract class AbstractProcessor {
         }
 
 
-        String dimmingGroupName = contextListHashMap.get(idOnContoller);
-        logger.info("DimmingGroupName :" + dimmingGroupName);
-        logger.info("edgeNote :" + edgeNote.toString());
-        logger.info("edgeNote :" + edgeNote.getEdgeNotebook().toString());
-        String edgeNotebookName = edgeNote.getEdgeNotebook().getNotebookName();
-        /*if (dimmingGroupName != null && dimmingGroupName.trim().toLowerCase().contains("acorns")) {
-            edgeNotebookName = "Acorn Calendar";
-        } else {
-            edgeNotebookName = "Group Calendar 1";
-        }*/
-        edgeNotebookName = edgeNotebookName.replace("Residential", "").trim();
-        logger.info("ProposedContextName :" + dimmingGroupName);
-        logger.info("DimmingGroupName :" + edgeNotebookName);
-        if (dimmingGroupName != null) {
-            if (dimmingGroupName.startsWith("4") || dimmingGroupName.startsWith("13")) {
-                edgeNotebookName = edgeNotebookName + " Acorns";
-            }
-            if (dimmingGroupName.contains("Node Only") && installStatus != null) {
-                //installStatus = InstallStatus.Verified.getValue();
-
-            }
-        }
-
-        logger.info("DimmingGroupName After:" + edgeNotebookName);
+        addDimmingGroup(edgeNote,paramsList,idOnContoller,loggingModel);
 
        /* if (dimmingGroupName != null && dimmingGroupName.trim().toLowerCase().contains("acorns")) {
             edgeNotebookName = edgeNotebookName +" Acorns";
@@ -608,11 +617,7 @@ public abstract class AbstractProcessor {
         if (installStatus != null && loggingModel.isActionNew()) {
             addStreetLightData("installStatus", loggingModel.isButtonPhotoCell() ? InstallStatus.Photocell_Only.getValue() : installStatus, paramsList);
         }
-        if(loggingModel.isDroppedPinWorkflow() && (loggingModel.getLuminaireFixturecode() != null && loggingModel.getLuminaireFixturecode().equalsIgnoreCase("piggy-back"))){
-            addStreetLightData("DimmingGroupName", edgeNotebookName +" Acorns", paramsList);
-        }else {
-            addStreetLightData("DimmingGroupName", edgeNotebookName, paramsList);
-        }
+
         // addStreetLightData("DimmingGroupName", "Group Calendar 1", paramsList);
         addPower(loggingModel,null,paramsList,null);
     }
@@ -990,13 +995,17 @@ public abstract class AbstractProcessor {
             addPower(loggingModel,powerVal,paramsList,proContextLookupData);
             //addStreetLightData("power", powerVal, paramsList);
 
-            String dimmingGroupName = contextListHashMap.get(loggingModel.getIdOnController());
-            logger.info("dimming groupname :"+dimmingGroupName);
+            String proposedContext = contextListHashMap.get(loggingModel.getIdOnController());
+            logger.info("dimming groupname :"+proposedContext);
             logger.info("stringContainsNumber(fixtureInfo[5]) status :"+stringContainsNumber(fixtureInfo[5]));
             logger.info("stringContainsNumber(fixtureInfo[5]) status :"+stringContainsNumber(fixtureInfo[5]));
-            if (dimmingGroupName != null && stringContainsNumber(fixtureInfo[5]) && (dimmingGroupName.startsWith("3") || dimmingGroupName.startsWith("11") || dimmingGroupName.startsWith("12"))) {
+            if (proposedContext != null && stringContainsNumber(fixtureInfo[5]) && (proposedContext.startsWith("3") || proposedContext.startsWith("11") || proposedContext.startsWith("12"))) {
                 fixtureInfo[5] = "LED";
                 logger.info("Entered if Statement Lum Type" +fixtureInfo[5]);
+            }
+
+            if(proposedContext != null && loggingModel.isSwap() && proposedContext.toLowerCase().contains("out of scope")){
+                fixtureInfo[5] = "LED";
             }
 
             //Re: SLV: Invalid Luminaire Type For Philips Fixture Scans (20190925) as per mail conversion

@@ -42,6 +42,8 @@ public class InstallMaintenanceLogModel extends LoggingModel {
 
     private boolean isReSync = false;
 
+    private boolean isSwap = false;
+
 
     private List unMatchedFormGuids = new ArrayList();
 
@@ -216,6 +218,14 @@ public class InstallMaintenanceLogModel extends LoggingModel {
         this.offLuxLevel = offLuxLevel;
     }
 
+    public boolean isSwap() {
+        return isSwap;
+    }
+
+    public void setSwap(boolean swap) {
+        isSwap = swap;
+    }
+
     @Override
     public String toString() {
         return "InstallMaintenanceLogModel{" +
@@ -238,6 +248,7 @@ public class InstallMaintenanceLogModel extends LoggingModel {
                 ", isMacRemoved=" + isMacRemoved +
                 ", isCNRNoMAC=" + isCNRNoMAC +
                 ", isReSync=" + isReSync +
+                ", isSwap=" + isSwap +
                 ", unMatchedFormGuids=" + unMatchedFormGuids +
                 ", datesHolder=" + datesHolder +
                 '}';

@@ -333,21 +333,33 @@ public class SwapTemplateProcessor extends AbstractProcessor {
 
         // Get Fixture QR Scan Value and
         if (cityWorkflowSyncLog.getFixtureQRScan() != null && !cityWorkflowSyncLog.getFixtureQRScan().trim().isEmpty()) {
+
+            if (cityWorkflowSyncLog.getFixtureQRScan().startsWith("Existing")) {
+                installMaintenanceLogModel.setNodeOnly(true);
+            }
+
             SlvServerData slvServerData = new SlvServerData();
             LinkedMultiValueMap<String, String> paramsList = new LinkedMultiValueMap<>();
             String idOnController = installMaintenanceLogModel.getIdOnController();
             paramsList.add("idOnController" , idOnController);
             paramsList.add("controllerStrId" , controllerStrId);
-            addStreetLightData("luminaire.installdate", dateFormat(edgeNote.getCreatedDateTime()), paramsList);
+            if(!installMaintenanceLogModel.isNodeOnly()){
+                addStreetLightData("luminaire.installdate", dateFormat(edgeNote.getCreatedDateTime()), paramsList);
+            }
+
             try {
                 buildFixtureStreetLightData(cityWorkflowSyncLog.getFixtureQRScan().trim(), paramsList, edgeNote, slvServerData, installMaintenanceLogModel);
                 if(installMaintenanceLogModel.getDatesHolder() != null){
                     if(installMaintenanceLogModel.getDatesHolder().getSlvDates()  == null || installMaintenanceLogModel.getDatesHolder().getSlvDates().getCslpLumDate() == null){
-                        addStreetLightData("cslp.lum.install.date", dateFormat(edgeNote.getCreatedDateTime()), paramsList);
+                        if(!installMaintenanceLogModel.isNodeOnly()){
+                            addStreetLightData("cslp.lum.install.date", dateFormat(edgeNote.getCreatedDateTime()), paramsList);
+                        }
+
                     }
                 }
                 if(installMaintenanceLogModel.getDimmingGroupName() == null &&  edgeNote.getEdgeNotebook() != null && edgeNote.getEdgeNotebook().getNotebookName() != null){
-                    addStreetLightData("DimmingGroupName", edgeNote.getEdgeNotebook().getNotebookName(), paramsList);
+                   // addStreetLightData("DimmingGroupName", edgeNote.getEdgeNotebook().getNotebookName(), paramsList);
+                    addDimmingGroup(edgeNote,paramsList,idOnController,installMaintenanceLogModel);
                     installMaintenanceLogModel.setDimmingGroupName(edgeNote.getEdgeNotebook().getNotebookName());
                 }
                 SLVTransactionLogs slvTransactionLogs = getSLVTransactionLogs(installMaintenanceLogModel);
@@ -393,7 +405,7 @@ public class SwapTemplateProcessor extends AbstractProcessor {
             }
         }
         if(installMaintenanceLogModel.getDimmingGroupName() == null && dimmingGroupName != null){
-            addStreetLightData("DimmingGroupName", dimmingGroupName, paramsList);
+            addDimmingGroup(edgeNote,paramsList,idOnController,installMaintenanceLogModel);
             installMaintenanceLogModel.setDimmingGroupName(dimmingGroupName);
         }
 
