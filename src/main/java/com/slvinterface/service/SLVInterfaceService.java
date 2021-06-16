@@ -593,13 +593,16 @@ public abstract class SLVInterfaceService {
 
 
     protected void addStreetLightData(String key, String value, LinkedMultiValueMap<String,String> paramsList) {
-        paramsList.add("valueName" , key.trim());
-        try {
-           // value =  URLEncoder.encode(value,"UTF-8");
-            paramsList.add("value" , value.trim());
-        }catch (Exception e){
-            e.printStackTrace();
+        if(value != null){
+            paramsList.add("valueName" , key.trim());
+            try {
+                // value =  URLEncoder.encode(value,"UTF-8");
+                paramsList.add("value" , value.trim());
+            }catch (Exception e){
+                e.printStackTrace();
+            }
         }
+
     }
 
 

@@ -95,6 +95,12 @@ public class SurreySLVInterface extends  SLVInterfaceService {
                     }
                 }
 
+                if(!isMacAlreadyPresent && previousEdge2SLVData.getInstallDate() == null){
+                    String installDate =  dateFormat(edgeNote.getCreatedDateTime());
+                    logger.info("After Format:"+installDate);
+                    previousEdge2SLVData.setInstallDate(installDate);
+                }
+
                 slvSync(slvSyncTable,previousEdge2SLVData,isMacAlreadyPresent);
             }catch (SLVConnectionException e){
                 throw new SLVConnectionException(e);
