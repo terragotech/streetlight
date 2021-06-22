@@ -706,7 +706,7 @@ public class StreetLightCanadaService {
                     if (!readLine.equals("")) {
                         System.out.println("Processing " + readLine);
                         String terragoAccessToken = edgeRestService.getEdgeToken();
-                        doProcess(readLine, terragoAccessToken, false);
+                        doProcess(readLine, terragoAccessToken, true);
                     }
                 }
 
@@ -722,6 +722,7 @@ public class StreetLightCanadaService {
                     }
                 }
             }
+            System.exit(0);
         } else {
             //##############################################################################################
             do {
