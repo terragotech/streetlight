@@ -438,12 +438,27 @@ public class StreetLightCanadaService {
                                         } else {
                                             installDateTime = edgeNote.getCreatedDateTime();
                                         }
-                                        slvTools.addStreetLightData("install.date", Utils.dateFormat(installDateTime), paramsList);
-                                        slvTools.addStreetLightData("lamp.installdate", Utils.dateFormat(installDateTime), paramsList);
-                                        if (!DataTools.checkForValidMacAddress(macAddress)) {
-                                            throw new InvalidMacAddressException("Bad macaddress " + macAddress);
+                                        boolean isMacAddressSync = true;
+
+                                        try {
+                                            if (!DataTools.checkForValidMacAddress(macAddress)) {
+                                                throw new InvalidMacAddressException("Bad macaddress " + macAddress);
+                                            }
+                                            slvTools.checkMacAddressExists(macAddress, edgeNote.getTitle(), edgeNote);
                                         }
-                                        slvTools.checkMacAddressExists(macAddress, edgeNote.getTitle(), edgeNote);
+                                        catch (InvalidMacAddressException e)
+                                        {
+                                            isMacAddressSync = false;
+                                        }
+                                        catch (QRCodeAlreadyUsedException e)
+                                        {
+                                            isMacAddressSync = false;
+                                        }
+                                        if(isMacAddressSync)
+                                        {
+                                            slvTools.addStreetLightData("install.date", Utils.dateFormat(installDateTime), paramsList);
+                                            slvTools.addStreetLightData("lamp.installdate", Utils.dateFormat(installDateTime), paramsList);
+                                        }
                                         if (isForTesting) {
                                             //Send MacAddress for Testing
                                             List<Object> paramsList1 = new ArrayList<>();
@@ -463,9 +478,11 @@ public class StreetLightCanadaService {
                                                 logger.error("Error",e);
                                             }
                                         } else {
-                                            slvTools.replaceOLC(controllerStrId, edgeNote.getTitle(), "", edgeNote);
-                                            slvTools.replaceOLC(controllerStrId, edgeNote.getTitle(), macAddress, edgeNote);
-                                            slvTools.syncMacAddress2Edge(edgeNote.getTitle(), macAddress, edgeNote.getEdgeNotebook().getNotebookName());
+                                            if(isMacAddressSync) {
+                                                slvTools.replaceOLC(controllerStrId, edgeNote.getTitle(), "", edgeNote);
+                                                slvTools.replaceOLC(controllerStrId, edgeNote.getTitle(), macAddress, edgeNote);
+                                                slvTools.syncMacAddress2Edge(edgeNote.getTitle(), macAddress, edgeNote.getEdgeNotebook().getNotebookName());
+                                            }
                                         }
                                         slvDevice.setMacAddress(macAddress);
                                         String gsonValues = gson.toJson(lightDataCompareResult.getJsonArray());
