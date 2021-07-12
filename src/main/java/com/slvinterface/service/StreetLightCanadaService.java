@@ -321,7 +321,7 @@ public class StreetLightCanadaService {
             String notesData = responseEntity.getBody();
             logger.info("rest service data:" + notesData);
             EdgeNote edgeNote = gson.fromJson(notesData, EdgeNote.class);
-            if ((!edgeNote.getCreatedBy().contains("admin") && !edgeNote.getCreatedBy().contains("slvinterface")) || resync) {
+            if ((!edgeNote.getCreatedBy().contains("admin") && !edgeNote.getCreatedBy().contains("slvinterface") && !edgeNote.getCreatedBy().contains("terragointerface")) || resync) {
                 JsonObject edgenoteJson = new JsonParser().parse(notesData).getAsJsonObject();
                 JsonArray serverForms = edgenoteJson.get("formData").getAsJsonArray();
                 int size = serverForms.size();
