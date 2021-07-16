@@ -6,10 +6,7 @@ import com.j256.ormlite.stmt.DeleteBuilder;
 import com.j256.ormlite.stmt.UpdateBuilder;
 import com.j256.ormlite.support.ConnectionSource;
 import com.j256.ormlite.table.TableUtils;
-import com.slvinterface.entity.EdgeAllMac;
-import com.slvinterface.entity.PromotedFormDataEntity;
-import com.slvinterface.entity.SLVSyncTable;
-import com.slvinterface.entity.SLVTransactionLogs;
+import com.slvinterface.entity.*;
 import org.apache.log4j.Logger;
 
 public class QueryExecutor {
@@ -22,6 +19,7 @@ public class QueryExecutor {
     public Dao<SLVSyncTable, String> slvSyncTablesDao = null;
     public Dao<SLVTransactionLogs, String> slvTransactionLogsDao = null;
     public Dao<PromotedFormDataEntity, String> promotedFormDataEntities = null;
+    public Dao<LookupEntity, String> lookupDao = null;
 
 
     public QueryExecutor() throws Exception {
@@ -36,6 +34,7 @@ public class QueryExecutor {
         slvSyncTablesDao = DaoManager.createDao(connectionSource, SLVSyncTable.class);
         slvTransactionLogsDao = DaoManager.createDao(connectionSource, SLVTransactionLogs.class);
         promotedFormDataEntities = DaoManager.createDao(connectionSource,PromotedFormDataEntity.class);
+        lookupDao = DaoManager.createDao(connectionSource,LookupEntity.class);
     }
 
 
@@ -58,6 +57,13 @@ public class QueryExecutor {
             TableUtils.createTableIfNotExists(connectionSource, SLVTransactionLogs.class);
         } catch (Exception e) {
               e.printStackTrace();
+            logger.error("Error in SLVTransactionLogs",e);
+        }
+
+        try {
+            TableUtils.createTableIfNotExists(connectionSource, LookupEntity.class);
+        } catch (Exception e) {
+            e.printStackTrace();
             logger.error("Error in SLVTransactionLogs",e);
         }
 
@@ -170,6 +176,27 @@ public class QueryExecutor {
             promotedFormDataEntities.create(promotedFormDataEntity);
         }catch (Exception e){
             logger.error("Error in savePromotedFormDataEntity",e);
+        }
+    }
+
+
+    public LookupEntity getLookupEntity(String lanternType){
+        try {
+            return lookupDao.queryBuilder().where().eq(LookupEntity.LANTERN_TYPE,lanternType).queryForFirst();
+        }catch (Exception e){
+            logger.error("Error in getPromotedFormDataEntity",e);
+        }
+
+
+
+        return null;
+    }
+
+    public void loadLookUp(LookupEntity lookupEntity){
+        try {
+            lookupDao.create(lookupEntity);
+        }catch (Exception e){
+            e.printStackTrace();
         }
     }
 

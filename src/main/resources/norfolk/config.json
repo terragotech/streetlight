@@ -1,5 +1,5 @@
 {
-  "priority": [{"type":"UPDATE_DEVICE","order":2},{"type":"NEW_DEVICE","order":3}],
+  "priority": [{"type":"REMOVE","order":1},{"type":"NEW_DEVICE","order":2}],
   "config": [
     {
       "type": "NEW_DEVICE",
@@ -7,60 +7,62 @@
         {
           "id": 15,
           "type": "MAC",
-          "isRequired": false
+          "edge":"QR Code Scan",
+          "slv":"macAddress",
+          "isRequired": true
         },
         {
-          "id": 16,
+          "id": 41,
           "type": "DATE",
+          "edge":"Install Date",
+          "slv":"install.date",
           "isRequired": true
         },
         {
           "id": 9,
           "type": "IDONCONTROLLER",
+          "edge":"idOnController",
+          "slv":"idOnController",
           "isRequired": true
-        },{
+        },
+        {
           "id": 11,
           "type": "GEOZONE",
+          "edge":"GeoZone",
+          "slv":"geoZone path",
           "isRequired": true
         },
         {
           "id": 10,
           "type": "CALENDAR",
+          "edge":"Calendar",
+          "slv":"dimmingGroupName",
           "isRequired": true
         },
         {
           "id": 5,
           "type": "NAME",
+          "edge":"Column ID",
+          "slv":"name",
           "isRequired": true
         },
         {
           "id": 8,
           "type": "CLIENT_NAME",
-          "isRequired": true
-        },
-        {
-          "id": 7,
-          "type": "DEVICE_PREMISE",
-          "isRequired": true
+          "edge":"Unique ID",
+          "slv":"client.name"
         },
         {
           "id": 3,
           "type": "ADDRESS",
-          "isRequired": true
+          "edge":"Road Name",
+          "slv":"address"
         },
         {
-          "id": 4,
-          "type": "CLIENT_NUMBER",
-          "isRequired": true
-        },
-        {
-          "id": 12,
-          "type": "RoadUSRN",
-          "isRequired": true
-        },
-        {
-          "id": 13,
-          "type": "WATTAGE",
+          "id": 42,
+          "type": "LANTERN_TYPE",
+          "edge":"Lantern Type",
+          "slv":"luminaire.type",
           "isRequired": true
         }
       ],
@@ -72,72 +74,23 @@
       ]
     },
     {
-      "type": "UPDATE_DEVICE",
+      "type": "REMOVE",
       "ids": [
         {
-          "id": 25,
+          "id": 27,
           "type": "MAC",
-          "isRequired": false
-        },
-        {
-          "id": 24,
-          "type": "DATE",
           "isRequired": true
         },
         {
           "id": 9,
           "type": "IDONCONTROLLER",
           "isRequired": true
-        },{
-          "id": 11,
-          "type": "GEOZONE",
-          "isRequired": true
-        },
-        {
-          "id": 10,
-          "type": "CALENDAR",
-          "isRequired": true
-        },
-        {
-          "id": 5,
-          "type": "NAME",
-          "isRequired": true
-        },
-        {
-          "id": 8,
-          "type": "CLIENT_NAME",
-          "isRequired": true
-        },
-        {
-          "id": 7,
-          "type": "DEVICE_PREMISE",
-          "isRequired": true
-        },
-        {
-          "id": 3,
-          "type": "ADDRESS",
-          "isRequired": true
-        },
-        {
-          "id": 4,
-          "type": "CLIENT_NUMBER",
-          "isRequired": true
-        },
-        {
-          "id": 12,
-          "type": "RoadUSRN",
-          "isRequired": true
-        },
-        {
-          "id": 13,
-          "type": "WATTAGE",
-          "isRequired": true
         }
       ],
       "action": [
         {
-          "id": 20,
-          "value": "Replace Lantern"
+          "id": 15,
+          "value": "Remove Lantern"
         }
       ]
     }

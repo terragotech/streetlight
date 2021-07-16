@@ -24,6 +24,15 @@ public class Edge2SLVData {
     private String address;
     private String power;
     private String devicePremise;
+    private String lanternType;
+
+    public String getLanternType() {
+        return lanternType;
+    }
+
+    public void setLanternType(String lanternType) {
+        this.lanternType = lanternType;
+    }
 
     public String getAddress() {
         return address;

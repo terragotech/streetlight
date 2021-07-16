@@ -777,6 +777,15 @@ public abstract class SLVInterfaceService {
                             }
                             break;
 
+                        case LANTERN_TYPE:
+                            try{
+                                String lanternType = valueById(formValuesList,id.getId());
+                                logger.info("lanternType:"+lanternType);
+                                edge2SLVData.setLanternType(lanternType);
+                            }catch (NoValueException e){
+                                logger.error("Error in processFormData",e);
+                            }
+                            break;
 
                     }
                 }

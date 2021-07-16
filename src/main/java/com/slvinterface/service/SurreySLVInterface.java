@@ -2,6 +2,7 @@ package com.slvinterface.service;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
+import com.slvinterface.entity.LookupEntity;
 import com.slvinterface.entity.PromotedFormDataEntity;
 import com.slvinterface.entity.SLVSyncTable;
 import com.slvinterface.entity.SLVTransactionLogs;
@@ -147,9 +148,6 @@ public class SurreySLVInterface extends  SLVInterfaceService {
     private void slvSync(SLVSyncTable slvSyncTable,Edge2SLVData previousEdge2SLVData,boolean isMacPresent)throws ReplaceOLCFailedException, DeviceSearchException,GeoZoneSearchException,CreateGeoZoneException,DeviceCreationException {
         SLVInterfaceUtilsModel slvInterfaceUtilsModel = getSLVInterfaceUtilsModel(previousEdge2SLVData,slvSyncTable);
         boolean isDeviceCreate = slvInterfaceUtils.checkDeviceDetails(slvInterfaceUtilsModel);
-        if(isDeviceCreate){
-            loadDefaultVal(slvSyncTable,previousEdge2SLVData);
-        }
         switch (previousEdge2SLVData.getPriority().getType()){
             case REMOVE:
                 logger.info("Remove Option is Selected.");
@@ -207,7 +205,19 @@ public class SurreySLVInterface extends  SLVInterfaceService {
         loadVal(paramsList,previousEdge2SLVData);
         addStreetLightData("installStatus","To be installed",paramsList);
         addStreetLightData("install.date","",paramsList);
-
+        addStreetLightData("luminaire.partdescription","",paramsList);
+        addStreetLightData("luminaire.model","",paramsList);
+        addStreetLightData("luminaire.lumenoutput","",paramsList);
+        addStreetLightData("luminaire.color","",paramsList);
+        addStreetLightData("luminaire.lightsource","",paramsList);
+        addStreetLightData("luminaire.DistributionType","",paramsList);
+        addStreetLightData("luminaire.style","",paramsList);
+        addStreetLightData("ElexonChargeCode","",paramsList);
+        addStreetLightData("power","",paramsList);
+        addStreetLightData("dimmingGroupName","",paramsList);
+        addStreetLightData("network.highvoltagethreshold","",paramsList);
+        addStreetLightData("network.lowvoltagethreshold","",paramsList);
+        addStreetLightData("powerCorrection","",paramsList);
         PromotedFormDataEntity promotedFormDataEntity = new PromotedFormDataEntity();
         promotedFormDataEntity.setLastupdateddatetime(System.currentTimeMillis());
         promotedFormDataEntity.setPromotedvalue(gson.toJson(new ArrayList<>()));
@@ -220,9 +230,12 @@ public class SurreySLVInterface extends  SLVInterfaceService {
 
 
     private void setDeviceVal(SLVSyncTable slvSyncTable,Edge2SLVData previousEdge2SLVData){
-        SLVTransactionLogs slvTransactionLogs = getSLVTransVal(slvSyncTable);
         List<Object> paramsList = new ArrayList<>();
         loadVal(paramsList,previousEdge2SLVData);
+        loadDefaultVal(slvSyncTable,previousEdge2SLVData,paramsList);
+        SLVTransactionLogs slvTransactionLogs = getSLVTransVal(slvSyncTable);
+
+
         addStreetLightData("installStatus","Installed",paramsList);
         addStreetLightData("MacAddress",previousEdge2SLVData.getMacAddress(),paramsList);
         addStreetLightData("install.date",previousEdge2SLVData.getInstallDate(),paramsList);
@@ -230,10 +243,9 @@ public class SurreySLVInterface extends  SLVInterfaceService {
     }
 
     //Customer asset ID,Customer prefix,Feature ID,Road name,Location description
-    private void loadDefaultVal(SLVSyncTable slvSyncTable,Edge2SLVData previousEdge2SLVData){
+    private void loadDefaultVal(SLVSyncTable slvSyncTable,Edge2SLVData previousEdge2SLVData,List<Object> paramsList){
         SLVTransactionLogs slvTransactionLogs = getSLVTransVal(slvSyncTable);
-        List<Object> paramsList = new ArrayList<>();
-        loadVal(paramsList,previousEdge2SLVData);
+       // loadVal (paramsList,previousEdge2SLVData);
 
         processFixtureQRScan(previousEdge2SLVData.getFixtureQRScan(),paramsList,previousEdge2SLVData,null);
 
@@ -261,7 +273,7 @@ public class SurreySLVInterface extends  SLVInterfaceService {
             e.printStackTrace();
         }
 
-        setDeviceValues(paramsList,slvTransactionLogs,null,previousEdge2SLVData);
+        //setDeviceValues(paramsList,slvTransactionLogs,null,previousEdge2SLVData);
     }
 
     private PromotedComponent getPromotedComponent(List<FormId> formIdList,String slvKey,String value){
@@ -282,12 +294,25 @@ public class SurreySLVInterface extends  SLVInterfaceService {
 
     private void processFixtureQRScan(String fixtureQRScan,List<Object> paramsList,Edge2SLVData previousEdge2SLVData,PromotedValue promotedValue){
         addData("client.name",previousEdge2SLVData.getClientName(),paramsList);
-        addData("device.premise",previousEdge2SLVData.getDevicePremise(),paramsList);
         addData("address",previousEdge2SLVData.getAddress(),paramsList);
-        addData("client.number",previousEdge2SLVData.getClientNumber(),paramsList);
-        addData("location.mapnumber",previousEdge2SLVData.getRoadUSRN(),paramsList);
-        addData("power",previousEdge2SLVData.getPower(),paramsList);
-
+        addData("luminaire.type",previousEdge2SLVData.getLanternType(),paramsList);
+        addData("network.highvoltagethreshold","253",paramsList);
+        addData("network.lowvoltagethreshold","207",paramsList);
+        addData("powerCorrection","0",paramsList);
+        if(previousEdge2SLVData.getLanternType() != null){
+            LookupEntity lookupEntity = queryExecutor.getLookupEntity(previousEdge2SLVData.getLanternType());
+            if(lookupEntity != null){
+                addData("luminaire.partdescription",lookupEntity.getPartDescription(),paramsList);
+                addData("luminaire.model",lookupEntity.getModel(),paramsList);
+                addData("luminaire.lumenoutput",lookupEntity.getLumenOutput(),paramsList);
+                addData("luminaire.color",lookupEntity.getColor(),paramsList);
+                addData("luminaire.lightsource",lookupEntity.getLightSource(),paramsList);
+                addData("luminaire.DistributionType",lookupEntity.getDistributionType(),paramsList);
+                addData("luminaire.style",lookupEntity.getStyle(),paramsList);
+                addData("ElexonChargeCode",lookupEntity.getElexonChargeCode(),paramsList);
+                addData("power",lookupEntity.getPower(),paramsList);
+            }
+        }
 
     }
 

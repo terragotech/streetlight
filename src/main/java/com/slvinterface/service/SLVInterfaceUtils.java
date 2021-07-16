@@ -240,12 +240,15 @@ public class SLVInterfaceUtils {
         }
         int geozoneId =  getGeoZoneId(slvInterfaceUtilsModel.getCurrentGeoZoneName(),getSLVTransVal(slvInterfaceUtilsModel));
         if(geozoneId == -1){
-            /*geozoneId =  createGeoZone(slvInterfaceUtilsModel);
+            geozoneId =  createGeoZone(slvInterfaceUtilsModel);
             if(geozoneId != -1){
                 slvInterfaceUtilsModel.setGeoZoneId(geozoneId);
                 createDevice(slvInterfaceUtilsModel);
-            }*/
-            throw  new CreateGeoZoneException("GeoZone not found");
+                return  true;
+            }else{
+                throw  new CreateGeoZoneException("GeoZone not found");
+            }
+
         }else{
             slvInterfaceUtilsModel.setGeoZoneId(geozoneId);
             createDevice(slvInterfaceUtilsModel);
